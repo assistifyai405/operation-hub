@@ -1112,7 +1112,8 @@ async def get_settings(user: dict = Depends(current_user)):
 
 
 async def _update_section(org: str, section: str, values: dict):
-    clean = {f"settings.{section}.{k}": v for k, v in values.items()}
+    allowed = set(DEFAULT_ORG_SETTINGS.get(section, {}).keys())
+    clean = {f"settings.{section}.{k}": v for k, v in values.items() if k in allowed}
     if clean:
         clean["updatedAt"] = now_iso()
         await db.organizations.update_one({"id": org}, {"$set": clean})
@@ -1149,7 +1150,8 @@ async def update_doc_settings(payload: SectionUpdate, org: str = Depends(current
 
 @api_router.patch("/settings/notifications")
 async def update_notif_prefs(payload: NotifPrefsUpdate, user: dict = Depends(current_user)):
-    merged = {**DEFAULT_NOTIF_PREFS, **(user.get("notificationPrefs", {}) or {}), **payload.values}
+    filtered = {k: bool(v) for k, v in payload.values.items() if k in DEFAULT_NOTIF_PREFS}
+    merged = {**DEFAULT_NOTIF_PREFS, **(user.get("notificationPrefs", {}) or {}), **filtered}
     await db.users.update_one({"id": user["id"]}, {"$set": {"notificationPrefs": merged, "updatedAt": now_iso()}})
     return merged
 
@@ -1160,8 +1162,8 @@ async def upload_branding_image(file: UploadFile = File(...), org: str = Depends
     if len(data) > 5 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="Image exceeds 5MB limit")
     ext = file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "png"
-    if ext not in {"png", "jpg", "jpeg", "gif", "webp", "svg"}:
-        raise HTTPException(status_code=415, detail="Only image files are allowed")
+    if ext not in {"png", "jpg", "jpeg", "gif", "webp"}:
+        raise HTTPException(status_code=415, detail="Only PNG, JPG, GIF or WEBP images are allowed")
     path = f"{S.APP_NAME}/branding/{org}/{uuid.uuid4()}.{ext}"
     ctype = file.content_type or S.guess_content_type(file.filename or "")
     try:
