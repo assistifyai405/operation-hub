@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Loader2, Users, CircleDot, Calendar, TrendingUp, Plus, Trash2,
   Send, Bot, Sparkles, FileText, FolderOpen, CheckSquare, Clock, StickyNote,
-  FilePlus2, FileUp, CheckCircle2, Rocket,
+  FilePlus2, FileUp, CheckCircle2, Rocket, ScrollText, RotateCcw,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -15,6 +15,7 @@ import { projectsApi, tasksApi, documentsApi, proposalsApi, activitiesApi } from
 import EmptyState from "@/components/EmptyState";
 import AIPlanner from "@/components/workspace/AIPlanner";
 import ProposalWriter from "@/components/workspace/ProposalWriter";
+import ContractWriter from "@/components/workspace/ContractWriter";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -375,6 +376,10 @@ const activityMeta = {
   plan_generated: { icon: Sparkles, color: "bg-violet-600/20 text-violet-400" },
   proposal_saved: { icon: FilePlus2, color: "bg-violet-600/20 text-violet-400" },
   proposal_exported: { icon: FileUp, color: "bg-blue-600/20 text-blue-400" },
+  contract_generated: { icon: ScrollText, color: "bg-violet-600/20 text-violet-400" },
+  contract_saved: { icon: FilePlus2, color: "bg-violet-600/20 text-violet-400" },
+  contract_exported: { icon: FileUp, color: "bg-blue-600/20 text-blue-400" },
+  contract_restored: { icon: RotateCcw, color: "bg-emerald-600/20 text-emerald-400" },
 };
 function ActivityTab({ activities }) {
   const fmt = (d) => new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -435,6 +440,7 @@ export default function ProjectWorkspace() {
     { id: "overview", label: "Overview" },
     { id: "planner", label: "AI Planner" },
     { id: "proposal", label: "Proposal" },
+    { id: "contract", label: "Contract" },
     { id: "chat", label: "AI Chat" },
     { id: "tasks", label: "Tasks" },
     { id: "documents", label: "Documents" },
@@ -468,6 +474,7 @@ export default function ProjectWorkspace() {
           <TabsContent value="overview"><Overview project={project} tasks={tasks} documents={documents} goTab={setTab} /></TabsContent>
           <TabsContent value="planner"><AIPlanner projectId={project.id} projectName={project.name} onSaved={loadActivities} /></TabsContent>
           <TabsContent value="proposal"><ProposalWriter projectId={project.id} projectName={project.name} onSaved={loadActivities} /></TabsContent>
+          <TabsContent value="contract"><ContractWriter projectId={project.id} projectName={project.name} onSaved={loadActivities} /></TabsContent>
           <TabsContent value="chat"><ProjectChat projectId={project.id} projectName={project.name} /></TabsContent>
           <TabsContent value="tasks"><TasksTab projectId={project.id} tasks={tasks} reload={afterTaskChange} /></TabsContent>
           <TabsContent value="documents"><DocumentsTab projectId={project.id} documents={documents} reload={afterDocChange} /></TabsContent>

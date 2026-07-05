@@ -66,3 +66,13 @@ export const proposalWriterApi = {
   restore: (projectId, version) => req(`/projects/${projectId}/proposal/restore/${version}`, { method: "POST" }),
   exportUrl: (projectId, fmt) => `${process.env.REACT_APP_BACKEND_URL}/api/projects/${projectId}/proposal/export/${fmt}`,
 };
+
+export const contractWriterApi = {
+  sections: () => req("/contract/sections"),
+  generate: (projectId) => req(`/projects/${projectId}/contract/generate`, { method: "POST" }),
+  get: (projectId) => req(`/projects/${projectId}/contract`),
+  save: (projectId, data) => req(`/projects/${projectId}/contract`, { method: "POST", body: JSON.stringify(data) }),
+  versions: (projectId) => req(`/projects/${projectId}/contract/versions`),
+  restore: (projectId, version) => req(`/projects/${projectId}/contract/restore/${version}`, { method: "POST" }),
+  exportUrl: (projectId, fmt) => `${process.env.REACT_APP_BACKEND_URL}/api/projects/${projectId}/contract/export/${fmt}`,
+};

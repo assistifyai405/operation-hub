@@ -21,7 +21,7 @@ def _as_list(v):
     return [v] if v else []
 
 
-def build_pdf(proposal: dict) -> bytes:
+def build_pdf(proposal: dict, sections=PROPOSAL_SECTIONS, doc_type: str = "Proposal") -> bytes:
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=LETTER, topMargin=0.9 * inch, bottomMargin=0.8 * inch,
                             leftMargin=0.9 * inch, rightMargin=0.9 * inch)
@@ -32,10 +32,10 @@ def build_pdf(proposal: dict) -> bytes:
     body = ParagraphStyle("b", parent=ss["Normal"], fontSize=10.5, leading=15, textColor=HexColor("#27272A"), alignment=TA_LEFT)
 
     content = proposal.get("content", {})
-    story = [Paragraph(proposal.get("title", "Proposal"), title),
-             Paragraph(f"Assistify OS · Proposal v{proposal.get('version', 1)} · Status: {proposal.get('status', 'Draft')}", sub),
+    story = [Paragraph(proposal.get("title", doc_type), title),
+             Paragraph(f"Assistify OS · {doc_type} v{proposal.get('version', 1)} · Status: {proposal.get('status', 'Draft')}", sub),
              HRFlowable(width="100%", color=HexColor("#E4E4E7"), spaceAfter=6)]
-    for sec in PROPOSAL_SECTIONS:
+    for sec in sections:
         val = content.get(sec["key"])
         if not val:
             continue
@@ -51,7 +51,7 @@ def build_pdf(proposal: dict) -> bytes:
     return buf.getvalue()
 
 
-def build_docx(proposal: dict) -> bytes:
+def build_docx(proposal: dict, sections=PROPOSAL_SECTIONS, doc_type: str = "Proposal") -> bytes:
     d = Document()
     style = d.styles["Normal"]
     style.font.name = "Calibri"
@@ -59,17 +59,17 @@ def build_docx(proposal: dict) -> bytes:
 
     content = proposal.get("content", {})
     t = d.add_paragraph()
-    run = t.add_run(proposal.get("title", "Proposal"))
+    run = t.add_run(proposal.get("title", doc_type))
     run.bold = True
     run.font.size = Pt(24)
     run.font.color.rgb = RGBColor(0x18, 0x18, 0x1B)
 
     meta = d.add_paragraph()
-    mr = meta.add_run(f"Assistify OS  ·  Proposal v{proposal.get('version', 1)}  ·  Status: {proposal.get('status', 'Draft')}")
+    mr = meta.add_run(f"Assistify OS  ·  {doc_type} v{proposal.get('version', 1)}  ·  Status: {proposal.get('status', 'Draft')}")
     mr.font.size = Pt(10)
     mr.font.color.rgb = RGBColor(0x71, 0x71, 0x7A)
 
-    for sec in PROPOSAL_SECTIONS:
+    for sec in sections:
         val = content.get(sec["key"])
         if not val:
             continue

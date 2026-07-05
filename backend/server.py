@@ -17,6 +17,7 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, Strea
 
 from ai_service import AIService
 from proposal_config import PROPOSAL_SECTIONS, PROPOSAL_STATUSES, PROPOSAL_SYSTEM, build_proposal_prompt
+from contract_config import CONTRACT_SECTIONS, CONTRACT_STATUSES, CONTRACT_SYSTEM, build_contract_prompt
 from proposal_export import build_pdf, build_docx
 
 ROOT_DIR = Path(__file__).parent
@@ -311,6 +312,7 @@ async def delete_project(project_id: str):
     await db.proposals.delete_many({"project_id": project_id})
     await db.plans.delete_many({"project_id": project_id})
     await db.ai_proposals.delete_many({"project_id": project_id})
+    await db.ai_contracts.delete_many({"project_id": project_id})
     await db.activities.delete_many({"project_id": project_id})
     return {"ok": True}
 
@@ -667,6 +669,161 @@ async def export_proposal_docx(project_id: str):
 @api_router.get("/proposal/sections")
 async def proposal_sections():
     return {"sections": PROPOSAL_SECTIONS, "statuses": PROPOSAL_STATUSES}
+
+
+# ------------------- AI Contract Generator -------------------
+class ContractContent(BaseModel):
+    title: str = "Untitled Contract"
+    status: str = "Draft"
+    content: dict = Field(default_factory=dict)
+
+
+async def _get_ai_contract(project_id: str):
+    return await db.ai_contracts.find_one({"project_id": project_id}, {"_id": 0})
+
+
+async def _build_contract_context(project_id: str):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    await enrich_project(p)
+    context = await build_project_context(p)
+
+    proposal_id = None
+    client = None
+    if p.get("client_id"):
+        client = await db.clients.find_one({"id": p["client_id"]}, {"_id": 0})
+    if client:
+        context += (
+            f"\n\nCLIENT DETAILS:\nCompany: {client.get('name')}\n"
+            f"Primary contact: {client.get('contact') or 'N/A'}\n"
+            f"Email: {client.get('email') or 'N/A'}\nAddress: [CLIENT ADDRESS]\n"
+        )
+
+    proposal = await _get_ai_proposal(project_id)
+    if proposal:
+        proposal_id = proposal.get("id")
+        c = proposal.get("content", {})
+        context += (
+            "\n\nAPPROVED PROPOSAL (source of truth for deliverables/pricing):\n"
+            f"Deliverables: {json.dumps(c.get('deliverables', []))}\n"
+            f"Timeline: {json.dumps(c.get('timeline', ''))}\n"
+            f"Pricing: {json.dumps(c.get('pricing_placeholder', ''))}\n"
+            f"Payment schedule: {json.dumps(c.get('payment_schedule', []))}\n"
+            f"Scope: {json.dumps(c.get('project_scope', []))}\n"
+        )
+
+    latest_plan = await db.plans.find_one({"project_id": project_id}, {"_id": 0}, sort=[("version", -1)])
+    if latest_plan:
+        context += "\n\nLATEST AI PROJECT PLAN:\n" + json.dumps(latest_plan.get("sections", {}))[:3000]
+
+    return p, context, proposal_id
+
+
+@api_router.post("/projects/{project_id}/contract/generate")
+async def generate_contract(project_id: str):
+    p, context, proposal_id = await _build_contract_context(project_id)
+    prompt = build_contract_prompt(context)
+    try:
+        content = await ai_service.complete_json(CONTRACT_SYSTEM, prompt, CONTRACT_SECTIONS, session_id=f"contract-{project_id}-{uuid.uuid4()}")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="AI returned an unparseable contract. Please regenerate.")
+    except Exception as e:
+        logging.exception("contract generation failed")
+        raise HTTPException(status_code=502, detail=f"Contract generation failed: {e}")
+
+    await log_activity(project_id, "contract_generated", f'Service agreement for "{p.get("name")}" was generated')
+    return {"title": f"{p.get('name')} — Service Agreement", "content": content, "proposal_id": proposal_id}
+
+
+@api_router.get("/projects/{project_id}/contract")
+async def get_contract(project_id: str):
+    return await _get_ai_contract(project_id)
+
+
+@api_router.get("/projects/{project_id}/contract/versions")
+async def contract_versions(project_id: str):
+    doc = await _get_ai_contract(project_id)
+    return doc.get("history", []) if doc else []
+
+
+async def _save_contract(project_id: str, payload: ContractContent, activity_type: str, activity_msg_fmt: str):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if payload.status not in CONTRACT_STATUSES:
+        raise HTTPException(status_code=422, detail="Invalid status")
+
+    existing = await _get_ai_contract(project_id)
+    version = (existing["version"] + 1) if existing else 1
+    now = now_iso()
+    entry = {"version": version, "title": payload.title, "status": payload.status, "content": payload.content, "created_at": now}
+    if existing:
+        history = existing.get("history", []) + [entry]
+        await db.ai_contracts.update_one({"project_id": project_id}, {"$set": {
+            "title": payload.title, "status": payload.status, "content": payload.content,
+            "version": version, "history": history, "updated_at": now,
+        }})
+    else:
+        proposal = await _get_ai_proposal(project_id)
+        doc = {
+            "id": str(uuid.uuid4()), "title": payload.title, "project_id": project_id,
+            "client_id": p.get("client_id"), "proposal_id": proposal.get("id") if proposal else None,
+            "status": payload.status, "content": payload.content, "version": version,
+            "history": [entry], "created_at": now, "updated_at": now,
+        }
+        await db.ai_contracts.insert_one(doc)
+    await log_activity(project_id, activity_type, activity_msg_fmt.format(version=version))
+    return await _get_ai_contract(project_id)
+
+
+@api_router.post("/projects/{project_id}/contract")
+async def save_contract(project_id: str, payload: ContractContent):
+    return await _save_contract(project_id, payload, "contract_saved", "Contract v{version} was saved")
+
+
+@api_router.post("/projects/{project_id}/contract/restore/{version}")
+async def restore_contract(project_id: str, version: int):
+    existing = await _get_ai_contract(project_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    match = next((v for v in existing.get("history", []) if v["version"] == version), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="Version not found")
+    return await _save_contract(
+        project_id, ContractContent(title=match["title"], status=match["status"], content=match["content"]),
+        "contract_restored", f"Contract restored from v{version} as v{{version}}",
+    )
+
+
+@api_router.get("/projects/{project_id}/contract/export/pdf")
+async def export_contract_pdf(project_id: str):
+    contract = await _get_ai_contract(project_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Save the contract before exporting")
+    data = build_pdf(contract, CONTRACT_SECTIONS, "Service Agreement")
+    await log_activity(project_id, "contract_exported", "Contract exported as PDF")
+    fname = _safe_filename(contract.get("title"))
+    return StreamingResponse(io.BytesIO(data), media_type="application/pdf",
+                             headers={"Content-Disposition": f'attachment; filename="{fname}.pdf"'})
+
+
+@api_router.get("/projects/{project_id}/contract/export/docx")
+async def export_contract_docx(project_id: str):
+    contract = await _get_ai_contract(project_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Save the contract before exporting")
+    data = build_docx(contract, CONTRACT_SECTIONS, "Service Agreement")
+    await log_activity(project_id, "contract_exported", "Contract exported as DOCX")
+    fname = _safe_filename(contract.get("title"))
+    return StreamingResponse(io.BytesIO(data),
+                             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                             headers={"Content-Disposition": f'attachment; filename="{fname}.docx"'})
+
+
+@api_router.get("/contract/sections")
+async def contract_sections():
+    return {"sections": CONTRACT_SECTIONS, "statuses": CONTRACT_STATUSES}
 
 
 app.include_router(api_router)

@@ -1,0 +1,21 @@
+{
+  "summary": "End-to-end validation of new AI Contract Generator module (backend + frontend). All 16 backend contract pytest cases pass (schema, generate w/ real LLM, save+versioning, invalid status 422, restore creates new non-destructive version, PDF/DOCX exports, export-before-save 404, activity logging, proposal_id link/smart data). Full UI flow verified on Brand Redesign project: Contract tab is between Proposal and AI Chat; empty state + generate button render; real LLM generation (~30s) produced all 17 sections; header controls (title input, version, status Select incl. Signed) all present; edit-textareas persist through save (verified via GET history v2); v1 save, v2 save (increment), compare view + exit, restore v1 -> v3, regenerate returns to 'draft'; activity feed shows contract_generated / contract_saved x2 / contract_restored refreshing without reload. Regression: Proposal PDF/DOCX exports still work after exporter generalization (proposal_export.py now takes optional sections+doc_type). Existing proposal/planner/crud tests still pass (2 pre-existing unrelated failures in test_crud unlinking tests + collection error in test_workspace due to missing env var — NOT caused by contract module).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_contract.py",
+    "/app/test_reports/pytest/contract_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py is 846 lines — approaching the 700-line guideline; consider splitting contract/proposal/planner routes into modules for maintainability.",
+    "test_workspace.py raises KeyError('REACT_APP_BACKEND_URL') at collection time when env var absent — should mirror the fallback used in test_contract.py/test_proposal.py."
+  ],
+  "updated_files": ["/app/backend/tests/test_contract.py"],
+  "success_rate": {"backend": "100% (16/16 contract tests)", "frontend": "100% (all critical flows verified)"},
+  "seed_data_creation": "Tests create/cleanup TEST_CONTRACT_* project/client per module fixture. UI test reused existing 'Brand Redesign' project (5b3538af-0c6a-480e-8b11-c730368e1402) — left contract at v3 with 2 saved versions + 1 restored + regenerated draft (not saved). Cleanup optional.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "New AI Contract module fully working. Backend endpoints under /api/projects/{id}/contract[/generate|/versions|/restore/{v}|/export/pdf|/export/docx] and /api/contract/sections. Frontend at ContractWriter.jsx with tab-trigger-contract in ProjectWorkspace. Version bump path: 'draft' -> save=1 -> edit+save=2 -> restore v1 = new v3 (non-destructive). tab-contract testid only appears when contract has content; empty state uses contract-empty testid.",
+  "rca of the issue": "N/A — no issues found."
+}
