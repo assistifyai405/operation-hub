@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Loader2, Users, CircleDot, Calendar, TrendingUp, Plus, Trash2,
   Send, Bot, Sparkles, FileText, FolderOpen, CheckSquare, Clock, StickyNote,
@@ -414,13 +414,14 @@ function ActivityTab({ activities }) {
 export default function ProjectWorkspace() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [proposals, setProposals] = useState([]);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState(searchParams.get("tab") || "overview");
 
   const loadProject = () => projectsApi.get(id).then(setProject).catch(() => navigate("/projects"));
   const loadTasks = () => tasksApi.list(id).then(setTasks).catch(() => {});

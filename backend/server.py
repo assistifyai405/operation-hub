@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -8,6 +8,7 @@ import io
 import re
 import json
 import time
+import asyncio
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field
@@ -24,6 +25,7 @@ from invoice_config import INVOICE_STATUSES, INVOICE_FIELDS, INVOICE_SYSTEM, bui
 from proposal_export import build_pdf, build_docx
 from invoice_export import build_invoice_pdf, build_invoice_docx
 import auth as A
+import storage as S
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -819,7 +821,228 @@ async def delete_document(document_id: str, org: str = Depends(current_org)):
     return {"ok": True}
 
 
-# ------------------- Proposals CRUD -------------------
+class DocumentRename(BaseModel):
+    name: str = Field(..., min_length=1)
+
+
+@api_router.post("/documents/upload")
+async def upload_document(
+    file: UploadFile = File(...),
+    project_id: Optional[str] = Form(None),
+    org: str = Depends(current_org),
+):
+    if project_id:
+        await require_project(project_id, org)
+    data = await file.read()
+    if len(data) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="File exceeds 25MB limit")
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "bin"
+    path = f"{S.APP_NAME}/uploads/{org}/{uuid.uuid4()}.{ext}"
+    ctype = file.content_type or S.guess_content_type(file.filename or "")
+    try:
+        result = await asyncio.to_thread(S.put_object, path, data, ctype)
+    except Exception as e:
+        logging.exception("upload failed")
+        raise HTTPException(status_code=502, detail=f"Upload failed: {e}")
+    doc = {
+        "id": str(uuid.uuid4()), "name": file.filename or "Untitled",
+        "type": S.category_for(file.filename or ""), "size": S.human_size(result.get("size", len(data))),
+        "size_bytes": result.get("size", len(data)), "content_type": ctype,
+        "storage_path": result["path"], "project_id": project_id, "organizationId": org,
+        "url": f"/api/documents/DOCID/file", "created_at": now_iso(),
+    }
+    doc["url"] = f"/api/documents/{doc['id']}/file"
+    await db.documents.insert_one(dict(doc))
+    await log_activity(project_id, "document_uploaded", f'Document "{doc["name"]}" was uploaded')
+    doc.pop("_id", None)
+    return doc
+
+
+@api_router.put("/documents/{document_id}")
+async def rename_document(document_id: str, payload: DocumentRename, org: str = Depends(current_org)):
+    res = await db.documents.find_one({"id": document_id, "organizationId": org}, {"_id": 0})
+    if not res:
+        raise HTTPException(status_code=404, detail="Document not found")
+    await db.documents.update_one({"id": document_id, "organizationId": org}, {"$set": {"name": payload.name.strip()}})
+    return {**res, "name": payload.name.strip()}
+
+
+@api_router.get("/documents/{document_id}/file")
+async def download_document(document_id: str, request: Request, auth: Optional[str] = None):
+    # Support ?auth= token for direct browser links (img/anchor cannot set headers)
+    token = auth
+    if not token:
+        h = request.headers.get("Authorization", "")
+        if h.startswith("Bearer "):
+            token = h[7:]
+    if not token:
+        token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = A.decode_token(token)
+        org = payload.get("org")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    doc = await db.documents.find_one({"id": document_id, "organizationId": org}, {"_id": 0})
+    if not doc or not doc.get("storage_path"):
+        raise HTTPException(status_code=404, detail="File not found")
+    try:
+        content, ctype = await asyncio.to_thread(S.get_object, doc["storage_path"])
+    except Exception:
+        raise HTTPException(status_code=404, detail="File not found in storage")
+    disposition = "inline" if (doc.get("content_type", "").startswith(("image/", "application/pdf"))) else "attachment"
+    return StreamingResponse(io.BytesIO(content), media_type=doc.get("content_type", ctype),
+                             headers={"Content-Disposition": f'{disposition}; filename="{_safe_filename(doc.get("name"))}"'})
+
+
+def _paginate(page: int, page_size: int):
+    page = max(1, page)
+    page_size = min(max(1, page_size), 50)
+    return page, page_size, (page - 1) * page_size
+
+
+@api_router.get("/library/documents")
+async def library_documents(org: str = Depends(current_org), q: str = "", type: str = "", page: int = 1, page_size: int = 12):
+    page, page_size, skip = _paginate(page, page_size)
+    query = {"organizationId": org}
+    if q.strip():
+        query["name"] = {"$regex": re.escape(q.strip()), "$options": "i"}
+    if type and type != "All":
+        query["type"] = type
+    total = await db.documents.count_documents(query)
+    items = await db.documents.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(page_size).to_list(page_size)
+    for it in items:
+        if it.get("project_id"):
+            p = await db.projects.find_one({"id": it["project_id"]}, {"_id": 0, "name": 1})
+            it["project_name"] = p["name"] if p else None
+    return {"items": items, "total": total, "page": page, "page_size": page_size, "pages": max(1, (total + page_size - 1) // page_size)}
+
+
+async def _enrich_doc_meta(items, org):
+    proj_ids = list({i["project_id"] for i in items if i.get("project_id")})
+    cli_ids = list({i.get("client_id") for i in items if i.get("client_id")})
+    projs = {p["id"]: p for p in await db.projects.find({"id": {"$in": proj_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)}
+    clis = {c["id"]: c for c in await db.clients.find({"id": {"$in": cli_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)}
+    for i in items:
+        i["project_name"] = projs.get(i.get("project_id"), {}).get("name")
+        i["client_name"] = clis.get(i.get("client_id"), {}).get("name")
+    return items
+
+
+@api_router.get("/library/proposals")
+async def library_proposals(org: str = Depends(current_org), q: str = "", status: str = "", sort: str = "recent", page: int = 1, page_size: int = 12):
+    page, page_size, skip = _paginate(page, page_size)
+    query = {"organizationId": org}
+    if q.strip():
+        query["title"] = {"$regex": re.escape(q.strip()), "$options": "i"}
+    if status and status != "All":
+        query["status"] = status
+    sort_field = "title" if sort == "title" else "updated_at"
+    direction = 1 if sort == "title" else -1
+    total = await db.ai_proposals.count_documents(query)
+    proj = {"_id": 0, "id": 1, "title": 1, "status": 1, "project_id": 1, "client_id": 1, "version": 1, "updated_at": 1, "created_at": 1}
+    items = await db.ai_proposals.find(query, proj).sort(sort_field, direction).skip(skip).limit(page_size).to_list(page_size)
+    await _enrich_doc_meta(items, org)
+    return {"items": items, "total": total, "page": page, "page_size": page_size, "pages": max(1, (total + page_size - 1) // page_size)}
+
+
+@api_router.get("/library/contracts")
+async def library_contracts(org: str = Depends(current_org), q: str = "", status: str = "", sort: str = "recent", page: int = 1, page_size: int = 12):
+    page, page_size, skip = _paginate(page, page_size)
+    query = {"organizationId": org}
+    if q.strip():
+        query["title"] = {"$regex": re.escape(q.strip()), "$options": "i"}
+    if status and status != "All":
+        query["status"] = status
+    sort_field = "title" if sort == "title" else "updated_at"
+    direction = 1 if sort == "title" else -1
+    total = await db.ai_contracts.count_documents(query)
+    proj = {"_id": 0, "id": 1, "title": 1, "status": 1, "project_id": 1, "client_id": 1, "version": 1, "updated_at": 1, "created_at": 1}
+    items = await db.ai_contracts.find(query, proj).sort(sort_field, direction).skip(skip).limit(page_size).to_list(page_size)
+    await _enrich_doc_meta(items, org)
+    return {"items": items, "total": total, "page": page, "page_size": page_size, "pages": max(1, (total + page_size - 1) // page_size)}
+
+
+@api_router.get("/library/invoices")
+async def library_invoices(org: str = Depends(current_org), q: str = "", status: str = "", sort: str = "recent", page: int = 1, page_size: int = 12):
+    page, page_size, skip = _paginate(page, page_size)
+    query = {"organizationId": org}
+    if q.strip():
+        query["$or"] = [{"invoice_number": {"$regex": re.escape(q.strip()), "$options": "i"}},
+                        {"title": {"$regex": re.escape(q.strip()), "$options": "i"}}]
+    if status and status != "All":
+        query["status"] = status
+    sort_field = "total" if sort == "amount" else "updated_at"
+    direction = -1
+    total = await db.ai_invoices.count_documents(query)
+    proj = {"_id": 0, "id": 1, "invoice_number": 1, "title": 1, "status": 1, "project_id": 1, "client_id": 1,
+            "total": 1, "subtotal": 1, "vat": 1, "content": 1, "version": 1, "updated_at": 1, "created_at": 1}
+    items = await db.ai_invoices.find(query, proj).sort(sort_field, direction).skip(skip).limit(page_size).to_list(page_size)
+    await _enrich_doc_meta(items, org)
+    # org-wide totals (independent of filters)
+    totals = {}
+    async for row in db.ai_invoices.aggregate([{"$match": {"organizationId": org}}, {"$group": {"_id": "$status", "count": {"$sum": 1}, "sum": {"$sum": "$total"}}}]):
+        totals[row["_id"]] = {"count": row["count"], "sum": round(row.get("sum", 0) or 0, 2)}
+    revenue = totals.get("Paid", {}).get("sum", 0)
+    outstanding = round(totals.get("Sent", {}).get("sum", 0) + totals.get("Overdue", {}).get("sum", 0), 2)
+    return {"items": items, "total": total, "page": page, "page_size": page_size, "pages": max(1, (total + page_size - 1) // page_size),
+            "totals": {"by_status": totals, "revenue": revenue, "outstanding": outstanding,
+                       "count": await db.ai_invoices.count_documents({"organizationId": org})}}
+
+
+@api_router.get("/analytics")
+async def analytics(org: str = Depends(current_org)):
+    base = {"organizationId": org}
+    # Revenue by month (from Paid + all invoices)
+    monthly = {}
+    async for row in db.ai_invoices.aggregate([
+        {"$match": base},
+        {"$group": {"_id": {"$substr": ["$created_at", 0, 7]}, "invoiced": {"$sum": "$total"},
+                    "paid": {"$sum": {"$cond": [{"$eq": ["$status", "Paid"]}, "$total", 0]}}}},
+        {"$sort": {"_id": 1}}, {"$limit": 12},
+    ]):
+        monthly[row["_id"]] = {"month": row["_id"], "invoiced": round(row.get("invoiced", 0) or 0, 2), "paid": round(row.get("paid", 0) or 0, 2)}
+    revenue_series = list(monthly.values())
+
+    project_status = []
+    palette = {"In Progress": "#8b5cf6", "Review": "#22d3ee", "Completed": "#34d399", "Planning": "#f59e0b", "Blocked": "#f87171"}
+    async for row in db.projects.aggregate([{"$match": base}, {"$group": {"_id": "$status", "count": {"$sum": 1}}}]):
+        project_status.append({"name": row["_id"] or "Unknown", "value": row["count"], "color": palette.get(row["_id"], "#a78bfa")})
+
+    invoice_status = []
+    async for row in db.ai_invoices.aggregate([{"$match": base}, {"$group": {"_id": "$status", "count": {"$sum": 1}}}]):
+        invoice_status.append({"status": row["_id"], "count": row["count"]})
+
+    total_invoiced = round(sum(m["invoiced"] for m in revenue_series), 2)
+    total_paid = round(sum(m["paid"] for m in revenue_series), 2)
+    kpis = {
+        "total_clients": await db.clients.count_documents(base),
+        "total_projects": await db.projects.count_documents(base),
+        "total_invoiced": total_invoiced,
+        "total_paid": total_paid,
+        "documents": await db.documents.count_documents(base),
+        "proposals": await db.ai_proposals.count_documents(base),
+        "contracts": await db.ai_contracts.count_documents(base),
+        "invoices": await db.ai_invoices.count_documents(base),
+        "open_tasks": await db.tasks.count_documents({**base, "done": False}),
+        "completed_tasks": await db.tasks.count_documents({**base, "done": True}),
+    }
+    return {"kpis": kpis, "revenue_series": revenue_series, "project_status": project_status, "invoice_status": invoice_status}
+
+
+@api_router.get("/notifications")
+async def notifications(org: str = Depends(current_org)):
+    items = await db.activities.aggregate([
+        {"$match": {"organizationId": org}}, {"$sort": {"created_at": -1}}, {"$limit": 10},
+        {"$lookup": {"from": "projects", "localField": "project_id", "foreignField": "id", "as": "proj"}},
+        {"$project": {"_id": 0, "id": 1, "type": 1, "message": 1, "created_at": 1, "project_id": 1,
+                      "project_name": {"$arrayElemAt": ["$proj.name", 0]}}},
+    ]).to_list(10)
+    return items
+
+
+# ------------------- Executive Dashboard -------------------
 @api_router.get("/proposals")
 async def list_proposals(project_id: Optional[str] = None, org: str = Depends(current_org)):
     q = {"organizationId": org}
@@ -1525,7 +1748,8 @@ async def dashboard_search(q: str, org: str = Depends(current_org)):
     invoices = await db.ai_invoices.find({**base, "$or": [{"invoice_number": rx}, {"title": rx}]}, {"_id": 0, "project_id": 1, "invoice_number": 1, "title": 1, "total": 1}).limit(5).to_list(5)
     contracts = await db.ai_contracts.find({**base, "title": rx}, {"_id": 0, "project_id": 1, "title": 1, "status": 1}).limit(5).to_list(5)
     proposals = await db.ai_proposals.find({**base, "title": rx}, {"_id": 0, "project_id": 1, "title": 1, "status": 1}).limit(5).to_list(5)
-    return {"clients": clients, "projects": projects, "invoices": invoices, "contracts": contracts, "proposals": proposals}
+    documents = await db.documents.find({**base, "name": rx}, {"_id": 0, "id": 1, "name": 1, "type": 1, "project_id": 1}).limit(5).to_list(5)
+    return {"clients": clients, "projects": projects, "invoices": invoices, "contracts": contracts, "proposals": proposals, "documents": documents}
 
 
 app.include_router(api_router)
@@ -1550,6 +1774,11 @@ SCOPED_COLLECTIONS = [
 
 @app.on_event("startup")
 async def startup():
+    try:
+        await asyncio.to_thread(S.init_storage)
+        logger.info("Object storage initialized")
+    except Exception as e:
+        logger.error(f"Storage init failed: {e}")
     await db.users.create_index("email", unique=True)
     await db.sessions.create_index("jti")
     await db.sessions.create_index("userId")

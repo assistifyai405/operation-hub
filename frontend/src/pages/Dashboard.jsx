@@ -65,9 +65,10 @@ function GlobalSearch({ navigate }) {
   const groups = results ? [
     { key: "clients", label: "Clients", items: results.clients, to: () => "/clients", title: (i) => i.name },
     { key: "projects", label: "Projects", items: results.projects, to: (i) => `/projects/${i.id}`, title: (i) => i.name },
-    { key: "invoices", label: "Invoices", items: results.invoices, to: (i) => `/projects/${i.project_id}`, title: (i) => `${i.invoice_number} · ${i.title}` },
-    { key: "contracts", label: "Contracts", items: results.contracts, to: (i) => `/projects/${i.project_id}`, title: (i) => i.title },
-    { key: "proposals", label: "Proposals", items: results.proposals, to: (i) => `/projects/${i.project_id}`, title: (i) => i.title },
+    { key: "invoices", label: "Invoices", items: results.invoices, to: (i) => `/projects/${i.project_id}?tab=invoice`, title: (i) => `${i.invoice_number} · ${i.title}` },
+    { key: "contracts", label: "Contracts", items: results.contracts, to: (i) => `/projects/${i.project_id}?tab=contract`, title: (i) => i.title },
+    { key: "proposals", label: "Proposals", items: results.proposals, to: (i) => `/projects/${i.project_id}?tab=proposal`, title: (i) => i.title },
+    { key: "documents", label: "Documents", items: results.documents, to: () => "/documents", title: (i) => i.name },
   ].filter((g) => g.items?.length) : [];
 
   return (

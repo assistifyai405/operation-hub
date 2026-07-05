@@ -3,19 +3,27 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare, MessageSquare,
   Bot, FileText, FolderOpen, BarChart3, Settings as SettingsIcon,
-  Search, Bell, Menu, X, Sparkles, LogOut, MailWarning,
+  Search, Bell, Menu, X, Sparkles, LogOut, MailWarning, ScrollText, Receipt,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { notifications } from "@/data/mock";
 import { useAuth } from "@/context/AuthContext";
-import { authApi } from "@/lib/api";
+import { authApi, notificationsApi } from "@/lib/api";
 import { toast } from "sonner";
 import CommandPalette from "@/components/CommandPalette";
 import OnboardingWizard from "@/components/OnboardingWizard";
+
+const relativeTime = (iso) => {
+  if (!iso) return "";
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+};
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -25,6 +33,8 @@ const nav = [
   { to: "/ai-chat", label: "AI Chat", icon: MessageSquare },
   { to: "/ai-agents", label: "AI Agents", icon: Bot },
   { to: "/proposals", label: "Proposals", icon: FileText },
+  { to: "/contracts", label: "Contracts", icon: ScrollText },
+  { to: "/invoices", label: "Invoices", icon: Receipt },
   { to: "/documents", label: "Documents", icon: FolderOpen },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
@@ -79,6 +89,7 @@ export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
@@ -87,6 +98,10 @@ export default function Layout() {
   useEffect(() => {
     if (user && user.onboardingCompleted === false) setWizardOpen(true);
   }, [user]);
+
+  useEffect(() => {
+    if (user) notificationsApi.list().then(setNotifications).catch(() => {});
+  }, [user, location.pathname]);
 
   const finishOnboarding = () => {
     setWizardOpen(false);
@@ -165,10 +180,12 @@ export default function Layout() {
             <DropdownMenuContent align="end" className="w-80 border-white/10 bg-zinc-950 text-zinc-200">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-white/10" />
-              {notifications.map((n) => (
-                <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-0.5 focus:bg-zinc-900">
-                  <span className="text-sm text-zinc-200">{n.text}</span>
-                  <span className="text-xs text-zinc-500">{n.time}</span>
+              {notifications.length === 0 ? (
+                <div className="px-2 py-6 text-center text-xs text-zinc-500" data-testid="notifications-empty">No activity yet</div>
+              ) : notifications.map((n) => (
+                <DropdownMenuItem key={n.id} onClick={() => n.project_id && navigate(`/projects/${n.project_id}`)} className="flex flex-col items-start gap-0.5 focus:bg-zinc-900">
+                  <span className="text-sm text-zinc-200">{n.message}</span>
+                  <span className="text-xs text-zinc-500">{n.project_name ? `${n.project_name} · ` : ""}{relativeTime(n.created_at)}</span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

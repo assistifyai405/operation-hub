@@ -117,8 +117,32 @@ export const tasksApi = {
 export const documentsApi = {
   list: (projectId) => req(`/documents${projectId ? `?project_id=${projectId}` : ""}`),
   create: (data) => req("/documents", { method: "POST", body: JSON.stringify(data) }),
+  rename: (id, name) => req(`/documents/${id}`, { method: "PUT", body: JSON.stringify({ name }) }),
   remove: (id) => req(`/documents/${id}`, { method: "DELETE" }),
+  upload: async (file, projectId) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    if (projectId) fd.append("project_id", projectId);
+    const res = await fetch(`${API}/documents/upload`, {
+      method: "POST", credentials: "include",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: fd,
+    });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(formatApiErrorDetail(e.detail) || "Upload failed"); }
+    return res.json();
+  },
+  fileUrl: (id) => `${API}/documents/${id}/file?auth=${encodeURIComponent(accessToken || "")}`,
 };
+
+export const libraryApi = {
+  documents: (params) => req(`/library/documents?${new URLSearchParams(params)}`),
+  proposals: (params) => req(`/library/proposals?${new URLSearchParams(params)}`),
+  contracts: (params) => req(`/library/contracts?${new URLSearchParams(params)}`),
+  invoices: (params) => req(`/library/invoices?${new URLSearchParams(params)}`),
+};
+
+export const analyticsApi = { get: () => req("/analytics") };
+export const notificationsApi = { list: () => req("/notifications") };
 
 export const proposalsApi = {
   list: (projectId) => req(`/proposals${projectId ? `?project_id=${projectId}` : ""}`),

@@ -17,6 +17,8 @@ import Tasks from "@/pages/Tasks";
 import AIChat from "@/pages/AIChat";
 import AIAgents from "@/pages/AIAgents";
 import Proposals from "@/pages/Proposals";
+import Contracts from "@/pages/Contracts";
+import Invoices from "@/pages/Invoices";
 import Documents from "@/pages/Documents";
 import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
@@ -42,6 +44,8 @@ function App() {
               <Route path="/ai-chat" element={<AIChat />} />
               <Route path="/ai-agents" element={<AIAgents />} />
               <Route path="/proposals" element={<Proposals />} />
+              <Route path="/contracts" element={<Contracts />} />
+              <Route path="/invoices" element={<Invoices />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />
