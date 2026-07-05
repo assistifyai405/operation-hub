@@ -6,6 +6,7 @@ import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Clients from "@/pages/Clients";
 import Projects from "@/pages/Projects";
+import ProjectWorkspace from "@/pages/ProjectWorkspace";
 import Tasks from "@/pages/Tasks";
 import AIChat from "@/pages/AIChat";
 import AIAgents from "@/pages/AIAgents";
@@ -24,6 +25,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:id" element={<ProjectWorkspace />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/ai-chat" element={<AIChat />} />
             <Route path="/ai-agents" element={<AIAgents />} />

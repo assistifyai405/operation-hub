@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, Users2, Calendar, Pencil, Trash2, FolderKanban, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -109,6 +110,7 @@ function ProjectForm({ open, setOpen, initial, clients, onSaved }) {
 }
 
 export default function Projects() {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -159,15 +161,15 @@ export default function Projects() {
                 </div>
                 <div className="space-y-3">
                   {items.map((p) => (
-                    <div key={p.id} className="group rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-violet-500/40" data-testid={`project-card-${p.id}`}>
+                    <div key={p.id} onClick={() => navigate(`/projects/${p.id}`)} className="group cursor-pointer rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-violet-500/40" data-testid={`project-card-${p.id}`}>
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-zinc-100">{p.name}</p>
                           <p className="mt-0.5 truncate text-xs text-zinc-500">{p.client_name || "No client"}</p>
                         </div>
                         <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                          <button onClick={() => openEdit(p)} data-testid={`edit-project-${p.id}`} className="rounded-md p-1 text-zinc-500 hover:bg-zinc-800 hover:text-violet-400"><Pencil className="h-3.5 w-3.5" /></button>
-                          <button onClick={() => setDeleteTarget(p)} data-testid={`delete-project-${p.id}`} className="rounded-md p-1 text-zinc-500 hover:bg-zinc-800 hover:text-red-400"><Trash2 className="h-3.5 w-3.5" /></button>
+                          <button onClick={(e) => { e.stopPropagation(); openEdit(p); }} data-testid={`edit-project-${p.id}`} className="rounded-md p-1 text-zinc-500 hover:bg-zinc-800 hover:text-violet-400"><Pencil className="h-3.5 w-3.5" /></button>
+                          <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }} data-testid={`delete-project-${p.id}`} className="rounded-md p-1 text-zinc-500 hover:bg-zinc-800 hover:text-red-400"><Trash2 className="h-3.5 w-3.5" /></button>
                         </div>
                       </div>
                       <div className="mt-3">

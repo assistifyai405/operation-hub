@@ -22,14 +22,31 @@ export const clientsApi = {
 
 export const projectsApi = {
   list: () => req("/projects"),
+  get: (id) => req(`/projects/${id}`),
   create: (data) => req("/projects", { method: "POST", body: JSON.stringify(data) }),
   update: (id, data) => req(`/projects/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   remove: (id) => req(`/projects/${id}`, { method: "DELETE" }),
 };
 
 export const tasksApi = {
-  list: () => req("/tasks"),
+  list: (projectId) => req(`/tasks${projectId ? `?project_id=${projectId}` : ""}`),
   create: (data) => req("/tasks", { method: "POST", body: JSON.stringify(data) }),
   update: (id, data) => req(`/tasks/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   remove: (id) => req(`/tasks/${id}`, { method: "DELETE" }),
+};
+
+export const documentsApi = {
+  list: (projectId) => req(`/documents${projectId ? `?project_id=${projectId}` : ""}`),
+  create: (data) => req("/documents", { method: "POST", body: JSON.stringify(data) }),
+  remove: (id) => req(`/documents/${id}`, { method: "DELETE" }),
+};
+
+export const proposalsApi = {
+  list: (projectId) => req(`/proposals${projectId ? `?project_id=${projectId}` : ""}`),
+  create: (data) => req("/proposals", { method: "POST", body: JSON.stringify(data) }),
+  remove: (id) => req(`/proposals/${id}`, { method: "DELETE" }),
+};
+
+export const activitiesApi = {
+  list: (projectId) => req(`/activities?project_id=${projectId}`),
 };

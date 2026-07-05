@@ -7,7 +7,7 @@ import os
 import json
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
@@ -29,6 +29,15 @@ api_router = APIRouter(prefix="/api")
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
+
+
+async def log_activity(project_id: Optional[str], atype: str, message: str):
+    if not project_id:
+        return
+    await db.activities.insert_one({
+        "id": str(uuid.uuid4()), "project_id": project_id,
+        "type": atype, "message": message, "created_at": now_iso(),
+    })
 
 
 # ------------------- AI Agents (personas) -------------------
@@ -101,6 +110,8 @@ class ProjectCreate(BaseModel):
     progress: int = 0
     due: str = ""
     members: int = 1
+    description: str = ""
+    notes: str = ""
 
 
 class Project(ProjectCreate):
@@ -117,6 +128,32 @@ class TaskCreate(BaseModel):
 
 
 class Task(TaskCreate):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: str = Field(default_factory=now_iso)
+
+
+class DocumentCreate(BaseModel):
+    name: str = Field(..., min_length=1)
+    type: str = "Doc"
+    size: str = "—"
+    project_id: Optional[str] = None
+    url: str = ""
+
+
+class Document(DocumentCreate):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: str = Field(default_factory=now_iso)
+
+
+class ProposalCreate(BaseModel):
+    title: str = Field(..., min_length=1)
+    amount: str = ""
+    status: str = "Draft"
+    content: str = ""
+    project_id: Optional[str] = None
+
+
+class Proposal(ProposalCreate):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: str = Field(default_factory=now_iso)
 
@@ -210,7 +247,6 @@ async def delete_client(client_id: str):
     res = await db.clients.delete_one({"id": client_id})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Client not found")
-    # Unlink projects from this client
     await db.projects.update_many({"client_id": client_id}, {"$set": {"client_id": None}})
     return {"ok": True}
 
@@ -232,10 +268,20 @@ async def list_projects():
     return projects
 
 
+@api_router.get("/projects/{project_id}")
+async def get_project(project_id: str):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    await enrich_project(p)
+    return p
+
+
 @api_router.post("/projects", response_model=Project)
 async def create_project(payload: ProjectCreate):
     obj = Project(**payload.model_dump())
     await db.projects.insert_one(obj.model_dump())
+    await log_activity(obj.id, "project_created", f'Project "{obj.name}" was created')
     return obj
 
 
@@ -255,6 +301,7 @@ async def delete_project(project_id: str):
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
     await db.tasks.update_many({"project_id": project_id}, {"$set": {"project_id": None}})
+    await db.activities.delete_many({"project_id": project_id})
     return {"ok": True}
 
 
@@ -273,8 +320,9 @@ async def enrich_task(t: dict):
 
 
 @api_router.get("/tasks")
-async def list_tasks():
-    tasks = await db.tasks.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+async def list_tasks(project_id: Optional[str] = None):
+    q = {"project_id": project_id} if project_id else {}
+    tasks = await db.tasks.find(q, {"_id": 0}).sort("created_at", -1).to_list(1000)
     for t in tasks:
         await enrich_task(t)
     return tasks
@@ -284,6 +332,9 @@ async def list_tasks():
 async def create_task(payload: TaskCreate):
     obj = Task(**payload.model_dump())
     await db.tasks.insert_one(obj.model_dump())
+    await log_activity(obj.project_id, "task_created", f'Task "{obj.title}" was created')
+    if obj.done:
+        await log_activity(obj.project_id, "task_completed", f'Task "{obj.title}" was completed')
     return obj
 
 
@@ -294,6 +345,8 @@ async def update_task(task_id: str, payload: TaskCreate):
         raise HTTPException(status_code=404, detail="Task not found")
     updated = {**res, **payload.model_dump()}
     await db.tasks.update_one({"id": task_id}, {"$set": payload.model_dump()})
+    if payload.done and not res.get("done"):
+        await log_activity(payload.project_id, "task_completed", f'Task "{payload.title}" was completed')
     return Task(**updated)
 
 
@@ -303,6 +356,58 @@ async def delete_task(task_id: str):
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Task not found")
     return {"ok": True}
+
+
+# ------------------- Documents CRUD -------------------
+@api_router.get("/documents")
+async def list_documents(project_id: Optional[str] = None):
+    q = {"project_id": project_id} if project_id else {}
+    return await db.documents.find(q, {"_id": 0}).sort("created_at", -1).to_list(1000)
+
+
+@api_router.post("/documents", response_model=Document)
+async def create_document(payload: DocumentCreate):
+    obj = Document(**payload.model_dump())
+    await db.documents.insert_one(obj.model_dump())
+    await log_activity(obj.project_id, "document_uploaded", f'Document "{obj.name}" was uploaded')
+    return obj
+
+
+@api_router.delete("/documents/{document_id}")
+async def delete_document(document_id: str):
+    res = await db.documents.delete_one({"id": document_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return {"ok": True}
+
+
+# ------------------- Proposals CRUD -------------------
+@api_router.get("/proposals")
+async def list_proposals(project_id: Optional[str] = None):
+    q = {"project_id": project_id} if project_id else {}
+    return await db.proposals.find(q, {"_id": 0}).sort("created_at", -1).to_list(1000)
+
+
+@api_router.post("/proposals", response_model=Proposal)
+async def create_proposal(payload: ProposalCreate):
+    obj = Proposal(**payload.model_dump())
+    await db.proposals.insert_one(obj.model_dump())
+    await log_activity(obj.project_id, "proposal_generated", f'Proposal "{obj.title}" was generated')
+    return obj
+
+
+@api_router.delete("/proposals/{proposal_id}")
+async def delete_proposal(proposal_id: str):
+    res = await db.proposals.delete_one({"id": proposal_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    return {"ok": True}
+
+
+# ------------------- Activities -------------------
+@api_router.get("/activities")
+async def list_activities(project_id: str):
+    return await db.activities.find({"project_id": project_id}, {"_id": 0}).sort("created_at", -1).to_list(1000)
 
 
 app.include_router(api_router)

@@ -76,7 +76,7 @@ export default function Layout() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const pageTitle = nav.find((n) => n.to === location.pathname)?.label || "Dashboard";
+  const pageTitle = [...nav].reverse().find((n) => location.pathname === n.to || location.pathname.startsWith(n.to + "/"))?.label || "Dashboard";
 
   return (
     <div className="min-h-screen bg-black text-zinc-50">
