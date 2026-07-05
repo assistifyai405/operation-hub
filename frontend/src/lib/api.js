@@ -51,6 +51,11 @@ export const activitiesApi = {
   list: (projectId) => req(`/activities?project_id=${projectId}`),
 };
 
+export const dashboardApi = {
+  summary: () => req("/dashboard/summary"),
+  search: (q) => req(`/dashboard/search?q=${encodeURIComponent(q)}`),
+};
+
 export const plansApi = {
   generate: (projectId) => req(`/projects/${projectId}/plan/generate`, { method: "POST" }),
   list: (projectId) => req(`/projects/${projectId}/plans`),

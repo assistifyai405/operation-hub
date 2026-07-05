@@ -1009,6 +1009,96 @@ async def invoice_config():
     return {"fields": INVOICE_FIELDS, "statuses": INVOICE_STATUSES}
 
 
+# ------------------- Executive Dashboard -------------------
+@api_router.get("/dashboard/summary")
+async def dashboard_summary():
+    total_projects = await db.projects.count_documents({})
+    completed_projects = await db.projects.count_documents({"status": "Completed"})
+
+    # Invoice financials in one aggregation (no N+1)
+    inv_by_status = {}
+    revenue = outstanding = 0.0
+    async for row in db.ai_invoices.aggregate([{"$group": {"_id": "$status", "count": {"$sum": 1}, "total": {"$sum": "$total"}}}]):
+        inv_by_status[row["_id"]] = {"count": row["count"], "total": round(row.get("total", 0) or 0, 2)}
+    revenue = inv_by_status.get("Paid", {}).get("total", 0)
+    outstanding = round(inv_by_status.get("Sent", {}).get("total", 0) + inv_by_status.get("Overdue", {}).get("total", 0), 2)
+    avg_row = await db.ai_invoices.aggregate([{"$group": {"_id": None, "avg": {"$avg": "$total"}}}]).to_list(1)
+    avg_invoice = round(avg_row[0]["avg"], 2) if avg_row else 0
+    total_invoices = await db.ai_invoices.count_documents({})
+
+    # Project status breakdown
+    project_status = {}
+    async for row in db.projects.aggregate([{"$group": {"_id": "$status", "count": {"$sum": 1}}}]):
+        project_status[row["_id"] or "Unknown"] = row["count"]
+
+    kpis = {
+        "total_clients": await db.clients.count_documents({}),
+        "active_projects": total_projects - completed_projects,
+        "completed_projects": completed_projects,
+        "open_tasks": await db.tasks.count_documents({"done": False}),
+        "completed_tasks": await db.tasks.count_documents({"done": True}),
+        "pending_proposals": await db.ai_proposals.count_documents({"status": {"$in": ["Draft", "Generated", "Sent"]}}),
+        "sent_contracts": await db.ai_contracts.count_documents({"status": {"$in": ["Sent", "Signed"]}}),
+        "outstanding_invoices": (inv_by_status.get("Sent", {}).get("count", 0) + inv_by_status.get("Overdue", {}).get("count", 0)),
+        "paid_invoices": inv_by_status.get("Paid", {}).get("count", 0),
+        "revenue": revenue,
+    }
+
+    financial = {
+        "draft": inv_by_status.get("Draft", {}).get("count", 0),
+        "sent": inv_by_status.get("Sent", {}).get("count", 0),
+        "paid": inv_by_status.get("Paid", {}).get("count", 0),
+        "overdue": inv_by_status.get("Overdue", {}).get("count", 0),
+        "cancelled": inv_by_status.get("Cancelled", {}).get("count", 0),
+        "revenue": revenue,
+        "outstanding_revenue": outstanding,
+        "average_invoice_value": avg_invoice,
+        "total_invoices": total_invoices,
+        "by_status": inv_by_status,
+    }
+
+    recent_activity = await db.activities.aggregate([
+        {"$sort": {"created_at": -1}}, {"$limit": 12},
+        {"$lookup": {"from": "projects", "localField": "project_id", "foreignField": "id", "as": "proj"}},
+        {"$project": {"_id": 0, "type": 1, "message": 1, "created_at": 1, "project_id": 1,
+                      "project_name": {"$arrayElemAt": ["$proj.name", 0]}}},
+    ]).to_list(12)
+
+    upcoming_tasks = await db.tasks.aggregate([
+        {"$match": {"done": False}},
+        {"$lookup": {"from": "projects", "localField": "project_id", "foreignField": "id", "as": "proj"}},
+        {"$addFields": {"project_name": {"$arrayElemAt": ["$proj.name", 0]},
+                        "nodue": {"$cond": [{"$in": ["$due", ["", None]]}, 1, 0]}}},
+        {"$sort": {"nodue": 1, "due": 1}}, {"$limit": 6},
+        {"$project": {"_id": 0, "proj": 0, "nodue": 0}},
+    ]).to_list(6)
+
+    recent_clients = await db.clients.aggregate([
+        {"$sort": {"created_at": -1}}, {"$limit": 5},
+        {"$lookup": {"from": "projects", "localField": "id", "foreignField": "client_id", "as": "proj"}},
+        {"$addFields": {"projects_count": {"$size": "$proj"}}},
+        {"$project": {"_id": 0, "proj": 0}},
+    ]).to_list(5)
+
+    return {
+        "kpis": kpis, "financial": financial, "project_status": project_status,
+        "recent_activity": recent_activity, "upcoming_tasks": upcoming_tasks, "recent_clients": recent_clients,
+    }
+
+
+@api_router.get("/dashboard/search")
+async def dashboard_search(q: str):
+    if not q or len(q.strip()) < 1:
+        return {"clients": [], "projects": [], "invoices": [], "contracts": [], "proposals": []}
+    rx = {"$regex": q.strip(), "$options": "i"}
+    clients = await db.clients.find({"$or": [{"name": rx}, {"contact": rx}, {"email": rx}]}, {"_id": 0, "id": 1, "name": 1, "contact": 1}).limit(5).to_list(5)
+    projects = await db.projects.find({"name": rx}, {"_id": 0, "id": 1, "name": 1, "status": 1}).limit(5).to_list(5)
+    invoices = await db.ai_invoices.find({"$or": [{"invoice_number": rx}, {"title": rx}]}, {"_id": 0, "project_id": 1, "invoice_number": 1, "title": 1, "total": 1}).limit(5).to_list(5)
+    contracts = await db.ai_contracts.find({"title": rx}, {"_id": 0, "project_id": 1, "title": 1, "status": 1}).limit(5).to_list(5)
+    proposals = await db.ai_proposals.find({"title": rx}, {"_id": 0, "project_id": 1, "title": 1, "status": 1}).limit(5).to_list(5)
+    return {"clients": clients, "projects": projects, "invoices": invoices, "contracts": contracts, "proposals": proposals}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
