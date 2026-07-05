@@ -18,6 +18,8 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 - Solo founders / agency owners managing multiple clients and projects who want AI leverage.
 
 ## Implemented (2026-06)
+- CRUD persistence (MongoDB) for Clients, Projects, Tasks with modals, validation, empty states, delete confirms. Projects link to Clients; Tasks link to Projects. Deleting a parent unlinks children. Backend enriches list responses with client_name/project_name and client project counts. Endpoints: /api/{clients,projects,tasks} GET/POST/PUT/DELETE. Verified 24/24 backend + all frontend flows (iteration_3).
+- Command Palette (Ctrl/Cmd+K) with navigation + AI quick actions (prompt prefilled into AI Chat). Verified iteration_2.
 - All 11 pages with premium dark UI, electric violet theme, Outfit font, animations.
 - Dashboard: revenue/stat cards, revenue area chart, projects pie, recent clients, upcoming tasks, AI agent activity bar chart, quick actions, notifications dropdown.
 - Clients (table), Projects (kanban), Tasks (interactive checklist + filters), Proposals (list), Documents (grid), Analytics (4 charts), Settings (tabbed).
