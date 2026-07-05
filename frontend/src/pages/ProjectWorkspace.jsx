@@ -462,7 +462,7 @@ export default function ProjectWorkspace() {
 
         <div className="mt-5">
           <TabsContent value="overview"><Overview project={project} tasks={tasks} documents={documents} goTab={setTab} /></TabsContent>
-          <TabsContent value="planner"><AIPlanner projectId={project.id} projectName={project.name} /></TabsContent>
+          <TabsContent value="planner"><AIPlanner projectId={project.id} projectName={project.name} onSaved={loadActivities} /></TabsContent>
           <TabsContent value="chat"><ProjectChat projectId={project.id} projectName={project.name} /></TabsContent>
           <TabsContent value="tasks"><TasksTab projectId={project.id} tasks={tasks} reload={afterTaskChange} /></TabsContent>
           <TabsContent value="documents"><DocumentsTab projectId={project.id} documents={documents} reload={afterDocChange} /></TabsContent>

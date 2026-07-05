@@ -93,7 +93,7 @@ function exportPdf(projectName, version, sections) {
   setTimeout(() => win.print(), 400);
 }
 
-export default function AIPlanner({ projectId, projectName }) {
+export default function AIPlanner({ projectId, projectName, onSaved }) {
   const [versions, setVersions] = useState([]);
   const [draft, setDraft] = useState(null);            // sections currently shown
   const [draftVersion, setDraftVersion] = useState(null); // null = unsaved draft, number = saved version
@@ -126,6 +126,7 @@ export default function AIPlanner({ projectId, projectName }) {
       toast.success(`Plan saved as v${saved.version}`);
       setDraftVersion(saved.version); setEditing(false);
       await loadVersions();
+      onSaved?.();
     } catch (e) { toast.error(e.message); } finally { setSaving(false); }
   };
 

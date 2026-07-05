@@ -1,0 +1,24 @@
+{
+  "summary": "Iteration 7 — Retest of the iteration_6 fix (stale Activity after plan save) + planner regression. FIX VERIFIED. In a fresh workspace: opened AI Planner, clicked generate-plan-btn (real LLM, ~20s), 9 plan-section-<key> blocks rendered, clicked save-plan-btn → version-1 appeared. WITHOUT reloading, switched to Activity tab and exactly 1 [data-testid=activity-plan_generated] entry was visible immediately. Regenerated + saved again → v2, switched back to Activity → 2 activity-plan_generated entries visible (still no reload). Regression PASS: edit-plan-btn + plan-edit-executive_summary + save-plan-btn persisted edit and created version-3; view-version-1 loaded v1; compare-version-2 opened plan-compare side-by-side and exit-compare-btn returned; export-pdf-btn opened a popup titled 'TEST_RETEST_PLANNER_ACT — Plan v1' (window.print scheduled). Other tabs (overview/chat/tasks/documents/proposals/notes/activity) still render fine. TEST_ project deleted via DELETE /api/projects/{id}.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_planner.py"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fix implementation is clean: AIPlanner.jsx now accepts onSaved prop and calls onSaved?.() after loadVersions() in save(). ProjectWorkspace.jsx passes onSaved={loadActivities}. Consistent with afterTaskChange/afterDocChange/afterProposalChange pattern.",
+    "Pre-existing: parse_plan_json still returns empty defaults for missing keys (no min-content validation).",
+    "Pre-existing: exportPdf uses setTimeout(win.print, 400); popup rendered fine in this run."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not retested (unchanged)", "frontend": "100% (all planner + activity refresh checks)"},
+  "test_credentials": "No auth — click [data-testid=login-submit] at /",
+  "seed_data_creation": "Created 1 TEST_RETEST_PLANNER_ACT project (id 43aebe94-...), saved 3 plan versions, then deleted the project (cascade cleaned plans + activities).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "iteration_6 stale-activity bug is fixed and verified. AIPlanner.jsx accepts onSaved callback; ProjectWorkspace passes loadActivities. Regenerate flow uses same generate() so also refreshes activity on next save. Planner testids unchanged. LLM ~15-25s per generate — use 90s timeouts.",
+  "rca of the issue": "N/A — verification confirms fix. Root cause (from iteration_6): AIPlanner.save didn't notify parent; now onSaved?.() called after loadVersions() → ProjectWorkspace.loadActivities() runs → activities state updated → Activity tab re-renders with new plan_generated entry immediately (no reload)."
+}
