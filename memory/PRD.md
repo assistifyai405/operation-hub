@@ -18,6 +18,7 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 - Solo founders / agency owners managing multiple clients and projects who want AI leverage.
 
 ## Implemented (2026-06)
+- Project Workspace at /projects/:id with 7 tabs (Overview, AI Chat, Tasks, Documents, Proposals, Notes, Activity Timeline). Per-project AI chat with persisted, isolated history (session_id=project-<id>). Auto-logged activity timeline (project/task created, task completed, proposal generated, document uploaded). New collections: documents, proposals, activities; projects gained description+notes; project delete cascades docs/proposals/activities. Verified iteration_5 (31/31 backend + all frontend, incl. chat isolation).
 - Dashboard wired to live CRUD data: real counts (Total Clients, Active Projects, Open Tasks, Completed Tasks), latest 5 clients, next 5 open tasks (sorted by due), live Projects-by-Status pie, loading + empty states, clickable stat cards. Revenue & AI-activity charts remain placeholder. Verified iteration_4 (100%).
 - CRUD persistence (MongoDB) for Clients, Projects, Tasks with modals, validation, empty states, delete confirms. Projects link to Clients; Tasks link to Projects. Deleting a parent unlinks children. Backend enriches list responses with client_name/project_name and client project counts. Endpoints: /api/{clients,projects,tasks} GET/POST/PUT/DELETE. Verified 24/24 backend + all frontend flows (iteration_3).
 - Command Palette (Ctrl/Cmd+K) with navigation + AI quick actions (prompt prefilled into AI Chat). Verified iteration_2.

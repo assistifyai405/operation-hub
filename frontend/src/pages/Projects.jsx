@@ -14,7 +14,7 @@ import EmptyState from "@/components/EmptyState";
 
 const columns = ["In Progress", "Review", "Completed", "Blocked"];
 const dot = { "In Progress": "bg-violet-400", Review: "bg-cyan-400", Completed: "bg-emerald-400", Blocked: "bg-red-400" };
-const empty = { name: "", client_id: "none", status: "In Progress", progress: 0, due: "", members: 1 };
+const empty = { name: "", client_id: "none", status: "In Progress", progress: 0, due: "", members: 1, description: "", notes: "" };
 
 function ProjectForm({ open, setOpen, initial, clients, onSaved }) {
   const [form, setForm] = useState(empty);
@@ -40,6 +40,7 @@ function ProjectForm({ open, setOpen, initial, clients, onSaved }) {
       status: form.status,
       progress: Math.max(0, Math.min(100, Number(form.progress) || 0)),
       due: form.due, members: Number(form.members) || 1,
+      description: form.description || "", notes: form.notes || "",
     };
     try {
       if (editing) await projectsApi.update(initial.id, payload);
@@ -96,6 +97,11 @@ function ProjectForm({ open, setOpen, initial, clients, onSaved }) {
               <input type="date" value={form.due} onChange={(e) => set("due", e.target.value)} data-testid="project-due-input"
                 className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
             </div>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-zinc-400">Description</label>
+            <textarea value={form.description} onChange={(e) => set("description", e.target.value)} data-testid="project-description-input" rows={3}
+              className="w-full resize-none rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" placeholder="What is this project about?" />
           </div>
         </div>
         <DialogFooter>

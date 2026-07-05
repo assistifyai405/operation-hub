@@ -301,6 +301,8 @@ async def delete_project(project_id: str):
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
     await db.tasks.update_many({"project_id": project_id}, {"$set": {"project_id": None}})
+    await db.documents.delete_many({"project_id": project_id})
+    await db.proposals.delete_many({"project_id": project_id})
     await db.activities.delete_many({"project_id": project_id})
     return {"ok": True}
 

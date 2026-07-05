@@ -161,7 +161,7 @@ function ProjectChat({ projectId, projectName }) {
           </div>
         )}
       </div>
-      <form onSubmit={(e) => { e.preventDefault(); send(); }} className="mt-3 flex items-center gap-3">
+      <form onSubmit={(e) => { e.preventDefault(); send(); }} className="mt-3 mb-6 flex items-center gap-3">
         <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Message project copilot…" data-testid="chat-input"
           className="flex-1 rounded-xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
         <button type="submit" disabled={streaming || !input.trim()} data-testid="chat-send" className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-white transition-all hover:bg-violet-500 disabled:opacity-40 glow-violet"><Send className="h-4 w-4" /></button>
