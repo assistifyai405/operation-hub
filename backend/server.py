@@ -69,6 +69,7 @@ def public_user(u: dict) -> dict:
         "organizationId": u.get("organizationId"), "timezone": u.get("timezone", "UTC"),
         "language": u.get("language", "en"), "createdAt": u.get("createdAt"),
         "updatedAt": u.get("updatedAt"), "lastLogin": u.get("lastLogin"),
+        "onboardingCompleted": u.get("onboardingCompleted", True),
     }
 
 
@@ -216,7 +217,7 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
         "id": user_id, "firstName": payload.firstName.strip(), "lastName": payload.lastName.strip(),
         "email": email, "passwordHash": A.hash_password(payload.password), "emailVerified": False,
         "avatar": "", "role": "owner", "organizationId": org_id, "timezone": "UTC", "language": "en",
-        "createdAt": now, "updatedAt": now, "lastLogin": now,
+        "createdAt": now, "updatedAt": now, "lastLogin": now, "onboardingCompleted": False,
     }
     await db.users.insert_one(user)
 
@@ -418,6 +419,32 @@ async def get_organization(user: dict = Depends(current_user)):
     return org
 
 
+ONBOARDING_STEPS = [
+    ("client", "clients"), ("project", "projects"), ("plan", "plans"),
+    ("proposal", "ai_proposals"), ("contract", "ai_contracts"), ("invoice", "ai_invoices"),
+]
+
+
+@api_router.get("/onboarding")
+async def get_onboarding(user: dict = Depends(current_user)):
+    org = user["organizationId"]
+    checklist = {}
+    for key, coll in ONBOARDING_STEPS:
+        checklist[key] = (await db[coll].count_documents({"organizationId": org})) > 0
+    done = sum(1 for v in checklist.values() if v)
+    percent = round(done / len(ONBOARDING_STEPS) * 100)
+    return {
+        "completed": user.get("onboardingCompleted", True),
+        "checklist": checklist, "done": done, "total": len(ONBOARDING_STEPS), "percent": percent,
+    }
+
+
+@api_router.post("/onboarding/complete")
+async def complete_onboarding(user: dict = Depends(current_user)):
+    await db.users.update_one({"id": user["id"]}, {"$set": {"onboardingCompleted": True, "updatedAt": now_iso()}})
+    return {"ok": True}
+
+
 @api_router.get("/auth/sessions")
 async def list_sessions(user: dict = Depends(current_user)):
     sessions = await db.sessions.find({"userId": user["id"], "revoked": False}, {"_id": 0, "jti": 0}).sort("lastUsedAt", -1).to_list(50)
@@ -484,6 +511,7 @@ class ClientCreate(BaseModel):
     name: str = Field(..., min_length=1)
     contact: str = ""
     email: str = ""
+    phone: str = ""
     value: float = 0
     status: str = "Active"
 
@@ -1544,7 +1572,7 @@ async def startup():
             "passwordHash": A.hash_password(demo_password), "emailVerified": True,
             "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
             "role": "owner", "organizationId": org_id, "timezone": "UTC", "language": "en",
-            "createdAt": now, "updatedAt": now, "lastLogin": now})
+            "createdAt": now, "updatedAt": now, "lastLogin": now, "onboardingCompleted": True})
         logger.info(f"[SEED] Created demo account {demo_email} / org {org_id}")
     else:
         org_id = demo["organizationId"]
@@ -1556,6 +1584,9 @@ async def startup():
         res = await db[coll].update_many({"organizationId": {"$exists": False}}, {"$set": {"organizationId": org_id}})
         if res.modified_count:
             logger.info(f"[BACKFILL] {coll}: {res.modified_count} docs -> org {org_id}")
+
+    # Existing users (pre-onboarding sprint) should not see the wizard
+    await db.users.update_many({"onboardingCompleted": {"$exists": False}}, {"$set": {"onboardingCompleted": True}})
 
 
 @app.on_event("shutdown")

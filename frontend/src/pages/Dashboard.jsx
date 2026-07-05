@@ -9,6 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { dashboardApi } from "@/lib/api";
 import { toast } from "sonner";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
 
 const money = (v) => `$${Number(v || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
@@ -120,6 +121,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6" data-testid="dashboard-page">
+      <OnboardingChecklist />
       <GlobalSearch navigate={navigate} />
 
       {/* KPI cards */}

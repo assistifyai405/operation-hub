@@ -1,5 +1,7 @@
-import { Plus, Upload, FileText, FileImage, FileSpreadsheet, FileArchive, File } from "lucide-react";
+import { Plus, Upload, FileText, FileImage, FileSpreadsheet, FileArchive, File, FolderOpen } from "lucide-react";
 import { documents } from "@/data/mock";
+import EmptyState from "@/components/EmptyState";
+import HelpTip from "@/components/HelpTip";
 
 const typeIcon = {
   PDF: { icon: FileText, color: "text-red-400 bg-red-500/10" },
@@ -13,12 +15,18 @@ export default function Documents() {
   return (
     <div className="space-y-5" data-testid="documents-page">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-zinc-400">{documents.length} files in your library.</p>
+        <p className="flex items-center gap-2 text-sm text-zinc-400">
+          {documents.length} files in your library.
+          <HelpTip testid="documents-help" text="Store client-facing files and reference material. Project-specific documents also live inside each Project Workspace under the Documents tab." />
+        </p>
         <button data-testid="upload-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet">
           <Upload className="h-4 w-4" /> Upload
         </button>
       </div>
 
+      {documents.length === 0 ? (
+        <EmptyState icon={FolderOpen} title="No documents yet" description="Upload contracts, briefs and assets to keep everything for your business in one place." actionLabel="Upload document" testid="documents-empty" />
+      ) : (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {documents.map((d) => {
           const t = typeIcon[d.type] || { icon: File, color: "text-zinc-400 bg-zinc-500/10" };
@@ -37,6 +45,7 @@ export default function Documents() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }

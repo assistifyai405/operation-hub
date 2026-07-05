@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare, MessageSquare,
@@ -15,6 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 import { authApi } from "@/lib/api";
 import { toast } from "sonner";
 import CommandPalette from "@/components/CommandPalette";
+import OnboardingWizard from "@/components/OnboardingWizard";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -77,10 +78,20 @@ const Sidebar = ({ onNavigate }) => (
 export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, setUser, logout } = useAuth();
   const pageTitle = [...nav].reverse().find((n) => location.pathname === n.to || location.pathname.startsWith(n.to + "/"))?.label || "Dashboard";
+
+  useEffect(() => {
+    if (user && user.onboardingCompleted === false) setWizardOpen(true);
+  }, [user]);
+
+  const finishOnboarding = () => {
+    setWizardOpen(false);
+    setUser((u) => (u ? { ...u, onboardingCompleted: true } : u));
+  };
 
   const fullName = user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email : "";
   const initials = user ? `${(user.firstName || user.email || "?")[0] || ""}${(user.lastName || "")[0] || ""}`.toUpperCase() : "";
@@ -200,6 +211,7 @@ export default function Layout() {
         </main>
       </div>
       <CommandPalette open={paletteOpen} setOpen={setPaletteOpen} />
+      {wizardOpen && <OnboardingWizard open={wizardOpen} onDone={finishOnboarding} />}
     </div>
   );
 }

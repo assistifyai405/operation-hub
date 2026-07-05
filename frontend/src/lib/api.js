@@ -135,6 +135,11 @@ export const dashboardApi = {
   search: (q) => req(`/dashboard/search?q=${encodeURIComponent(q)}`),
 };
 
+export const onboardingApi = {
+  get: () => req("/onboarding"),
+  complete: () => req("/onboarding/complete", { method: "POST" }),
+};
+
 export const plansApi = {
   generate: (projectId) => req(`/projects/${projectId}/plan/generate`, { method: "POST" }),
   list: (projectId) => req(`/projects/${projectId}/plans`),

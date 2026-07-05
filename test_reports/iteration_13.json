@@ -1,0 +1,23 @@
+{
+  "summary": "Iteration 13: Full backend + frontend testing of the First-Run Onboarding sprint. Backend: 6/6 new tests in test_onboarding.py PASS — new user registration sets onboardingCompleted=false and GET /api/onboarding returns completed=false, percent=0, done=0/6, all checklist keys false; after POST /api/clients (with new phone field on ClientCreate accepted+persisted) the client key flips to true; POST /api/onboarding/complete persists — GET returns completed=true and onboardingCompleted persists across re-login; unauth GET/POST /api/onboarding return 401; demo user jordan@assistify.io has onboardingCompleted=true with client+project checked and percent between 30-100 (measured 67%); new user can create client+project scoped to their org (percent >=33). Regression: 24/26 test_auth.py still pass (2 pre-existing profile failures unrelated to sprint — auth token key mismatch left from prior iterations). Frontend: registering a fresh user auto-lands on /dashboard and OnboardingWizard modal appears at Welcome step; Next→Create Client (all 4 testids), Save creates client via API, Next→Create Project fields work, Save creates project, Generate step shows, Finish button navigates to /projects/:id. Skip flow: click Skip closes wizard, dashboard OnboardingChecklist shows 0% for brand-new user, reload does NOT re-open wizard, logout+login also does NOT re-open wizard (persistence verified). Demo user login: no wizard shown; checklist shows 67% (4/6 items auto-checked matching seeded data: client, project, contract, invoice). Documents page shows documents-help tooltip icon; Proposals page shows proposals-help tooltip icon. Regression: /clients still lists Halcyon/Vertex/Northwind for demo, /projects and /tasks pages load fine. No blocking console errors (401s only on public pages when unauthenticated, expected).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_onboarding.py",
+    "/app/test_reports/pytest/onboarding_iter13.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "In-memory rate limiter (register: 10/hour/IP) is easy to trip during e2e testing — backend restart clears state. For production, consider Redis-backed limiter and higher/looser register limits.",
+    "Documents.jsx and Proposals.jsx (top-level pages) still import mock data (documents/proposals) from @/data/mock — empty states never trigger for any real user because the mock array is always non-empty. This is intentional per PRD but should be swapped to real API data in a future sprint.",
+    "GET /api/onboarding default for completed uses user.get('onboardingCompleted', True) — safe because startup backfills all pre-existing users to True, but any edge case where the field is missing will silently mark onboarding as completed. Consider explicit False default now that backfill exists.",
+    "ClientCreate accepts free-text 'email' with no EmailStr validation — malformed emails still persist. Low-priority."
+  ],
+  "updated_files": ["/app/backend/tests/test_onboarding.py"],
+  "success_rate": {"backend": "100% (6/6 onboarding + 24/26 auth regression, 2 pre-existing)", "frontend": "100% (all onboarding flows + regression)"},
+  "test_credentials": "Demo: jordan@assistify.io / Assistify2026! (untouched). Test users created during run: onb+<uuid>@example.com and onbfe<uuid>@example.com and onbskip<uuid>@example.com — all pw=NewPass123!, each isolated org, safe to leave/delete.",
+  "seed_data_creation": "3-4 disposable test users created during E2E, each with 1 client + 1 project (TEST_ prefixed). Demo account and its data are untouched.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Reusable onboarding test file at /app/backend/tests/test_onboarding.py. Note: /api/clients backend uses fields name/contact/email/phone (NOT companyName/primaryContactName); /api/projects uses client_id (snake_case). Rate limiter is in-memory (10 register per hour per IP) — restart backend to clear if it starts returning 429 during heavy Playwright register loops. Wizard blocks close-except-skip (onOpenChange no-op); use [data-testid='onboarding-skip'] to dismiss. OnboardingChecklist appears on Dashboard only after user has NOT completed onboarding OR has completed but percent<100."
+}
