@@ -6,6 +6,26 @@ import pytest
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://operations-hub-75.preview.emergentagent.com').rstrip('/')
 
 
+def test_chat_stream_real_ai_response():
+    """After LLM key funding, chat/stream should return non-empty streamed text."""
+    payload = {"session_id": "TEST_real_ai_session", "agent_id": "copilot", "message": "Say hello in 5 words"}
+    collected = ""
+    done_seen = False
+    with requests.post(f"{BASE_URL}/api/chat/stream", json=payload, stream=True, timeout=60) as r:
+        assert r.status_code == 200
+        for line in r.iter_lines(decode_unicode=True):
+            if not line or not line.startswith("data:"):
+                continue
+            data = json.loads(line[5:].strip())
+            if data.get("delta"):
+                collected += data["delta"]
+            if data.get("done"):
+                done_seen = True
+    assert done_seen, "stream should emit done event"
+    assert len(collected) > 0, f"expected non-empty AI text, got: {collected!r}"
+    assert "sorry" not in collected.lower() or len(collected) > 20
+
+
 def test_root():
     r = requests.get(f"{BASE_URL}/api/")
     assert r.status_code == 200

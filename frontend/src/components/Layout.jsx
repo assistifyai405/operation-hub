@@ -11,6 +11,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { currentUser, notifications } from "@/data/mock";
+import CommandPalette from "@/components/CommandPalette";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -72,6 +73,7 @@ const Sidebar = ({ onNavigate }) => (
 
 export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const pageTitle = nav.find((n) => n.to === location.pathname)?.label || "Dashboard";
@@ -104,13 +106,23 @@ export default function Layout() {
           </button>
           <h1 className="text-lg font-semibold tracking-tight" data-testid="page-title">{pageTitle}</h1>
           <div className="relative ml-auto hidden max-w-xs flex-1 sm:block">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-            <input
-              data-testid="global-search"
-              placeholder="Search anything..."
-              className="w-full rounded-lg border border-white/10 bg-zinc-950 py-2 pl-9 pr-3 text-sm text-zinc-200 outline-none transition-all placeholder:text-zinc-600 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40"
-            />
+            <button
+              onClick={() => setPaletteOpen(true)}
+              data-testid="open-command-palette"
+              className="flex w-full items-center gap-2 rounded-lg border border-white/10 bg-zinc-950 py-2 pl-3 pr-2 text-sm text-zinc-500 transition-all hover:border-violet-500/40 hover:text-zinc-300"
+            >
+              <Search className="h-4 w-4" />
+              <span>Search or run command…</span>
+              <kbd className="ml-auto rounded border border-white/10 bg-zinc-900 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400">⌘K</kbd>
+            </button>
           </div>
+          <button
+            onClick={() => setPaletteOpen(true)}
+            data-testid="open-command-palette-mobile"
+            className="rounded-lg border border-white/10 bg-zinc-950 p-2 text-zinc-400 transition-all hover:text-zinc-100 sm:hidden ml-auto"
+          >
+            <Search className="h-[18px] w-[18px]" />
+          </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="relative rounded-lg border border-white/10 bg-zinc-950 p-2 text-zinc-400 transition-all hover:text-zinc-100" data-testid="notifications-btn">
@@ -158,6 +170,7 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+      <CommandPalette open={paletteOpen} setOpen={setPaletteOpen} />
     </div>
   );
 }
