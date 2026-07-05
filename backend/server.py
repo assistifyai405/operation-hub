@@ -837,6 +837,10 @@ async def upload_document(
     if len(data) > 25 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="File exceeds 25MB limit")
     ext = file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "bin"
+    allowed = {"pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "doc", "docx", "txt", "rtf",
+               "xls", "xlsx", "csv", "ppt", "pptx", "zip", "json", "md"}
+    if ext not in allowed:
+        raise HTTPException(status_code=415, detail=f"Unsupported file type: .{ext}")
     path = f"{S.APP_NAME}/uploads/{org}/{uuid.uuid4()}.{ext}"
     ctype = file.content_type or S.guess_content_type(file.filename or "")
     try:
