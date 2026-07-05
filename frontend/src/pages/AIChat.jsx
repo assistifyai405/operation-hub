@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Send, Sparkles, Bot } from "lucide-react";
+import { getAccessToken } from "@/lib/api";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -22,7 +23,7 @@ export default function AIChat() {
   const endRef = useRef(null);
 
   useEffect(() => {
-    fetch(`${API}/agents`).then((r) => r.json()).then(setAgents).catch(() => {});
+    fetch(`${API}/agents`, { headers: { Authorization: `Bearer ${getAccessToken()}` }, credentials: "include" }).then((r) => r.json()).then(setAgents).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -47,7 +48,8 @@ export default function AIChat() {
     try {
       const res = await fetch(`${API}/chat/stream`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getAccessToken()}` },
+        credentials: "include",
         body: JSON.stringify({ session_id: sessionId, agent_id: agentId, message: content }),
       });
       const reader = res.body.getReader();

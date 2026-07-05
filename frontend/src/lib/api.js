@@ -1,17 +1,96 @@
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-async function req(path, options = {}) {
-  const res = await fetch(`${API}${path}`, {
-    headers: { "Content-Type": "application/json" },
+// ---- access token store ----
+let accessToken = localStorage.getItem("assistify_token") || sessionStorage.getItem("assistify_token") || null;
+
+export function setAccessToken(token, remember = true) {
+  accessToken = token;
+  if (token) {
+    (remember ? localStorage : sessionStorage).setItem("assistify_token", token);
+    (remember ? sessionStorage : localStorage).removeItem("assistify_token");
+  } else {
+    localStorage.removeItem("assistify_token");
+    sessionStorage.removeItem("assistify_token");
+  }
+}
+export function getAccessToken() {
+  return accessToken;
+}
+
+export function formatApiErrorDetail(detail) {
+  if (detail == null) return "Something went wrong. Please try again.";
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail))
+    return detail.map((e) => (e && typeof e.msg === "string" ? e.msg : JSON.stringify(e))).filter(Boolean).join(" ");
+  if (detail && typeof detail.msg === "string") return detail.msg;
+  return String(detail);
+}
+
+let refreshing = null;
+async function tryRefresh() {
+  if (!refreshing) {
+    refreshing = fetch(`${API}/auth/refresh`, { method: "POST", credentials: "include" })
+      .then(async (r) => {
+        if (!r.ok) throw new Error("refresh failed");
+        const data = await r.json();
+        setAccessToken(data.accessToken, true);
+        return data.accessToken;
+      })
+      .finally(() => { refreshing = null; });
+  }
+  return refreshing;
+}
+
+async function rawReq(path, options, token) {
+  return fetch(`${API}${path}`, {
+    credentials: "include",
     ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    },
   });
+}
+
+async function req(path, options = {}) {
+  let res = await rawReq(path, options, accessToken);
+  if (res.status === 401 && !path.startsWith("/auth/")) {
+    try {
+      const newToken = await tryRefresh();
+      res = await rawReq(path, options, newToken);
+    } catch {
+      setAccessToken(null);
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+      throw new Error("Session expired");
+    }
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Request failed");
+    throw new Error(formatApiErrorDetail(err.detail) || "Request failed");
   }
   if (res.status === 204) return null;
   return res.json();
 }
+
+export const authApi = {
+  register: (data) => req("/auth/register", { method: "POST", body: JSON.stringify(data) }),
+  login: (data) => req("/auth/login", { method: "POST", body: JSON.stringify(data) }),
+  logout: () => req("/auth/logout", { method: "POST" }),
+  me: () => req("/auth/me"),
+  refresh: () => req("/auth/refresh", { method: "POST" }),
+  forgotPassword: (email) => req("/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+  resetPassword: (token, password) => req("/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password }) }),
+  verifyEmail: (token) => req("/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) }),
+  resendVerification: () => req("/auth/resend-verification", { method: "POST" }),
+  updateProfile: (data) => req("/auth/profile", { method: "PATCH", body: JSON.stringify(data) }),
+  changePassword: (data) => req("/auth/change-password", { method: "POST", body: JSON.stringify(data) }),
+  organization: () => req("/auth/organization"),
+  sessions: () => req("/auth/sessions"),
+  revokeSession: (id) => req(`/auth/sessions/${id}`, { method: "DELETE" }),
+};
 
 export const clientsApi = {
   list: () => req("/clients"),

@@ -1,17 +1,19 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import io
+import re
 import json
+import time
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
 
@@ -21,6 +23,7 @@ from contract_config import CONTRACT_SECTIONS, CONTRACT_STATUSES, CONTRACT_SYSTE
 from invoice_config import INVOICE_STATUSES, INVOICE_FIELDS, INVOICE_SYSTEM, build_invoice_prompt
 from proposal_export import build_pdf, build_docx
 from invoice_export import build_invoice_pdf, build_invoice_docx
+import auth as A
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -35,6 +38,10 @@ ai_service = AIService(api_key=EMERGENT_LLM_KEY)
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+REFRESH_COOKIE = "refresh_token"
+COOKIE_PATH = "/api/auth"
+
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
@@ -43,10 +50,384 @@ def now_iso():
 async def log_activity(project_id: Optional[str], atype: str, message: str):
     if not project_id:
         return
+    proj = await db.projects.find_one({"id": project_id}, {"_id": 0, "organizationId": 1})
     await db.activities.insert_one({
         "id": str(uuid.uuid4()), "project_id": project_id,
+        "organizationId": (proj or {}).get("organizationId"),
         "type": atype, "message": message, "created_at": now_iso(),
     })
+
+
+# ==================================================================
+# AUTHENTICATION
+# ==================================================================
+def public_user(u: dict) -> dict:
+    return {
+        "id": u["id"], "firstName": u.get("firstName", ""), "lastName": u.get("lastName", ""),
+        "email": u["email"], "emailVerified": u.get("emailVerified", False),
+        "avatar": u.get("avatar", ""), "role": u.get("role", "owner"),
+        "organizationId": u.get("organizationId"), "timezone": u.get("timezone", "UTC"),
+        "language": u.get("language", "en"), "createdAt": u.get("createdAt"),
+        "updatedAt": u.get("updatedAt"), "lastLogin": u.get("lastLogin"),
+    }
+
+
+async def current_user(request: Request) -> dict:
+    token = None
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+    if not token:
+        token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = A.decode_token(token)
+    except A.jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except A.jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    if payload.get("type") != "access":
+        raise HTTPException(status_code=401, detail="Invalid token type")
+    user = await db.users.find_one({"id": payload["sub"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
+
+
+async def current_org(user: dict = Depends(current_user)) -> str:
+    return user["organizationId"]
+
+
+async def require_project(project_id: str, org: str) -> dict:
+    p = await db.projects.find_one({"id": project_id, "organizationId": org}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return p
+
+
+# --- simple in-memory rate limiter (per process) ---
+_rl_store: dict = {}
+
+
+def rate_limit(key: str, max_calls: int, window_s: int):
+    now = time.time()
+    calls = [t for t in _rl_store.get(key, []) if now - t < window_s]
+    if len(calls) >= max_calls:
+        raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+    calls.append(now)
+    _rl_store[key] = calls
+
+
+def _client_ip(request: Request) -> str:
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+# --- auth models ---
+class RegisterRequest(BaseModel):
+    firstName: str = Field(..., min_length=1, max_length=60)
+    lastName: str = Field(default="", max_length=60)
+    email: str
+    password: str = Field(..., min_length=8, max_length=128)
+    company: str = ""
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+    remember: bool = True
+
+
+class ForgotRequest(BaseModel):
+    email: str
+
+
+class ResetRequest(BaseModel):
+    token: str
+    password: str = Field(..., min_length=8, max_length=128)
+
+
+class ProfileUpdate(BaseModel):
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    avatar: Optional[str] = None
+    timezone: Optional[str] = None
+    language: Optional[str] = None
+    company: Optional[str] = None
+
+
+class ChangePassword(BaseModel):
+    currentPassword: str
+    newPassword: str = Field(..., min_length=8, max_length=128)
+
+
+def _set_refresh_cookie(response: Response, token: str, remember: bool):
+    max_age = A.REFRESH_TOKEN_DAYS * 86400 if remember else 86400
+    response.set_cookie(key=REFRESH_COOKIE, value=token, httponly=True, secure=True,
+                        samesite="none", max_age=max_age, path=COOKIE_PATH)
+
+
+def _set_access_cookie(response: Response, access: str):
+    # Enables direct-link authenticated downloads (PDF/DOCX exports via window.open)
+    response.set_cookie(key="access_token", value=access, httponly=True, secure=True,
+                        samesite="none", max_age=A.ACCESS_TOKEN_MINUTES * 60, path="/api")
+
+
+async def _create_session(user: dict, request: Request, remember: bool):
+    jti = A.gen_id()
+    now = now_iso()
+    expires = datetime.now(timezone.utc) + timedelta(days=A.REFRESH_TOKEN_DAYS if remember else 1)
+    await db.sessions.insert_one({
+        "id": A.gen_id(), "userId": user["id"], "jti": jti,
+        "userAgent": request.headers.get("user-agent", ""), "ip": _client_ip(request),
+        "createdAt": now, "lastUsedAt": now, "expiresAt": expires.isoformat(),
+        "revoked": False, "remember": remember,
+    })
+    access = A.create_access_token(user["id"], user["email"], user["organizationId"])
+    refresh = A.create_refresh_token(user["id"], jti, remember)
+    return access, refresh
+
+
+def _dev_link(path: str, token: str) -> str:
+    base = os.environ.get("FRONTEND_URL", "").rstrip("/")
+    return f"{base}{path}?token={token}"
+
+
+@api_router.post("/auth/register")
+async def register(payload: RegisterRequest, request: Request, response: Response):
+    rate_limit(f"register:{_client_ip(request)}", 10, 3600)
+    email = payload.email.strip().lower()
+    if not EMAIL_RE.match(email):
+        raise HTTPException(status_code=422, detail="Please enter a valid email address")
+    if await db.users.find_one({"email": email}):
+        raise HTTPException(status_code=409, detail="An account with this email already exists")
+
+    now = now_iso()
+    org_id = A.gen_id()
+    org_name = payload.company.strip() or f"{payload.firstName}'s Organization"
+    user_id = A.gen_id()
+    await db.organizations.insert_one({
+        "id": org_id, "name": org_name, "ownerId": user_id, "createdAt": now, "updatedAt": now,
+    })
+    user = {
+        "id": user_id, "firstName": payload.firstName.strip(), "lastName": payload.lastName.strip(),
+        "email": email, "passwordHash": A.hash_password(payload.password), "emailVerified": False,
+        "avatar": "", "role": "owner", "organizationId": org_id, "timezone": "UTC", "language": "en",
+        "createdAt": now, "updatedAt": now, "lastLogin": now,
+    }
+    await db.users.insert_one(user)
+
+    # Email verification (dev mode: log + return link)
+    vtoken = A.gen_token()
+    await db.email_verification_tokens.insert_one({
+        "token": vtoken, "userId": user_id, "used": False,
+        "expires_at": datetime.now(timezone.utc) + timedelta(days=2), "created_at": now,
+    })
+    verify_link = _dev_link("/verify-email", vtoken)
+    logger.info(f"[EMAIL:VERIFY] {email} -> {verify_link}")
+
+    access, refresh = await _create_session(user, request, True)
+    _set_refresh_cookie(response, refresh, True)
+    _set_access_cookie(response, access)
+    return {"user": public_user(user), "accessToken": access, "verificationLink": verify_link}
+
+
+@api_router.post("/auth/login")
+async def login(payload: LoginRequest, request: Request, response: Response):
+    email = payload.email.strip().lower()
+    ip = _client_ip(request)
+    identifier = f"{ip}:{email}"
+
+    attempt = await db.login_attempts.find_one({"identifier": identifier})
+    if attempt and attempt.get("count", 0) >= 5:
+        locked_until = attempt.get("locked_until")
+        if locked_until and datetime.now(timezone.utc) < datetime.fromisoformat(locked_until):
+            raise HTTPException(status_code=429, detail="Too many failed attempts. Try again in a few minutes.")
+
+    user = await db.users.find_one({"email": email})
+    if not user or not A.verify_password(payload.password, user["passwordHash"]):
+        count = (attempt.get("count", 0) if attempt else 0) + 1
+        update = {"count": count, "last_attempt": now_iso()}
+        if count >= 5:
+            update["locked_until"] = (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
+        await db.login_attempts.update_one({"identifier": identifier}, {"$set": update}, upsert=True)
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    await db.login_attempts.delete_one({"identifier": identifier})
+    await db.users.update_one({"id": user["id"]}, {"$set": {"lastLogin": now_iso()}})
+    user["lastLogin"] = now_iso()
+
+    access, refresh = await _create_session(user, request, payload.remember)
+    _set_refresh_cookie(response, refresh, payload.remember)
+    _set_access_cookie(response, access)
+    return {"user": public_user(user), "accessToken": access}
+
+
+@api_router.post("/auth/refresh")
+async def refresh_token(request: Request, response: Response):
+    token = request.cookies.get(REFRESH_COOKIE)
+    if not token:
+        raise HTTPException(status_code=401, detail="No refresh token")
+    try:
+        payload = A.decode_token(token)
+    except A.jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    if payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid token type")
+
+    session = await db.sessions.find_one({"jti": payload["jti"], "userId": payload["sub"], "revoked": False})
+    if not session:
+        raise HTTPException(status_code=401, detail="Session expired. Please sign in again.")
+    user = await db.users.find_one({"id": payload["sub"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    # rotate refresh token
+    new_jti = A.gen_id()
+    remember = session.get("remember", True)
+    await db.sessions.update_one({"jti": payload["jti"]}, {"$set": {"jti": new_jti, "lastUsedAt": now_iso()}})
+    access = A.create_access_token(user["id"], user["email"], user["organizationId"])
+    new_refresh = A.create_refresh_token(user["id"], new_jti, remember)
+    _set_refresh_cookie(response, new_refresh, remember)
+    _set_access_cookie(response, access)
+    return {"user": public_user(user), "accessToken": access}
+
+
+@api_router.post("/auth/logout")
+async def logout(request: Request, response: Response):
+    token = request.cookies.get(REFRESH_COOKIE)
+    if token:
+        try:
+            payload = A.decode_token(token)
+            await db.sessions.update_one({"jti": payload.get("jti")}, {"$set": {"revoked": True}})
+        except Exception:
+            pass
+    response.delete_cookie(REFRESH_COOKIE, path=COOKIE_PATH)
+    response.delete_cookie("access_token", path="/api")
+    return {"ok": True}
+
+
+@api_router.get("/auth/me")
+async def get_me(user: dict = Depends(current_user)):
+    return public_user(user)
+
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(payload: ForgotRequest, request: Request):
+    rate_limit(f"forgot:{_client_ip(request)}", 5, 900)
+    email = payload.email.strip().lower()
+    user = await db.users.find_one({"email": email})
+    generic = {"ok": True, "message": "If an account exists, a reset link has been sent."}
+    if not user:
+        return generic
+    token = A.gen_token()
+    await db.password_reset_tokens.insert_one({
+        "token": token, "userId": user["id"], "used": False,
+        "expires_at": datetime.now(timezone.utc) + timedelta(hours=1), "created_at": now_iso(),
+    })
+    reset_link = _dev_link("/reset-password", token)
+    logger.info(f"[EMAIL:RESET] {email} -> {reset_link}")
+    return {**generic, "resetLink": reset_link}
+
+
+@api_router.post("/auth/reset-password")
+async def reset_password(payload: ResetRequest):
+    rec = await db.password_reset_tokens.find_one({"token": payload.token})
+    if not rec or rec.get("used"):
+        raise HTTPException(status_code=400, detail="Invalid or already-used reset link")
+    expires = rec["expires_at"]
+    if isinstance(expires, str):
+        expires = datetime.fromisoformat(expires)
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > expires:
+        raise HTTPException(status_code=400, detail="This reset link has expired")
+    await db.users.update_one({"id": rec["userId"]}, {"$set": {
+        "passwordHash": A.hash_password(payload.password), "updatedAt": now_iso()}})
+    await db.password_reset_tokens.update_one({"token": payload.token}, {"$set": {"used": True}})
+    await db.sessions.update_many({"userId": rec["userId"]}, {"$set": {"revoked": True}})
+    return {"ok": True, "message": "Password updated. Please sign in."}
+
+
+@api_router.post("/auth/verify-email")
+async def verify_email(body: dict):
+    token = (body or {}).get("token")
+    if not token:
+        raise HTTPException(status_code=422, detail="Missing token")
+    rec = await db.email_verification_tokens.find_one({"token": token})
+    if not rec or rec.get("used"):
+        raise HTTPException(status_code=400, detail="Invalid or already-used verification link")
+    expires = rec["expires_at"]
+    if isinstance(expires, str):
+        expires = datetime.fromisoformat(expires)
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > expires:
+        raise HTTPException(status_code=400, detail="This verification link has expired")
+    await db.users.update_one({"id": rec["userId"]}, {"$set": {"emailVerified": True, "updatedAt": now_iso()}})
+    await db.email_verification_tokens.update_one({"token": token}, {"$set": {"used": True}})
+    return {"ok": True, "message": "Email verified"}
+
+
+@api_router.post("/auth/resend-verification")
+async def resend_verification(user: dict = Depends(current_user)):
+    if user.get("emailVerified"):
+        return {"ok": True, "message": "Email already verified"}
+    token = A.gen_token()
+    await db.email_verification_tokens.insert_one({
+        "token": token, "userId": user["id"], "used": False,
+        "expires_at": datetime.now(timezone.utc) + timedelta(days=2), "created_at": now_iso(),
+    })
+    link = _dev_link("/verify-email", token)
+    logger.info(f"[EMAIL:VERIFY] {user['email']} -> {link}")
+    return {"ok": True, "verificationLink": link}
+
+
+@api_router.patch("/auth/profile")
+async def update_profile(payload: ProfileUpdate, user: dict = Depends(current_user)):
+    updates = {}
+    for f in ["firstName", "lastName", "avatar", "timezone", "language"]:
+        v = getattr(payload, f)
+        if v is not None:
+            updates[f] = v
+    if updates:
+        updates["updatedAt"] = now_iso()
+        await db.users.update_one({"id": user["id"]}, {"$set": updates})
+    if payload.company is not None and payload.company.strip():
+        await db.organizations.update_one({"id": user["organizationId"]},
+                                          {"$set": {"name": payload.company.strip(), "updatedAt": now_iso()}})
+    fresh = await db.users.find_one({"id": user["id"]}, {"_id": 0})
+    return public_user(fresh)
+
+
+@api_router.post("/auth/change-password")
+async def change_password(payload: ChangePassword, user: dict = Depends(current_user)):
+    if not A.verify_password(payload.currentPassword, user["passwordHash"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    await db.users.update_one({"id": user["id"]}, {"$set": {
+        "passwordHash": A.hash_password(payload.newPassword), "updatedAt": now_iso()}})
+    return {"ok": True, "message": "Password changed"}
+
+
+@api_router.get("/auth/organization")
+async def get_organization(user: dict = Depends(current_user)):
+    org = await db.organizations.find_one({"id": user["organizationId"]}, {"_id": 0})
+    return org
+
+
+@api_router.get("/auth/sessions")
+async def list_sessions(user: dict = Depends(current_user)):
+    sessions = await db.sessions.find({"userId": user["id"], "revoked": False}, {"_id": 0, "jti": 0}).sort("lastUsedAt", -1).to_list(50)
+    return sessions
+
+
+@api_router.delete("/auth/sessions/{session_id}")
+async def revoke_session(session_id: str, user: dict = Depends(current_user)):
+    await db.sessions.update_one({"id": session_id, "userId": user["id"]}, {"$set": {"revoked": True}})
+    return {"ok": True}
 
 
 # ------------------- AI Agents (personas) -------------------
@@ -174,23 +555,25 @@ async def root():
 
 
 @api_router.get("/agents")
-async def list_agents():
+async def list_agents(user: dict = Depends(current_user)):
     return [{k: v for k, v in a.items() if k != "system_message"} for a in AGENTS.values()]
 
 
 @api_router.get("/chat/history/{session_id}")
-async def chat_history(session_id: str):
-    return await db.chat_messages.find({"session_id": session_id}, {"_id": 0}).sort("timestamp", 1).to_list(1000)
+async def chat_history(session_id: str, org: str = Depends(current_org)):
+    return await db.chat_messages.find({"session_id": session_id, "organizationId": org}, {"_id": 0}).sort("timestamp", 1).to_list(1000)
 
 
 @api_router.post("/chat/stream")
-async def chat_stream(req: ChatRequest):
+async def chat_stream(req: ChatRequest, org: str = Depends(current_org)):
     agent = AGENTS.get(req.agent_id)
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
 
     user_msg = ChatMessage(session_id=req.session_id, agent_id=req.agent_id, role="user", content=req.message)
-    await db.chat_messages.insert_one(user_msg.model_dump())
+    um = user_msg.model_dump()
+    um["organizationId"] = org
+    await db.chat_messages.insert_one(um)
 
     chat = LlmChat(
         api_key=EMERGENT_LLM_KEY, session_id=req.session_id, system_message=agent["system_message"],
@@ -211,7 +594,9 @@ async def chat_stream(req: ChatRequest):
         finally:
             if full:
                 bot_msg = ChatMessage(session_id=req.session_id, agent_id=req.agent_id, role="assistant", content=full)
-                await db.chat_messages.insert_one(bot_msg.model_dump())
+                bm = bot_msg.model_dump()
+                bm["organizationId"] = org
+                await db.chat_messages.insert_one(bm)
             yield f"data: {json.dumps({'done': True})}\n\n"
 
     return StreamingResponse(
@@ -221,92 +606,94 @@ async def chat_stream(req: ChatRequest):
 
 
 # ------------------- Clients CRUD -------------------
-async def client_with_counts(c: dict):
-    c["projects"] = await db.projects.count_documents({"client_id": c["id"]})
+async def client_with_counts(c: dict, org: str):
+    c["projects"] = await db.projects.count_documents({"client_id": c["id"], "organizationId": org})
     return c
 
 
 @api_router.get("/clients")
-async def list_clients():
-    clients = await db.clients.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+async def list_clients(org: str = Depends(current_org)):
+    clients = await db.clients.find({"organizationId": org}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     for c in clients:
-        await client_with_counts(c)
+        await client_with_counts(c, org)
     return clients
 
 
 @api_router.post("/clients", response_model=Client)
-async def create_client(payload: ClientCreate):
+async def create_client(payload: ClientCreate, org: str = Depends(current_org)):
     obj = Client(**payload.model_dump())
-    await db.clients.insert_one(obj.model_dump())
+    doc = obj.model_dump()
+    doc["organizationId"] = org
+    await db.clients.insert_one(doc)
     return obj
 
 
 @api_router.put("/clients/{client_id}", response_model=Client)
-async def update_client(client_id: str, payload: ClientCreate):
-    res = await db.clients.find_one({"id": client_id}, {"_id": 0})
+async def update_client(client_id: str, payload: ClientCreate, org: str = Depends(current_org)):
+    res = await db.clients.find_one({"id": client_id, "organizationId": org}, {"_id": 0})
     if not res:
         raise HTTPException(status_code=404, detail="Client not found")
     updated = {**res, **payload.model_dump()}
-    await db.clients.update_one({"id": client_id}, {"$set": payload.model_dump()})
-    return Client(**updated)
+    await db.clients.update_one({"id": client_id, "organizationId": org}, {"$set": payload.model_dump()})
+    return Client(**{k: v for k, v in updated.items() if k in Client.model_fields})
 
 
 @api_router.delete("/clients/{client_id}")
-async def delete_client(client_id: str):
-    res = await db.clients.delete_one({"id": client_id})
+async def delete_client(client_id: str, org: str = Depends(current_org)):
+    res = await db.clients.delete_one({"id": client_id, "organizationId": org})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Client not found")
-    await db.projects.update_many({"client_id": client_id}, {"$set": {"client_id": None}})
+    await db.projects.update_many({"client_id": client_id, "organizationId": org}, {"$set": {"client_id": None}})
     return {"ok": True}
 
 
 # ------------------- Projects CRUD -------------------
-async def enrich_project(p: dict):
+async def enrich_project(p: dict, org: str):
     p["client_name"] = None
     if p.get("client_id"):
-        c = await db.clients.find_one({"id": p["client_id"]}, {"_id": 0, "name": 1})
+        c = await db.clients.find_one({"id": p["client_id"], "organizationId": org}, {"_id": 0, "name": 1})
         p["client_name"] = c["name"] if c else None
     return p
 
 
 @api_router.get("/projects")
-async def list_projects():
-    projects = await db.projects.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+async def list_projects(org: str = Depends(current_org)):
+    projects = await db.projects.find({"organizationId": org}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     for p in projects:
-        await enrich_project(p)
+        await enrich_project(p, org)
     return projects
 
 
 @api_router.get("/projects/{project_id}")
-async def get_project(project_id: str):
-    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
-    await enrich_project(p)
+async def get_project(project_id: str, org: str = Depends(current_org)):
+    p = await require_project(project_id, org)
+    await enrich_project(p, org)
     return p
 
 
 @api_router.post("/projects", response_model=Project)
-async def create_project(payload: ProjectCreate):
+async def create_project(payload: ProjectCreate, org: str = Depends(current_org)):
     obj = Project(**payload.model_dump())
-    await db.projects.insert_one(obj.model_dump())
+    doc = obj.model_dump()
+    doc["organizationId"] = org
+    await db.projects.insert_one(doc)
     await log_activity(obj.id, "project_created", f'Project "{obj.name}" was created')
     return obj
 
 
 @api_router.put("/projects/{project_id}", response_model=Project)
-async def update_project(project_id: str, payload: ProjectCreate):
-    res = await db.projects.find_one({"id": project_id}, {"_id": 0})
+async def update_project(project_id: str, payload: ProjectCreate, org: str = Depends(current_org)):
+    res = await db.projects.find_one({"id": project_id, "organizationId": org}, {"_id": 0})
     if not res:
         raise HTTPException(status_code=404, detail="Project not found")
     updated = {**res, **payload.model_dump()}
-    await db.projects.update_one({"id": project_id}, {"$set": payload.model_dump()})
-    return Project(**updated)
+    await db.projects.update_one({"id": project_id, "organizationId": org}, {"$set": payload.model_dump()})
+    return Project(**{k: v for k, v in updated.items() if k in Project.model_fields})
 
 
 @api_router.delete("/projects/{project_id}")
-async def delete_project(project_id: str):
-    res = await db.projects.delete_one({"id": project_id})
+async def delete_project(project_id: str, org: str = Depends(current_org)):
+    res = await db.projects.delete_one({"id": project_id, "organizationId": org})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
     await db.tasks.update_many({"project_id": project_id}, {"$set": {"project_id": None}})
@@ -321,32 +708,36 @@ async def delete_project(project_id: str):
 
 
 # ------------------- Tasks CRUD -------------------
-async def enrich_task(t: dict):
+async def enrich_task(t: dict, org: str):
     t["project_name"] = None
     t["client_name"] = None
     if t.get("project_id"):
-        p = await db.projects.find_one({"id": t["project_id"]}, {"_id": 0, "name": 1, "client_id": 1})
+        p = await db.projects.find_one({"id": t["project_id"], "organizationId": org}, {"_id": 0, "name": 1, "client_id": 1})
         if p:
             t["project_name"] = p["name"]
             if p.get("client_id"):
-                c = await db.clients.find_one({"id": p["client_id"]}, {"_id": 0, "name": 1})
+                c = await db.clients.find_one({"id": p["client_id"], "organizationId": org}, {"_id": 0, "name": 1})
                 t["client_name"] = c["name"] if c else None
     return t
 
 
 @api_router.get("/tasks")
-async def list_tasks(project_id: Optional[str] = None):
-    q = {"project_id": project_id} if project_id else {}
+async def list_tasks(project_id: Optional[str] = None, org: str = Depends(current_org)):
+    q = {"organizationId": org}
+    if project_id:
+        q["project_id"] = project_id
     tasks = await db.tasks.find(q, {"_id": 0}).sort("created_at", -1).to_list(1000)
     for t in tasks:
-        await enrich_task(t)
+        await enrich_task(t, org)
     return tasks
 
 
 @api_router.post("/tasks", response_model=Task)
-async def create_task(payload: TaskCreate):
+async def create_task(payload: TaskCreate, org: str = Depends(current_org)):
     obj = Task(**payload.model_dump())
-    await db.tasks.insert_one(obj.model_dump())
+    doc = obj.model_dump()
+    doc["organizationId"] = org
+    await db.tasks.insert_one(doc)
     await log_activity(obj.project_id, "task_created", f'Task "{obj.title}" was created')
     if obj.done:
         await log_activity(obj.project_id, "task_completed", f'Task "{obj.title}" was completed')
@@ -354,20 +745,20 @@ async def create_task(payload: TaskCreate):
 
 
 @api_router.put("/tasks/{task_id}", response_model=Task)
-async def update_task(task_id: str, payload: TaskCreate):
-    res = await db.tasks.find_one({"id": task_id}, {"_id": 0})
+async def update_task(task_id: str, payload: TaskCreate, org: str = Depends(current_org)):
+    res = await db.tasks.find_one({"id": task_id, "organizationId": org}, {"_id": 0})
     if not res:
         raise HTTPException(status_code=404, detail="Task not found")
     updated = {**res, **payload.model_dump()}
-    await db.tasks.update_one({"id": task_id}, {"$set": payload.model_dump()})
+    await db.tasks.update_one({"id": task_id, "organizationId": org}, {"$set": payload.model_dump()})
     if payload.done and not res.get("done"):
         await log_activity(payload.project_id, "task_completed", f'Task "{payload.title}" was completed')
-    return Task(**updated)
+    return Task(**{k: v for k, v in updated.items() if k in Task.model_fields})
 
 
 @api_router.delete("/tasks/{task_id}")
-async def delete_task(task_id: str):
-    res = await db.tasks.delete_one({"id": task_id})
+async def delete_task(task_id: str, org: str = Depends(current_org)):
+    res = await db.tasks.delete_one({"id": task_id, "organizationId": org})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Task not found")
     return {"ok": True}
@@ -375,22 +766,26 @@ async def delete_task(task_id: str):
 
 # ------------------- Documents CRUD -------------------
 @api_router.get("/documents")
-async def list_documents(project_id: Optional[str] = None):
-    q = {"project_id": project_id} if project_id else {}
+async def list_documents(project_id: Optional[str] = None, org: str = Depends(current_org)):
+    q = {"organizationId": org}
+    if project_id:
+        q["project_id"] = project_id
     return await db.documents.find(q, {"_id": 0}).sort("created_at", -1).to_list(1000)
 
 
 @api_router.post("/documents", response_model=Document)
-async def create_document(payload: DocumentCreate):
+async def create_document(payload: DocumentCreate, org: str = Depends(current_org)):
     obj = Document(**payload.model_dump())
-    await db.documents.insert_one(obj.model_dump())
+    doc = obj.model_dump()
+    doc["organizationId"] = org
+    await db.documents.insert_one(doc)
     await log_activity(obj.project_id, "document_uploaded", f'Document "{obj.name}" was uploaded')
     return obj
 
 
 @api_router.delete("/documents/{document_id}")
-async def delete_document(document_id: str):
-    res = await db.documents.delete_one({"id": document_id})
+async def delete_document(document_id: str, org: str = Depends(current_org)):
+    res = await db.documents.delete_one({"id": document_id, "organizationId": org})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Document not found")
     return {"ok": True}
@@ -398,22 +793,26 @@ async def delete_document(document_id: str):
 
 # ------------------- Proposals CRUD -------------------
 @api_router.get("/proposals")
-async def list_proposals(project_id: Optional[str] = None):
-    q = {"project_id": project_id} if project_id else {}
+async def list_proposals(project_id: Optional[str] = None, org: str = Depends(current_org)):
+    q = {"organizationId": org}
+    if project_id:
+        q["project_id"] = project_id
     return await db.proposals.find(q, {"_id": 0}).sort("created_at", -1).to_list(1000)
 
 
 @api_router.post("/proposals", response_model=Proposal)
-async def create_proposal(payload: ProposalCreate):
+async def create_proposal(payload: ProposalCreate, org: str = Depends(current_org)):
     obj = Proposal(**payload.model_dump())
-    await db.proposals.insert_one(obj.model_dump())
+    doc = obj.model_dump()
+    doc["organizationId"] = org
+    await db.proposals.insert_one(doc)
     await log_activity(obj.project_id, "proposal_generated", f'Proposal "{obj.title}" was generated')
     return obj
 
 
 @api_router.delete("/proposals/{proposal_id}")
-async def delete_proposal(proposal_id: str):
-    res = await db.proposals.delete_one({"id": proposal_id})
+async def delete_proposal(proposal_id: str, org: str = Depends(current_org)):
+    res = await db.proposals.delete_one({"id": proposal_id, "organizationId": org})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Proposal not found")
     return {"ok": True}
@@ -421,7 +820,8 @@ async def delete_proposal(proposal_id: str):
 
 # ------------------- Activities -------------------
 @api_router.get("/activities")
-async def list_activities(project_id: str):
+async def list_activities(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     return await db.activities.find({"project_id": project_id}, {"_id": 0}).sort("created_at", -1).to_list(1000)
 
 
@@ -487,11 +887,9 @@ def parse_plan_json(text: str) -> dict:
 
 
 @api_router.post("/projects/{project_id}/plan/generate")
-async def generate_plan(project_id: str):
-    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
-    await enrich_project(p)
+async def generate_plan(project_id: str, org: str = Depends(current_org)):
+    p = await require_project(project_id, org)
+    await enrich_project(p, org)
     context = await build_project_context(p)
 
     prompt = (
@@ -527,18 +925,19 @@ async def generate_plan(project_id: str):
 
 
 @api_router.get("/projects/{project_id}/plans")
-async def list_plans(project_id: str):
+async def list_plans(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     return await db.plans.find({"project_id": project_id}, {"_id": 0}).sort("version", -1).to_list(1000)
 
 
 @api_router.post("/projects/{project_id}/plans", response_model=Plan)
-async def save_plan(project_id: str, payload: PlanSave):
-    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
+async def save_plan(project_id: str, payload: PlanSave, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     version = await db.plans.count_documents({"project_id": project_id}) + 1
     obj = Plan(project_id=project_id, version=version, sections=payload.sections)
-    await db.plans.insert_one(obj.model_dump())
+    doc = obj.model_dump()
+    doc["organizationId"] = org
+    await db.plans.insert_one(doc)
     await log_activity(project_id, "plan_generated", f"AI project plan v{version} was saved")
     return obj
 
@@ -555,14 +954,11 @@ async def _get_ai_proposal(project_id: str):
 
 
 @api_router.post("/projects/{project_id}/proposal/generate")
-async def generate_proposal(project_id: str):
-    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
-    await enrich_project(p)
+async def generate_proposal(project_id: str, org: str = Depends(current_org)):
+    p = await require_project(project_id, org)
+    await enrich_project(p, org)
     context = await build_project_context(p)
 
-    # Fold in the latest AI plan if one exists (richer context, no manual copy/paste)
     latest_plan = await db.plans.find_one({"project_id": project_id}, {"_id": 0}, sort=[("version", -1)])
     if latest_plan:
         secs = latest_plan.get("sections", {})
@@ -583,21 +979,21 @@ async def generate_proposal(project_id: str):
 
 
 @api_router.get("/projects/{project_id}/proposal")
-async def get_proposal(project_id: str):
+async def get_proposal(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     return await _get_ai_proposal(project_id)
 
 
 @api_router.get("/projects/{project_id}/proposal/versions")
-async def proposal_versions(project_id: str):
+async def proposal_versions(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     doc = await _get_ai_proposal(project_id)
     return doc.get("history", []) if doc else []
 
 
 @api_router.post("/projects/{project_id}/proposal")
-async def save_proposal(project_id: str, payload: ProposalContent):
-    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
+async def save_proposal(project_id: str, payload: ProposalContent, org: str = Depends(current_org)):
+    p = await require_project(project_id, org)
     if payload.status not in PROPOSAL_STATUSES:
         raise HTTPException(status_code=422, detail="Invalid status")
 
@@ -617,8 +1013,9 @@ async def save_proposal(project_id: str, payload: ProposalContent):
     else:
         doc = {
             "id": str(uuid.uuid4()), "title": payload.title, "project_id": project_id,
-            "client_id": p.get("client_id"), "status": payload.status, "content": payload.content,
-            "version": version, "history": [version_entry], "created_at": now, "updated_at": now,
+            "organizationId": org, "client_id": p.get("client_id"), "status": payload.status,
+            "content": payload.content, "version": version, "history": [version_entry],
+            "created_at": now, "updated_at": now,
         }
         await db.ai_proposals.insert_one(doc)
     await log_activity(project_id, "proposal_saved", f"Proposal v{version} was saved")
@@ -626,14 +1023,15 @@ async def save_proposal(project_id: str, payload: ProposalContent):
 
 
 @api_router.post("/projects/{project_id}/proposal/restore/{version}")
-async def restore_proposal(project_id: str, version: int):
+async def restore_proposal(project_id: str, version: int, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     existing = await _get_ai_proposal(project_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Proposal not found")
     match = next((v for v in existing.get("history", []) if v["version"] == version), None)
     if not match:
         raise HTTPException(status_code=404, detail="Version not found")
-    return await save_proposal(project_id, ProposalContent(title=match["title"], status=match["status"], content=match["content"]))
+    return await save_proposal(project_id, ProposalContent(title=match["title"], status=match["status"], content=match["content"]), org)
 
 
 def _export_or_404(project_id, proposal):
@@ -647,7 +1045,8 @@ def _safe_filename(name: str) -> str:
 
 
 @api_router.get("/projects/{project_id}/proposal/export/pdf")
-async def export_proposal_pdf(project_id: str):
+async def export_proposal_pdf(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     proposal = await _get_ai_proposal(project_id)
     _export_or_404(project_id, proposal)
     data = build_pdf(proposal)
@@ -658,7 +1057,8 @@ async def export_proposal_pdf(project_id: str):
 
 
 @api_router.get("/projects/{project_id}/proposal/export/docx")
-async def export_proposal_docx(project_id: str):
+async def export_proposal_docx(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     proposal = await _get_ai_proposal(project_id)
     _export_or_404(project_id, proposal)
     data = build_docx(proposal)
@@ -670,7 +1070,7 @@ async def export_proposal_docx(project_id: str):
 
 
 @api_router.get("/proposal/sections")
-async def proposal_sections():
+async def proposal_sections(user: dict = Depends(current_user)):
     return {"sections": PROPOSAL_SECTIONS, "statuses": PROPOSAL_STATUSES}
 
 
@@ -685,17 +1085,15 @@ async def _get_ai_contract(project_id: str):
     return await db.ai_contracts.find_one({"project_id": project_id}, {"_id": 0})
 
 
-async def _build_contract_context(project_id: str):
-    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
-    await enrich_project(p)
+async def _build_contract_context(project_id: str, org: str):
+    p = await require_project(project_id, org)
+    await enrich_project(p, org)
     context = await build_project_context(p)
 
     proposal_id = None
     client = None
     if p.get("client_id"):
-        client = await db.clients.find_one({"id": p["client_id"]}, {"_id": 0})
+        client = await db.clients.find_one({"id": p["client_id"], "organizationId": org}, {"_id": 0})
     if client:
         context += (
             f"\n\nCLIENT DETAILS:\nCompany: {client.get('name')}\n"
@@ -724,8 +1122,8 @@ async def _build_contract_context(project_id: str):
 
 
 @api_router.post("/projects/{project_id}/contract/generate")
-async def generate_contract(project_id: str):
-    p, context, proposal_id = await _build_contract_context(project_id)
+async def generate_contract(project_id: str, org: str = Depends(current_org)):
+    p, context, proposal_id = await _build_contract_context(project_id, org)
     prompt = build_contract_prompt(context)
     try:
         content = await ai_service.complete_json(CONTRACT_SYSTEM, prompt, CONTRACT_SECTIONS, session_id=f"contract-{project_id}-{uuid.uuid4()}")
@@ -740,20 +1138,20 @@ async def generate_contract(project_id: str):
 
 
 @api_router.get("/projects/{project_id}/contract")
-async def get_contract(project_id: str):
+async def get_contract(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     return await _get_ai_contract(project_id)
 
 
 @api_router.get("/projects/{project_id}/contract/versions")
-async def contract_versions(project_id: str):
+async def contract_versions(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     doc = await _get_ai_contract(project_id)
     return doc.get("history", []) if doc else []
 
 
-async def _save_contract(project_id: str, payload: ContractContent, activity_type: str, activity_msg_fmt: str):
-    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
+async def _save_contract(project_id: str, payload: ContractContent, org: str, activity_type: str, activity_msg_fmt: str):
+    p = await require_project(project_id, org)
     if payload.status not in CONTRACT_STATUSES:
         raise HTTPException(status_code=422, detail="Invalid status")
 
@@ -771,7 +1169,8 @@ async def _save_contract(project_id: str, payload: ContractContent, activity_typ
         proposal = await _get_ai_proposal(project_id)
         doc = {
             "id": str(uuid.uuid4()), "title": payload.title, "project_id": project_id,
-            "client_id": p.get("client_id"), "proposal_id": proposal.get("id") if proposal else None,
+            "organizationId": org, "client_id": p.get("client_id"),
+            "proposal_id": proposal.get("id") if proposal else None,
             "status": payload.status, "content": payload.content, "version": version,
             "history": [entry], "created_at": now, "updated_at": now,
         }
@@ -781,12 +1180,13 @@ async def _save_contract(project_id: str, payload: ContractContent, activity_typ
 
 
 @api_router.post("/projects/{project_id}/contract")
-async def save_contract(project_id: str, payload: ContractContent):
-    return await _save_contract(project_id, payload, "contract_saved", "Contract v{version} was saved")
+async def save_contract(project_id: str, payload: ContractContent, org: str = Depends(current_org)):
+    return await _save_contract(project_id, payload, org, "contract_saved", "Contract v{version} was saved")
 
 
 @api_router.post("/projects/{project_id}/contract/restore/{version}")
-async def restore_contract(project_id: str, version: int):
+async def restore_contract(project_id: str, version: int, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     existing = await _get_ai_contract(project_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Contract not found")
@@ -795,12 +1195,13 @@ async def restore_contract(project_id: str, version: int):
         raise HTTPException(status_code=404, detail="Version not found")
     return await _save_contract(
         project_id, ContractContent(title=match["title"], status=match["status"], content=match["content"]),
-        "contract_restored", f"Contract restored from v{version} as v{{version}}",
+        org, "contract_restored", f"Contract restored from v{version} as v{{version}}",
     )
 
 
 @api_router.get("/projects/{project_id}/contract/export/pdf")
-async def export_contract_pdf(project_id: str):
+async def export_contract_pdf(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     contract = await _get_ai_contract(project_id)
     if not contract:
         raise HTTPException(status_code=404, detail="Save the contract before exporting")
@@ -812,7 +1213,8 @@ async def export_contract_pdf(project_id: str):
 
 
 @api_router.get("/projects/{project_id}/contract/export/docx")
-async def export_contract_docx(project_id: str):
+async def export_contract_docx(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     contract = await _get_ai_contract(project_id)
     if not contract:
         raise HTTPException(status_code=404, detail="Save the contract before exporting")
@@ -825,14 +1227,11 @@ async def export_contract_docx(project_id: str):
 
 
 @api_router.get("/contract/sections")
-async def contract_sections():
+async def contract_sections(user: dict = Depends(current_user)):
     return {"sections": CONTRACT_SECTIONS, "statuses": CONTRACT_STATUSES}
 
 
 # ------------------- AI Invoice Generator -------------------
-from datetime import timedelta
-
-
 class InvoiceSave(BaseModel):
     invoice_number: str = ""
     title: str = "Untitled Invoice"
@@ -860,14 +1259,14 @@ def _compute_invoice(line_items: list, vat_rate: float):
     return items, subtotal, vat_amount, total
 
 
-async def _next_invoice_number():
-    count = await db.ai_invoices.count_documents({})
+async def _next_invoice_number(org: str):
+    count = await db.ai_invoices.count_documents({"organizationId": org})
     return f"INV-{datetime.now(timezone.utc).strftime('%Y%m')}-{count + 1:04d}"
 
 
 @api_router.post("/projects/{project_id}/invoice/generate")
-async def generate_invoice(project_id: str):
-    p, context, proposal_id = await _build_contract_context(project_id)
+async def generate_invoice(project_id: str, org: str = Depends(current_org)):
+    p, context, proposal_id = await _build_contract_context(project_id, org)
     contract = await _get_ai_contract(project_id)
     if contract:
         context += "\n\nSIGNED/DRAFT CONTRACT PAYMENT TERMS:\n" + json.dumps(contract.get("content", {}).get("payment_terms", []))
@@ -885,12 +1284,12 @@ async def generate_invoice(project_id: str):
     vat_rate = float(data.get("vat_rate", 0) or 0)
     items, subtotal, vat_amount, total = _compute_invoice(data.get("line_items", []), vat_rate)
 
-    client = await db.clients.find_one({"id": p["client_id"]}, {"_id": 0}) if p.get("client_id") else None
+    cl = await db.clients.find_one({"id": p["client_id"], "organizationId": org}, {"_id": 0}) if p.get("client_id") else None
     issue = datetime.now(timezone.utc)
     due = issue + timedelta(days=14)
     content = {
-        "client_name": (client or {}).get("contact") or (client or {}).get("name") or "",
-        "company": (client or {}).get("name") or "",
+        "client_name": (cl or {}).get("contact") or (cl or {}).get("name") or "",
+        "company": (cl or {}).get("name") or "",
         "billing_address": data.get("billing_address", "[CLIENT ADDRESS]"),
         "project_name": p.get("name", ""),
         "description": data.get("description", ""),
@@ -903,27 +1302,27 @@ async def generate_invoice(project_id: str):
     }
     await log_activity(project_id, "invoice_generated", f'Invoice for "{p.get("name")}" was generated')
     return {
-        "invoice_number": await _next_invoice_number(), "title": f"{p.get('name')} — Invoice",
+        "invoice_number": await _next_invoice_number(org), "title": f"{p.get('name')} — Invoice",
         "content": content, "line_items": items, "subtotal": subtotal, "vat": vat_amount, "total": total,
         "proposal_id": proposal_id, "contract_id": contract.get("id") if contract else None,
     }
 
 
 @api_router.get("/projects/{project_id}/invoice")
-async def get_invoice(project_id: str):
+async def get_invoice(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     return await _get_ai_invoice(project_id)
 
 
 @api_router.get("/projects/{project_id}/invoice/versions")
-async def invoice_versions(project_id: str):
+async def invoice_versions(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     doc = await _get_ai_invoice(project_id)
     return doc.get("history", []) if doc else []
 
 
-async def _save_invoice(project_id: str, payload: InvoiceSave, activity_type: str, activity_msg: str):
-    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
+async def _save_invoice(project_id: str, payload: InvoiceSave, org: str, activity_type: str, activity_msg: str):
+    p = await require_project(project_id, org)
     if payload.status not in INVOICE_STATUSES:
         raise HTTPException(status_code=422, detail="Invalid status")
 
@@ -934,7 +1333,7 @@ async def _save_invoice(project_id: str, payload: InvoiceSave, activity_type: st
     existing = await _get_ai_invoice(project_id)
     version = (existing["version"] + 1) if existing else 1
     now = now_iso()
-    inv_number = payload.invoice_number or (existing["invoice_number"] if existing else await _next_invoice_number())
+    inv_number = payload.invoice_number or (existing["invoice_number"] if existing else await _next_invoice_number(org))
     entry = {
         "version": version, "invoice_number": inv_number, "title": payload.title, "status": payload.status,
         "content": content, "line_items": items, "subtotal": subtotal, "vat": vat_amount, "total": total, "created_at": now,
@@ -951,7 +1350,7 @@ async def _save_invoice(project_id: str, payload: InvoiceSave, activity_type: st
         contract = await _get_ai_contract(project_id)
         doc = {
             "id": str(uuid.uuid4()), "invoice_number": inv_number, "title": payload.title, "project_id": project_id,
-            "client_id": p.get("client_id"), "proposal_id": proposal.get("id") if proposal else None,
+            "organizationId": org, "client_id": p.get("client_id"), "proposal_id": proposal.get("id") if proposal else None,
             "contract_id": contract.get("id") if contract else None, "status": payload.status, "content": content,
             "line_items": items, "subtotal": subtotal, "vat": vat_amount, "total": total,
             "version": version, "history": [entry], "created_at": now, "updated_at": now,
@@ -962,12 +1361,13 @@ async def _save_invoice(project_id: str, payload: InvoiceSave, activity_type: st
 
 
 @api_router.post("/projects/{project_id}/invoice")
-async def save_invoice(project_id: str, payload: InvoiceSave):
-    return await _save_invoice(project_id, payload, "invoice_saved", "Invoice {number} v{version} was saved")
+async def save_invoice(project_id: str, payload: InvoiceSave, org: str = Depends(current_org)):
+    return await _save_invoice(project_id, payload, org, "invoice_saved", "Invoice {number} v{version} was saved")
 
 
 @api_router.post("/projects/{project_id}/invoice/restore/{version}")
-async def restore_invoice(project_id: str, version: int):
+async def restore_invoice(project_id: str, version: int, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     existing = await _get_ai_invoice(project_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Invoice not found")
@@ -976,11 +1376,12 @@ async def restore_invoice(project_id: str, version: int):
         raise HTTPException(status_code=404, detail="Version not found")
     payload = InvoiceSave(invoice_number=match["invoice_number"], title=match["title"],
                           status=match["status"], content=match["content"], line_items=match["line_items"])
-    return await _save_invoice(project_id, payload, "invoice_restored", "Invoice restored from v" + str(version) + " as v{version}")
+    return await _save_invoice(project_id, payload, org, "invoice_restored", "Invoice restored from v" + str(version) + " as v{version}")
 
 
 @api_router.get("/projects/{project_id}/invoice/export/pdf")
-async def export_invoice_pdf(project_id: str):
+async def export_invoice_pdf(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     invoice = await _get_ai_invoice(project_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Save the invoice before exporting")
@@ -992,7 +1393,8 @@ async def export_invoice_pdf(project_id: str):
 
 
 @api_router.get("/projects/{project_id}/invoice/export/docx")
-async def export_invoice_docx(project_id: str):
+async def export_invoice_docx(project_id: str, org: str = Depends(current_org)):
+    await require_project(project_id, org)
     invoice = await _get_ai_invoice(project_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Save the invoice before exporting")
@@ -1005,40 +1407,38 @@ async def export_invoice_docx(project_id: str):
 
 
 @api_router.get("/invoice/config")
-async def invoice_config():
+async def invoice_config(user: dict = Depends(current_user)):
     return {"fields": INVOICE_FIELDS, "statuses": INVOICE_STATUSES}
 
 
 # ------------------- Executive Dashboard -------------------
 @api_router.get("/dashboard/summary")
-async def dashboard_summary():
-    total_projects = await db.projects.count_documents({})
-    completed_projects = await db.projects.count_documents({"status": "Completed"})
+async def dashboard_summary(org: str = Depends(current_org)):
+    base = {"organizationId": org}
+    total_projects = await db.projects.count_documents(base)
+    completed_projects = await db.projects.count_documents({**base, "status": "Completed"})
 
-    # Invoice financials in one aggregation (no N+1)
     inv_by_status = {}
-    revenue = outstanding = 0.0
-    async for row in db.ai_invoices.aggregate([{"$group": {"_id": "$status", "count": {"$sum": 1}, "total": {"$sum": "$total"}}}]):
+    async for row in db.ai_invoices.aggregate([{"$match": base}, {"$group": {"_id": "$status", "count": {"$sum": 1}, "total": {"$sum": "$total"}}}]):
         inv_by_status[row["_id"]] = {"count": row["count"], "total": round(row.get("total", 0) or 0, 2)}
     revenue = inv_by_status.get("Paid", {}).get("total", 0)
     outstanding = round(inv_by_status.get("Sent", {}).get("total", 0) + inv_by_status.get("Overdue", {}).get("total", 0), 2)
-    avg_row = await db.ai_invoices.aggregate([{"$group": {"_id": None, "avg": {"$avg": "$total"}}}]).to_list(1)
+    avg_row = await db.ai_invoices.aggregate([{"$match": base}, {"$group": {"_id": None, "avg": {"$avg": "$total"}}}]).to_list(1)
     avg_invoice = round(avg_row[0]["avg"], 2) if avg_row else 0
-    total_invoices = await db.ai_invoices.count_documents({})
+    total_invoices = await db.ai_invoices.count_documents(base)
 
-    # Project status breakdown
     project_status = {}
-    async for row in db.projects.aggregate([{"$group": {"_id": "$status", "count": {"$sum": 1}}}]):
+    async for row in db.projects.aggregate([{"$match": base}, {"$group": {"_id": "$status", "count": {"$sum": 1}}}]):
         project_status[row["_id"] or "Unknown"] = row["count"]
 
     kpis = {
-        "total_clients": await db.clients.count_documents({}),
+        "total_clients": await db.clients.count_documents(base),
         "active_projects": total_projects - completed_projects,
         "completed_projects": completed_projects,
-        "open_tasks": await db.tasks.count_documents({"done": False}),
-        "completed_tasks": await db.tasks.count_documents({"done": True}),
-        "pending_proposals": await db.ai_proposals.count_documents({"status": {"$in": ["Draft", "Generated", "Sent"]}}),
-        "sent_contracts": await db.ai_contracts.count_documents({"status": {"$in": ["Sent", "Signed"]}}),
+        "open_tasks": await db.tasks.count_documents({**base, "done": False}),
+        "completed_tasks": await db.tasks.count_documents({**base, "done": True}),
+        "pending_proposals": await db.ai_proposals.count_documents({**base, "status": {"$in": ["Draft", "Generated", "Sent"]}}),
+        "sent_contracts": await db.ai_contracts.count_documents({**base, "status": {"$in": ["Sent", "Signed"]}}),
         "outstanding_invoices": (inv_by_status.get("Sent", {}).get("count", 0) + inv_by_status.get("Overdue", {}).get("count", 0)),
         "paid_invoices": inv_by_status.get("Paid", {}).get("count", 0),
         "revenue": revenue,
@@ -1058,14 +1458,14 @@ async def dashboard_summary():
     }
 
     recent_activity = await db.activities.aggregate([
-        {"$sort": {"created_at": -1}}, {"$limit": 12},
+        {"$match": base}, {"$sort": {"created_at": -1}}, {"$limit": 12},
         {"$lookup": {"from": "projects", "localField": "project_id", "foreignField": "id", "as": "proj"}},
         {"$project": {"_id": 0, "type": 1, "message": 1, "created_at": 1, "project_id": 1,
                       "project_name": {"$arrayElemAt": ["$proj.name", 0]}}},
     ]).to_list(12)
 
     upcoming_tasks = await db.tasks.aggregate([
-        {"$match": {"done": False}},
+        {"$match": {**base, "done": False}},
         {"$lookup": {"from": "projects", "localField": "project_id", "foreignField": "id", "as": "proj"}},
         {"$addFields": {"project_name": {"$arrayElemAt": ["$proj.name", 0]},
                         "nodue": {"$cond": [{"$in": ["$due", ["", None]]}, 1, 0]}}},
@@ -1074,7 +1474,7 @@ async def dashboard_summary():
     ]).to_list(6)
 
     recent_clients = await db.clients.aggregate([
-        {"$sort": {"created_at": -1}}, {"$limit": 5},
+        {"$match": base}, {"$sort": {"created_at": -1}}, {"$limit": 5},
         {"$lookup": {"from": "projects", "localField": "id", "foreignField": "client_id", "as": "proj"}},
         {"$addFields": {"projects_count": {"$size": "$proj"}}},
         {"$project": {"_id": 0, "proj": 0}},
@@ -1087,15 +1487,16 @@ async def dashboard_summary():
 
 
 @api_router.get("/dashboard/search")
-async def dashboard_search(q: str):
+async def dashboard_search(q: str, org: str = Depends(current_org)):
     if not q or len(q.strip()) < 1:
         return {"clients": [], "projects": [], "invoices": [], "contracts": [], "proposals": []}
-    rx = {"$regex": q.strip(), "$options": "i"}
-    clients = await db.clients.find({"$or": [{"name": rx}, {"contact": rx}, {"email": rx}]}, {"_id": 0, "id": 1, "name": 1, "contact": 1}).limit(5).to_list(5)
-    projects = await db.projects.find({"name": rx}, {"_id": 0, "id": 1, "name": 1, "status": 1}).limit(5).to_list(5)
-    invoices = await db.ai_invoices.find({"$or": [{"invoice_number": rx}, {"title": rx}]}, {"_id": 0, "project_id": 1, "invoice_number": 1, "title": 1, "total": 1}).limit(5).to_list(5)
-    contracts = await db.ai_contracts.find({"title": rx}, {"_id": 0, "project_id": 1, "title": 1, "status": 1}).limit(5).to_list(5)
-    proposals = await db.ai_proposals.find({"title": rx}, {"_id": 0, "project_id": 1, "title": 1, "status": 1}).limit(5).to_list(5)
+    rx = {"$regex": re.escape(q.strip()), "$options": "i"}
+    base = {"organizationId": org}
+    clients = await db.clients.find({**base, "$or": [{"name": rx}, {"contact": rx}, {"email": rx}]}, {"_id": 0, "id": 1, "name": 1, "contact": 1}).limit(5).to_list(5)
+    projects = await db.projects.find({**base, "name": rx}, {"_id": 0, "id": 1, "name": 1, "status": 1}).limit(5).to_list(5)
+    invoices = await db.ai_invoices.find({**base, "$or": [{"invoice_number": rx}, {"title": rx}]}, {"_id": 0, "project_id": 1, "invoice_number": 1, "title": 1, "total": 1}).limit(5).to_list(5)
+    contracts = await db.ai_contracts.find({**base, "title": rx}, {"_id": 0, "project_id": 1, "title": 1, "status": 1}).limit(5).to_list(5)
+    proposals = await db.ai_proposals.find({**base, "title": rx}, {"_id": 0, "project_id": 1, "title": 1, "status": 1}).limit(5).to_list(5)
     return {"clients": clients, "projects": projects, "invoices": invoices, "contracts": contracts, "proposals": proposals}
 
 
@@ -1111,6 +1512,50 @@ app.add_middleware(
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+SCOPED_COLLECTIONS = [
+    "clients", "projects", "tasks", "documents", "proposals", "activities",
+    "plans", "ai_proposals", "ai_contracts", "ai_invoices", "chat_messages",
+]
+
+
+@app.on_event("startup")
+async def startup():
+    await db.users.create_index("email", unique=True)
+    await db.sessions.create_index("jti")
+    await db.sessions.create_index("userId")
+    await db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
+    await db.email_verification_tokens.create_index("expires_at", expireAfterSeconds=0)
+    await db.login_attempts.create_index("identifier")
+
+    # Seed demo account + backfill existing (pre-auth) data to its organization
+    demo_email = os.environ.get("DEMO_EMAIL", "jordan@assistify.io").lower()
+    demo_password = os.environ.get("DEMO_PASSWORD", "Assistify2026!")
+    demo = await db.users.find_one({"email": demo_email})
+    now = now_iso()
+    if not demo:
+        org_id = A.gen_id()
+        user_id = A.gen_id()
+        await db.organizations.insert_one({
+            "id": org_id, "name": "Assistify Inc.", "ownerId": user_id, "createdAt": now, "updatedAt": now})
+        await db.users.insert_one({
+            "id": user_id, "firstName": "Jordan", "lastName": "Reyes", "email": demo_email,
+            "passwordHash": A.hash_password(demo_password), "emailVerified": True,
+            "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
+            "role": "owner", "organizationId": org_id, "timezone": "UTC", "language": "en",
+            "createdAt": now, "updatedAt": now, "lastLogin": now})
+        logger.info(f"[SEED] Created demo account {demo_email} / org {org_id}")
+    else:
+        org_id = demo["organizationId"]
+        if not A.verify_password(demo_password, demo["passwordHash"]):
+            await db.users.update_one({"email": demo_email}, {"$set": {"passwordHash": A.hash_password(demo_password)}})
+
+    # Backfill any legacy documents that lack organizationId
+    for coll in SCOPED_COLLECTIONS:
+        res = await db[coll].update_many({"organizationId": {"$exists": False}}, {"$set": {"organizationId": org_id}})
+        if res.modified_count:
+            logger.info(f"[BACKFILL] {coll}: {res.modified_count} docs -> org {org_id}")
 
 
 @app.on_event("shutdown")

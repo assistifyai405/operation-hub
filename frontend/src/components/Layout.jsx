@@ -3,14 +3,17 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare, MessageSquare,
   Bot, FileText, FolderOpen, BarChart3, Settings as SettingsIcon,
-  Search, Bell, Menu, X, Sparkles, LogOut,
+  Search, Bell, Menu, X, Sparkles, LogOut, MailWarning,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { currentUser, notifications } from "@/data/mock";
+import { notifications } from "@/data/mock";
+import { useAuth } from "@/context/AuthContext";
+import { authApi } from "@/lib/api";
+import { toast } from "sonner";
 import CommandPalette from "@/components/CommandPalette";
 
 const nav = [
@@ -76,7 +79,25 @@ export default function Layout() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const pageTitle = [...nav].reverse().find((n) => location.pathname === n.to || location.pathname.startsWith(n.to + "/"))?.label || "Dashboard";
+
+  const fullName = user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email : "";
+  const initials = user ? `${(user.firstName || user.email || "?")[0] || ""}${(user.lastName || "")[0] || ""}`.toUpperCase() : "";
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
+
+  const resendVerification = async () => {
+    try {
+      await authApi.resendVerification();
+      toast.success("Verification link sent (check backend logs in dev mode).");
+    } catch (e) {
+      toast.error(e.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-zinc-50">
@@ -145,21 +166,29 @@ export default function Layout() {
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2" data-testid="user-menu">
                 <Avatar className="h-8 w-8 border border-white/10">
-                  <AvatarImage src={currentUser.avatar} />
-                  <AvatarFallback>JR</AvatarFallback>
+                  <AvatarImage src={user?.avatar} />
+                  <AvatarFallback className="bg-violet-600/20 text-violet-300 text-xs">{initials}</AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 border-white/10 bg-zinc-950 text-zinc-200">
               <DropdownMenuLabel>
-                <p className="text-sm font-medium">{currentUser.name}</p>
-                <p className="text-xs font-normal text-zinc-500">{currentUser.email}</p>
+                <p className="text-sm font-medium" data-testid="user-name">{fullName}</p>
+                <p className="text-xs font-normal text-zinc-500">{user?.email}</p>
+                {user && !user.emailVerified && (
+                  <span className="mt-1 inline-block rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-400" data-testid="unverified-badge">Email unverified</span>
+                )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-white/10" />
+              {user && !user.emailVerified && (
+                <DropdownMenuItem className="focus:bg-zinc-900" onClick={resendVerification} data-testid="resend-verification">
+                  <MailWarning className="mr-2 h-4 w-4" /> Verify email
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem className="focus:bg-zinc-900" onClick={() => navigate("/settings")}>
                 <SettingsIcon className="mr-2 h-4 w-4" /> Settings
               </DropdownMenuItem>
-              <DropdownMenuItem className="focus:bg-zinc-900" onClick={() => navigate("/")} data-testid="logout-btn">
+              <DropdownMenuItem className="focus:bg-zinc-900" onClick={handleLogout} data-testid="logout-btn">
                 <LogOut className="mr-2 h-4 w-4" /> Log out
               </DropdownMenuItem>
             </DropdownMenuContent>

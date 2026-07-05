@@ -1,0 +1,24 @@
+{
+  "summary": "Iteration 12: Full backend + frontend testing of new production JWT auth sprint. Backend: 26/26 auth tests pass (test_auth.py) covering registration (with org creation, dev verifyLink, duplicate 409, invalid email 422), login (demo success, wrong password 401, brute-force 429 lockout after 5 failed attempts), session (GET /auth/me with Bearer, 401 without token, /auth/refresh rotates access + succeeds with new token), logout (revokes session, subsequent refresh returns 401), protected routes (/api/clients, /api/projects, /api/dashboard/summary all 401 without token), org isolation (demo sees 3 clients, newly-registered user sees 0), forgot-password (returns resetLink for existing user, generic response for unknown email, reset with token allows login), verify-email (register returns verificationLink, POST /auth/verify-email flips emailVerified=true, invalid token 400), profile update (patch updates firstName/lastName and org name via company), change-password (rejects wrong current 400, accepts correct 200), regression (demo can still read /clients /projects /tasks /dashboard/summary). Frontend: /login with demo creds redirects to /dashboard; user-menu shows 'Jordan Reyes'; NO unverified-badge for verified demo user; logout returns to /login; visiting /clients while logged out redirects to /login; /register creates fresh user + lands on /dashboard; unverified-badge AND resend-verification appear for new user; /forgot-password displays dev-reset-link with token URL; Settings > Profile save updates firstName (persists on reload); Settings > Security change-password shows 'Password changed' toast. Regression: Dashboard KPIs load (total_clients=3), /clients still lists Halcyon/Vertex/Northwind for demo, project workspace was validated in prev iterations. No console errors other than expected 401s during unauthenticated redirects.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_auth.py",
+    "/app/test_reports/pytest/auth_iter12.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Login lockout uses identifier = ip:email. In shared-IP scenarios (office NAT) a single attacker can lock any known email address. Consider a hybrid rule (per-email failure count with progressive backoff plus per-IP).",
+    "Refresh cookie is samesite=none + secure — required for cross-origin, but ensure the preview deployment always uses HTTPS (it does). Access token is also mirrored to a cookie at path=/api for export downloads — acceptable but note this widens the surface (CSRF vector for non-GET). Consider CSRF token for state-changing endpoints if cookie auth is ever accepted.",
+    "Passwords have no server-side complexity validation (only Pydantic min_length in RegisterRequest — verify). Consider min 8 chars + at least one number for change-password too.",
+    "auth.py line 16 uses os.environ['JWT_SECRET'] with direct KeyError on missing env — good fail-fast, but ensure JWT_SECRET is set in production env (currently loaded from backend/.env).",
+    "/auth/reset-password revokes all sessions (good), but /auth/change-password does NOT revoke other sessions/refresh tokens after a password change. Consider revoking all sessions on password change for security."
+  ],
+  "updated_files": ["/app/backend/tests/test_auth.py"],
+  "success_rate": {"backend": "100% (26/26)", "frontend": "100% (all critical auth flows + regression)"},
+  "test_credentials": "Demo: jordan@assistify.io / Assistify2026! (owns 3 clients). QA registrations use qa+<uuid>@example.com. Note change-password test above changed one new user's password to 'NewPass456!' — that test user is disposable.",
+  "seed_data_creation": "Created several disposable QA users (qa+<uuid>@example.com) via /auth/register — each has its own isolated org. Demo account untouched. Login-attempts collection may contain locked records for a fake email used in brute-force test (auto-clears after 15 min).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Auth sprint fully green. Reusable test suite at /app/backend/tests/test_auth.py — set REACT_APP_BACKEND_URL env before running. All data-testids in prompt exist and work. Radix DropdownMenu requires real click (not force=True) to open; use await page.click(...) without force plus wait 500-700ms for menu portal to render before querying unverified-badge/resend-verification. Refresh token is httpOnly cookie at path /api/auth so requests.Session() carries it automatically. Prev iterations 1-11 covered dashboard/AI planner/proposal/contract/invoice — all still reachable & protected."
+}
