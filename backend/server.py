@@ -15,10 +15,12 @@ from datetime import datetime, timezone
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
 
-from ai_service import AIService
+from ai_service import AIService, extract_json
 from proposal_config import PROPOSAL_SECTIONS, PROPOSAL_STATUSES, PROPOSAL_SYSTEM, build_proposal_prompt
 from contract_config import CONTRACT_SECTIONS, CONTRACT_STATUSES, CONTRACT_SYSTEM, build_contract_prompt
+from invoice_config import INVOICE_STATUSES, INVOICE_FIELDS, INVOICE_SYSTEM, build_invoice_prompt
 from proposal_export import build_pdf, build_docx
+from invoice_export import build_invoice_pdf, build_invoice_docx
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -313,6 +315,7 @@ async def delete_project(project_id: str):
     await db.plans.delete_many({"project_id": project_id})
     await db.ai_proposals.delete_many({"project_id": project_id})
     await db.ai_contracts.delete_many({"project_id": project_id})
+    await db.ai_invoices.delete_many({"project_id": project_id})
     await db.activities.delete_many({"project_id": project_id})
     return {"ok": True}
 
@@ -824,6 +827,186 @@ async def export_contract_docx(project_id: str):
 @api_router.get("/contract/sections")
 async def contract_sections():
     return {"sections": CONTRACT_SECTIONS, "statuses": CONTRACT_STATUSES}
+
+
+# ------------------- AI Invoice Generator -------------------
+from datetime import timedelta
+
+
+class InvoiceSave(BaseModel):
+    invoice_number: str = ""
+    title: str = "Untitled Invoice"
+    status: str = "Draft"
+    content: dict = Field(default_factory=dict)
+    line_items: list = Field(default_factory=list)
+
+
+async def _get_ai_invoice(project_id: str):
+    return await db.ai_invoices.find_one({"project_id": project_id}, {"_id": 0})
+
+
+def _compute_invoice(line_items: list, vat_rate: float):
+    items = []
+    subtotal = 0.0
+    for li in (line_items or []):
+        qty = float(li.get("quantity", 0) or 0)
+        price = float(li.get("unit_price", 0) or 0)
+        amount = round(qty * price, 2)
+        subtotal += amount
+        items.append({"description": li.get("description", ""), "quantity": qty, "unit_price": price, "amount": amount})
+    subtotal = round(subtotal, 2)
+    vat_amount = round(subtotal * float(vat_rate or 0) / 100, 2)
+    total = round(subtotal + vat_amount, 2)
+    return items, subtotal, vat_amount, total
+
+
+async def _next_invoice_number():
+    count = await db.ai_invoices.count_documents({})
+    return f"INV-{datetime.now(timezone.utc).strftime('%Y%m')}-{count + 1:04d}"
+
+
+@api_router.post("/projects/{project_id}/invoice/generate")
+async def generate_invoice(project_id: str):
+    p, context, proposal_id = await _build_contract_context(project_id)
+    contract = await _get_ai_contract(project_id)
+    if contract:
+        context += "\n\nSIGNED/DRAFT CONTRACT PAYMENT TERMS:\n" + json.dumps(contract.get("content", {}).get("payment_terms", []))
+
+    prompt = build_invoice_prompt(context)
+    try:
+        raw = await ai_service.complete(INVOICE_SYSTEM, prompt, session_id=f"invoice-{project_id}-{uuid.uuid4()}")
+        data = extract_json(raw)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="AI returned an unparseable invoice. Please regenerate.")
+    except Exception as e:
+        logging.exception("invoice generation failed")
+        raise HTTPException(status_code=502, detail=f"Invoice generation failed: {e}")
+
+    vat_rate = float(data.get("vat_rate", 0) or 0)
+    items, subtotal, vat_amount, total = _compute_invoice(data.get("line_items", []), vat_rate)
+
+    client = await db.clients.find_one({"id": p["client_id"]}, {"_id": 0}) if p.get("client_id") else None
+    issue = datetime.now(timezone.utc)
+    due = issue + timedelta(days=14)
+    content = {
+        "client_name": (client or {}).get("contact") or (client or {}).get("name") or "",
+        "company": (client or {}).get("name") or "",
+        "billing_address": data.get("billing_address", "[CLIENT ADDRESS]"),
+        "project_name": p.get("name", ""),
+        "description": data.get("description", ""),
+        "payment_terms": data.get("payment_terms", "Net 14"),
+        "notes": data.get("notes", ""),
+        "bank_details": data.get("bank_details", "[BANK DETAILS]"),
+        "issue_date": issue.strftime("%Y-%m-%d"),
+        "due_date": due.strftime("%Y-%m-%d"),
+        "vat_rate": vat_rate,
+    }
+    await log_activity(project_id, "invoice_generated", f'Invoice for "{p.get("name")}" was generated')
+    return {
+        "invoice_number": await _next_invoice_number(), "title": f"{p.get('name')} — Invoice",
+        "content": content, "line_items": items, "subtotal": subtotal, "vat": vat_amount, "total": total,
+        "proposal_id": proposal_id, "contract_id": contract.get("id") if contract else None,
+    }
+
+
+@api_router.get("/projects/{project_id}/invoice")
+async def get_invoice(project_id: str):
+    return await _get_ai_invoice(project_id)
+
+
+@api_router.get("/projects/{project_id}/invoice/versions")
+async def invoice_versions(project_id: str):
+    doc = await _get_ai_invoice(project_id)
+    return doc.get("history", []) if doc else []
+
+
+async def _save_invoice(project_id: str, payload: InvoiceSave, activity_type: str, activity_msg: str):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if payload.status not in INVOICE_STATUSES:
+        raise HTTPException(status_code=422, detail="Invalid status")
+
+    vat_rate = float(payload.content.get("vat_rate", 0) or 0)
+    items, subtotal, vat_amount, total = _compute_invoice(payload.line_items, vat_rate)
+    content = {**payload.content, "vat_rate": vat_rate}
+
+    existing = await _get_ai_invoice(project_id)
+    version = (existing["version"] + 1) if existing else 1
+    now = now_iso()
+    inv_number = payload.invoice_number or (existing["invoice_number"] if existing else await _next_invoice_number())
+    entry = {
+        "version": version, "invoice_number": inv_number, "title": payload.title, "status": payload.status,
+        "content": content, "line_items": items, "subtotal": subtotal, "vat": vat_amount, "total": total, "created_at": now,
+    }
+    if existing:
+        history = existing.get("history", []) + [entry]
+        await db.ai_invoices.update_one({"project_id": project_id}, {"$set": {
+            "invoice_number": inv_number, "title": payload.title, "status": payload.status, "content": content,
+            "line_items": items, "subtotal": subtotal, "vat": vat_amount, "total": total,
+            "version": version, "history": history, "updated_at": now,
+        }})
+    else:
+        proposal = await _get_ai_proposal(project_id)
+        contract = await _get_ai_contract(project_id)
+        doc = {
+            "id": str(uuid.uuid4()), "invoice_number": inv_number, "title": payload.title, "project_id": project_id,
+            "client_id": p.get("client_id"), "proposal_id": proposal.get("id") if proposal else None,
+            "contract_id": contract.get("id") if contract else None, "status": payload.status, "content": content,
+            "line_items": items, "subtotal": subtotal, "vat": vat_amount, "total": total,
+            "version": version, "history": [entry], "created_at": now, "updated_at": now,
+        }
+        await db.ai_invoices.insert_one(doc)
+    await log_activity(project_id, activity_type, activity_msg.format(version=version, number=inv_number))
+    return await _get_ai_invoice(project_id)
+
+
+@api_router.post("/projects/{project_id}/invoice")
+async def save_invoice(project_id: str, payload: InvoiceSave):
+    return await _save_invoice(project_id, payload, "invoice_saved", "Invoice {number} v{version} was saved")
+
+
+@api_router.post("/projects/{project_id}/invoice/restore/{version}")
+async def restore_invoice(project_id: str, version: int):
+    existing = await _get_ai_invoice(project_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    match = next((v for v in existing.get("history", []) if v["version"] == version), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="Version not found")
+    payload = InvoiceSave(invoice_number=match["invoice_number"], title=match["title"],
+                          status=match["status"], content=match["content"], line_items=match["line_items"])
+    return await _save_invoice(project_id, payload, "invoice_restored", "Invoice restored from v" + str(version) + " as v{version}")
+
+
+@api_router.get("/projects/{project_id}/invoice/export/pdf")
+async def export_invoice_pdf(project_id: str):
+    invoice = await _get_ai_invoice(project_id)
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Save the invoice before exporting")
+    data = build_invoice_pdf(invoice)
+    await log_activity(project_id, "invoice_exported", "Invoice exported as PDF")
+    fname = _safe_filename(invoice.get("invoice_number") or invoice.get("title"))
+    return StreamingResponse(io.BytesIO(data), media_type="application/pdf",
+                             headers={"Content-Disposition": f'attachment; filename="{fname}.pdf"'})
+
+
+@api_router.get("/projects/{project_id}/invoice/export/docx")
+async def export_invoice_docx(project_id: str):
+    invoice = await _get_ai_invoice(project_id)
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Save the invoice before exporting")
+    data = build_invoice_docx(invoice)
+    await log_activity(project_id, "invoice_exported", "Invoice exported as DOCX")
+    fname = _safe_filename(invoice.get("invoice_number") or invoice.get("title"))
+    return StreamingResponse(io.BytesIO(data),
+                             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                             headers={"Content-Disposition": f'attachment; filename="{fname}.docx"'})
+
+
+@api_router.get("/invoice/config")
+async def invoice_config():
+    return {"fields": INVOICE_FIELDS, "statuses": INVOICE_STATUSES}
 
 
 app.include_router(api_router)

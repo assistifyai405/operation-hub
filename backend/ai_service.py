@@ -36,7 +36,7 @@ class AIService:
         return parse_json(text, keys)
 
 
-def parse_json(text: str, keys: list) -> dict:
+def extract_json(text: str) -> dict:
     t = (text or "").strip()
     if t.startswith("```"):
         t = t.split("```", 2)[1] if t.count("```") >= 2 else t.strip("`")
@@ -45,5 +45,9 @@ def parse_json(text: str, keys: list) -> dict:
     s, e = t.find("{"), t.rfind("}")
     if s != -1 and e != -1:
         t = t[s:e + 1]
-    data = json.loads(t)
+    return json.loads(t)
+
+
+def parse_json(text: str, keys: list) -> dict:
+    data = extract_json(text)
     return {k["key"]: data.get(k["key"], "" if k["type"] == "text" else []) for k in keys}

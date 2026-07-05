@@ -76,3 +76,13 @@ export const contractWriterApi = {
   restore: (projectId, version) => req(`/projects/${projectId}/contract/restore/${version}`, { method: "POST" }),
   exportUrl: (projectId, fmt) => `${process.env.REACT_APP_BACKEND_URL}/api/projects/${projectId}/contract/export/${fmt}`,
 };
+
+export const invoiceWriterApi = {
+  config: () => req("/invoice/config"),
+  generate: (projectId) => req(`/projects/${projectId}/invoice/generate`, { method: "POST" }),
+  get: (projectId) => req(`/projects/${projectId}/invoice`),
+  save: (projectId, data) => req(`/projects/${projectId}/invoice`, { method: "POST", body: JSON.stringify(data) }),
+  versions: (projectId) => req(`/projects/${projectId}/invoice/versions`),
+  restore: (projectId, version) => req(`/projects/${projectId}/invoice/restore/${version}`, { method: "POST" }),
+  exportUrl: (projectId, fmt) => `${process.env.REACT_APP_BACKEND_URL}/api/projects/${projectId}/invoice/export/${fmt}`,
+};
