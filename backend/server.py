@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+import io
 import json
 import logging
 from pathlib import Path
@@ -14,6 +15,10 @@ from datetime import datetime, timezone
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
 
+from ai_service import AIService
+from proposal_config import PROPOSAL_SECTIONS, PROPOSAL_STATUSES, PROPOSAL_SYSTEM, build_proposal_prompt
+from proposal_export import build_pdf, build_docx
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
@@ -22,6 +27,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 EMERGENT_LLM_KEY = os.environ['EMERGENT_LLM_KEY']
+ai_service = AIService(api_key=EMERGENT_LLM_KEY)
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -304,6 +310,7 @@ async def delete_project(project_id: str):
     await db.documents.delete_many({"project_id": project_id})
     await db.proposals.delete_many({"project_id": project_id})
     await db.plans.delete_many({"project_id": project_id})
+    await db.ai_proposals.delete_many({"project_id": project_id})
     await db.activities.delete_many({"project_id": project_id})
     return {"ok": True}
 
@@ -529,6 +536,137 @@ async def save_plan(project_id: str, payload: PlanSave):
     await db.plans.insert_one(obj.model_dump())
     await log_activity(project_id, "plan_generated", f"AI project plan v{version} was saved")
     return obj
+
+
+# ------------------- AI Proposal Writer -------------------
+class ProposalContent(BaseModel):
+    title: str = "Untitled Proposal"
+    status: str = "Draft"
+    content: dict = Field(default_factory=dict)
+
+
+async def _get_ai_proposal(project_id: str):
+    return await db.ai_proposals.find_one({"project_id": project_id}, {"_id": 0})
+
+
+@api_router.post("/projects/{project_id}/proposal/generate")
+async def generate_proposal(project_id: str):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    await enrich_project(p)
+    context = await build_project_context(p)
+
+    # Fold in the latest AI plan if one exists (richer context, no manual copy/paste)
+    latest_plan = await db.plans.find_one({"project_id": project_id}, {"_id": 0}, sort=[("version", -1)])
+    if latest_plan:
+        secs = latest_plan.get("sections", {})
+        context += "\n\nLATEST AI PROJECT PLAN:\n" + json.dumps(secs)[:4000]
+
+    prompt = build_proposal_prompt(context)
+    try:
+        content = await ai_service.complete_json(PROPOSAL_SYSTEM, prompt, PROPOSAL_SECTIONS, session_id=f"proposal-{project_id}-{uuid.uuid4()}")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="AI returned an unparseable proposal. Please regenerate.")
+    except Exception as e:
+        logging.exception("proposal generation failed")
+        raise HTTPException(status_code=502, detail=f"Proposal generation failed: {e}")
+
+    await log_activity(project_id, "proposal_generated", f'Proposal for "{p.get("name")}" was generated')
+    default_title = f"{p.get('name')} — Proposal"
+    return {"title": default_title, "content": content}
+
+
+@api_router.get("/projects/{project_id}/proposal")
+async def get_proposal(project_id: str):
+    return await _get_ai_proposal(project_id)
+
+
+@api_router.get("/projects/{project_id}/proposal/versions")
+async def proposal_versions(project_id: str):
+    doc = await _get_ai_proposal(project_id)
+    return doc.get("history", []) if doc else []
+
+
+@api_router.post("/projects/{project_id}/proposal")
+async def save_proposal(project_id: str, payload: ProposalContent):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if payload.status not in PROPOSAL_STATUSES:
+        raise HTTPException(status_code=422, detail="Invalid status")
+
+    existing = await _get_ai_proposal(project_id)
+    version = (existing["version"] + 1) if existing else 1
+    now = now_iso()
+    version_entry = {
+        "version": version, "title": payload.title, "status": payload.status,
+        "content": payload.content, "created_at": now,
+    }
+    if existing:
+        history = existing.get("history", []) + [version_entry]
+        await db.ai_proposals.update_one({"project_id": project_id}, {"$set": {
+            "title": payload.title, "status": payload.status, "content": payload.content,
+            "version": version, "history": history, "updated_at": now,
+        }})
+    else:
+        doc = {
+            "id": str(uuid.uuid4()), "title": payload.title, "project_id": project_id,
+            "client_id": p.get("client_id"), "status": payload.status, "content": payload.content,
+            "version": version, "history": [version_entry], "created_at": now, "updated_at": now,
+        }
+        await db.ai_proposals.insert_one(doc)
+    await log_activity(project_id, "proposal_saved", f"Proposal v{version} was saved")
+    return await _get_ai_proposal(project_id)
+
+
+@api_router.post("/projects/{project_id}/proposal/restore/{version}")
+async def restore_proposal(project_id: str, version: int):
+    existing = await _get_ai_proposal(project_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    match = next((v for v in existing.get("history", []) if v["version"] == version), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="Version not found")
+    return await save_proposal(project_id, ProposalContent(title=match["title"], status=match["status"], content=match["content"]))
+
+
+def _export_or_404(project_id, proposal):
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Save the proposal before exporting")
+
+
+def _safe_filename(name: str) -> str:
+    ascii_name = "".join(c if (c.isalnum() or c in " -_") else "_" for c in (name or "proposal"))
+    return ascii_name.strip().replace(" ", "_")[:60] or "proposal"
+
+
+@api_router.get("/projects/{project_id}/proposal/export/pdf")
+async def export_proposal_pdf(project_id: str):
+    proposal = await _get_ai_proposal(project_id)
+    _export_or_404(project_id, proposal)
+    data = build_pdf(proposal)
+    await log_activity(project_id, "proposal_exported", "Proposal exported as PDF")
+    fname = _safe_filename(proposal.get("title"))
+    return StreamingResponse(io.BytesIO(data), media_type="application/pdf",
+                             headers={"Content-Disposition": f'attachment; filename="{fname}.pdf"'})
+
+
+@api_router.get("/projects/{project_id}/proposal/export/docx")
+async def export_proposal_docx(project_id: str):
+    proposal = await _get_ai_proposal(project_id)
+    _export_or_404(project_id, proposal)
+    data = build_docx(proposal)
+    await log_activity(project_id, "proposal_exported", "Proposal exported as DOCX")
+    fname = _safe_filename(proposal.get("title"))
+    return StreamingResponse(io.BytesIO(data),
+                             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                             headers={"Content-Disposition": f'attachment; filename="{fname}.docx"'})
+
+
+@api_router.get("/proposal/sections")
+async def proposal_sections():
+    return {"sections": PROPOSAL_SECTIONS, "statuses": PROPOSAL_STATUSES}
 
 
 app.include_router(api_router)

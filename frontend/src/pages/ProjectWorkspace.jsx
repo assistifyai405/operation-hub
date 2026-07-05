@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { projectsApi, tasksApi, documentsApi, proposalsApi, activitiesApi } from "@/lib/api";
 import EmptyState from "@/components/EmptyState";
 import AIPlanner from "@/components/workspace/AIPlanner";
+import ProposalWriter from "@/components/workspace/ProposalWriter";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -372,6 +373,8 @@ const activityMeta = {
   proposal_generated: { icon: FileText, color: "bg-amber-600/20 text-amber-400" },
   document_uploaded: { icon: FileUp, color: "bg-cyan-600/20 text-cyan-400" },
   plan_generated: { icon: Sparkles, color: "bg-violet-600/20 text-violet-400" },
+  proposal_saved: { icon: FilePlus2, color: "bg-violet-600/20 text-violet-400" },
+  proposal_exported: { icon: FileUp, color: "bg-blue-600/20 text-blue-400" },
 };
 function ActivityTab({ activities }) {
   const fmt = (d) => new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -431,6 +434,7 @@ export default function ProjectWorkspace() {
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "planner", label: "AI Planner" },
+    { id: "proposal", label: "Proposal" },
     { id: "chat", label: "AI Chat" },
     { id: "tasks", label: "Tasks" },
     { id: "documents", label: "Documents" },
@@ -463,6 +467,7 @@ export default function ProjectWorkspace() {
         <div className="mt-5">
           <TabsContent value="overview"><Overview project={project} tasks={tasks} documents={documents} goTab={setTab} /></TabsContent>
           <TabsContent value="planner"><AIPlanner projectId={project.id} projectName={project.name} onSaved={loadActivities} /></TabsContent>
+          <TabsContent value="proposal"><ProposalWriter projectId={project.id} projectName={project.name} onSaved={loadActivities} /></TabsContent>
           <TabsContent value="chat"><ProjectChat projectId={project.id} projectName={project.name} /></TabsContent>
           <TabsContent value="tasks"><TasksTab projectId={project.id} tasks={tasks} reload={afterTaskChange} /></TabsContent>
           <TabsContent value="documents"><DocumentsTab projectId={project.id} documents={documents} reload={afterDocChange} /></TabsContent>

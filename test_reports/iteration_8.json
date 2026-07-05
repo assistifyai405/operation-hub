@@ -1,0 +1,23 @@
+{
+  "summary": "Iteration 8 — Full backend + frontend testing of the new AI Proposal Writer module. Backend: 16/16 pytest tests PASS (sections/statuses schema, generate with real LLM, save v1→v2 versioning, invalid status 422, versions list, restore non-destructive (v3 with v1 content), PDF (%PDF) + DOCX (PK zip) exports with correct content-types, export-before-save → 404, activity logging for proposal_generated/proposal_saved/proposal_exported, and regressions: plural /api/proposals CRUD + planner endpoints reachable). Frontend Playwright: full happy-path passed — tab-trigger-proposal is between planner and chat, empty state + generate-proposal-btn shows on new project, real LLM generation (~15s) rendered all 15 prop-section-<key> blocks, header shows editable proposal-title-input + proposal-version (draft) + status Select with proposal-status-Sent option, edit mode fills prop-edit-executive_summary with TEST_EDIT_MARKER_v1 which persisted (verified via GET /api/projects/{id}/proposal), save produced v1, version-history-btn opens proposal-version-list with proposal-version-1, regenerate returns to 'draft', save→v2, view-proposal-version-1 loads it, compare-proposal-version-1 opens proposal-compare and exit-compare-proposal-btn returns, restore-proposal-version-1 creates v3 non-destructively, export PDF + DOCX buttons open popups without crashing, and after all actions Activity tab shows activity-proposal_generated (2), activity-proposal_saved (3), activity-proposal_exported (2) without full-page reload. Regressions PASS: AI Planner tab still shows planner-empty/generate-plan-btn, plural Proposals tab still has ws-add-proposal-btn, and overview/tasks/documents/notes/chat tabs render fine.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/backend/tests/test_proposal.py", "/app/test_reports/pytest/pytest_proposal.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py is 688 lines — getting close to the 700-line split threshold; proposal endpoints could later move to a proposal_routes.py module.",
+    "generate_proposal always folds in the latest plan even if it's stale/empty — fine, but consider only including if sections exist (minor).",
+    "restore_proposal uses payload's status from the historical entry — correct + non-destructive; new version increments as expected.",
+    "ProposalWriter.jsx: exportFile uses window.open then a 1.5s setTimeout(onSaved) to refresh activities — works but is time-based; a follow-up event/callback would be cleaner. Not blocking.",
+    "AIService uses default model 'gpt-5.4' via env — provider-agnostic wrapper is clean; prompts fully in proposal_config.py (not hardcoded).",
+    "MongoDB _id is properly excluded in _get_ai_proposal via projection {'_id':0}."
+  ],
+  "updated_files": ["/app/backend/tests/test_proposal.py"],
+  "success_rate": {"backend": "100% (16/16)", "frontend": "100% (all proposal + activity + regression checks)"},
+  "test_credentials": "No auth — click [data-testid=login-submit] at /",
+  "seed_data_creation": "Backend tests created TEST_PROPOSAL_MODULE + TEST_NO_SAVE_EXPORT projects and cleaned them up. Frontend test created TEST_PROPOSAL_UI project, saved 3 proposal versions, exported PDF+DOCX, then deleted the project (cascade cleaned ai_proposals + activities).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "New AI Proposal Writer module fully verified end-to-end. Testids to reuse: tab-trigger-proposal, tab-proposal, proposal-empty, generate-proposal-btn, proposal-title-input, proposal-version, proposal-status-trigger, proposal-status-<Status>, prop-section-<key>, prop-edit-<key>, edit-proposal-btn, save-proposal-btn, regenerate-proposal-btn, version-history-btn, proposal-version-list, proposal-version-<n>, view/compare/restore-proposal-version-<n>, exit-compare-proposal-btn, proposal-compare, export-proposal-pdf-btn, export-proposal-docx-btn, activity-proposal_generated/saved/exported. Proposal generation is ~15s real LLM (allow 120s). ai_proposals collection: one doc per project with content + history[].",
+  "rca of the issue": "N/A — all features working as designed."
+}

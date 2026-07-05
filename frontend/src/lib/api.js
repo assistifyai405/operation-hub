@@ -56,3 +56,13 @@ export const plansApi = {
   list: (projectId) => req(`/projects/${projectId}/plans`),
   save: (projectId, sections) => req(`/projects/${projectId}/plans`, { method: "POST", body: JSON.stringify({ sections }) }),
 };
+
+export const proposalWriterApi = {
+  sections: () => req("/proposal/sections"),
+  generate: (projectId) => req(`/projects/${projectId}/proposal/generate`, { method: "POST" }),
+  get: (projectId) => req(`/projects/${projectId}/proposal`),
+  save: (projectId, data) => req(`/projects/${projectId}/proposal`, { method: "POST", body: JSON.stringify(data) }),
+  versions: (projectId) => req(`/projects/${projectId}/proposal/versions`),
+  restore: (projectId, version) => req(`/projects/${projectId}/proposal/restore/${version}`, { method: "POST" }),
+  exportUrl: (projectId, fmt) => `${process.env.REACT_APP_BACKEND_URL}/api/projects/${projectId}/proposal/export/${fmt}`,
+};
