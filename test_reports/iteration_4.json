@@ -1,0 +1,24 @@
+{
+  "summary": "Iteration 4: Verified Dashboard live MongoDB CRUD wiring. Backend regression: 18/18 test_crud.py pass (serial). Frontend Playwright: dashboard-page renders after login. Stat cards match live counts exactly (TC=3, AP=2 [projects with status!=Completed], OT=2 [tasks not done], CT=1 [tasks done]) — matches seeded data. Recent Clients section shows all 3 seeded clients with formatted $value. Upcoming Tasks shows the 2 open tasks (completed 'Onboarding call' correctly excluded). Projects by Status pie renders with In Progress/Review/Completed slices (pie-empty not present). Stat card navigation: card-0->/clients, card-1->/projects, card-2->/tasks all OK. 'View all' link in Recent Clients navigates to /clients. E2E consistency: Created TEST_DashClient via API+reload -> stat-value-0 incremented 3->4 AND recent-client-<id> visible with '$1,234' formatting. Created open task 'TEST_DashOpenTask' (no project) -> stat-value-2 incremented 2->3 AND upcoming-task-<id> visible with 'No project' label. PUT task done=true -> reload -> stat-value-2 decremented back to 2, stat-value-3 incremented 1->2, upcoming-task-<id> removed from list. All TEST_ data cleaned up. Seeded demo state preserved. Sidebar layout unchanged.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_crud.py", "/app/test_reports/pytest/dashboard_iter4.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Dashboard.jsx sorts upcoming tasks by `new Date(a.due) - new Date(b.due)` but pushes null-due tasks to the end via `if (!a.due) return 1`. This works but Date('') === Invalid Date leads to NaN subtraction; harmless since null-due are already excluded above, but consider explicit guard for empty-string due values coming from DB.",
+    "Dashboard fetches all three collections on mount with no re-fetch trigger when returning from CRUD pages. Users editing a client on /clients and navigating back via history will see stale counts until hard reload. Consider a lightweight refetch on focus or a shared store (already noted as acceptable given current UX).",
+    "Command Palette regression check inconclusive — no element with data-testid='cmdk-root' or [cmdk-root] was found after Ctrl+K. Header search input is present so basic UX intact; recommend adding data-testid='cmdk-root' to the palette modal for reliable regression testing."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (18/18 CRUD serial)", "frontend": "100% (all Dashboard flows)"},
+  "test_credentials": "No auth — click [data-testid=login-submit] at /",
+  "seed_data_creation": "Created 1 client + 1 task via API during E2E; both deleted at end. DB left in original seeded state (3 clients, 3 projects, 3 tasks incl. 1 done).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Dashboard is fully wired to /api/clients, /api/projects, /api/tasks with correct testids (dashboard-page, dashboard-loading, stat-card-0..3, stat-value-0..3, recent-client-<id>, recent-clients-empty, upcoming-task-<id>, upcoming-tasks-empty, pie-empty). No re-fetch on route change; use page.reload() when validating CRUD -> dashboard sync. Command Palette does not expose a cmdk-root testid; if regression needed, request main agent to add one.",
+  "rca of the issue": "N/A — no bugs"
+}
