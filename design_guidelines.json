@@ -1,0 +1,104 @@
+{
+  "theme": "Dark",
+  "archetype": "4 (Swiss & High-Contrast) adapted for Dark Mode",
+  "domain": "SaaS Admin Dashboard / AI Platform",
+  "colors": {
+    "background": "bg-black",
+    "surface": "bg-zinc-950",
+    "surface_hover": "hover:bg-zinc-900",
+    "primary": "bg-violet-600",
+    "primary_hover": "hover:bg-violet-500",
+    "border": "border-white/10",
+    "border_hover": "hover:border-violet-500/50",
+    "text": {
+      "primary": "text-zinc-50",
+      "secondary": "text-zinc-400",
+      "muted": "text-zinc-500",
+      "accent": "text-violet-400"
+    }
+  },
+  "typography": {
+    "heading_font": "Outfit",
+    "body_font": "Outfit",
+    "rules": {
+      "headings": "font-semibold tracking-tight text-zinc-50",
+      "body": "font-normal leading-relaxed text-zinc-400",
+      "labels": "uppercase tracking-[0.2em] text-xs font-semibold text-zinc-500"
+    }
+  },
+  "layout_and_spacing": {
+    "sidebar": "fixed left-0 top-0 h-screen w-64 bg-black border-r border-white/10 flex flex-col",
+    "main_content": "ml-64 min-h-screen bg-black p-8 text-zinc-50",
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+    "card": "bg-zinc-950 border border-white/10 rounded-xl p-6 transition-all duration-300 hover:border-white/20",
+    "glass_header": "sticky top-0 z-50 backdrop-blur-xl bg-black/60 border-b border-white/10 px-8 py-4"
+  },
+  "components": {
+    "button_primary": "inline-flex items-center justify-center px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg font-medium transition-all shadow-[0_0_15px_rgba(124,58,237,0.3)] hover:shadow-[0_0_25px_rgba(124,58,237,0.5)] data-testid='primary-btn'",
+    "button_secondary": "inline-flex items-center justify-center px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-50 border border-white/10 rounded-lg font-medium transition-all data-testid='secondary-btn'",
+    "input": "w-full bg-zinc-950 border border-white/10 rounded-lg px-4 py-2 text-zinc-50 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all",
+    "table": "w-full text-left text-sm text-zinc-400",
+    "table_header": "bg-zinc-900/50 text-zinc-50 font-medium border-b border-white/10",
+    "table_row": "border-b border-white/5 hover:bg-zinc-900/50 transition-colors",
+    "badge": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-500/10 text-violet-400 border border-violet-500/20"
+  },
+  "icons": {
+    "library": "lucide-react",
+    "size": "w-5 h-5",
+    "color": "text-zinc-400 group-hover:text-violet-400"
+  },
+  "pages": [
+    "Login (Static, central card, electric violet CTA)",
+    "Dashboard (Control room grid: 4 stat cards top, 2 wide charts middle, 2 lists bottom for active projects/recent clients)",
+    "Clients (Data table without cards, sharp and dense)",
+    "Projects (Kanban board or structured list view)",
+    "Tasks (List view with priority tags)",
+    "AI Chat (Conversational UI, glowing violet user/bot bubbles)",
+    "AI Agents (Grid of agent cards with abstract glowing avatars)",
+    "Proposals (Document list view)",
+    "Documents (Grid view with file thumbnails)",
+    "Analytics (Dense charts using Recharts, dark tooltips)",
+    "Settings (Vertical tabs left, form right)"
+  ],
+  "accessibility": {
+    "focus_ring": "focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-black",
+    "testing": "All interactive elements MUST have data-testid attributes (e.g., data-testid='login-submit')"
+  },
+  "media": {
+    "user_avatars": [
+      {
+        "url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzZ8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdCUyMHBvcnRyYWl0fGVufDB8fHx8MTc4MzE2NzAyNXww&ixlib=rb-4.1.0&q=85",
+        "description": "Woman portrait"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzZ8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdCUyMHBvcnRyYWl0fGVufDB8fHx8MTc4MzE2NzAyNXww&ixlib=rb-4.1.0&q=85",
+        "description": "Man portrait"
+      },
+      {
+        "url": "https://images.pexels.com/photos/31869537/pexels-photo-31869537.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Elegant portrait"
+      }
+    ],
+    "ai_agent_avatars": [
+      {
+        "url": "https://images.unsplash.com/photo-1674027444485-cec3da58eef4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxmdXR1cmlzdGljJTIwYXJ0aWZpY2lhbCUyMGludGVsbGlnZW5jZSUyMGdsb3dpbmclMjBjb3JlfGVufDB8fHx8MTc4MzIzOTg1OHww&ixlib=rb-4.1.0&q=85",
+        "description": "Abstract sphere"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1689443111130-6e9c7dfd8f9e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHRlY2glMjBzdGFydHVwJTIwbG9nb3xlbnwwfHx8fDE3ODMyMzk4NzF8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Purple geometric core"
+      }
+    ],
+    "logos": [
+      {
+        "url": "https://images.unsplash.com/photo-1689443111384-1cf214df988a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHRlY2glMjBzdGFydHVwJTIwbG9nb3xlbnwwfHx8fDE3ODMyMzk4NzF8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Abstract logo 1"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1689443111070-2c1a1110fe82?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHRlY2glMjBzdGFydHVwJTIwbG9nb3xlbnwwfHx8fDE3ODMyMzk4NzF8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Abstract logo 2"
+      }
+    ]
+  },
+  "instructions_to_main_agent": "Ensure all interactive elements have data-testid attributes. Implement a fixed sidebar layout with React Router navigating the 11 pages. Use Recharts for all dashboard analytics with dark backgrounds. Maintain exactly 1px borders with border-white/10 for all cards and inputs. Avoid using generic Inter font; use Outfit everywhere."
+}
