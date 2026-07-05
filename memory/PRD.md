@@ -1,0 +1,40 @@
+# Assistify OS — PRD
+
+## Original Problem Statement
+Build a premium AI business operating system called Assistify OS — an all-in-one dark-theme SaaS platform for entrepreneurs to manage clients, projects, AI agents, proposals, documents, tasks and operations. Pages: Login, Dashboard, Clients, Projects, Tasks, AI Chat, AI Agents, Proposals, Documents, Analytics, Settings. Design inspired by Linear, Notion, Stripe, Vercel — dark theme, electric violet accent, rounded cards, smooth animations, fully responsive.
+
+## User Choices
+- Real AI integration for AI Chat & AI Agents (Emergent LLM key, OpenAI gpt-5.4, streaming)
+- Clean & geometric typography → Outfit font
+- Electric violet accent (Linear-style)
+- Static login → routes to dashboard (no real auth)
+
+## Architecture
+- Frontend: React 19 + React Router 7, Tailwind, shadcn/ui, Recharts, lucide-react. Fixed sidebar layout + glass header.
+- Backend: FastAPI + MongoDB. Endpoints: GET /api/agents, POST /api/chat/stream (SSE streaming via emergentintegrations), GET /api/chat/history/{session_id}. Chat messages persisted in MongoDB.
+- LLM: emergentintegrations LlmChat, model openai/gpt-5.4, EMERGENT_LLM_KEY.
+
+## User Personas
+- Solo founders / agency owners managing multiple clients and projects who want AI leverage.
+
+## Implemented (2026-06)
+- All 11 pages with premium dark UI, electric violet theme, Outfit font, animations.
+- Dashboard: revenue/stat cards, revenue area chart, projects pie, recent clients, upcoming tasks, AI agent activity bar chart, quick actions, notifications dropdown.
+- Clients (table), Projects (kanban), Tasks (interactive checklist + filters), Proposals (list), Documents (grid), Analytics (4 charts), Settings (tabbed).
+- AI Agents page (4 personas from backend) + AI Chat with streaming SSE and agent switcher.
+- Placeholder data in frontend/src/data/mock.js.
+- Verified: backend 100%, frontend 100% (testing agent iteration_1).
+
+## Known Status
+- AI Chat/Agents return live responses ONLY once the Emergent LLM key has balance. Currently $0 → returns budget error (user opted to fund later). UI flow works end-to-end.
+
+## Backlog
+- P1: Persist assistant error markers / show error toast on AI failure.
+- P1: Add data-testid to kanban columns/cards.
+- P2: CRUD persistence for clients/projects/tasks (currently mock).
+- P2: Real auth + multi-user.
+- P2: Health endpoint to verify LLM key validity.
+
+## Next Tasks
+- Fund LLM key and validate live AI chat.
+- Wire real data persistence for core entities if requested.
