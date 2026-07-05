@@ -144,6 +144,30 @@ export const libraryApi = {
 export const analyticsApi = { get: () => req("/analytics") };
 export const notificationsApi = { list: () => req("/notifications") };
 
+export const settingsApi = {
+  get: () => req("/settings"),
+  updateOrganization: (data) => req("/settings/organization", { method: "PATCH", body: JSON.stringify(data) }),
+  updateBranding: (values) => req("/settings/branding", { method: "PATCH", body: JSON.stringify({ values }) }),
+  updateAI: (values) => req("/settings/ai", { method: "PATCH", body: JSON.stringify({ values }) }),
+  updateDocuments: (values) => req("/settings/documents", { method: "PATCH", body: JSON.stringify({ values }) }),
+  updateNotifications: (values) => req("/settings/notifications", { method: "PATCH", body: JSON.stringify({ values }) }),
+  billing: () => req("/settings/billing"),
+  apiKeys: () => req("/settings/api-keys"),
+  recentLogins: () => req("/settings/recent-logins"),
+  logoutAll: () => req("/auth/logout-all", { method: "POST" }),
+  imageUrl: (url) => `${process.env.REACT_APP_BACKEND_URL}${url}?auth=${encodeURIComponent(accessToken || "")}`,
+  uploadImage: async (file) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(`${API}/settings/upload-image`, {
+      method: "POST", credentials: "include",
+      headers: { Authorization: `Bearer ${accessToken}` }, body: fd,
+    });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(formatApiErrorDetail(e.detail) || "Upload failed"); }
+    return res.json();
+  },
+};
+
 export const proposalsApi = {
   list: (projectId) => req(`/proposals${projectId ? `?project_id=${projectId}` : ""}`),
   create: (data) => req("/proposals", { method: "POST", body: JSON.stringify(data) }),

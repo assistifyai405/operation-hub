@@ -1046,6 +1046,195 @@ async def notifications(org: str = Depends(current_org)):
     return items
 
 
+# ==================================================================
+# SETTINGS & WORKSPACE MANAGEMENT
+# ==================================================================
+DEFAULT_ORG_SETTINGS = {
+    "organization": {
+        "website": "", "businessEmail": "", "phone": "", "address": "",
+        "vatNumber": "", "kvkNumber": "", "defaultCurrency": "USD", "defaultVat": 0, "logo": "",
+    },
+    "branding": {
+        "primaryColor": "#8b5cf6", "secondaryColor": "#22d3ee", "logo": "", "pdfLogo": "",
+        "proposalFooter": "", "contractFooter": "", "invoiceFooter": "",
+    },
+    "ai": {
+        "provider": "openai", "proposalTone": "Professional", "contractTone": "Formal",
+        "invoiceNotes": "", "temperature": 0.7,
+    },
+    "documents": {
+        "proposalPrefix": "PROP", "contractPrefix": "CTR", "invoicePrefix": "INV",
+        "numberingStart": 1, "pdfPageSize": "A4", "pdfAccentColor": "#8b5cf6",
+    },
+}
+DEFAULT_NOTIF_PREFS = {
+    "emailNotifications": True, "productUpdates": True, "securityAlerts": True,
+    "billingAlerts": True, "taskReminders": True, "weeklyDigest": False, "aiAlerts": False,
+}
+
+
+def _merged_settings(org_doc: dict) -> dict:
+    s = org_doc.get("settings", {}) or {}
+    out = {}
+    for section, defaults in DEFAULT_ORG_SETTINGS.items():
+        out[section] = {**defaults, **(s.get(section, {}) or {})}
+    out["organization"]["name"] = org_doc.get("name", "")
+    return out
+
+
+class OrgProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    website: Optional[str] = None
+    businessEmail: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    vatNumber: Optional[str] = None
+    kvkNumber: Optional[str] = None
+    defaultCurrency: Optional[str] = None
+    defaultVat: Optional[float] = None
+    logo: Optional[str] = None
+
+
+class SectionUpdate(BaseModel):
+    values: dict
+
+
+class NotifPrefsUpdate(BaseModel):
+    values: dict
+
+
+@api_router.get("/settings")
+async def get_settings(user: dict = Depends(current_user)):
+    org_doc = await db.organizations.find_one({"id": user["organizationId"]}, {"_id": 0})
+    settings = _merged_settings(org_doc or {})
+    settings["notifications"] = {**DEFAULT_NOTIF_PREFS, **(user.get("notificationPrefs", {}) or {})}
+    return settings
+
+
+async def _update_section(org: str, section: str, values: dict):
+    clean = {f"settings.{section}.{k}": v for k, v in values.items()}
+    if clean:
+        clean["updatedAt"] = now_iso()
+        await db.organizations.update_one({"id": org}, {"$set": clean})
+    org_doc = await db.organizations.find_one({"id": org}, {"_id": 0})
+    return _merged_settings(org_doc)[section]
+
+
+@api_router.patch("/settings/organization")
+async def update_org_profile(payload: OrgProfileUpdate, org: str = Depends(current_org)):
+    data = {k: v for k, v in payload.model_dump().items() if v is not None}
+    name = data.pop("name", None)
+    if name is not None and name.strip():
+        await db.organizations.update_one({"id": org}, {"$set": {"name": name.strip(), "updatedAt": now_iso()}})
+    result = await _update_section(org, "organization", data)
+    org_doc = await db.organizations.find_one({"id": org}, {"_id": 0})
+    result["name"] = org_doc.get("name", "")
+    return result
+
+
+@api_router.patch("/settings/branding")
+async def update_branding(payload: SectionUpdate, org: str = Depends(current_org)):
+    return await _update_section(org, "branding", payload.values)
+
+
+@api_router.patch("/settings/ai")
+async def update_ai_settings(payload: SectionUpdate, org: str = Depends(current_org)):
+    return await _update_section(org, "ai", payload.values)
+
+
+@api_router.patch("/settings/documents")
+async def update_doc_settings(payload: SectionUpdate, org: str = Depends(current_org)):
+    return await _update_section(org, "documents", payload.values)
+
+
+@api_router.patch("/settings/notifications")
+async def update_notif_prefs(payload: NotifPrefsUpdate, user: dict = Depends(current_user)):
+    merged = {**DEFAULT_NOTIF_PREFS, **(user.get("notificationPrefs", {}) or {}), **payload.values}
+    await db.users.update_one({"id": user["id"]}, {"$set": {"notificationPrefs": merged, "updatedAt": now_iso()}})
+    return merged
+
+
+@api_router.post("/settings/upload-image")
+async def upload_branding_image(file: UploadFile = File(...), org: str = Depends(current_org)):
+    data = await file.read()
+    if len(data) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Image exceeds 5MB limit")
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "png"
+    if ext not in {"png", "jpg", "jpeg", "gif", "webp", "svg"}:
+        raise HTTPException(status_code=415, detail="Only image files are allowed")
+    path = f"{S.APP_NAME}/branding/{org}/{uuid.uuid4()}.{ext}"
+    ctype = file.content_type or S.guess_content_type(file.filename or "")
+    try:
+        result = await asyncio.to_thread(S.put_object, path, data, ctype)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Upload failed: {e}")
+    asset_id = str(uuid.uuid4())
+    await db.branding_assets.insert_one({"id": asset_id, "organizationId": org, "storage_path": result["path"],
+                                         "content_type": ctype, "created_at": now_iso()})
+    return {"id": asset_id, "url": f"/api/settings/image/{asset_id}"}
+
+
+@api_router.get("/settings/image/{asset_id}")
+async def serve_branding_image(asset_id: str, request: Request, auth: Optional[str] = None):
+    token = auth
+    if not token:
+        h = request.headers.get("Authorization", "")
+        if h.startswith("Bearer "):
+            token = h[7:]
+    if not token:
+        token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        org = A.decode_token(token).get("org")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    asset = await db.branding_assets.find_one({"id": asset_id, "organizationId": org}, {"_id": 0})
+    if not asset:
+        raise HTTPException(status_code=404, detail="Image not found")
+    content, ctype = await asyncio.to_thread(S.get_object, asset["storage_path"])
+    return StreamingResponse(io.BytesIO(content), media_type=asset.get("content_type", ctype))
+
+
+@api_router.post("/auth/logout-all")
+async def logout_all(user: dict = Depends(current_user)):
+    res = await db.sessions.update_many({"userId": user["id"], "revoked": False}, {"$set": {"revoked": True}})
+    return {"ok": True, "revoked": res.modified_count}
+
+
+@api_router.get("/settings/recent-logins")
+async def recent_logins(user: dict = Depends(current_user)):
+    sessions = await db.sessions.find({"userId": user["id"]}, {"_id": 0, "jti": 0}).sort("createdAt", -1).limit(10).to_list(10)
+    return sessions
+
+
+@api_router.get("/settings/billing")
+async def get_billing(user: dict = Depends(current_user)):
+    org = user["organizationId"]
+    base = {"organizationId": org}
+    seats = await db.users.count_documents({"organizationId": org})
+    usage = {
+        "clients": await db.clients.count_documents(base),
+        "projects": await db.projects.count_documents(base),
+        "documents": await db.documents.count_documents(base),
+        "proposals": await db.ai_proposals.count_documents(base),
+        "contracts": await db.ai_contracts.count_documents(base),
+        "invoices": await db.ai_invoices.count_documents(base),
+    }
+    return {
+        "plan": "Pro", "price": 99, "interval": "month", "status": "active",
+        "seats": {"used": seats, "included": 5},
+        "usage": usage,
+        "limits": {"projects": 100, "documents": 1000, "ai_generations": 500},
+        "renews_on": "2026-09-01",
+    }
+
+
+@api_router.get("/settings/api-keys")
+async def list_api_keys(user: dict = Depends(current_user)):
+    return {"keys": [], "note": "API access is coming soon."}
+
+
 # ------------------- Executive Dashboard -------------------
 @api_router.get("/proposals")
 async def list_proposals(project_id: Optional[str] = None, org: str = Depends(current_org)):
@@ -1516,7 +1705,9 @@ def _compute_invoice(line_items: list, vat_rate: float):
 
 async def _next_invoice_number(org: str):
     count = await db.ai_invoices.count_documents({"organizationId": org})
-    return f"INV-{datetime.now(timezone.utc).strftime('%Y%m')}-{count + 1:04d}"
+    org_doc = await db.organizations.find_one({"id": org}, {"_id": 0, "settings": 1})
+    prefix = ((org_doc or {}).get("settings", {}).get("documents", {}) or {}).get("invoicePrefix") or "INV"
+    return f"{prefix}-{datetime.now(timezone.utc).strftime('%Y%m')}-{count + 1:04d}"
 
 
 @api_router.post("/projects/{project_id}/invoice/generate")
