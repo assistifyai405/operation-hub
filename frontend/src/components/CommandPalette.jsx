@@ -54,7 +54,11 @@ export default function CommandPalette({ open, setOpen }) {
   const runAi = (a) => {
     setOpen(false);
     toast.success(`AI action: ${a.label}`, { description: "Routing to your AI workspace…" });
-    navigate(a.agent && a.to === "/ai-chat" ? `/ai-chat?agent=${a.agent}` : a.to);
+    if (a.to === "/ai-chat") {
+      navigate(`/ai-chat?agent=${a.agent}&q=${encodeURIComponent(a.prompt)}`);
+    } else {
+      navigate(a.to);
+    }
   };
 
   return (

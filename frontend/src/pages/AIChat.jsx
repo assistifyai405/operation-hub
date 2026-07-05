@@ -26,6 +26,11 @@ export default function AIChat() {
   }, []);
 
   useEffect(() => {
+    const q = params.get("q");
+    if (q) setInput(q);
+  }, [params]);
+
+  useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streaming]);
 
@@ -56,7 +61,8 @@ export default function AIChat() {
         buffer = lines.pop();
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
-          const data = JSON.parse(line.slice(6));
+          let data;
+          try { data = JSON.parse(line.slice(6)); } catch { continue; }
           if (data.delta) {
             setMessages((m) => {
               const copy = [...m];
