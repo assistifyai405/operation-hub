@@ -50,3 +50,9 @@ export const proposalsApi = {
 export const activitiesApi = {
   list: (projectId) => req(`/activities?project_id=${projectId}`),
 };
+
+export const plansApi = {
+  generate: (projectId) => req(`/projects/${projectId}/plan/generate`, { method: "POST" }),
+  list: (projectId) => req(`/projects/${projectId}/plans`),
+  save: (projectId, sections) => req(`/projects/${projectId}/plans`, { method: "POST", body: JSON.stringify({ sections }) }),
+};

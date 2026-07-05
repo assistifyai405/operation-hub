@@ -1,0 +1,32 @@
+{
+  "summary": "Iteration 6: Full validation of the new AI Project Planner feature (backend + frontend). Backend planner suite = 6/6 passing (test_planner.py): (1) POST /api/projects/{id}/plan/generate returns {sections} with all 9 required keys (executive_summary, business_goal, technical_requirements, recommended_plan, milestones, suggested_tasks, estimated_timeline, risks, next_actions) via real gpt-5.4 LLM call in ~15-25s and content references project context (mobile/banking/biometric/PCI etc); (2) 404 on non-existent project id; (3) POST /plans saves auto-incrementing versions starting at 1, GET /plans returns newest-first with created_at, edited section content persists correctly on read-back; (4) plan_generated activity logged on save; (5) DELETE project cascades delete on plans collection. Frontend Playwright suite = 19/20 (95%): tab-trigger-planner exists, planner-empty shows generate-plan-btn with no saved plan, Generate call renders all 9 plan-section-<key> blocks with context-aware content in ~15s, 'Unsaved draft' toolbar chip shown, edit-plan-btn toggles plan-edit-<key> textareas, editing executive_summary + save-plan-btn persists EDITED text in view and in GET /plans, version-1 appears in sidebar with timestamp, regenerate-plan-btn produces fresh Unsaved draft, save creates version-2, view-version-1 loads v1 content, compare-version-1 (from v2) shows plan-compare side-by-side, exit-compare-btn returns to normal, export-pdf-btn opens a popup window with formatted 'AI Project Plan' HTML (window.print scheduled), sidebar-generate-btn present. Regression PASSED: Overview/AI Chat/Tasks/Documents/Proposals/Notes/Activity tabs all still render. ONE minor frontend integration issue found: after saving a plan, the parent ProjectWorkspace's activities state is NOT refreshed — the plan_generated entry does not appear on the Activity tab until the workspace is re-navigated / reloaded (verified: backend DOES log plan_generated correctly; a fresh page load shows activity-plan_generated as expected). All TEST_ data cleaned up.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Save plan → Activity tab", "issue": "After clicking save-plan-btn in AIPlanner, ProjectWorkspace.activities state is not reloaded. The new 'plan_generated' entry is missing from the Activity tab until the user navigates away and back or reloads the page. Backend logs the activity correctly (verified by API GET /activities and by fresh page load).", "affected_selectors": ["[data-testid=activity-plan_generated]"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_planner.py",
+    "/app/test_reports/pytest/planner_iter6.xml"
+  ],
+  "action_items": [
+    "Wire an activity-refresh callback into AIPlanner (like afterTaskChange). Pass e.g. onSaved={() => { loadActivities(); }} from ProjectWorkspace.jsx to <AIPlanner> and call it inside AIPlanner.save() after plansApi.save. This will make the plan_generated entry appear in Activity immediately after saving."
+  ],
+  "critical_code_review_comments": [
+    "AIPlanner.jsx does not accept an onSaved / reload callback prop; other tabs (Tasks/Documents/Proposals) all call afterXChange() to refresh Activity — this is the root cause of the stale-activity bug above. Minor DRY/consistency issue.",
+    "server.py parse_plan_json returns empty defaults ('' or []) for missing keys — good defensive behaviour, but a malformed LLM response would still produce a saveable but empty plan. Consider validating that at least executive_summary is non-empty before returning 200.",
+    "AIPlanner.jsx exportPdf uses setTimeout(win.print, 400) which is fragile if the popup loads slowly; but not a blocker.",
+    "Frontend ProjectWorkspace/AIPlanner still show the Radix DialogContent a11y warning (pre-existing from previous iterations)."
+  ],
+  "updated_files": ["/app/backend/tests/test_planner.py"],
+  "success_rate": {"backend": "100% (6/6 planner tests)", "frontend": "95% (19/20 planner UI checks; only Activity refresh gap)"},
+  "test_credentials": "No auth — click [data-testid=login-submit] at /",
+  "seed_data_creation": "All TEST_UI_PLANNER_* and TEST_PLANNER_* projects, tasks and plans were created and cleaned up via DELETE /projects/{id} (cascades to plans/tasks/activities).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Planner testids in use: tab-trigger-planner, tab-planner, planner-empty, generate-plan-btn, sidebar-generate-btn, regenerate-plan-btn, edit-plan-btn, save-plan-btn, export-pdf-btn, exit-compare-btn, plan-section-<key>, plan-edit-<key>, version-list, version-<n>, view-version-<n>, compare-version-<n>, plan-compare, no-versions. LLM (openai/gpt-5.4) plan generation is real and takes ~15-25s in this env (allow 90s timeouts). Backend endpoints: POST /api/projects/{id}/plan/generate (returns {sections} with 9 keys; 404 for bad id), GET /api/projects/{id}/plans (newest-first), POST /api/projects/{id}/plans body {sections} (auto version). Delete project cascades plans. Known minor: parent workspace activities are stale after plan save until reload — see integration_issues above.",
+  "rca of the issue": "Root cause of stale-activity: In /app/frontend/src/pages/ProjectWorkspace.jsx, <AIPlanner /> is rendered without any reload callback, unlike TasksTab/DocumentsTab/ProposalsTab which receive reload={afterTaskChange|afterDocChange|afterProposalChange}. Those helpers all call loadActivities() so the Activity tab is refreshed. Fix: (1) add loadActivities() call in AIPlanner.save via an onSaved prop; e.g. <AIPlanner projectId={project.id} projectName={project.name} onSaved={loadActivities} /> and inside AIPlanner.save() call props.onSaved?.() after loadVersions(). This is a ~3-line change."
+}

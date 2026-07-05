@@ -303,6 +303,7 @@ async def delete_project(project_id: str):
     await db.tasks.update_many({"project_id": project_id}, {"$set": {"project_id": None}})
     await db.documents.delete_many({"project_id": project_id})
     await db.proposals.delete_many({"project_id": project_id})
+    await db.plans.delete_many({"project_id": project_id})
     await db.activities.delete_many({"project_id": project_id})
     return {"ok": True}
 
@@ -410,6 +411,124 @@ async def delete_proposal(proposal_id: str):
 @api_router.get("/activities")
 async def list_activities(project_id: str):
     return await db.activities.find({"project_id": project_id}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+
+
+# ------------------- AI Project Planner -------------------
+PLAN_SECTIONS = [
+    "executive_summary", "business_goal", "technical_requirements", "recommended_plan",
+    "milestones", "suggested_tasks", "estimated_timeline", "risks", "next_actions",
+]
+
+PLANNER_SYSTEM = (
+    "You are an elite AI project planner for Assistify OS. Given full project context, you produce "
+    "a rigorous, actionable project plan. You ALWAYS respond with a single valid JSON object and nothing else "
+    "(no markdown fences, no prose outside JSON)."
+)
+
+
+class PlanSave(BaseModel):
+    sections: dict
+
+
+class Plan(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str
+    version: int
+    sections: dict
+    created_at: str = Field(default_factory=now_iso)
+
+
+async def build_project_context(project: dict) -> str:
+    pid = project["id"]
+    tasks = await db.tasks.find({"project_id": pid}, {"_id": 0}).to_list(1000)
+    docs = await db.documents.find({"project_id": pid}, {"_id": 0}).to_list(1000)
+    acts = await db.activities.find({"project_id": pid}, {"_id": 0}).sort("created_at", 1).to_list(1000)
+    task_lines = "\n".join([f"- [{'x' if t.get('done') else ' '}] {t['title']} (priority: {t.get('priority','Medium')}, due: {t.get('due') or 'none'})" for t in tasks]) or "None"
+    doc_lines = "\n".join([f"- {d['name']} ({d.get('type','Doc')})" for d in docs]) or "None"
+    act_lines = "\n".join([f"- {a['message']} ({a['created_at'][:10]})" for a in acts]) or "None"
+    return (
+        f"PROJECT NAME: {project.get('name')}\n"
+        f"CLIENT: {project.get('client_name') or 'No client'}\n"
+        f"CURRENT STATUS: {project.get('status')}\n"
+        f"PROGRESS: {project.get('progress', 0)}%\n"
+        f"DEADLINE: {project.get('due') or 'Not set'}\n"
+        f"TEAM SIZE: {project.get('members', 1)}\n"
+        f"DESCRIPTION: {project.get('description') or 'No description provided'}\n"
+        f"NOTES: {project.get('notes') or 'No notes'}\n\n"
+        f"EXISTING TASKS:\n{task_lines}\n\n"
+        f"DOCUMENTS:\n{doc_lines}\n\n"
+        f"ACTIVITY TIMELINE:\n{act_lines}\n"
+    )
+
+
+def parse_plan_json(text: str) -> dict:
+    t = text.strip()
+    if t.startswith("```"):
+        t = t.split("```", 2)[1] if t.count("```") >= 2 else t.strip("`")
+        if t.lstrip().lower().startswith("json"):
+            t = t.lstrip()[4:]
+    start, end = t.find("{"), t.rfind("}")
+    if start != -1 and end != -1:
+        t = t[start:end + 1]
+    data = json.loads(t)
+    return {k: data.get(k, "" if k in ("executive_summary", "business_goal", "estimated_timeline") else []) for k in PLAN_SECTIONS}
+
+
+@api_router.post("/projects/{project_id}/plan/generate")
+async def generate_plan(project_id: str):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    await enrich_project(p)
+    context = await build_project_context(p)
+
+    prompt = (
+        f"Analyze the following project and generate a complete project plan.\n\n{context}\n\n"
+        "Return ONLY a JSON object with EXACTLY these keys:\n"
+        '{\n'
+        '  "executive_summary": "2-4 sentence string",\n'
+        '  "business_goal": "1-3 sentence string",\n'
+        '  "technical_requirements": ["array of requirement strings"],\n'
+        '  "recommended_plan": ["array of phase strings, e.g. \'Phase 1: Discovery — ...\'"],\n'
+        '  "milestones": ["array of milestone strings, each like \'Milestone name — target\'"],\n'
+        '  "suggested_tasks": ["array of task strings, each prefixed with priority like \'High: task title\'"],\n'
+        '  "estimated_timeline": "string summarizing overall timeline and per-phase durations",\n'
+        '  "risks": ["array of risk/challenge strings"],\n'
+        '  "next_actions": ["array of concrete next action strings"]\n'
+        '}\n'
+        "Be specific and tailored to the actual project context above. Output JSON only."
+    )
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY, session_id=f"planner-{project_id}-{uuid.uuid4()}",
+        system_message=PLANNER_SYSTEM,
+    ).with_model("openai", "gpt-5.4")
+    try:
+        resp = await chat.send_message(UserMessage(text=prompt))
+        text = resp if isinstance(resp, str) else str(resp)
+        sections = parse_plan_json(text)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="AI returned an unparseable plan. Please regenerate.")
+    except Exception as e:
+        logging.exception("plan generation failed")
+        raise HTTPException(status_code=502, detail=f"Plan generation failed: {e}")
+    return {"sections": sections}
+
+
+@api_router.get("/projects/{project_id}/plans")
+async def list_plans(project_id: str):
+    return await db.plans.find({"project_id": project_id}, {"_id": 0}).sort("version", -1).to_list(1000)
+
+
+@api_router.post("/projects/{project_id}/plans", response_model=Plan)
+async def save_plan(project_id: str, payload: PlanSave):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    version = await db.plans.count_documents({"project_id": project_id}) + 1
+    obj = Plan(project_id=project_id, version=version, sections=payload.sections)
+    await db.plans.insert_one(obj.model_dump())
+    await log_activity(project_id, "plan_generated", f"AI project plan v{version} was saved")
+    return obj
 
 
 app.include_router(api_router)
