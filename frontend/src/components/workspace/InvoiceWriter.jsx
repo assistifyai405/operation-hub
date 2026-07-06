@@ -6,6 +6,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { invoiceWriterApi } from "@/lib/api";
+import BrandedDocPreview from "@/components/BrandedDocPreview";
 
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
 const money = (v) => `$${Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -169,6 +170,8 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
           </div>
         </div>
       </div>
+
+      <BrandedDocPreview docType="invoice" />
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">

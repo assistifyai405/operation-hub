@@ -1,0 +1,25 @@
+{
+  "summary": "Iteration 16 — Copilot 2.0 + Branded Exports. Backend: 26/26 pytest cases pass in /app/backend/tests/test_copilot_branding.py (auth guards on /api/copilot/*, read queries return real data with no action, create_client + create_project confirmation → execute flow persists to /api/clients & /api/projects with correct client_id linkage to Halcyon Group, /api/copilot/history persists user+assistant messages, /api/copilot/suggestions returns real-data chips, generate_proposal produces action + execute persisted a new saved proposal, all 6 branded export endpoints — proposal/contract/invoice PDF (%PDF header) + DOCX (PK zip with word/document.xml) — return valid files and require auth, cross-org isolation verified: fresh org gets 403/404 on demo project export, regression smoke passes on /api/auth/me, /api/clients, /api/projects, /api/tasks, /api/dashboard/summary, /api/settings, /api/notifications). Frontend: /ai-chat loads copilot-page, read query 'Show my highest value clients' returned assistant reply with real client names (Halcyon Group $62,400, Northwind Labs $48,200, Vertex Studio $31,900) and NO action card. Create client flow: action card rendered with Confirm/Cancel, Confirm created TEST_UICopilot Corp visible on /clients, copilot-open-result link appeared. Suggestion chips render on fresh session (3 chips: Review project progress / Summarize today's activity / My highest-value clients), click sends prompt as user msg. Session memory: user msg persists after page reload via GET /api/copilot/history. Branded preview blocks (branded-preview-proposal/contract/invoice + branded-preview-footer) all render on the Project Workspace tabs. Deep link /projects/:id?tab=invoice opens invoice tab with branded preview. /ai-chat-classic still routes (old AI chat preserved). Tested with demo account jordan@assistify.io.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_copilot_branding.py",
+    "/app/test_reports/pytest/copilot_branding.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py has grown to 2259 lines — copilot + export endpoints should be split into routers/copilot.py and routers/exports.py.",
+    "POST /api/copilot/execute trusts client-supplied `action` payload without server-side re-validation of the tool/params against the last assistant message; a caller could execute any create_client/create_project directly, bypassing the confirmation UX. Consider signing the action or storing pending actions server-side keyed by session+action_id.",
+    "_resolve_project has a dead branch: `cl = await db.clients.find_one(...) if False else None` — leftover code should be removed.",
+    "_brand_context reads logo bytes synchronously with asyncio.to_thread per export request with no in-process cache; heavy PDF traffic will hit S3/storage repeatedly. Add TTL cache keyed by (org_id, asset_id).",
+    "In /api/copilot/message the whole workspace snapshot is passed to the LLM every turn; on large orgs this will blow the context window and cost. Consider truncation / RAG.",
+    "Frontend AICopilot.jsx should debounce rapid enter-key sends; currently a second Enter before response returns can create duplicate user messages."
+  ],
+  "updated_files": ["/app/backend/tests/test_copilot_branding.py"],
+  "success_rate": {"backend": "100% (26/26)", "frontend": "100% (read queries, action confirm+execute, suggestions, session memory, branded preview on all 3 generators + deep-link, /ai-chat-classic)"},
+  "test_credentials": "Demo intact: jordan@assistify.io / Assistify2026!. Test-created records were cleaned up (TEST_NikeIter16 Inc, TEST_Q3Website Iter16, TEST_UICopilot Corp). One extra saved proposal version may have been created by generate_proposal execute on 'Brand Redesign' project — non-destructive.",
+  "seed_data_creation": "None persisted; TEST_* clients/projects created and deleted during tests.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Reusable regression at /app/backend/tests/test_copilot_branding.py. Note: pytest.ini uses xdist -n auto which spawns 2 workers; when running this specific file locally use `-o addopts=` to disable xdist because module-scoped fixtures (demo login) can race. LLM balance was healthy during this run — read/create action detection works via ai_service.complete+extract_json. Branded preview data-testids are branded-preview-proposal/contract/invoice + branded-preview-footer (+ branded-preview-logo when logo uploaded, branded-preview-toggle to collapse). Copilot testids: copilot-page/input/send/messages/user-msg/assistant-msg/action-card/confirm/cancel/open-result/suggestion-<i>. /ai-chat-classic still routes to legacy AIChat. Demo has saved proposal/contract/invoice on 'Brand Redesign' project — use it for export tests."
+}

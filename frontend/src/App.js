@@ -15,6 +15,7 @@ import Projects from "@/pages/Projects";
 import ProjectWorkspace from "@/pages/ProjectWorkspace";
 import Tasks from "@/pages/Tasks";
 import AIChat from "@/pages/AIChat";
+import AICopilot from "@/pages/AICopilot";
 import AIAgents from "@/pages/AIAgents";
 import Proposals from "@/pages/Proposals";
 import Contracts from "@/pages/Contracts";
@@ -41,7 +42,8 @@ function App() {
               <Route path="/projects" element={<Projects />} />
               <Route path="/projects/:id" element={<ProjectWorkspace />} />
               <Route path="/tasks" element={<Tasks />} />
-              <Route path="/ai-chat" element={<AIChat />} />
+              <Route path="/ai-chat" element={<AICopilot />} />
+              <Route path="/ai-chat-classic" element={<AIChat />} />
               <Route path="/ai-agents" element={<AIAgents />} />
               <Route path="/proposals" element={<Proposals />} />
               <Route path="/contracts" element={<Contracts />} />

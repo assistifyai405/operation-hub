@@ -30,7 +30,7 @@ const nav = [
   { to: "/clients", label: "Clients", icon: Users },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/tasks", label: "Tasks", icon: CheckSquare },
-  { to: "/ai-chat", label: "AI Chat", icon: MessageSquare },
+  { to: "/ai-chat", label: "Copilot", icon: Sparkles },
   { to: "/ai-agents", label: "AI Agents", icon: Bot },
   { to: "/proposals", label: "Proposals", icon: FileText },
   { to: "/contracts", label: "Contracts", icon: ScrollText },

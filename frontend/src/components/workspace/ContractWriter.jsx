@@ -6,6 +6,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { contractWriterApi } from "@/lib/api";
+import BrandedDocPreview from "@/components/BrandedDocPreview";
 
 const asList = (v) => Array.isArray(v) ? v : (v ? [v] : []);
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
@@ -145,6 +146,8 @@ export default function ContractWriter({ projectId, projectName, onSaved }) {
           </Select>
         </div>
       </div>
+
+      <BrandedDocPreview docType="contract" />
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
