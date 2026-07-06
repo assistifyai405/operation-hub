@@ -111,15 +111,13 @@ class TestCopilotCreateClient:
         assert action is not None, f"expected action card, got: {data}"
         assert action.get("tool") == "create_client"
         assert action.get("requires_confirmation") is True
+        assert action.get("action_id"), "server must issue a confirmation token"
         params = action.get("params", {})
         assert "nike" in (params.get("name") or "").lower()
 
-        # 2. Confirm execute
-        force_params = {**params}
-        # Force the test-prefixed name for easy cleanup
-        force_params["name"] = "TEST_NikeIter16 Inc"
+        # 2. Confirm execute using the server-issued token (client cannot forge params)
         r2 = demo_client.post(f"{BASE_URL}/api/copilot/execute",
-                              json={"session_id": sid, "action": {"tool": "create_client", "params": force_params}},
+                              json={"session_id": sid, "action_id": action["action_id"]},
                               timeout=30)
         assert r2.status_code == 200, r2.text
         created = r2.json().get("created") or {}
@@ -130,8 +128,8 @@ class TestCopilotCreateClient:
         # 3. Verify persistence via /api/clients
         r3 = demo_client.get(f"{BASE_URL}/api/clients", timeout=10)
         assert r3.status_code == 200
-        names = [c.get("name") for c in r3.json()]
-        assert "TEST_NikeIter16 Inc" in names
+        match = next((c for c in r3.json() if c.get("id") == client_id), None)
+        assert match is not None and "nikeiter16" in (match.get("name") or "").lower()
 
         # cleanup
         demo_client.delete(f"{BASE_URL}/api/clients/{client_id}", timeout=10)
@@ -150,12 +148,10 @@ class TestCopilotCreateProject:
         action = r.json().get("action")
         assert action is not None
         assert action.get("tool") == "create_project"
-        params = action.get("params", {})
-        params["name"] = "TEST_Q3Website Iter16"
-        params.setdefault("client_name", "Halcyon Group")
+        assert action.get("action_id"), "server must issue a confirmation token"
 
         r2 = demo_client.post(f"{BASE_URL}/api/copilot/execute",
-                              json={"session_id": sid, "action": {"tool": "create_project", "params": params}},
+                              json={"session_id": sid, "action_id": action["action_id"]},
                               timeout=30)
         assert r2.status_code == 200, r2.text
         created = r2.json().get("created") or {}
@@ -167,7 +163,7 @@ class TestCopilotCreateProject:
         assert r3.status_code == 200
         proj = next((p for p in r3.json() if p["id"] == pid), None)
         assert proj is not None
-        assert proj["name"] == "TEST_Q3Website Iter16"
+        assert "q3website" in proj["name"].lower()
         # Should be linked to Halcyon Group client if found
         clients = demo_client.get(f"{BASE_URL}/api/clients", timeout=10).json()
         halcyon = next((c for c in clients if "halcyon" in c["name"].lower()), None)
@@ -231,9 +227,10 @@ class TestCopilotGenerateProposal:
         action = r.json().get("action")
         assert action is not None
         assert action.get("tool") == "generate_proposal"
+        assert action.get("action_id"), "server must issue a confirmation token"
 
         r2 = demo_client.post(f"{BASE_URL}/api/copilot/execute",
-                              json={"session_id": sid, "action": action}, timeout=120)
+                              json={"session_id": sid, "action_id": action["action_id"]}, timeout=120)
         # generation can 502 (LLM balance) - acceptable
         assert r2.status_code in (200, 502), r2.text
         if r2.status_code == 502:
@@ -331,3 +328,85 @@ class TestRegressionSmoke:
     def test_smoke_endpoints(self, demo_client, path):
         r = demo_client.get(f"{BASE_URL}{path}", timeout=10)
         assert r.status_code == 200, f"{path} -> {r.status_code} {r.text[:120]}"
+
+
+
+# ---------------- COPILOT EXECUTE SECURITY ----------------
+class TestCopilotExecuteSecurity:
+    def test_execute_rejects_missing_token(self, demo_client):
+        # Old-style client-supplied action payload must be refused (bypass attempt).
+        r = demo_client.post(f"{BASE_URL}/api/copilot/execute",
+                             json={"session_id": "sec-notoken",
+                                   "action": {"tool": "create_client", "params": {"name": "HACKER Corp"}}},
+                             timeout=15)
+        assert r.status_code == 400, r.text
+
+    def test_execute_rejects_forged_token(self, demo_client):
+        r = demo_client.post(f"{BASE_URL}/api/copilot/execute",
+                             json={"session_id": "sec-forged", "action_id": "forged-" + uuid.uuid4().hex},
+                             timeout=15)
+        assert r.status_code == 404, r.text
+
+    def test_execute_is_single_use(self, demo_client):
+        sid = "sec-single-" + uuid.uuid4().hex[:6]
+        r = demo_client.post(f"{BASE_URL}/api/copilot/message",
+                             json={"session_id": sid, "message": "Create a new client called TEST_SingleUse Ltd"},
+                             timeout=60)
+        if r.status_code == 502:
+            pytest.skip("LLM unavailable")
+        action = r.json().get("action")
+        assert action and action.get("action_id")
+        aid = action["action_id"]
+        r1 = demo_client.post(f"{BASE_URL}/api/copilot/execute",
+                              json={"session_id": sid, "action_id": aid}, timeout=30)
+        assert r1.status_code == 200, r1.text
+        client_id = (r1.json().get("created") or {}).get("id")
+        # Second execution of same token must be rejected (no double-create)
+        r2 = demo_client.post(f"{BASE_URL}/api/copilot/execute",
+                              json={"session_id": sid, "action_id": aid}, timeout=30)
+        assert r2.status_code == 409, r2.text
+        if client_id:
+            demo_client.delete(f"{BASE_URL}/api/clients/{client_id}", timeout=10)
+
+    def test_cross_org_cannot_execute_others_token(self, demo_client, fresh_client):
+        sid = "sec-xorg-" + uuid.uuid4().hex[:6]
+        r = demo_client.post(f"{BASE_URL}/api/copilot/message",
+                             json={"session_id": sid, "message": "Create a new client called TEST_XOrgProbe LLC"},
+                             timeout=60)
+        if r.status_code == 502:
+            pytest.skip("LLM unavailable")
+        action = r.json().get("action")
+        assert action and action.get("action_id")
+        aid = action["action_id"]
+        # A different org must not be able to execute the pending action.
+        rx = fresh_client.post(f"{BASE_URL}/api/copilot/execute",
+                               json={"session_id": sid, "action_id": aid}, timeout=30)
+        assert rx.status_code == 404, rx.text
+        # Original org's action must still be intact (attacker did not consume it)
+        ro = demo_client.post(f"{BASE_URL}/api/copilot/execute",
+                              json={"session_id": sid, "action_id": aid}, timeout=30)
+        assert ro.status_code == 200, ro.text
+        cid = (ro.json().get("created") or {}).get("id")
+        if cid:
+            demo_client.delete(f"{BASE_URL}/api/clients/{cid}", timeout=10)
+
+    def test_execute_logs_activity(self, demo_client):
+        sid = "sec-log-" + uuid.uuid4().hex[:6]
+        r = demo_client.post(f"{BASE_URL}/api/copilot/message",
+                             json={"session_id": sid, "message": "Create a project called TEST_LogProbe Site"},
+                             timeout=60)
+        if r.status_code == 502:
+            pytest.skip("LLM unavailable")
+        action = r.json().get("action")
+        assert action and action.get("action_id")
+        r2 = demo_client.post(f"{BASE_URL}/api/copilot/execute",
+                              json={"session_id": sid, "action_id": action["action_id"]}, timeout=30)
+        assert r2.status_code == 200, r2.text
+        pid = (r2.json().get("created") or {}).get("id")
+        # A copilot_action activity should be logged for the project
+        acts = demo_client.get(f"{BASE_URL}/api/activities?project_id={pid}", timeout=10)
+        if acts.status_code == 200:
+            types = [a.get("type") for a in acts.json()]
+            assert "copilot_action" in types, types
+        if pid:
+            demo_client.delete(f"{BASE_URL}/api/projects/{pid}", timeout=10)

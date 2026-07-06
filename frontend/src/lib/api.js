@@ -146,7 +146,7 @@ export const notificationsApi = { list: () => req("/notifications") };
 
 export const copilotApi = {
   message: (session_id, message) => req("/copilot/message", { method: "POST", body: JSON.stringify({ session_id, message }) }),
-  execute: (session_id, action) => req("/copilot/execute", { method: "POST", body: JSON.stringify({ session_id, action }) }),
+  execute: (session_id, action_id) => req("/copilot/execute", { method: "POST", body: JSON.stringify({ session_id, action_id }) }),
   history: (session_id) => req(`/copilot/history/${session_id}`),
   suggestions: () => req("/copilot/suggestions"),
 };

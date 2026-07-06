@@ -1299,7 +1299,29 @@ class CopilotMessage(BaseModel):
 
 class CopilotExecute(BaseModel):
     session_id: str
-    action: dict
+    action_id: Optional[str] = None
+
+
+COPILOT_ACTION_TTL_MIN = 30
+
+
+async def _log_copilot_action(org: str, project_id: Optional[str], message: str):
+    await db.activities.insert_one({
+        "id": str(uuid.uuid4()), "project_id": project_id, "organizationId": org,
+        "type": "copilot_action", "message": message, "created_at": now_iso(),
+    })
+
+
+async def _store_pending_action(session_id: str, org: str, tool: str, params: dict, preview: list) -> str:
+    aid = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    await db.copilot_pending_actions.insert_one({
+        "id": aid, "session_id": session_id, "organizationId": org,
+        "tool": tool, "params": params or {}, "preview": preview or [],
+        "consumed": False, "created_at": now.isoformat(),
+        "expires_at": (now + timedelta(minutes=COPILOT_ACTION_TTL_MIN)).isoformat(),
+    })
+    return aid
 
 
 @api_router.post("/copilot/message")
@@ -1318,11 +1340,16 @@ async def copilot_message(payload: CopilotMessage, org: str = Depends(current_or
         raise HTTPException(status_code=502, detail=f"Copilot is unavailable right now: {e}")
 
     reply = result.get("reply", "I'm not sure how to help with that.")
-    action = result.get("action")
-    if action and action.get("tool") in COPILOT_TOOLS:
-        action["requires_confirmation"] = True
-    else:
-        action = None
+    raw_action = result.get("action")
+    action = None
+    if raw_action and raw_action.get("tool") in COPILOT_TOOLS:
+        tool = raw_action["tool"]
+        params = raw_action.get("params", {}) or {}
+        preview = raw_action.get("preview", []) or []
+        # Persist the pending action server-side; client can only reference it by token.
+        aid = await _store_pending_action(payload.session_id, org, tool, params, preview)
+        action = {"tool": tool, "params": params, "preview": preview,
+                  "action_id": aid, "requires_confirmation": True}
     await db.copilot_messages.insert_one({"id": str(uuid.uuid4()), "session_id": payload.session_id,
                                           "organizationId": org, "role": "assistant", "content": reply,
                                           "action": action, "created_at": now_iso()})
@@ -1349,9 +1376,27 @@ async def _resolve_project(org: str, params: dict):
 
 @api_router.post("/copilot/execute")
 async def copilot_execute(payload: CopilotExecute, org: str = Depends(current_org)):
-    action = payload.action or {}
-    tool = action.get("tool")
-    params = action.get("params", {}) or {}
+    # Never trust a client-supplied action. Execute ONLY a previously-proposed,
+    # server-stored pending action, scoped to this org + session, referenced by token.
+    if not payload.action_id:
+        raise HTTPException(status_code=400, detail="Missing action confirmation token.")
+    pending = await db.copilot_pending_actions.find_one(
+        {"id": payload.action_id, "session_id": payload.session_id, "organizationId": org})
+    if not pending:
+        raise HTTPException(status_code=404, detail="This action is no longer available. Please ask the Copilot again.")
+    if pending.get("consumed"):
+        raise HTTPException(status_code=409, detail="This action was already executed.")
+    if pending.get("expires_at") and datetime.now(timezone.utc).isoformat() > pending["expires_at"]:
+        raise HTTPException(status_code=410, detail="This action expired. Please ask the Copilot again.")
+    # Atomically claim the action to prevent double-execution / race conditions.
+    claim = await db.copilot_pending_actions.update_one(
+        {"id": payload.action_id, "organizationId": org, "consumed": False},
+        {"$set": {"consumed": True, "consumed_at": now_iso()}})
+    if claim.modified_count != 1:
+        raise HTTPException(status_code=409, detail="This action was already executed.")
+
+    tool = pending["tool"]
+    params = pending.get("params", {}) or {}
     if tool not in COPILOT_TOOLS:
         raise HTTPException(status_code=400, detail="Unknown action")
 
@@ -1361,13 +1406,13 @@ async def copilot_execute(payload: CopilotExecute, org: str = Depends(current_or
                      value=float(params.get("value", 0) or 0), status=params.get("status", "Active"))
         doc = obj.model_dump(); doc["organizationId"] = org
         await db.clients.insert_one(doc)
+        await _log_copilot_action(org, None, f'Copilot created client "{obj.name}"')
         result = {"reply": f'Created client "{obj.name}".', "navigate": "/clients", "created": {"type": "client", "id": obj.id, "name": obj.name}}
 
     elif tool == "create_project":
         client_id = None
         cname = (params.get("client_name") or "").strip().lower()
         if cname:
-            cl = await db.clients.find_one({"organizationId": org}, {"_id": 0}) if False else None
             clients = await db.clients.find({"organizationId": org}, {"_id": 0, "id": 1, "name": 1}).to_list(200)
             match = next((c for c in clients if c["name"].strip().lower() == cname), None) or next((c for c in clients if cname in c["name"].strip().lower()), None)
             client_id = match["id"] if match else None
@@ -1376,6 +1421,7 @@ async def copilot_execute(payload: CopilotExecute, org: str = Depends(current_or
         doc = obj.model_dump(); doc["organizationId"] = org
         await db.projects.insert_one(doc)
         await log_activity(obj.id, "project_created", f'Project "{obj.name}" was created')
+        await _log_copilot_action(org, obj.id, f'Copilot created project "{obj.name}"')
         result = {"reply": f'Created project "{obj.name}".', "navigate": f"/projects/{obj.id}", "created": {"type": "project", "id": obj.id, "name": obj.name}}
 
     else:
@@ -1405,6 +1451,7 @@ async def copilot_execute(payload: CopilotExecute, org: str = Depends(current_or
         except Exception as e:
             logging.exception("copilot generate failed")
             raise HTTPException(status_code=502, detail=f"Generation failed: {e}")
+        await _log_copilot_action(org, pid, f'Copilot generated a {msg} for "{project["name"]}"')
         result = {"reply": f'Generated a {msg} for "{project["name"]}".', "navigate": f"/projects/{pid}?tab={tab}", "created": {"type": tool, "project": project["name"]}}
         if tab == "plan":
             result["navigate"] = f"/projects/{pid}?tab=proposal"

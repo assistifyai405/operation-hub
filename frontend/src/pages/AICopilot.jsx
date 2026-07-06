@@ -82,7 +82,7 @@ export default function AICopilot() {
   const confirmAction = async (idx, action) => {
     setExecBusy(idx);
     try {
-      const res = await copilotApi.execute(sessionId, action);
+      const res = await copilotApi.execute(sessionId, action.action_id);
       setMessages((m) => m.map((msg, i) => i === idx ? { ...msg, done: true } : msg));
       setMessages((m) => [...m, { role: "assistant", content: res.reply, navigate: res.navigate }]);
       copilotApi.suggestions().then(setSuggestions).catch(() => {});
