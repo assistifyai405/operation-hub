@@ -1490,6 +1490,32 @@ def _safe_filename(name: str) -> str:
     return ascii_name.strip().replace(" ", "_")[:60] or "proposal"
 
 
+async def _brand_context(org_id: str, footer_key: str) -> dict:
+    org_doc = await db.organizations.find_one({"id": org_id}, {"_id": 0}) or {}
+    s = _merged_settings(org_doc)
+    b, o = s["branding"], s["organization"]
+    logo_url = b.get("pdfLogo") or b.get("logo") or o.get("logo") or ""
+    logo_bytes = None
+    if logo_url and "/api/settings/image/" in logo_url:
+        asset_id = logo_url.rstrip("/").rsplit("/", 1)[-1].split("?")[0]
+        asset = await db.branding_assets.find_one({"id": asset_id, "organizationId": org_id}, {"_id": 0})
+        if asset and asset.get("storage_path"):
+            try:
+                logo_bytes, _ = await asyncio.to_thread(S.get_object, asset["storage_path"])
+            except Exception:
+                logo_bytes = None
+    return {
+        "company_name": o.get("name", "") or "Assistify OS",
+        "logo_bytes": logo_bytes,
+        "primary": b.get("primaryColor") or "#7C3AED",
+        "secondary": b.get("secondaryColor") or "#22D3EE",
+        "address": o.get("address", ""), "website": o.get("website", ""),
+        "email": o.get("businessEmail", ""), "phone": o.get("phone", ""),
+        "vat": o.get("vatNumber", ""), "kvk": o.get("kvkNumber", ""),
+        "footer": b.get(footer_key, ""),
+    }
+
+
 @api_router.get("/projects/{project_id}/proposal/export/pdf")
 async def export_proposal_pdf(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
