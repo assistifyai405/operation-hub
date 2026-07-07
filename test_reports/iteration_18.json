@@ -1,0 +1,36 @@
+{
+  "summary": "P1 launch-readiness verified. Backend: 17/17 tests pass (security ?auth ignored, send-guard blocks unverified Sent/allows Draft, verified user Sent works, Copilot post-snapshot healthy). Frontend: verify-email-banner appears for unverified users with correct aria-labels & professional toast copy; images render without ?auth= token in URL; verified user (jordan) sees no banner; upgrade-btn absent (billing hidden). One minor UX overlap found: Sonner toast covers banner-dismiss button in top-right corner immediately after register.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Layout verify-email-banner",
+        "issue": "The Sonner toast toaster (top-right) covers the banner-dismiss (X) button at coords ~(1864,84). Immediately post-register the 'Account created!' toast blocks the click for ~4s. After toasts auto-dismiss the button is clickable. Handler itself works (verified via programmatic click: sessionStorage set to '1' and banner correctly removed from DOM). Suggest raising banner z-index above toaster OR moving toaster below the banner OR positioning toaster bottom.",
+        "selector": "[data-testid=banner-dismiss]",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_p1_launch.py",
+    "/app/test_reports/pytest/p1_launch.xml"
+  ],
+  "action_items": [
+    "Fix z-index / positioning so Sonner toasts do not overlap [data-testid=banner-dismiss] in the top-right of the layout. Either move Toaster to bottom-right for post-register auth toasts, or set banner z-index > toaster, or shift toaster below the verify-email-banner."
+  ],
+  "critical_code_review_comments": [
+    "banner-resend button has no aria-label; it does have visible text 'Resend email' so accessible-name is satisfied, but for consistency with other icon/inline controls consider adding aria-label='Resend verification email'.",
+    "server.py continues to grow — send-guard helper is fine but consider extracting into a dependency (Depends(require_verified_for_send)) for reusability.",
+    "Register flow toasts (Sonner) & OnboardingWizard modal both appear simultaneously — consider deferring the wizard opening until toasts settle (better first-run UX)."
+  ],
+  "updated_files": ["/app/backend/tests/test_p1_launch.py"],
+  "success_rate": {"backend": "100%", "frontend": "95%"},
+  "test_credentials": "Verified: jordan@assistify.io / Assistify2026!. Unverified: fresh POST /api/auth/register (rate limit 10/hr/IP).",
+  "seed_data_creation": "Test proposals/contracts/invoices with status 'Sent' saved on seed jordan's first project (regression check). Ephemeral TEST_P1_ users created via register — self-contained orgs (no cleanup needed).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "New backend suite /app/backend/tests/test_p1_launch.py (17 tests, 5s). Covers ?auth= security, send-guard for unverified users on proposal/contract/invoice (Sent blocked with 403 'Please verify your email before sending documents to clients.', Draft/other statuses ok), verified user regression (all Sent statuses save), and Copilot suggestions/message flows. Prior suites (test_copilot_branding, test_email_delivery, test_demo_and_billing) still green. Legacy test_proposal.py and test_planner.py are pre-auth and fail with 'Not authenticated' — ignore. Register/demo/forgot share a 10/hr/IP in-memory rate limit; restart backend to reset if 429s appear.",
+  "rca of the issue": "Sonner Toaster is mounted top-right at higher z-index than the sticky verify-email-banner header row. Immediately after registration Sonner shows 'Account created! Verify your email from Settings anytime.' which auto-dismisses in ~4s but blocks pointer events on the small 24x24 dismiss button below/behind it. document.elementFromPoint at (1864,84) returned the <li data-sonner-toast> element instead of banner-dismiss. Fix options: (a) move Toaster to position='bottom-right'; (b) increase banner element z-index above toaster; (c) render banner in a fixed layer above toaster; (d) throttle post-register toast for a moment when banner is visible."
+}

@@ -39,27 +39,33 @@ COPILOT_SYSTEM = (
 
 async def _copilot_snapshot(org: str) -> str:
     base = {"organizationId": org}
-    clients = await db.clients.find(base, {"_id": 0, "id": 1, "name": 1, "contact": 1, "email": 1, "value": 1}).sort("value", -1).to_list(50)
-    projects = await db.projects.find(base, {"_id": 0, "id": 1, "name": 1, "status": 1, "due": 1, "progress": 1, "client_id": 1}).to_list(50)
+    # Keep accurate totals via counts; send only a bounded, relevant slice of each list to the LLM.
+    clients = await db.clients.find(base, {"_id": 0, "id": 1, "name": 1, "contact": 1, "email": 1, "value": 1}).sort("value", -1).to_list(20)
+    total_clients = await db.clients.count_documents(base)
+    projects = await db.projects.find(base, {"_id": 0, "id": 1, "name": 1, "status": 1, "due": 1, "progress": 1, "client_id": 1}).sort("updated_at", -1).to_list(25)
+    total_projects = await db.projects.count_documents(base)
     cmap = {c["id"]: c["name"] for c in clients}
     for p in projects:
         p["client_name"] = cmap.get(p.get("client_id"))
     open_tasks = await db.tasks.count_documents({**base, "done": False})
     done_tasks = await db.tasks.count_documents({**base, "done": True})
-    overdue_tasks = await db.tasks.find({**base, "done": False}, {"_id": 0, "title": 1, "due": 1, "project_id": 1}).to_list(200)
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    overdue_tasks = [t for t in overdue_tasks if t.get("due") and str(t["due"]) < today][:15]
-    invoices = await db.ai_invoices.find(base, {"_id": 0, "invoice_number": 1, "title": 1, "status": 1, "total": 1, "content": 1, "project_id": 1}).to_list(100)
-    inv_summary = [{"number": i.get("invoice_number"), "status": i.get("status"), "total": i.get("total"), "due": i.get("content", {}).get("due_date")} for i in invoices]
-    activities = await db.activities.find(base, {"_id": 0, "message": 1, "created_at": 1}).sort("created_at", -1).to_list(15)
+    overdue_tasks = await db.tasks.find({**base, "done": False, "due": {"$lt": today, "$ne": None}},
+                                        {"_id": 0, "title": 1, "due": 1, "project_id": 1}).sort("due", 1).to_list(10)
+    # Prioritise unpaid/overdue invoices; they drive most Copilot questions.
+    invoices = await db.ai_invoices.find(base, {"_id": 0, "invoice_number": 1, "status": 1, "total": 1, "content": 1}).sort("updated_at", -1).to_list(30)
+    total_invoices = await db.ai_invoices.count_documents(base)
+    inv_summary = [{"number": i.get("invoice_number"), "status": i.get("status"), "total": i.get("total"), "due": (i.get("content") or {}).get("due_date")} for i in invoices]
+    activities = await db.activities.find(base, {"_id": 0, "message": 1, "created_at": 1}).sort("created_at", -1).to_list(8)
     snapshot = {
         "today": today,
         "counts": {
-            "clients": len(clients), "projects": len(projects), "open_tasks": open_tasks, "completed_tasks": done_tasks,
+            "clients": total_clients, "projects": total_projects, "open_tasks": open_tasks, "completed_tasks": done_tasks,
             "proposals": await db.ai_proposals.count_documents(base), "contracts": await db.ai_contracts.count_documents(base),
-            "invoices": len(invoices),
+            "invoices": total_invoices,
         },
-        "clients": [{"name": c["name"], "contact": c.get("contact"), "value": c.get("value", 0)} for c in clients[:30]],
+        "note": "Lists below are a bounded slice (top clients by value, most-recent projects/invoices, soonest-overdue tasks). Use 'counts' for totals.",
+        "clients": [{"name": c["name"], "contact": c.get("contact"), "value": c.get("value", 0)} for c in clients],
         "projects": [{"name": p["name"], "status": p.get("status"), "due": p.get("due"), "progress": p.get("progress", 0), "client": p.get("client_name")} for p in projects],
         "overdue_tasks": overdue_tasks,
         "invoices": inv_summary,

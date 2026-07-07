@@ -106,7 +106,7 @@ export function ImageUpload({ label, value, onChange, testid, hint }) {
     <Field label={label} hint={hint}>
       <div className="flex items-center gap-4">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-zinc-900">
-          {value ? <img src={settingsApi.imageUrl(value)} alt="" className="h-full w-full object-contain" /> : <ImageIcon className="h-6 w-6 text-zinc-600" />}
+          {value ? <img src={settingsApi.imageUrl(value)} alt="Logo preview" className="h-full w-full object-contain" /> : <ImageIcon className="h-6 w-6 text-zinc-600" />}
         </div>
         <input ref={ref} type="file" accept="image/*" onChange={upload} className="hidden" data-testid={`${testid}-input`} />
         <button type="button" onClick={() => ref.current?.click()} disabled={busy} data-testid={testid}

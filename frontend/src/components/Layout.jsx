@@ -100,6 +100,7 @@ export default function Layout() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [bannerDismissed, setBannerDismissed] = useState(() => sessionStorage.getItem("verify_banner_dismissed") === "1");
   const location = useLocation();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
@@ -126,10 +127,15 @@ export default function Layout() {
     navigate("/login");
   };
 
+  const dismissBanner = () => {
+    sessionStorage.setItem("verify_banner_dismissed", "1");
+    setBannerDismissed(true);
+  };
+
   const resendVerification = async () => {
     try {
       await authApi.resendVerification();
-      toast.success("Verification link sent (check backend logs in dev mode).");
+      toast.success("Verification email sent — please check your inbox.");
     } catch (e) {
       toast.error(e.message);
     }
@@ -147,7 +153,7 @@ export default function Layout() {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-64 border-r border-white/10 bg-black animate-fade-up">
-            <button className="absolute right-3 top-5 text-zinc-400" onClick={() => setMobileOpen(false)} data-testid="mobile-close">
+            <button className="absolute right-3 top-5 text-zinc-400 focus-visible:ring-2 focus-visible:ring-violet-500 rounded-md" onClick={() => setMobileOpen(false)} data-testid="mobile-close" aria-label="Close navigation menu">
               <X className="h-5 w-5" />
             </button>
             <Sidebar onNavigate={() => setMobileOpen(false)} />
@@ -158,7 +164,7 @@ export default function Layout() {
       <div className="lg:ml-64">
         {/* Header */}
         <header className="sticky top-0 z-30 flex items-center gap-4 border-b border-white/10 bg-black/60 px-4 py-3.5 backdrop-blur-xl sm:px-8">
-          <button className="lg:hidden text-zinc-400" onClick={() => setMobileOpen(true)} data-testid="mobile-menu">
+          <button className="lg:hidden text-zinc-400" onClick={() => setMobileOpen(true)} data-testid="mobile-menu" aria-label="Open navigation menu">
             <Menu className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-semibold tracking-tight" data-testid="page-title">{pageTitle}</h1>
@@ -176,15 +182,16 @@ export default function Layout() {
           <button
             onClick={() => setPaletteOpen(true)}
             data-testid="open-command-palette-mobile"
+            aria-label="Search or run a command"
             className="rounded-lg border border-white/10 bg-zinc-950 p-2 text-zinc-400 transition-all hover:text-zinc-100 sm:hidden ml-auto"
           >
             <Search className="h-[18px] w-[18px]" />
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="relative rounded-lg border border-white/10 bg-zinc-950 p-2 text-zinc-400 transition-all hover:text-zinc-100" data-testid="notifications-btn">
+              <button className="relative rounded-lg border border-white/10 bg-zinc-950 p-2 text-zinc-400 transition-all hover:text-zinc-100" data-testid="notifications-btn" aria-label={notifications.length ? `Notifications, ${notifications.length} recent` : "Notifications"}>
                 <Bell className="h-[18px] w-[18px]" />
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-violet-500 animate-pulse-glow" />
+                {notifications.length > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-violet-500 animate-pulse-glow" />}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80 border-white/10 bg-zinc-950 text-zinc-200">
@@ -202,9 +209,9 @@ export default function Layout() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2" data-testid="user-menu">
+              <button className="flex items-center gap-2" data-testid="user-menu" aria-label="Account menu">
                 <Avatar className="h-8 w-8 border border-white/10">
-                  <AvatarImage src={user?.avatar} />
+                  <AvatarImage src={user?.avatar} alt={fullName ? `${fullName} avatar` : "User avatar"} />
                   <AvatarFallback className="bg-violet-600/20 text-violet-300 text-xs">{initials}</AvatarFallback>
                 </Avatar>
               </button>
@@ -232,6 +239,17 @@ export default function Layout() {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
+
+        {user && !user.emailVerified && !bannerDismissed && (
+          <div data-testid="verify-email-banner" role="status" className="flex flex-wrap items-center gap-3 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2.5 sm:px-8">
+            <MailWarning className="h-4 w-4 shrink-0 text-amber-400" />
+            <p className="text-sm text-amber-200">Verify your email to unlock sending proposals, contracts &amp; invoices to clients.</p>
+            <button onClick={resendVerification} data-testid="banner-resend" className="ml-auto rounded-md border border-amber-500/40 px-2.5 py-1 text-xs font-medium text-amber-200 transition-colors hover:bg-amber-500/15 focus-visible:ring-2 focus-visible:ring-amber-400">Resend email</button>
+            <button onClick={dismissBanner} data-testid="banner-dismiss" aria-label="Dismiss email verification reminder" className="rounded-md p-1 text-amber-300/70 transition-colors hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-400">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         <main className="p-4 sm:p-8">
           <Outlet />

@@ -132,7 +132,7 @@ export const documentsApi = {
     if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(formatApiErrorDetail(e.detail) || "Upload failed"); }
     return res.json();
   },
-  fileUrl: (id) => `${API}/documents/${id}/file?auth=${encodeURIComponent(accessToken || "")}`,
+  fileUrl: (id) => `${API}/documents/${id}/file`,
 };
 
 export const libraryApi = {
@@ -163,7 +163,7 @@ export const settingsApi = {
   apiKeys: () => req("/settings/api-keys"),
   recentLogins: () => req("/settings/recent-logins"),
   logoutAll: () => req("/auth/logout-all", { method: "POST" }),
-  imageUrl: (url) => `${process.env.REACT_APP_BACKEND_URL}${url}?auth=${encodeURIComponent(accessToken || "")}`,
+  imageUrl: (url) => `${process.env.REACT_APP_BACKEND_URL}${url}`,
   uploadImage: async (file) => {
     const fd = new FormData();
     fd.append("file", file);

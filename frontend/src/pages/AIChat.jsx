@@ -96,7 +96,7 @@ export default function AIChat() {
             data-testid={`select-agent-${a.id}`}
             className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${agentId === a.id ? "border-violet-500 bg-violet-600/15 text-violet-300" : "border-white/10 bg-zinc-950 text-zinc-400 hover:text-zinc-200"}`}
           >
-            <img src={a.avatar} alt="" className="h-5 w-5 rounded-full object-cover" />
+            <img src={a.avatar} alt={`${a.name || "AI agent"} avatar`} className="h-5 w-5 rounded-full object-cover" />
             {a.name}
           </button>
         ))}

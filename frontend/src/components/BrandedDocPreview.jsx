@@ -32,7 +32,7 @@ export default function BrandedDocPreview({ docType = "proposal" }) {
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 {logo ? (
-                  <img src={settingsApi.imageUrl(logo)} alt="logo" className="mb-2 max-h-12 object-contain" data-testid="branded-preview-logo" />
+                  <img src={settingsApi.imageUrl(logo)} alt="Company logo" className="mb-2 max-h-12 object-contain" data-testid="branded-preview-logo" />
                 ) : (
                   <p className="text-lg font-bold text-zinc-900">{o.name}</p>
                 )}

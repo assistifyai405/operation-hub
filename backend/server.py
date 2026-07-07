@@ -120,6 +120,13 @@ def _dev_link(path: str, token: str) -> str:
     return f"{base}{path}?token={token}"
 
 
+def _guard_send(user, status: str):
+    # Block client-facing "send" actions until the acting user verifies their email.
+    # When called internally (e.g. Copilot), `user` is the unresolved Depends sentinel, not a dict -> skip.
+    if isinstance(user, dict) and status == "Sent" and not user.get("emailVerified", False):
+        raise HTTPException(status_code=403, detail="Please verify your email before sending documents to clients.")
+
+
 async def _email_brand(org_id: str) -> dict:
     org_doc = await db.organizations.find_one({"id": org_id}, {"_id": 0}) or {}
     s = _merged_settings(org_doc)
@@ -885,13 +892,12 @@ async def rename_document(document_id: str, payload: DocumentRename, org: str = 
 
 
 @api_router.get("/documents/{document_id}/file")
-async def download_document(document_id: str, request: Request, auth: Optional[str] = None):
-    # Support ?auth= token for direct browser links (img/anchor cannot set headers)
-    token = auth
-    if not token:
-        h = request.headers.get("Authorization", "")
-        if h.startswith("Bearer "):
-            token = h[7:]
+async def download_document(document_id: str, request: Request):
+    # Authenticated via Bearer header or the httpOnly access_token cookie (no token in URL).
+    token = None
+    h = request.headers.get("Authorization", "")
+    if h.startswith("Bearer "):
+        token = h[7:]
     if not token:
         token = request.cookies.get("access_token")
     if not token:
@@ -1190,12 +1196,12 @@ async def upload_branding_image(file: UploadFile = File(...), org: str = Depends
 
 
 @api_router.get("/settings/image/{asset_id}")
-async def serve_branding_image(asset_id: str, request: Request, auth: Optional[str] = None):
-    token = auth
-    if not token:
-        h = request.headers.get("Authorization", "")
-        if h.startswith("Bearer "):
-            token = h[7:]
+async def serve_branding_image(asset_id: str, request: Request):
+    # Authenticated via Bearer header or the httpOnly access_token cookie (no token in URL).
+    token = None
+    h = request.headers.get("Authorization", "")
+    if h.startswith("Bearer "):
+        token = h[7:]
     if not token:
         token = request.cookies.get("access_token")
     if not token:
@@ -1452,10 +1458,11 @@ async def proposal_versions(project_id: str, org: str = Depends(current_org)):
 
 
 @api_router.post("/projects/{project_id}/proposal")
-async def save_proposal(project_id: str, payload: ProposalContent, org: str = Depends(current_org)):
+async def save_proposal(project_id: str, payload: ProposalContent, org: str = Depends(current_org), user: dict = Depends(current_user)):
     p = await require_project(project_id, org)
     if payload.status not in PROPOSAL_STATUSES:
         raise HTTPException(status_code=422, detail="Invalid status")
+    _guard_send(user, payload.status)
 
     existing = await _get_ai_proposal(project_id)
     version = (existing["version"] + 1) if existing else 1
@@ -1606,7 +1613,8 @@ async def _save_contract(project_id: str, payload: ContractContent, org: str, ac
 
 
 @api_router.post("/projects/{project_id}/contract")
-async def save_contract(project_id: str, payload: ContractContent, org: str = Depends(current_org)):
+async def save_contract(project_id: str, payload: ContractContent, org: str = Depends(current_org), user: dict = Depends(current_user)):
+    _guard_send(user, payload.status)
     return await _save_contract(project_id, payload, org, "contract_saved", "Contract v{version} was saved")
 
 
@@ -1763,7 +1771,8 @@ async def _save_invoice(project_id: str, payload: InvoiceSave, org: str, activit
 
 
 @api_router.post("/projects/{project_id}/invoice")
-async def save_invoice(project_id: str, payload: InvoiceSave, org: str = Depends(current_org)):
+async def save_invoice(project_id: str, payload: InvoiceSave, org: str = Depends(current_org), user: dict = Depends(current_user)):
+    _guard_send(user, payload.status)
     return await _save_invoice(project_id, payload, org, "invoice_saved", "Invoice {number} v{version} was saved")
 
 
