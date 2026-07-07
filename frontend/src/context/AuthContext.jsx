@@ -40,6 +40,13 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  const demo = useCallback(async () => {
+    const data = await authApi.demo();
+    setAccessToken(data.accessToken, true);
+    setUser(data.user);
+    return data;
+  }, []);
+
   const logout = useCallback(async () => {
     try { await authApi.logout(); } catch (_) {}
     setAccessToken(null);
@@ -53,7 +60,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, setUser, login, register, demo, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

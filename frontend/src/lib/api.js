@@ -78,6 +78,7 @@ async function req(path, options = {}) {
 export const authApi = {
   register: (data) => req("/auth/register", { method: "POST", body: JSON.stringify(data) }),
   login: (data) => req("/auth/login", { method: "POST", body: JSON.stringify(data) }),
+  demo: () => req("/auth/demo", { method: "POST" }),
   logout: () => req("/auth/logout", { method: "POST" }),
   me: () => req("/auth/me"),
   refresh: () => req("/auth/refresh", { method: "POST" }),

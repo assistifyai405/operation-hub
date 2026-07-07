@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Loader2, KeyRound, Plug, CreditCard, ShieldCheck, Monitor, LogOut, Check, Sparkles,
+  Loader2, KeyRound, Plug, CreditCard, ShieldCheck, Monitor, LogOut, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { authApi, settingsApi } from "@/lib/api";
+import { BILLING_ENABLED } from "@/lib/config";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   SectionCard, TextField, TextArea, SelectField, ColorField, ToggleRow, ImageUpload, SaveButton, inputCls,
@@ -293,29 +294,36 @@ export function BillingSection() {
     ["Proposals", b.usage.proposals, null], ["Contracts", b.usage.contracts, null], ["Invoices", b.usage.invoices, null],
   ];
   return (
-    <SectionCard title="Billing" description="Manage your plan and usage." testid="settings-billing">
-      <div className="rounded-xl border border-violet-500/25 bg-gradient-to-br from-violet-600/15 to-transparent p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-violet-400" /><p className="text-sm font-semibold text-violet-300">{b.plan} Plan</p><span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">Active</span></div>
-            <p className="mt-2 text-3xl font-bold text-zinc-50">${b.price}<span className="text-sm font-normal text-zinc-500">/{b.interval}</span></p>
-            <p className="mt-1 text-xs text-zinc-400">Renews on {b.renews_on} · {b.seats.used}/{b.seats.included} seats used</p>
+    <SectionCard title="Billing" description="Plans and usage." testid="settings-billing">
+      {BILLING_ENABLED ? (
+        <div className="rounded-xl border border-violet-500/25 bg-gradient-to-br from-violet-600/15 to-transparent p-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-violet-400" /><p className="text-sm font-semibold text-violet-300">{b.plan} Plan</p><span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">Active</span></div>
+              <p className="mt-2 text-3xl font-bold text-zinc-50">${b.price}<span className="text-sm font-normal text-zinc-500">/{b.interval}</span></p>
+              <p className="mt-1 text-xs text-zinc-400">Renews on {b.renews_on} · {b.seats.used}/{b.seats.included} seats used</p>
+            </div>
+            <button data-testid="upgrade-btn" onClick={() => toast.info("Manage your plan.")} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet">Manage plan</button>
           </div>
-          <button data-testid="upgrade-btn" onClick={() => toast.info("Stripe billing is coming soon.")} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet">Upgrade</button>
         </div>
-      </div>
+      ) : (
+        <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-6 text-center" data-testid="billing-coming-soon">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600/15 text-violet-400"><Sparkles className="h-5 w-5" /></div>
+          <p className="mt-3 text-sm font-semibold text-zinc-100">Plans &amp; billing are coming soon</p>
+          <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">Assistify OS is free while we're in early access. We'll let you know before any paid plans go live — no surprises.</p>
+        </div>
+      )}
       <div>
         <p className="mb-3 text-sm font-semibold text-zinc-100">Usage this period</p>
         <div className="space-y-3" data-testid="billing-usage">
           {usageRows.map(([label, used, limit]) => (
             <div key={label}>
-              <div className="mb-1 flex items-center justify-between text-xs"><span className="text-zinc-400">{label}</span><span className="text-zinc-300">{used}{limit ? ` / ${limit}` : ""}</span></div>
-              {limit && <div className="h-2 overflow-hidden rounded-full bg-zinc-800"><div className="h-full rounded-full bg-violet-500" style={{ width: `${Math.min(100, (used / limit) * 100)}%` }} /></div>}
+              <div className="mb-1 flex items-center justify-between text-xs"><span className="text-zinc-400">{label}</span><span className="text-zinc-300">{used}{limit && BILLING_ENABLED ? ` / ${limit}` : ""}</span></div>
+              {limit && BILLING_ENABLED && <div className="h-2 overflow-hidden rounded-full bg-zinc-800"><div className="h-full rounded-full bg-violet-500" style={{ width: `${Math.min(100, (used / limit) * 100)}%` }} /></div>}
             </div>
           ))}
         </div>
       </div>
-      <p className="flex items-center gap-1.5 text-xs text-zinc-600"><Check className="h-3.5 w-3.5" /> Payments are not yet enabled — Stripe integration coming soon.</p>
     </SectionCard>
   );
 }

@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { AuthShell, inputClass } from "@/components/AuthShell";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const [email, setEmail] = useState("jordan@assistify.io");
-  const [password, setPassword] = useState("Assistify2026!");
+  const { login, demo } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +25,19 @@ export default function Login() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDemo = async () => {
+    setError("");
+    setDemoLoading(true);
+    try {
+      await demo();
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -55,9 +69,18 @@ export default function Login() {
           <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} data-testid="remember-me" className="h-4 w-4 rounded border-white/10 bg-zinc-950 accent-violet-600" />
           Remember me for 7 days
         </label>
-        <button type="submit" disabled={loading} data-testid="login-submit" className="group flex w-full items-center justify-center gap-2 rounded-lg bg-violet-600 py-2.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 glow-violet">
+        <button type="submit" disabled={loading || demoLoading} data-testid="login-submit" className="group flex w-full items-center justify-center gap-2 rounded-lg bg-violet-600 py-2.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 glow-violet">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Sign in <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>}
         </button>
+        <div className="flex items-center gap-3 py-1">
+          <div className="h-px flex-1 bg-white/10" />
+          <span className="text-[11px] uppercase tracking-wide text-zinc-600">or</span>
+          <div className="h-px flex-1 bg-white/10" />
+        </div>
+        <button type="button" onClick={handleDemo} disabled={loading || demoLoading} data-testid="explore-demo-btn" className="flex w-full items-center justify-center gap-2 rounded-lg border border-violet-500/40 bg-violet-500/10 py-2.5 text-sm font-semibold text-violet-200 transition-all hover:bg-violet-500/20 disabled:opacity-60">
+          {demoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Sparkles className="h-4 w-4" /> Explore demo workspace</>}
+        </button>
+        <p className="text-center text-[11px] text-zinc-600">No signup needed — opens a private sample workspace just for you.</p>
       </form>
     </AuthShell>
   );

@@ -176,6 +176,72 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     return out
 
 
+async def _seed_demo_data(org_id: str):
+    """Seed a small, isolated set of sample data so a demo workspace isn't empty."""
+    now = now_iso()
+    clients = [
+        {"name": "Northwind Labs", "contact": "Dana Whitfield", "email": "dana@northwind.test", "value": 48200, "status": "Active"},
+        {"name": "Vertex Studio", "contact": "Marco Ruiz", "email": "marco@vertex.test", "value": 31900, "status": "Active"},
+        {"name": "Halcyon Group", "contact": "Priya Nair", "email": "priya@halcyon.test", "value": 62400, "status": "Active"},
+    ]
+    client_ids = {}
+    for c in clients:
+        obj = Client(**c)
+        doc = obj.model_dump(); doc["organizationId"] = org_id
+        await db.clients.insert_one(doc)
+        client_ids[c["name"]] = obj.id
+    projects = [
+        {"name": "Brand Redesign", "client": "Halcyon Group", "status": "In Progress", "description": "Full visual identity refresh and website redesign."},
+        {"name": "Q3 Marketing Site", "client": "Northwind Labs", "status": "Planning", "description": "New marketing website with CMS."},
+    ]
+    proj_ids = []
+    for p in projects:
+        obj = Project(name=p["name"], client_id=client_ids.get(p["client"]), status=p["status"], description=p["description"])
+        doc = obj.model_dump(); doc["organizationId"] = org_id
+        await db.projects.insert_one(doc)
+        proj_ids.append(obj.id)
+        await db.activities.insert_one({"id": str(uuid.uuid4()), "project_id": obj.id, "organizationId": org_id,
+                                        "type": "project_created", "message": f'Project "{obj.name}" was created', "created_at": now})
+    tasks = [
+        {"title": "Kickoff call with client", "priority": "High", "project_id": proj_ids[0]},
+        {"title": "Draft moodboard", "priority": "Medium", "project_id": proj_ids[0]},
+        {"title": "Collect brand assets", "priority": "Low", "project_id": proj_ids[1]},
+    ]
+    for t in tasks:
+        obj = Task(**t)
+        doc = obj.model_dump(); doc["organizationId"] = org_id
+        await db.tasks.insert_one(doc)
+
+
+@api_router.post("/auth/demo")
+async def create_demo(request: Request, response: Response):
+    """Provision a brand-new ISOLATED demo tenant (own org + anonymous user) and sign in.
+    Each call creates a fresh workspace — demo users never share data."""
+    rate_limit(f"demo:{_client_ip(request)}", 10, 3600)
+    now = now_iso()
+    org_id = A.gen_id()
+    user_id = A.gen_id()
+    email = f"demo+{uuid.uuid4().hex[:10]}@assistify.demo"
+    await db.organizations.insert_one({
+        "id": org_id, "name": "Demo Workspace", "ownerId": user_id,
+        "isDemo": True, "createdAt": now, "updatedAt": now,
+    })
+    user = {
+        "id": user_id, "firstName": "Demo", "lastName": "User", "email": email,
+        "passwordHash": A.hash_password(A.gen_token()),  # random, unusable — no password login for demo
+        "emailVerified": True, "avatar": "", "role": "owner", "organizationId": org_id,
+        "timezone": "UTC", "language": "en", "isDemo": True,
+        "createdAt": now, "updatedAt": now, "lastLogin": now, "onboardingCompleted": True,
+    }
+    await db.users.insert_one(user)
+    await _seed_demo_data(org_id)
+    access, refresh = await _create_session(user, request, False)
+    _set_refresh_cookie(response, refresh, False)
+    _set_access_cookie(response, access)
+    return {"user": public_user(user), "accessToken": access, "isDemo": True}
+
+
+
 @api_router.post("/auth/login")
 async def login(payload: LoginRequest, request: Request, response: Response):
     email = payload.email.strip().lower()
