@@ -26,6 +26,7 @@ from proposal_export import build_pdf, build_docx
 from invoice_export import build_invoice_pdf, build_invoice_docx
 import auth as A
 import storage as S
+import email_service
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -119,6 +120,17 @@ def _dev_link(path: str, token: str) -> str:
     return f"{base}{path}?token={token}"
 
 
+async def _email_brand(org_id: str) -> dict:
+    org_doc = await db.organizations.find_one({"id": org_id}, {"_id": 0}) or {}
+    s = _merged_settings(org_doc)
+    b, o = s["branding"], s["organization"]
+    return {
+        "company_name": o.get("name") or "Assistify OS",
+        "primary": b.get("primaryColor") or "#7C3AED",
+        "logo_url": b.get("logo") or o.get("logo") or "",
+    }
+
+
 @api_router.post("/auth/register")
 async def register(payload: RegisterRequest, request: Request, response: Response):
     rate_limit(f"register:{_client_ip(request)}", 10, 3600)
@@ -143,19 +155,25 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     }
     await db.users.insert_one(user)
 
-    # Email verification (dev mode: log + return link)
+    # Email verification — send via Resend when configured, else dev-mode fallback
     vtoken = A.gen_token()
     await db.email_verification_tokens.insert_one({
         "token": vtoken, "userId": user_id, "used": False,
         "expires_at": datetime.now(timezone.utc) + timedelta(days=2), "created_at": now,
     })
     verify_link = _dev_link("/verify-email", vtoken)
-    logger.info(f"[EMAIL:VERIFY] {email} -> {verify_link}")
+    brand = await _email_brand(org_id)
+    await email_service.send_verification_email(email, verify_link, brand)
 
     access, refresh = await _create_session(user, request, True)
     _set_refresh_cookie(response, refresh, True)
     _set_access_cookie(response, access)
-    return {"user": public_user(user), "accessToken": access, "verificationLink": verify_link}
+    out = {"user": public_user(user), "accessToken": access}
+    if not email_service.is_enabled():
+        # Dev-mode only: expose the link so the flow is testable without a mail provider.
+        logger.info(f"[EMAIL:VERIFY:DEV] {email} -> {verify_link}")
+        out["verificationLink"] = verify_link
+    return out
 
 
 @api_router.post("/auth/login")
@@ -252,7 +270,12 @@ async def forgot_password(payload: ForgotRequest, request: Request):
         "expires_at": datetime.now(timezone.utc) + timedelta(hours=1), "created_at": now_iso(),
     })
     reset_link = _dev_link("/reset-password", token)
-    logger.info(f"[EMAIL:RESET] {email} -> {reset_link}")
+    brand = await _email_brand(user["organizationId"])
+    await email_service.send_password_reset_email(email, reset_link, brand)
+    if email_service.is_enabled():
+        return generic
+    # Dev-mode only: expose the link so the flow is testable without a mail provider.
+    logger.info(f"[EMAIL:RESET:DEV] {email} -> {reset_link}")
     return {**generic, "resetLink": reset_link}
 
 
@@ -305,7 +328,11 @@ async def resend_verification(user: dict = Depends(current_user)):
         "expires_at": datetime.now(timezone.utc) + timedelta(days=2), "created_at": now_iso(),
     })
     link = _dev_link("/verify-email", token)
-    logger.info(f"[EMAIL:VERIFY] {user['email']} -> {link}")
+    brand = await _email_brand(user["organizationId"])
+    await email_service.send_verification_email(user["email"], link, brand)
+    if email_service.is_enabled():
+        return {"ok": True, "message": "Verification email sent"}
+    logger.info(f"[EMAIL:VERIFY:DEV] {user['email']} -> {link}")
     return {"ok": True, "verificationLink": link}
 
 
