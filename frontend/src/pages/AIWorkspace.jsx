@@ -7,7 +7,7 @@ import {
 import { aiApi } from "@/lib/api";
 import { AiIcon, fmtDuration, relTime } from "@/components/ai/aiHelpers";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 
 const RANGES = [
@@ -276,6 +276,7 @@ export default function AIWorkspace() {
               {compareDoc && <AiIcon name={compareDoc.icon} className="h-4 w-4 text-violet-300" />}
               {compareDoc?.project_name} — {compareDoc?.label}
             </DialogTitle>
+            <DialogDescription className="text-zinc-500">Review how this document evolved across versions, then open a side-by-side compare.</DialogDescription>
           </DialogHeader>
           {compareDoc && (
             <div className="space-y-3">
