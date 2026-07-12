@@ -9,6 +9,7 @@ import { proposalWriterApi } from "@/lib/api";
 import BrandedDocPreview from "@/components/BrandedDocPreview";
 import { AIWorkflow } from "@/components/ai/AIWorkflow";
 import { AIActionReport } from "@/components/ai/AIActionReport";
+import { useAssistantDocument } from "@/context/AssistantContext";
 
 const asList = (v) => Array.isArray(v) ? v : (v ? [v] : []);
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
@@ -121,6 +122,7 @@ export default function ProposalWriter({ projectId, projectName, onSaved }) {
   const exportFile = (fmt) => { window.open(proposalWriterApi.exportUrl(projectId, fmt), "_blank"); toast.success(`Exporting ${fmt.toUpperCase()}…`); setTimeout(() => onSaved?.(), 1500); };
   const viewVersion = (v) => { setContent(v.content); setTitle(v.title); setStatus(v.status); setDirtyVersion(v.version); setEditing(false); setCompareWith(null); };
   const setField = (key, val) => setContent((c) => ({ ...c, [key]: val }));
+  useAssistantDocument({ type: "proposal", name: title || `${projectName} — Proposal`, sections, content, setField, active: !!content });
 
   if (loading) return <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>;
 

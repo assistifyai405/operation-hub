@@ -1,0 +1,33 @@
+{
+  "summary": "AI Workspace Assistant (omnipresent) tested end-to-end. All 9 backend pytest cases pass (suggestions generic/document/project shape+chip contents; transform-section improve returns apply.mode=section+target+value+report; transform-document translate returns apply.mode=document with per-key values and list-type preservation; info summarize returns markdown answer + report with apply=null; unknown command → 400; SSE /assistant/chat/stream emits data:{delta:...} then data:{done:true, report:{...}} with text/event-stream content-type; history is org-isolated between two demo tenants). Frontend Playwright verified 20/20 steps: demo login, FAB visible on dashboard (opened via JS due to Emergent badge overlap — same pattern the request called out), panel opens with context 'your dashboard', close works. On project Brand Redesign → Proposal tab: context line says 'the Brand Redesign — Proposal', section-select present, 8 suggestion chips rendered (improve/exec_summary/pricing/weak/tone/translate/email/faq). Regression: rapid tab switching contract→invoice→planner→proposal produced ZERO 'Maximum update depth' errors. Slash '/summarize' returned a report. TRANSFORM chip 'improve' returned Apply button; Apply → Undo lifecycle works. Copy + Regenerate buttons present. /ai-workspace and /ai-chat still render. No infinite render loop regression.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "FloatingAssistant FAB", "issues": ["FAB at bottom-20 right-6 overlaps the 'Made with Emergent' preview badge (bottom-right). Normal Playwright click was intercepted; JS .click() works. In production the badge is absent so end-users are unaffected, but consider nudging FAB up (e.g. bottom-24) or shifting left in preview mode to remove the visual crowding."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_assistant.py",
+    "/app/test_reports/pytest/assistant_results.xml"
+  ],
+  "action_items": [
+    "(Optional) Adjust FAB position so it doesn't sit under the 'Made with Emergent' preview badge (only visible in preview envs).",
+    "(Cosmetic) When applying 'improve' on the seeded proposal whose sections are empty strings, the model correctly returns 0 changed sections and the report says 'No changes were made'. This is expected behaviour but a UX polish idea: surface a friendlier 'nothing to improve yet — add content first' hint when apply.values is empty."
+  ],
+  "critical_code_review_comments": [
+    "assistant.py _split_meta: on the info branch the model is asked to append '@@META@@{json}'. If the model omits the marker, meta is {} and the report lacks what/why/impact — the code correctly defaults 'what' to the action label and leaves why/impact empty. Fine, but consider a soft fallback prompt-retry if meta missing.",
+    "AssistantContext.hasDocument is derived as !!docRef.current from a ref inside the provider value. React won't re-render children when docRef mutates; the code intentionally bumps docTick to force it. That works, but effectiveContext/buildPayload depend on docTick via 'void docTick' which is a bit fragile — a follow-up refactor could store the doc handle in state directly for clarity.",
+    "FloatingAssistant.jsx runAction: the transform chip uses targetKey from state; if the user changes the section-select while the request is in flight, the current in-flight request still runs against the old key. Not a bug (payload was already sent) but worth a comment.",
+    "chat/stream: SSE 'gen' async generator awaits _persist(full) inside 'finally' — persist happens after the browser receives 'done'. If persist ever throws, the client already got done and is fine, but the exception surfaces as a 500 in the response tail (masked by StreamingResponse). Non-blocking.",
+    "Confidence heuristic (_confidence) mixes 88 + ctx bonus + len-based bonus, capped at 98. Presented to end users as a percentage — perfectly fine for UX but not a real calibration. OK for MVP."
+  ],
+  "updated_files": ["/app/backend/tests/test_assistant.py", "/app/test_reports/iteration_22.json"],
+  "success_rate": {"backend": "100% (9/9)", "frontend": "100% (20/20 steps)"},
+  "test_credentials": "POST /api/auth/demo (accessToken in response body). No user creds needed — the 'Explore Demo' button on /login provisions an isolated tenant seeded with project 'Brand Redesign' + proposal v2 + plan.",
+  "seed_data_creation": "Each test relies on the /api/auth/demo seed (Halcyon Group client, Brand Redesign project, versioned proposal + plan). No extra fixtures created.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Assistant testids: assistant-fab (open via JS in preview due to Emergent badge overlap), assistant-panel, assistant-context-line, assistant-close, assistant-section-select, assistant-suggestions with assistant-chip-<command> children, assistant-input, assistant-send, assistant-apply-btn, assistant-undo-btn, assistant-copy-btn, assistant-regenerate-btn, assistant-report, assistant-error, assistant-welcome, assistant-messages, assistant-msg-user/assistant. Backend regression suite: /app/backend/tests/test_assistant.py (9 cases, ~11s). LLM calls use gpt-5.4 via Emergent universal key; tests gracefully skip on 502 budget errors."
+}

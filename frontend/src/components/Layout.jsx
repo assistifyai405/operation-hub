@@ -17,6 +17,8 @@ import CommandPalette from "@/components/CommandPalette";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { AiIcon } from "@/components/ai/aiHelpers";
 import { BILLING_ENABLED } from "@/lib/config";
+import { AssistantProvider } from "@/context/AssistantContext";
+import FloatingAssistant from "@/components/assistant/FloatingAssistant";
 
 const relativeTime = (iso) => {
   if (!iso) return "";
@@ -144,6 +146,7 @@ export default function Layout() {
   };
 
   return (
+    <AssistantProvider>
     <div className="min-h-screen bg-black text-zinc-50">
       {/* Desktop sidebar */}
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r border-white/10 bg-black lg:block">
@@ -268,6 +271,8 @@ export default function Layout() {
       </div>
       <CommandPalette open={paletteOpen} setOpen={setPaletteOpen} />
       {wizardOpen && <OnboardingWizard open={wizardOpen} onDone={finishOnboarding} />}
+      <FloatingAssistant />
     </div>
+    </AssistantProvider>
   );
 }

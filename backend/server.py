@@ -37,6 +37,7 @@ from dependencies import (public_user, current_user, current_org, require_projec
 from routers.copilot import router as copilot_router
 from routers.exports import router as exports_router
 from routers.ai import router as ai_router
+from routers.assistant import router as assistant_router
 import ai_activity as aia
 
 app = FastAPI()
@@ -1956,6 +1957,7 @@ app.include_router(api_router)
 app.include_router(copilot_router)
 app.include_router(exports_router)
 app.include_router(ai_router)
+app.include_router(assistant_router)
 
 app.add_middleware(
     CORSMiddleware,

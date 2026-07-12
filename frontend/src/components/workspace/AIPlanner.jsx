@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { plansApi } from "@/lib/api";
 import { AIWorkflow } from "@/components/ai/AIWorkflow";
 import { AIActionReport } from "@/components/ai/AIActionReport";
+import { useAssistantDocument } from "@/context/AssistantContext";
 
 const SECTIONS = [
   { key: "executive_summary", label: "Executive Summary", icon: FileText, type: "text" },
@@ -137,6 +138,7 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
 
   const viewVersion = (v) => { setDraft(v.sections); setDraftVersion(v.version); setEditing(false); setCompareWith(null); };
   const setField = (key, val) => setDraft((d) => ({ ...d, [key]: val }));
+  useAssistantDocument({ type: "plan", name: `${projectName} — Plan`, sections: SECTIONS, content: draft, setField, active: draft !== null });
 
   // AI Action Report — shown immediately after a successful generation
   if (report) {

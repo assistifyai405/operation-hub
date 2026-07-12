@@ -17,6 +17,7 @@ import AIPlanner from "@/components/workspace/AIPlanner";
 import ProposalWriter from "@/components/workspace/ProposalWriter";
 import ContractWriter from "@/components/workspace/ContractWriter";
 import InvoiceWriter from "@/components/workspace/InvoiceWriter";
+import { useAssistant } from "@/context/AssistantContext";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -422,6 +423,14 @@ export default function ProjectWorkspace() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState(searchParams.get("tab") || "overview");
+  const assistant = useAssistant();
+
+  useEffect(() => {
+    if (!assistant || !project) return undefined;
+    assistant.setPageContext({ scope: "project", label: `the ${project.name} project`, entityId: project.id, entityName: project.name });
+    return () => assistant.setPageContext(null);
+    // eslint-disable-next-line
+  }, [project?.id, project?.name]);
 
   const loadProject = () => projectsApi.get(id).then(setProject).catch(() => navigate("/projects"));
   const loadTasks = () => tasksApi.list(id).then(setTasks).catch(() => {});

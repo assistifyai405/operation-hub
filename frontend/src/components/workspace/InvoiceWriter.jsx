@@ -9,6 +9,7 @@ import { invoiceWriterApi } from "@/lib/api";
 import BrandedDocPreview from "@/components/BrandedDocPreview";
 import { AIWorkflow } from "@/components/ai/AIWorkflow";
 import { AIActionReport } from "@/components/ai/AIActionReport";
+import { useAssistantDocument } from "@/context/AssistantContext";
 
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
 const money = (v) => `$${Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -137,6 +138,7 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
   const exportFile = (fmt) => { window.open(invoiceWriterApi.exportUrl(projectId, fmt), "_blank"); toast.success(`Exporting ${fmt.toUpperCase()}…`); setTimeout(() => onSaved?.(), 1500); };
   const viewVersion = (v) => { setNumber(v.invoice_number); setTitle(v.title); setStatus(v.status); setContent(v.content); setLineItems(v.line_items); setDirtyVersion(v.version); setEditing(false); setCompareWith(null); };
   const setField = (k, val) => setContent((c) => ({ ...c, [k]: val }));
+  useAssistantDocument({ type: "invoice", name: title || `${projectName} — Invoice`, sections: BODY_FIELDS, content, setField, active: !!content });
   const setItem = (i, k, val) => setLineItems((rows) => rows.map((r, idx) => idx === i ? { ...r, [k]: k === "description" ? val : Number(val) } : r));
   const addItem = () => setLineItems((r) => [...r, { description: "", quantity: 1, unit_price: 0 }]);
   const removeItem = (i) => setLineItems((r) => r.filter((_, idx) => idx !== i));

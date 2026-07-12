@@ -159,6 +159,15 @@ export const aiApi = {
   workspaceVersions: () => req("/ai/workspace/versions"),
 };
 
+const API_BASE = `${process.env.REACT_APP_BACKEND_URL}/api`;
+export const assistantApi = {
+  action: (body) => req("/assistant/action", { method: "POST", body: JSON.stringify(body) }),
+  history: (session_id) => req(`/assistant/history/${session_id}`),
+  suggestions: (scope = "generic", documentType = "") =>
+    req(`/assistant/suggestions?scope=${encodeURIComponent(scope)}&document_type=${encodeURIComponent(documentType || "")}`),
+  streamUrl: () => `${API_BASE}/assistant/chat/stream`,
+};
+
 export const copilotApi = {
   message: (session_id, message) => req("/copilot/message", { method: "POST", body: JSON.stringify({ session_id, message }) }),
   execute: (session_id, action_id) => req("/copilot/execute", { method: "POST", body: JSON.stringify({ session_id, action_id }) }),
