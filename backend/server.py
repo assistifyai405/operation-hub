@@ -1392,7 +1392,7 @@ async def generate_plan(project_id: str, org: str = Depends(current_org)):
     await aia.log_ai_activity(org, "plan", f'Project plan created for {p.get("name")}',
                               f'Assistify analyzed {p.get("name")} and produced a structured delivery plan with phases, milestones and tasks.',
                               "Project Workspace", {"project_id": project_id})
-    return {"sections": sections}
+    return {"sections": sections, "report": aia.build_ai_report("plan", p, sections)}
 
 
 @api_router.get("/projects/{project_id}/plans")
@@ -1450,7 +1450,7 @@ async def generate_proposal(project_id: str, org: str = Depends(current_org)):
                               f'Assistify drafted a full client proposal for {p.get("name")}{_cn}, so you didn\'t have to write it from scratch.',
                               "Project Workspace", {"project_id": project_id})
     default_title = f"{p.get('name')} — Proposal"
-    return {"title": default_title, "content": content}
+    return {"title": default_title, "content": content, "report": aia.build_ai_report("proposal", p, content)}
 
 
 @api_router.get("/projects/{project_id}/proposal")
@@ -1580,7 +1580,7 @@ async def generate_contract(project_id: str, org: str = Depends(current_org)):
     await aia.log_ai_activity(org, "contract", f'Contract drafted for {p.get("name")}',
                               f'Assistify prepared a service agreement{_cn} with standard protective clauses ready for review.',
                               "Project Workspace", {"project_id": project_id})
-    return {"title": f"{p.get('name')} — Service Agreement", "content": content, "proposal_id": proposal_id}
+    return {"title": f"{p.get('name')} — Service Agreement", "content": content, "proposal_id": proposal_id, "report": aia.build_ai_report("contract", p, content)}
 
 
 @api_router.get("/projects/{project_id}/contract")
@@ -1731,6 +1731,7 @@ async def generate_invoice(project_id: str, org: str = Depends(current_org)):
         "invoice_number": await _next_invoice_number(org), "title": f"{p.get('name')} — Invoice",
         "content": content, "line_items": items, "subtotal": subtotal, "vat": vat_amount, "total": total,
         "proposal_id": proposal_id, "contract_id": contract.get("id") if contract else None,
+        "report": aia.build_ai_report("invoice", p, content),
     }
 
 

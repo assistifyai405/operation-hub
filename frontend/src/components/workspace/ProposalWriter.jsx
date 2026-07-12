@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { proposalWriterApi } from "@/lib/api";
 import BrandedDocPreview from "@/components/BrandedDocPreview";
 import { AIWorkflow } from "@/components/ai/AIWorkflow";
+import { AIActionReport } from "@/components/ai/AIActionReport";
 
 const asList = (v) => Array.isArray(v) ? v : (v ? [v] : []);
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
@@ -65,6 +66,8 @@ export default function ProposalWriter({ projectId, projectName, onSaved }) {
   const [editing, setEditing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [compareWith, setCompareWith] = useState(null);
+  const [report, setReport] = useState(null);
+  const [durationMs, setDurationMs] = useState(0);
 
   const load = async () => {
     try {
@@ -77,12 +80,23 @@ export default function ProposalWriter({ projectId, projectName, onSaved }) {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [projectId]);
 
   const generate = async () => {
-    setGenerating(true); setCompareWith(null); setEditing(false);
+    setGenerating(true); setCompareWith(null); setEditing(false); setReport(null);
+    const start = Date.now();
     try {
-      const { title: t, content: c } = await proposalWriterApi.generate(projectId);
+      const { title: t, content: c, report: r } = await proposalWriterApi.generate(projectId);
       setContent(c); setTitle((prev) => prev || t); setStatus("Generated"); setDirtyVersion(null);
-      toast.success("Proposal generated — review, edit and save");
+      setDurationMs(Date.now() - start); setReport(r || null);
     } catch (e) { toast.error(e.message); } finally { setGenerating(false); }
+  };
+
+  const sendToClient = async () => {
+    setStatus("Sent"); setReport(null);
+    try {
+      const doc = await proposalWriterApi.save(projectId, { title: title || `${projectName} — Proposal`, status: "Sent", content });
+      setProposal(doc); setDirtyVersion(doc.version);
+      toast.success("Proposal marked as Sent");
+      onSaved?.();
+    } catch (e) { toast.error(e.message); setStatus("Generated"); }
   };
 
   const save = async () => {
@@ -109,6 +123,19 @@ export default function ProposalWriter({ projectId, projectName, onSaved }) {
   const setField = (key, val) => setContent((c) => ({ ...c, [key]: val }));
 
   if (loading) return <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+
+  // AI Action Report — shown immediately after a successful generation
+  if (report) {
+    return (
+      <AIActionReport report={report} durationMs={durationMs} actions={{
+        onReview: () => { setReport(null); setEditing(false); },
+        onEdit: () => { setReport(null); setEditing(true); },
+        onDownloadPdf: () => exportFile("pdf"),
+        onExportWord: () => exportFile("docx"),
+        onSend: sendToClient,
+      }} />
+    );
+  }
 
   // Empty (never generated / saved)
   if (!content) {

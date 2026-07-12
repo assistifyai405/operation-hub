@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { invoiceWriterApi } from "@/lib/api";
 import BrandedDocPreview from "@/components/BrandedDocPreview";
 import { AIWorkflow } from "@/components/ai/AIWorkflow";
+import { AIActionReport } from "@/components/ai/AIActionReport";
 
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
 const money = (v) => `$${Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -81,6 +82,8 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
   const [editing, setEditing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [compareWith, setCompareWith] = useState(null);
+  const [report, setReport] = useState(null);
+  const [durationMs, setDurationMs] = useState(0);
 
   const totals = useMemo(() => computeTotals(lineItems, content?.vat_rate), [lineItems, content]);
 
@@ -95,12 +98,22 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [projectId]);
 
   const generate = async () => {
-    setGenerating(true); setCompareWith(null); setEditing(false);
+    setGenerating(true); setCompareWith(null); setEditing(false); setReport(null);
+    const start = Date.now();
     try {
       const d = await invoiceWriterApi.generate(projectId);
       setNumber(d.invoice_number); setTitle((prev) => prev || d.title); setContent(d.content); setLineItems(d.line_items); setStatus("Generated"); setDirtyVersion(null);
-      toast.success("Invoice generated — review, edit and save");
+      setDurationMs(Date.now() - start); setReport(d.report || null);
     } catch (e) { toast.error(e.message); } finally { setGenerating(false); }
+  };
+
+  const sendToClient = async () => {
+    setStatus("Sent"); setReport(null);
+    try {
+      const doc = await invoiceWriterApi.save(projectId, { invoice_number: number, title: title || `${projectName} — Invoice`, status: "Sent", content, line_items: lineItems });
+      setInvoice(doc); setDirtyVersion(doc.version);
+      toast.success("Invoice marked as Sent"); onSaved?.();
+    } catch (e) { toast.error(e.message); setStatus("Generated"); }
   };
 
   const save = async () => {
@@ -129,6 +142,18 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
   const removeItem = (i) => setLineItems((r) => r.filter((_, idx) => idx !== i));
 
   if (loading) return <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+
+  if (report) {
+    return (
+      <AIActionReport report={report} durationMs={durationMs} actions={{
+        onReview: () => { setReport(null); setEditing(false); },
+        onEdit: () => { setReport(null); setEditing(true); },
+        onDownloadPdf: () => exportFile("pdf"),
+        onExportWord: () => exportFile("docx"),
+        onSend: sendToClient,
+      }} />
+    );
+  }
 
   if (!content) {
     if (generating) {

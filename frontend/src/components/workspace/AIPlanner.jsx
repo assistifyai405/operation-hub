@@ -7,6 +7,7 @@ import {
 import { toast } from "sonner";
 import { plansApi } from "@/lib/api";
 import { AIWorkflow } from "@/components/ai/AIWorkflow";
+import { AIActionReport } from "@/components/ai/AIActionReport";
 
 const SECTIONS = [
   { key: "executive_summary", label: "Executive Summary", icon: FileText, type: "text" },
@@ -102,6 +103,8 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [compareWith, setCompareWith] = useState(null); // version object
+  const [report, setReport] = useState(null);
+  const [durationMs, setDurationMs] = useState(0);
 
   const loadVersions = () => plansApi.list(projectId).then((v) => {
     setVersions(v);
@@ -111,11 +114,12 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
   useEffect(() => { loadVersions(); /* eslint-disable-next-line */ }, [projectId]);
 
   const generate = async () => {
-    setGenerating(true); setCompareWith(null); setEditing(false);
+    setGenerating(true); setCompareWith(null); setEditing(false); setReport(null);
+    const start = Date.now();
     try {
-      const { sections } = await plansApi.generate(projectId);
+      const { sections, report: r } = await plansApi.generate(projectId);
       setDraft(sections); setDraftVersion(null);
-      toast.success("Plan generated — review, edit and save it");
+      setDurationMs(Date.now() - start); setReport(r || null);
     } catch (e) { toast.error(e.message); } finally { setGenerating(false); }
   };
 
@@ -133,6 +137,16 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
 
   const viewVersion = (v) => { setDraft(v.sections); setDraftVersion(v.version); setEditing(false); setCompareWith(null); };
   const setField = (key, val) => setDraft((d) => ({ ...d, [key]: val }));
+
+  // AI Action Report — shown immediately after a successful generation
+  if (report) {
+    return (
+      <AIActionReport report={report} durationMs={durationMs} actions={{
+        onReview: () => { setReport(null); setEditing(false); },
+        onEdit: () => { setReport(null); setEditing(true); },
+      }} />
+    );
+  }
 
   // Initial empty state (no versions, no draft)
   if (draft === null && versions.length === 0) {

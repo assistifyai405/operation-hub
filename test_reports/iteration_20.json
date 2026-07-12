@@ -1,0 +1,29 @@
+{
+  "summary": "Tested the new AI Action Report feature across all 4 generation flows (proposal, contract, invoice, plan) — backend & frontend. Backend: 7/7 pytest tests pass, all endpoints correctly return the `report` object with expected time_saved values (23/12/6/15), confidence (88-99), steps, why (3-6), quality (4), and human type_labels. Regression: proposal save/get and plan persistence intact; /api/ai/time-saved works. Frontend: AIActionReport renders correctly after each generation with all required data-testids (report-success-title, report-checklist [8/7/6/6 items], report-time-saved with correct minutes, report-lifetime, report-confidence(-value), report-why, report-quality [4 chips], report-actions). Suggested next-step buttons visible/clickable: proposal/contract/invoice show all 5 (Review/Edit/PDF/Word/Send), plan only shows Review+Edit (as spec'd). Review button dismisses report and returns to the editor with content intact. Mobile (390px) responsive — layout stacks single-column with no overflow. No lorem/placeholder text detected; all copy is human/business-friendly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "AI Action Report (desktop)", "issues": ["Minor cosmetic: on a wide (1920px) desktop viewport, during the 0.32s ai-pop item-stagger animation, a few checklist items can briefly appear scaled up (scale(1.25)) and visually overlap outside the left card boundary before settling. Once animations complete (~800ms) all items fit inside the card with correct bounding boxes. Not a blocker; if desired, apply overflow-hidden to the checklist card or add transform-origin:left center to stop the visual bleed."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_ai_action_report.py", "/app/test_reports/pytest/ai_action_report.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "build_ai_report is clean, deterministic, and free of any LLM cost — good design.",
+    "AIActionReport.jsx unconditionally calls aiApi.timeSaved() on every mount; consider caching the lifetime figure to avoid a duplicate network hit each time the user regenerates.",
+    "The `report-onSend` handler in ProposalWriter/etc. sends via proposalWriterApi.save() — works, but silently marks status Sent even if the content is a fresh unsaved draft; that's the intended UX per the spec (verified account) but worth documenting."
+  ],
+  "updated_files": ["/app/backend/tests/test_ai_action_report.py (new)"],
+  "success_rate": {"backend": "100% (7/7)", "frontend": "100% of tested flows"},
+  "test_credentials": "jordan@assistify.io / Assistify2026! (seed owner)",
+  "seed_data_creation": "None — used existing seed project 5b3538af-0c6a-480e-8b11-c730368e1402 (Brand Redesign / Northwind Labs).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "AI Action Report feature is fully working end-to-end. Backend `report` object shape verified. Frontend renders and all 5 suggested-action buttons wire to the correct existing handlers. Plan report intentionally omits PDF/Word/Send buttons. Only cosmetic note is the mid-animation overflow at wide desktop viewports (self-resolves in <1s).",
+  "rca of the issue": "N/A — no functional bugs found."
+}
