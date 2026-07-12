@@ -11,10 +11,11 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
-import { authApi, notificationsApi } from "@/lib/api";
+import { authApi, notificationsApi, aiApi } from "@/lib/api";
 import { toast } from "sonner";
 import CommandPalette from "@/components/CommandPalette";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import { AiIcon } from "@/components/ai/aiHelpers";
 import { BILLING_ENABLED } from "@/lib/config";
 
 const relativeTime = (iso) => {
@@ -111,7 +112,7 @@ export default function Layout() {
   }, [user]);
 
   useEffect(() => {
-    if (user) notificationsApi.list().then(setNotifications).catch(() => {});
+    if (user) aiApi.notifications().then(setNotifications).catch(() => notificationsApi.list().then(setNotifications).catch(() => {}));
   }, [user, location.pathname]);
 
   const finishOnboarding = () => {
@@ -194,15 +195,21 @@ export default function Layout() {
                 {notifications.length > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-violet-500 animate-pulse-glow" />}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 border-white/10 bg-zinc-950 text-zinc-200">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-96 max-w-[92vw] border-white/10 bg-zinc-950 text-zinc-200">
+              <DropdownMenuLabel className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-violet-400" /> Assistify notifications</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-white/10" />
               {notifications.length === 0 ? (
-                <div className="px-2 py-6 text-center text-xs text-zinc-500" data-testid="notifications-empty">No activity yet</div>
-              ) : notifications.map((n) => (
-                <DropdownMenuItem key={n.id} onClick={() => n.project_id && navigate(`/projects/${n.project_id}`)} className="flex flex-col items-start gap-0.5 focus:bg-zinc-900">
-                  <span className="text-sm text-zinc-200">{n.message}</span>
-                  <span className="text-xs text-zinc-500">{n.project_name ? `${n.project_name} · ` : ""}{relativeTime(n.created_at)}</span>
+                <div className="px-2 py-6 text-center text-xs text-zinc-500" data-testid="notifications-empty">Nothing needs your attention right now.</div>
+              ) : notifications.slice(0, 8).map((n, i) => (
+                <DropdownMenuItem key={i} onClick={() => n.link && navigate(n.link)} className="flex items-start gap-2.5 focus:bg-zinc-900" data-testid="notification-item">
+                  <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${n.kind === "insight" ? "bg-amber-500/15 text-amber-400" : "bg-emerald-500/15 text-emerald-400"}`}>
+                    <AiIcon name={n.icon} className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-zinc-100">{n.title}</span>
+                    <span className="block text-xs leading-snug text-zinc-400 whitespace-normal">{n.message}</span>
+                    <span className="block text-[11px] text-zinc-600">{relativeTime(n.created_at)}</span>
+                  </span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -230,6 +237,9 @@ export default function Layout() {
                   <MailWarning className="mr-2 h-4 w-4" /> Verify email
                 </DropdownMenuItem>
               )}
+              <DropdownMenuItem className="focus:bg-zinc-900" onClick={() => navigate("/ai-history")} data-testid="menu-ai-history">
+                <Sparkles className="mr-2 h-4 w-4" /> AI History
+              </DropdownMenuItem>
               <DropdownMenuItem className="focus:bg-zinc-900" onClick={() => navigate("/settings")}>
                 <SettingsIcon className="mr-2 h-4 w-4" /> Settings
               </DropdownMenuItem>

@@ -36,6 +36,8 @@ from dependencies import (public_user, current_user, current_org, require_projec
                           rate_limit, _client_ip)
 from routers.copilot import router as copilot_router
 from routers.exports import router as exports_router
+from routers.ai import router as ai_router
+import ai_activity as aia
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -1387,6 +1389,9 @@ async def generate_plan(project_id: str, org: str = Depends(current_org)):
     except Exception as e:
         logging.exception("plan generation failed")
         raise HTTPException(status_code=502, detail=f"Plan generation failed: {e}")
+    await aia.log_ai_activity(org, "plan", f'Project plan created for {p.get("name")}',
+                              f'Assistify analyzed {p.get("name")} and produced a structured delivery plan with phases, milestones and tasks.',
+                              "Project Workspace", {"project_id": project_id})
     return {"sections": sections}
 
 
@@ -1440,6 +1445,10 @@ async def generate_proposal(project_id: str, org: str = Depends(current_org)):
         raise HTTPException(status_code=502, detail=f"Proposal generation failed: {e}")
 
     await log_activity(project_id, "proposal_generated", f'Proposal for "{p.get("name")}" was generated')
+    _cn = f' for {p.get("client_name")}' if p.get("client_name") else ""
+    await aia.log_ai_activity(org, "proposal", f'Proposal generated for {p.get("name")}',
+                              f'Assistify drafted a full client proposal for {p.get("name")}{_cn}, so you didn\'t have to write it from scratch.',
+                              "Project Workspace", {"project_id": project_id})
     default_title = f"{p.get('name')} — Proposal"
     return {"title": default_title, "content": content}
 
@@ -1567,6 +1576,10 @@ async def generate_contract(project_id: str, org: str = Depends(current_org)):
         raise HTTPException(status_code=502, detail=f"Contract generation failed: {e}")
 
     await log_activity(project_id, "contract_generated", f'Service agreement for "{p.get("name")}" was generated')
+    _cn = f' with {p.get("client_name")}' if p.get("client_name") else ""
+    await aia.log_ai_activity(org, "contract", f'Contract drafted for {p.get("name")}',
+                              f'Assistify prepared a service agreement{_cn} with standard protective clauses ready for review.',
+                              "Project Workspace", {"project_id": project_id})
     return {"title": f"{p.get('name')} — Service Agreement", "content": content, "proposal_id": proposal_id}
 
 
@@ -1711,6 +1724,9 @@ async def generate_invoice(project_id: str, org: str = Depends(current_org)):
         "vat_rate": vat_rate,
     }
     await log_activity(project_id, "invoice_generated", f'Invoice for "{p.get("name")}" was generated')
+    await aia.log_ai_activity(org, "invoice", f'Invoice prepared for {p.get("name")}',
+                              f'Assistify built an invoice for {p.get("name")} with line items, VAT and totals calculated automatically.',
+                              "Project Workspace", {"project_id": project_id})
     return {
         "invoice_number": await _next_invoice_number(org), "title": f"{p.get('name')} — Invoice",
         "content": content, "line_items": items, "subtotal": subtotal, "vat": vat_amount, "total": total,
@@ -1889,6 +1905,7 @@ async def dashboard_search(q: str, org: str = Depends(current_org)):
 app.include_router(api_router)
 app.include_router(copilot_router)
 app.include_router(exports_router)
+app.include_router(ai_router)
 
 app.add_middleware(
     CORSMiddleware,

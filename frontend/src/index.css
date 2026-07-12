@@ -50,6 +50,30 @@ a:focus:not(:focus-visible) {
     outline: none;
 }
 
+/* --- AI microinteractions --- */
+@keyframes ai-pop {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.25); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.ai-pop { animation: ai-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes ai-progress {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0); }
+    100% { transform: translateX(100%); }
+}
+.ai-progress {
+    width: 60%;
+    animation: ai-progress 1.4s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.4s ease-out both; }
+
 @layer base {
     :root {
         --background: 0 0% 0%;

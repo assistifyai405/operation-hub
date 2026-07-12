@@ -145,6 +145,14 @@ export const libraryApi = {
 export const analyticsApi = { get: () => req("/analytics") };
 export const notificationsApi = { list: () => req("/notifications") };
 
+export const aiApi = {
+  activities: (scope = "today", limit = 20) => req(`/ai/activities?scope=${scope}&limit=${limit}`),
+  history: () => req("/ai/activities/history"),
+  timeSaved: () => req("/ai/time-saved"),
+  insights: () => req("/ai/insights"),
+  notifications: () => req("/ai/notifications"),
+};
+
 export const copilotApi = {
   message: (session_id, message) => req("/copilot/message", { method: "POST", body: JSON.stringify({ session_id, message }) }),
   execute: (session_id, action_id) => req("/copilot/execute", { method: "POST", body: JSON.stringify({ session_id, action_id }) }),

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { contractWriterApi } from "@/lib/api";
 import BrandedDocPreview from "@/components/BrandedDocPreview";
+import { AIWorkflow } from "@/components/ai/AIWorkflow";
 
 const asList = (v) => Array.isArray(v) ? v : (v ? [v] : []);
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
@@ -111,6 +112,19 @@ export default function ContractWriter({ projectId, projectName, onSaved }) {
   if (loading) return <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>;
 
   if (!content) {
+    if (generating) {
+      return (
+        <div data-testid="contract-generating">
+          <AIWorkflow running={generating} title="Drafting your agreement" steps={[
+            "Reading client & project details",
+            "Reviewing the linked proposal",
+            "Applying standard protective clauses",
+            "Structuring the service agreement",
+            "Finalizing your contract",
+          ]} />
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-zinc-950/40 py-20 text-center" data-testid="contract-empty">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-600 glow-violet animate-pulse-glow"><ScrollText className="h-8 w-8 text-white" /></div>

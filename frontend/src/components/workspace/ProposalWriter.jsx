@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { proposalWriterApi } from "@/lib/api";
 import BrandedDocPreview from "@/components/BrandedDocPreview";
+import { AIWorkflow } from "@/components/ai/AIWorkflow";
 
 const asList = (v) => Array.isArray(v) ? v : (v ? [v] : []);
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
@@ -111,6 +112,19 @@ export default function ProposalWriter({ projectId, projectName, onSaved }) {
 
   // Empty (never generated / saved)
   if (!content) {
+    if (generating) {
+      return (
+        <div data-testid="proposal-generating">
+          <AIWorkflow running={generating} title="Writing your proposal" steps={[
+            "Reading client information",
+            "Understanding the project scope",
+            "Reviewing the plan, notes & tasks",
+            "Looking for pricing opportunities",
+            "Writing your client-ready proposal",
+          ]} />
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-zinc-950/40 py-20 text-center" data-testid="proposal-empty">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-600 glow-violet animate-pulse-glow"><FileSignature className="h-8 w-8 text-white" /></div>

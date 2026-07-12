@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { plansApi } from "@/lib/api";
+import { AIWorkflow } from "@/components/ai/AIWorkflow";
 
 const SECTIONS = [
   { key: "executive_summary", label: "Executive Summary", icon: FileText, type: "text" },
@@ -135,6 +136,19 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
 
   // Initial empty state (no versions, no draft)
   if (draft === null && versions.length === 0) {
+    if (generating) {
+      return (
+        <div data-testid="planner-generating">
+          <AIWorkflow running={generating} title="Analyzing your project" steps={[
+            "Reading the project brief & notes",
+            "Understanding your goals",
+            "Mapping phases & milestones",
+            "Identifying risks & dependencies",
+            "Writing your project plan",
+          ]} />
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-zinc-950/40 py-20 text-center" data-testid="planner-empty">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-600 glow-violet animate-pulse-glow"><Sparkles className="h-8 w-8 text-white" /></div>

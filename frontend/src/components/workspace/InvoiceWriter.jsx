@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { invoiceWriterApi } from "@/lib/api";
 import BrandedDocPreview from "@/components/BrandedDocPreview";
+import { AIWorkflow } from "@/components/ai/AIWorkflow";
 
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
 const money = (v) => `$${Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -130,6 +131,19 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
   if (loading) return <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>;
 
   if (!content) {
+    if (generating) {
+      return (
+        <div data-testid="invoice-generating">
+          <AIWorkflow running={generating} title="Preparing your invoice" steps={[
+            "Reading client & billing details",
+            "Pulling scope from proposal & contract",
+            "Building line items",
+            "Calculating VAT & totals",
+            "Finalizing your invoice",
+          ]} />
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-zinc-950/40 py-20 text-center" data-testid="invoice-empty">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-600 glow-violet animate-pulse-glow"><Receipt className="h-8 w-8 text-white" /></div>
