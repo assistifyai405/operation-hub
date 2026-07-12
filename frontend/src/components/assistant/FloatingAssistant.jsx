@@ -95,8 +95,16 @@ export default function FloatingAssistant() {
     try {
       const payload = { session_id: sessionRef.current, command, instruction, arg, context: buildPayload(opts.targetKey) };
       const res = await assistantApi.action(payload);
-      updateMsg(aid, { report: res.report, apply: res.apply, typing: true });
-      typeOut(aid, res.answer || "Done.");
+      let apply = res.apply;
+      let answer = res.answer || "Done.";
+      const emptyDoc = apply?.mode === "document" && !Object.keys(apply.values || {}).length;
+      const emptySec = apply?.mode === "section" && !((apply.value || "").length);
+      if (emptyDoc || emptySec) {
+        apply = null;
+        answer = "There's nothing to change here yet — add some content to this document first, then ask me again.";
+      }
+      updateMsg(aid, { report: res.report, apply, typing: true });
+      typeOut(aid, answer);
     } catch (e) {
       updateMsg(aid, { content: "", typing: false, error: e.message || "The assistant couldn't complete that." });
     } finally { setBusy(false); }
@@ -176,7 +184,7 @@ export default function FloatingAssistant() {
             initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
             whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }}
             onClick={() => setOpen(true)} data-testid="assistant-fab"
-            className="fixed bottom-20 right-6 z-[60] flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-lg shadow-violet-900/40 glow-violet"
+            className="fixed bottom-24 right-6 z-[60] flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-lg shadow-violet-900/40 glow-violet"
             aria-label="Open Assistify Assistant">
             <Sparkles className="h-6 w-6" />
             <span className="absolute inset-0 rounded-2xl bg-violet-500/40 animate-ping-slow" />
