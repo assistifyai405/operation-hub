@@ -160,6 +160,14 @@ export const aiApi = {
 };
 
 const API_BASE = `${process.env.REACT_APP_BACKEND_URL}/api`;
+export const opportunitiesApi = {
+  list: () => req("/opportunities"),
+  brief: () => req("/opportunities/brief"),
+  health: () => req("/opportunities/health"),
+  dismiss: (key) => req("/opportunities/dismiss", { method: "POST", body: JSON.stringify({ key }) }),
+  archiveProject: (projectId) => req(`/opportunities/archive-project/${projectId}`, { method: "POST" }),
+};
+
 export const assistantApi = {
   action: (body) => req("/assistant/action", { method: "POST", body: JSON.stringify(body) }),
   history: (session_id) => req(`/assistant/history/${session_id}`),

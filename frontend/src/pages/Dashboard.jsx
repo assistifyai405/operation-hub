@@ -11,6 +11,7 @@ import { dashboardApi } from "@/lib/api";
 import { toast } from "sonner";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import DashboardAIAssistant from "@/components/DashboardAIAssistant";
+import DashboardOpportunities from "@/components/DashboardOpportunities";
 
 const money = (v) => `$${Number(v || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
@@ -126,6 +127,7 @@ export default function Dashboard() {
       <OnboardingChecklist />
       <GlobalSearch navigate={navigate} />
       <DashboardAIAssistant />
+      <DashboardOpportunities />
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

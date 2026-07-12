@@ -25,6 +25,7 @@ export function AssistantProvider({ children }) {
   const [open, setOpen] = useState(false);
   const [pageContext, setPageContext] = useState(null); // {scope, label, entityId, entityName}
   const [docTick, setDocTick] = useState(0);            // re-render trigger when a doc registers/clears
+  const [primed, setPrimed] = useState(null);           // {command, ts} auto-run once a doc registers
   const docRef = useRef(null);                          // {type, name, sections, getContent, applySection}
   const undoRef = useRef(null);                         // {label, restore: () => void}
 
@@ -103,6 +104,7 @@ export function AssistantProvider({ children }) {
     hasDocument: !!docRef.current,
     effectiveContext,
     buildPayload, applyChange, undoLast,
+    primed, primeAction: setPrimed,
   };
   return <AssistantContext.Provider value={value}>{children}</AssistantContext.Provider>;
 }

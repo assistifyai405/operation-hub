@@ -1,0 +1,25 @@
+{
+  "summary": "Full E2E test of AI Opportunities & Recommendations sprint. Backend 8/8 pytest passed (list shape+sort, item fields, brief, health w/ 6 categories, dismiss/snooze persistence, archive-project + 404, org isolation). Frontend: /login demo → dashboard shows daily-brief (greeting+lines+view-all), workspace-health (77% Good), dashboard-opportunities; sidebar Opportunities nav present; /opportunities page renders 6 cards with all required testids (opportunity-priority, opportunity-action-btn, opportunity-dismiss-btn), score rings, filter chips with counts (All 6, Critical 0, High 0, Medium 2, Low 3 — filter narrows list correctly, High shows 0 cards as expected). Snooze removes card immediately and persists across reload. One-click actions work: 'Open client' navigates to /clients; 'Set a deadline' navigates to /projects/{id}?tab=overview. Assistant priming via /projects/{id}?tab=proposal&assist=improve opens the floating assistant-panel primed with project context. Regression: /dashboard, /ai-workspace, /ai-chat all render without errors; no 'Maximum update depth exceeded' loops observed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_opportunities.py",
+    "/app/test_reports/pytest/opportunities.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Assistant auto-run on ?assist=improve requires the project to already have a proposal document; on the fresh demo (proposal not yet generated) the panel opens & is primed but the improve command silently no-ops. Consider showing a subtle 'Generate proposal first' hint when primed action has no target document.",
+    "opportunities.py is 343 lines and still readable — fine now but if more rule types are added consider splitting rules into per-domain modules."
+  ],
+  "updated_files": ["/app/backend/tests/test_opportunities.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Explore Demo btn on /login; token stored under localStorage key 'assistify_token'",
+  "seed_data_creation": "None — used existing demo seed (Northwind Labs / Vertex Studio / Halcyon Group clients; Q3 Marketing Site / Brand Redesign projects; 6 opportunities, health 77%)",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration_23 (Opportunities) fully passing. LocalStorage token key is 'assistify_token' (not 'accessToken'). Demo seeds Medium×2 project_no_deadline + Low×3 client_missing_info + 1 client_not_contacted = 6 opps; no High/Critical in seed. To exercise assist priming end-to-end with an LLM run, generate a proposal first on a demo project, then hit /projects/{id}?tab=proposal&assist=improve."
+}

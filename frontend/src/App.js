@@ -24,6 +24,7 @@ import Documents from "@/pages/Documents";
 import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
 import AIWorkspace from "@/pages/AIWorkspace";
+import Opportunities from "@/pages/Opportunities";
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/ai-workspace" element={<AIWorkspace />} />
+              <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/ai-history" element={<Navigate to="/ai-workspace" replace />} />
             </Route>
           </Routes>

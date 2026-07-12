@@ -176,6 +176,17 @@ export default function FloatingAssistant() {
 
   const isTransform = (cmd) => { const s = suggestions.find((x) => x.command === cmd); return s?.mode === "transform"; };
 
+  // Auto-run a command that was "primed" from an Opportunity deep-link, once the doc is ready.
+  useEffect(() => {
+    if (A.primed && hasDocument && !busy) {
+      const cmd = A.primed.command;
+      A.primeAction(null);
+      setOpen(true);
+      runAction(cmd, { targetKey: "" });
+    }
+    // eslint-disable-next-line
+  }, [A.primed, hasDocument]);
+
   return (
     <>
       <AnimatePresence>

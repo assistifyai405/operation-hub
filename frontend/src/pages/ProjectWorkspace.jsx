@@ -432,6 +432,15 @@ export default function ProjectWorkspace() {
     // eslint-disable-next-line
   }, [project?.id, project?.name]);
 
+  useEffect(() => {
+    const cmd = searchParams.get("assist");
+    if (assistant && project && cmd) {
+      assistant.setOpen(true);
+      assistant.primeAction({ command: cmd, ts: Date.now() });
+    }
+    // eslint-disable-next-line
+  }, [project?.id, searchParams.get("assist")]);
+
   const loadProject = () => projectsApi.get(id).then(setProject).catch(() => navigate("/projects"));
   const loadTasks = () => tasksApi.list(id).then(setTasks).catch(() => {});
   const loadDocs = () => documentsApi.list(id).then(setDocuments).catch(() => {});
