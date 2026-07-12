@@ -1938,6 +1938,7 @@ async def startup():
     await db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
     await db.email_verification_tokens.create_index("expires_at", expireAfterSeconds=0)
     await db.login_attempts.create_index("identifier")
+    await db.ai_activities.create_index([("organizationId", 1), ("created_at", -1)])
 
     # Seed demo account + backfill existing (pre-auth) data to its organization
     demo_email = os.environ.get("DEMO_EMAIL", "jordan@assistify.io").lower()
