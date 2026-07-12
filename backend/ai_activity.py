@@ -29,18 +29,23 @@ LABEL = {
 }
 
 
-def _entry(org, atype, title, explanation, source_page, related=None, when=None):
-    return {
+def _entry(org, atype, title, explanation, source_page, related=None, when=None, meta=None):
+    e = {
         "id": str(uuid.uuid4()), "organizationId": org, "type": atype,
         "icon": ICON.get(atype, "sparkles"), "label": LABEL.get(atype, "AI action"),
         "title": title, "explanation": explanation, "source_page": source_page,
         "time_saved": TIME_SAVED.get(atype, 5), "related": related or {},
+        "confidence": 94, "gen_ms": None, "client_name": None, "project_name": None,
+        "status": "Completed", "archived": False,
         "created_at": (when or datetime.now(timezone.utc).isoformat()),
     }
+    if meta:
+        e.update({k: v for k, v in meta.items() if v is not None})
+    return e
 
 
-async def log_ai_activity(org, atype, title, explanation, source_page, related=None):
-    entry = _entry(org, atype, title, explanation, source_page, related)
+async def log_ai_activity(org, atype, title, explanation, source_page, related=None, **meta):
+    entry = _entry(org, atype, title, explanation, source_page, related, meta=meta)
     await db.ai_activities.insert_one(dict(entry))
     return entry
 
