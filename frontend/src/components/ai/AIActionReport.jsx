@@ -74,7 +74,7 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
           <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><Sparkles className="h-4 w-4 text-violet-400" /> What Assistify did</p>
           <div className="space-y-2">
             {report.steps.map((s, i) => (
-              <div key={i} className="flex items-center gap-2.5 text-sm ai-pop" style={{ animationDelay: `${i * 70}ms` }}>
+              <div key={i} className="flex items-center gap-2.5 text-sm animate-fade-up" style={{ animationDelay: `${i * 70}ms` }}>
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-500/15"><Check className="h-3 w-3 text-emerald-400" /></span>
                 <span className="text-zinc-300">{s}</span>
               </div>
