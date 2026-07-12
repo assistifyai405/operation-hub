@@ -221,6 +221,43 @@ async def _seed_demo_data(org_id: str):
         doc = obj.model_dump(); doc["organizationId"] = org_id
         await db.tasks.insert_one(doc)
 
+    # Sample AI activity so the AI Workspace demonstrates value from the first visit.
+    hal, nw = client_ids.get("Halcyon Group"), client_ids.get("Northwind Labs")
+    samples = [
+        ("proposal", f'Proposal generated for {projects[0]["name"]}',
+         "Assistify drafted a full client proposal covering scope, timeline and pricing.", 0, 4200, "Halcyon Group", projects[0]["name"], proj_ids[0]),
+        ("plan", f'Project plan created for {projects[0]["name"]}',
+         "Assistify analyzed the project and produced a structured delivery plan with phases and milestones.", 0, 3100, "Halcyon Group", projects[0]["name"], proj_ids[0]),
+        ("contract", f'Contract drafted for {projects[0]["name"]}',
+         "Assistify prepared a service agreement with standard protective clauses ready for review.", 1, 5200, "Halcyon Group", projects[0]["name"], proj_ids[0]),
+        ("plan", f'Project plan created for {projects[1]["name"]}',
+         "Assistify mapped out phases and next actions for the marketing site build.", 2, 2800, "Northwind Labs", projects[1]["name"], proj_ids[1]),
+        ("invoice", f'Invoice prepared for {projects[0]["name"]}',
+         "Assistify built an invoice with line items, VAT and totals calculated automatically.", 3, 2100, "Halcyon Group", projects[0]["name"], proj_ids[0]),
+        ("proposal", f'Proposal generated for {projects[1]["name"]}',
+         "Assistify drafted a client-ready proposal tailored to the project brief.", 5, 3900, "Northwind Labs", projects[1]["name"], proj_ids[1]),
+    ]
+    for atype, title, expl, days_ago, gms, cname, pname, pid in samples:
+        when = (datetime.now(timezone.utc) - timedelta(days=days_ago, hours=days_ago)).isoformat()
+        e = aia._entry(org_id, atype, title, expl, "Project Workspace", {"project_id": pid}, when,
+                       meta={"gen_ms": gms, "client_name": cname, "project_name": pname})
+        await db.ai_activities.insert_one(dict(e))
+
+    # A versioned proposal + plan so Version Compare has content on day one.
+    v_now = now_iso()
+    await db.ai_proposals.insert_one({
+        "id": str(uuid.uuid4()), "title": f"{projects[0]['name']} — Proposal", "project_id": proj_ids[0],
+        "organizationId": org_id, "client_id": hal, "status": "Sent", "content": {}, "version": 2,
+        "history": [
+            {"version": 1, "title": f"{projects[0]['name']} — Proposal", "status": "Draft", "content": {}, "created_at": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()},
+            {"version": 2, "title": f"{projects[0]['name']} — Proposal", "status": "Sent", "content": {}, "created_at": v_now},
+        ], "created_at": v_now, "updated_at": v_now,
+    })
+    for ver in (1, 2):
+        await db.plans.insert_one({"id": str(uuid.uuid4()), "project_id": proj_ids[0], "organizationId": org_id,
+                                   "version": ver, "sections": {}, "created_at": (datetime.now(timezone.utc) - timedelta(days=2 - ver)).isoformat()})
+    await db.organizations.update_one({"id": org_id}, {"$set": {"ai_backfilled": True}})
+
 
 @api_router.post("/auth/demo")
 async def create_demo(request: Request, response: Response):
@@ -1359,6 +1396,7 @@ async def generate_plan(project_id: str, org: str = Depends(current_org)):
     p = await require_project(project_id, org)
     await enrich_project(p, org)
     context = await build_project_context(p)
+    _t0 = time.perf_counter()
 
     prompt = (
         f"Analyze the following project and generate a complete project plan.\n\n{context}\n\n"
@@ -1391,7 +1429,9 @@ async def generate_plan(project_id: str, org: str = Depends(current_org)):
         raise HTTPException(status_code=502, detail=f"Plan generation failed: {e}")
     await aia.log_ai_activity(org, "plan", f'Project plan created for {p.get("name")}',
                               f'Assistify analyzed {p.get("name")} and produced a structured delivery plan with phases, milestones and tasks.',
-                              "Project Workspace", {"project_id": project_id})
+                              "Project Workspace", {"project_id": project_id},
+                              gen_ms=int((time.perf_counter() - _t0) * 1000),
+                              client_name=p.get("client_name"), project_name=p.get("name"))
     return {"sections": sections, "report": aia.build_ai_report("plan", p, sections)}
 
 
@@ -1436,6 +1476,7 @@ async def generate_proposal(project_id: str, org: str = Depends(current_org)):
         context += "\n\nLATEST AI PROJECT PLAN:\n" + json.dumps(secs)[:4000]
 
     prompt = build_proposal_prompt(context)
+    _t0 = time.perf_counter()
     try:
         content = await ai_service.complete_json(PROPOSAL_SYSTEM, prompt, PROPOSAL_SECTIONS, session_id=f"proposal-{project_id}-{uuid.uuid4()}")
     except json.JSONDecodeError:
@@ -1448,7 +1489,9 @@ async def generate_proposal(project_id: str, org: str = Depends(current_org)):
     _cn = f' for {p.get("client_name")}' if p.get("client_name") else ""
     await aia.log_ai_activity(org, "proposal", f'Proposal generated for {p.get("name")}',
                               f'Assistify drafted a full client proposal for {p.get("name")}{_cn}, so you didn\'t have to write it from scratch.',
-                              "Project Workspace", {"project_id": project_id})
+                              "Project Workspace", {"project_id": project_id},
+                              gen_ms=int((time.perf_counter() - _t0) * 1000),
+                              client_name=p.get("client_name"), project_name=p.get("name"))
     default_title = f"{p.get('name')} — Proposal"
     return {"title": default_title, "content": content, "report": aia.build_ai_report("proposal", p, content)}
 
@@ -1567,6 +1610,7 @@ async def _build_contract_context(project_id: str, org: str):
 async def generate_contract(project_id: str, org: str = Depends(current_org)):
     p, context, proposal_id = await _build_contract_context(project_id, org)
     prompt = build_contract_prompt(context)
+    _t0 = time.perf_counter()
     try:
         content = await ai_service.complete_json(CONTRACT_SYSTEM, prompt, CONTRACT_SECTIONS, session_id=f"contract-{project_id}-{uuid.uuid4()}")
     except json.JSONDecodeError:
@@ -1579,7 +1623,9 @@ async def generate_contract(project_id: str, org: str = Depends(current_org)):
     _cn = f' with {p.get("client_name")}' if p.get("client_name") else ""
     await aia.log_ai_activity(org, "contract", f'Contract drafted for {p.get("name")}',
                               f'Assistify prepared a service agreement{_cn} with standard protective clauses ready for review.',
-                              "Project Workspace", {"project_id": project_id})
+                              "Project Workspace", {"project_id": project_id},
+                              gen_ms=int((time.perf_counter() - _t0) * 1000),
+                              client_name=p.get("client_name"), project_name=p.get("name"))
     return {"title": f"{p.get('name')} — Service Agreement", "content": content, "proposal_id": proposal_id, "report": aia.build_ai_report("contract", p, content)}
 
 
@@ -1695,6 +1741,7 @@ async def generate_invoice(project_id: str, org: str = Depends(current_org)):
         context += "\n\nSIGNED/DRAFT CONTRACT PAYMENT TERMS:\n" + json.dumps(contract.get("content", {}).get("payment_terms", []))
 
     prompt = build_invoice_prompt(context)
+    _t0 = time.perf_counter()
     try:
         raw = await ai_service.complete(INVOICE_SYSTEM, prompt, session_id=f"invoice-{project_id}-{uuid.uuid4()}")
         data = extract_json(raw)
@@ -1726,7 +1773,9 @@ async def generate_invoice(project_id: str, org: str = Depends(current_org)):
     await log_activity(project_id, "invoice_generated", f'Invoice for "{p.get("name")}" was generated')
     await aia.log_ai_activity(org, "invoice", f'Invoice prepared for {p.get("name")}',
                               f'Assistify built an invoice for {p.get("name")} with line items, VAT and totals calculated automatically.',
-                              "Project Workspace", {"project_id": project_id})
+                              "Project Workspace", {"project_id": project_id},
+                              gen_ms=int((time.perf_counter() - _t0) * 1000),
+                              client_name=p.get("client_name"), project_name=p.get("name"))
     return {
         "invoice_number": await _next_invoice_number(org), "title": f"{p.get('name')} — Invoice",
         "content": content, "line_items": items, "subtotal": subtotal, "vat": vat_amount, "total": total,

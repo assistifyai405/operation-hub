@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare, MessageSquare,
   Bot, FileText, FolderOpen, BarChart3, Settings as SettingsIcon,
-  Search, Bell, Menu, X, Sparkles, LogOut, MailWarning, ScrollText, Receipt,
+  Search, Bell, Menu, X, Sparkles, LogOut, MailWarning, ScrollText, Receipt, LayoutGrid,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -33,6 +33,7 @@ const nav = [
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/tasks", label: "Tasks", icon: CheckSquare },
   { to: "/ai-chat", label: "Copilot", icon: Sparkles },
+  { to: "/ai-workspace", label: "AI Workspace", icon: LayoutGrid },
   { to: "/ai-agents", label: "AI Agents", icon: Bot },
   { to: "/proposals", label: "Proposals", icon: FileText },
   { to: "/contracts", label: "Contracts", icon: ScrollText },
@@ -237,8 +238,8 @@ export default function Layout() {
                   <MailWarning className="mr-2 h-4 w-4" /> Verify email
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem className="focus:bg-zinc-900" onClick={() => navigate("/ai-history")} data-testid="menu-ai-history">
-                <Sparkles className="mr-2 h-4 w-4" /> AI History
+              <DropdownMenuItem className="focus:bg-zinc-900" onClick={() => navigate("/ai-workspace")} data-testid="menu-ai-history">
+                <Sparkles className="mr-2 h-4 w-4" /> AI Workspace
               </DropdownMenuItem>
               <DropdownMenuItem className="focus:bg-zinc-900" onClick={() => navigate("/settings")}>
                 <SettingsIcon className="mr-2 h-4 w-4" /> Settings

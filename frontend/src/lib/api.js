@@ -151,6 +151,12 @@ export const aiApi = {
   timeSaved: () => req("/ai/time-saved"),
   insights: () => req("/ai/insights"),
   notifications: () => req("/ai/notifications"),
+  workspaceStats: () => req("/ai/workspace/stats"),
+  workspaceSearch: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return req(`/ai/workspace/search${qs ? `?${qs}` : ""}`);
+  },
+  workspaceVersions: () => req("/ai/workspace/versions"),
 };
 
 export const copilotApi = {

@@ -23,7 +23,7 @@ import Invoices from "@/pages/Invoices";
 import Documents from "@/pages/Documents";
 import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
-import AIHistory from "@/pages/AIHistory";
+import AIWorkspace from "@/pages/AIWorkspace";
 
 function App() {
   return (
@@ -52,7 +52,8 @@ function App() {
               <Route path="/documents" element={<Documents />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/ai-history" element={<AIHistory />} />
+              <Route path="/ai-workspace" element={<AIWorkspace />} />
+              <Route path="/ai-history" element={<Navigate to="/ai-workspace" replace />} />
             </Route>
           </Routes>
         </AuthProvider>
