@@ -2,6 +2,7 @@ import {
   FileText, ScrollText, Receipt, Mail, ListChecks, Users, FolderKanban,
   CheckSquare, BadgeDollarSign, BarChart3, Sparkles, AlertTriangle, Clock, Folder,
   Calendar, Copy, Target, ArrowRight, Phone, Globe, Building2,
+  Bell, RefreshCw, Archive, TrendingUp, Zap,
 } from "lucide-react";
 
 const ICONS = {
@@ -11,6 +12,7 @@ const ICONS = {
   "sparkles": Sparkles, "alert": AlertTriangle, "clock": Clock, "folder": Folder,
   "calendar": Calendar, "copy": Copy, "target": Target, "arrow-right": ArrowRight,
   "phone": Phone, "globe": Globe, "building": Building2,
+  "bell": Bell, "refresh-cw": RefreshCw, "archive": Archive, "trending-up": TrendingUp, "zap": Zap,
 };
 
 export function AiIcon({ name, className }) {

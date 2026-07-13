@@ -1,0 +1,34 @@
+{
+  "summary": "End-to-end tested the AI Automation Engine sprint. 19/19 backend pytest tests pass covering defaults (enabled+prepare), 12 template seed, approvals seed, approve/reject/edit/prepare, safety downgrade (external/generative in auto mode -> pending, not executed), safe internal auto (create_task auto-executes), master pause/resume + disable, per-automation toggle, builder CRUD with validation, logs with event_label, run-now, org isolation (cross-tenant approve returns 404), and regression on /api/memory/stats, /api/opportunities, /api/crm/sales-metrics, /api/assistant/suggestions. Frontend E2E passes: demo login -> dashboard widget renders, sidebar nav-automations -> /automations shows status strip, 4 tabs, 12 automation cards each with toggle/mode/delete, 5 seeded approval cards with approve/reject/disable/risk (email approvals with edit/save), Approve removes card, builder dialog opens with trigger/mode/save controls, Run now works (toast 'Scan complete'), Pause dropdown exposes 1h/tomorrow/1w/forever, Settings tab has all switches. Everything functional.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "minor_testid_mismatches": [
+      {"component": "AutomationBuilder", "issue": "Add condition button uses data-testid='builder-add-condition' while spec calls it 'add-condition'. Functional; consider renaming for spec parity.", "priority": "LOW"}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_automation_engine.py",
+    "/app/test_reports/pytest/automation_results.xml"
+  ],
+  "action_items": [
+    "Optional: rename data-testid 'builder-add-condition' -> 'add-condition' for spec parity."
+  ],
+  "critical_code_review_comments": [
+    "_evaluate() accepts a `force` argument that is never used (still works because POST /run bypasses _maybe_evaluate throttle by calling _evaluate directly). Cosmetic; remove or wire it in.",
+    "prepare_email/prepare_followup on approve: the code path does `pass` in _execute_one — status flips to 'executed' but nothing tangibly marks the email as 'ready to send' beyond the approval status. Consider stamping the approval doc/action with a 'ready_to_send: true' marker for clarity (per user choice 2a).",
+    "Time-saved counter only increments on auto-execute and manual approve — rejects/edits leave time_saved alone (correct).",
+    "Files are within acceptable size (routers/automation.py 1055 lines) but could be split into engine/api modules for maintainability."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_automation_engine.py (new)"
+  ],
+  "success_rate": {"backend": "100% (19/19)", "frontend": "100% (all critical flows)"},
+  "test_credentials": "Demo flow only. POST /api/auth/demo (backend) / data-testid='explore-demo-btn' on /login (UI). Fresh isolated tenant each call.",
+  "seed_data_creation": "Each demo login seeds 12 template automations + ~5 pending approvals (3 new_client + 1 lead_needs_followup + 1 client_inactive) automatically.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Automation engine backend is stable. Demo tenant seeds produce matches only for triggers new_client / lead_needs_followup / client_inactive because there are no seeded proposals/invoices/contracts. If future tests need to exercise proposal_/invoice_/contract_ triggers directly, seed those docs first or manually POST them. THROTTLE_SECONDS=120 — use POST /api/automation/run to force evaluation in tests."
+}

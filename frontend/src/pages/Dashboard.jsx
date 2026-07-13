@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import DashboardAIAssistant from "@/components/DashboardAIAssistant";
 import DashboardOpportunities from "@/components/DashboardOpportunities";
+import DashboardAutomations from "@/components/DashboardAutomations";
 import DashboardSales from "@/components/DashboardSales";
 
 const money = (v) => `$${Number(v || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -128,6 +129,7 @@ export default function Dashboard() {
       <OnboardingChecklist />
       <GlobalSearch navigate={navigate} />
       <DashboardAIAssistant />
+      <DashboardAutomations />
       <DashboardSales />
       <DashboardOpportunities />
 

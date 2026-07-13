@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare, MessageSquare,
   Bot, FileText, FolderOpen, BarChart3, Settings as SettingsIcon,
-  Search, Bell, Menu, X, Sparkles, LogOut, MailWarning, ScrollText, Receipt, LayoutGrid, Target, TrendingUp, Brain,
+  Search, Bell, Menu, X, Sparkles, LogOut, MailWarning, ScrollText, Receipt, LayoutGrid, Target, TrendingUp, Brain, Zap,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -32,6 +32,7 @@ const relativeTime = (iso) => {
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/opportunities", label: "Opportunities", icon: Target },
+  { to: "/automations", label: "Automations", icon: Zap },
   { to: "/crm", label: "CRM", icon: Users },
   { to: "/pipeline", label: "Pipeline", icon: TrendingUp },
   { to: "/clients", label: "Clients", icon: Users },

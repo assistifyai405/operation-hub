@@ -203,6 +203,28 @@ export const opportunitiesApi = {
   archiveProject: (projectId) => req(`/opportunities/archive-project/${projectId}`, { method: "POST" }),
 };
 
+export const automationApi = {
+  summary: () => req("/automation/summary"),
+  getSettings: () => req("/automation/settings"),
+  updateSettings: (body) => req("/automation/settings", { method: "PATCH", body: JSON.stringify(body) }),
+  pause: (duration) => req("/automation/pause", { method: "POST", body: JSON.stringify({ duration }) }),
+  resume: () => req("/automation/resume", { method: "POST" }),
+  automations: () => req("/automation/automations"),
+  createAutomation: (body) => req("/automation/automations", { method: "POST", body: JSON.stringify(body) }),
+  updateAutomation: (id, body) => req(`/automation/automations/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  toggleAutomation: (id, enabled) => req(`/automation/automations/${id}/toggle`, { method: "PATCH", body: JSON.stringify({ enabled }) }),
+  setMode: (id, mode) => req(`/automation/automations/${id}/mode`, { method: "PATCH", body: JSON.stringify({ mode }) }),
+  deleteAutomation: (id) => req(`/automation/automations/${id}`, { method: "DELETE" }),
+  builderOptions: () => req("/automation/builder-options"),
+  approvals: (status = "pending") => req(`/automation/approvals?status=${status}`),
+  approve: (id) => req(`/automation/approvals/${id}/approve`, { method: "POST" }),
+  reject: (id) => req(`/automation/approvals/${id}/reject`, { method: "POST" }),
+  prepareSuggestion: (id) => req(`/automation/approvals/${id}/prepare`, { method: "POST" }),
+  editApproval: (id, actions) => req(`/automation/approvals/${id}`, { method: "PUT", body: JSON.stringify({ actions }) }),
+  logs: (limit = 100) => req(`/automation/logs?limit=${limit}`),
+  run: () => req("/automation/run", { method: "POST" }),
+};
+
 export const assistantApi = {
   action: (body) => req("/assistant/action", { method: "POST", body: JSON.stringify(body) }),
   history: (session_id) => req(`/assistant/history/${session_id}`),

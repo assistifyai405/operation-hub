@@ -29,6 +29,7 @@ import CRM from "@/pages/CRM";
 import ContactDetail from "@/pages/ContactDetail";
 import Pipeline from "@/pages/Pipeline";
 import KnowledgeBrain from "@/pages/KnowledgeBrain";
+import Automations from "@/pages/Automations";
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
               <Route path="/crm/:id" element={<ContactDetail />} />
               <Route path="/pipeline" element={<Pipeline />} />
               <Route path="/knowledge-brain" element={<KnowledgeBrain />} />
+              <Route path="/automations" element={<Automations />} />
               <Route path="/ai-history" element={<Navigate to="/ai-workspace" replace />} />
             </Route>
           </Routes>

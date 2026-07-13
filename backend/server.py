@@ -42,6 +42,8 @@ from routers.opportunities import router as opportunities_router
 from routers.crm import router as crm_router
 from routers.memory import router as memory_router
 from routers.memory import build_memory_prompt
+from routers.automation import router as automation_router
+from routers.automation import seed_demo_automations
 import ai_activity as aia
 
 app = FastAPI()
@@ -305,6 +307,10 @@ async def _seed_demo_data(org_id: str):
         await db.plans.insert_one({"id": str(uuid.uuid4()), "project_id": proj_ids[0], "organizationId": org_id,
                                    "version": ver, "sections": {}, "created_at": (datetime.now(timezone.utc) - timedelta(days=2 - ver)).isoformat()})
     await db.organizations.update_one({"id": org_id}, {"$set": {"ai_backfilled": True}})
+
+    # Provision the AI Automation Engine (defaults + templates) and run one pass so
+    # the Approval Center & History demonstrate value from the first visit.
+    await seed_demo_automations(org_id)
 
 
 @api_router.post("/auth/demo")
@@ -2020,6 +2026,7 @@ app.include_router(assistant_router)
 app.include_router(opportunities_router)
 app.include_router(crm_router)
 app.include_router(memory_router)
+app.include_router(automation_router)
 
 app.add_middleware(
     CORSMiddleware,
