@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ListChecks, ArrowRight } from "lucide-react";
 import { AiIcon } from "@/components/ai/aiHelpers";
-import { Section, PRIORITY_META } from "./execShared";
+import { Section, PRIORITY_META, money } from "./execShared";
 
 const ORDER = ["Critical", "High", "Medium", "Low"];
 
@@ -41,8 +41,8 @@ export function TodayPriorities({ priorities, total }) {
                       <p className="truncate text-xs text-zinc-500">{it.why}</p>
                     </div>
                     <div className="hidden shrink-0 text-right sm:block">
-                      <p className={`text-xs font-semibold ${pm.ring}`}>Score {it.score}</p>
-                      <p className="text-[10px] text-emerald-500/80">~{it.time_saved}m saved</p>
+                      {it.revenue_impact ? <p className="text-xs font-semibold text-emerald-400" data-testid="priority-revenue-impact">≈{money(it.revenue_impact)}</p> : <p className={`text-xs font-semibold ${pm.ring}`}>Score {it.score}</p>}
+                      <p className="text-[10px] text-zinc-500">{it.revenue_impact ? "revenue impact" : `~${it.time_saved}m saved`}</p>
                     </div>
                     <ArrowRight className="h-4 w-4 shrink-0 text-zinc-600" />
                   </button>

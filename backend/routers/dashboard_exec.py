@@ -111,6 +111,36 @@ async def _build_trends(org):
     return {"labels": labels, "series": series}
 
 
+async def _enrich_impact(org, items):
+    """Attach a real estimated revenue_impact to scan items (from invoices/deals/clients).
+    Non-destructive — leaves None when no concrete figure exists."""
+    base = {"organizationId": org}
+    invs = await db.ai_invoices.find(base, {"_id": 0, "id": 1, "total": 1}).to_list(1000)
+    inv_total = {i["id"]: (i.get("total") or 0) for i in invs}
+    leads = await db.leads.find(base, {"_id": 0, "project_id": 1, "client_id": 1, "value": 1, "stage": 1}).to_list(1000)
+    proj_val, client_val = {}, {}
+    for l in leads:
+        v = l.get("value") or 0
+        if l.get("project_id"):
+            proj_val[l["project_id"]] = max(proj_val.get(l["project_id"], 0), v)
+        if l.get("client_id") and l.get("stage") not in ("Won", "Lost"):
+            client_val[l["client_id"]] = client_val.get(l["client_id"], 0) + v
+    clients = await db.clients.find(base, {"_id": 0, "id": 1, "value": 1}).to_list(1000)
+    cval = {c["id"]: (c.get("value") or 0) for c in clients}
+    for it in items:
+        eid = it.get("key", "").split(":", 1)[1] if ":" in it.get("key", "") else None
+        ent = it.get("entity", {})
+        impact = None
+        if it.get("type", "").startswith("invoice"):
+            impact = inv_total.get(eid)
+        if not impact and ent.get("project_id"):
+            impact = proj_val.get(ent["project_id"])
+        if not impact and ent.get("client_id"):
+            impact = client_val.get(ent["client_id"]) or cval.get(ent["client_id"])
+        it["revenue_impact"] = round(impact) if impact else None
+    return items
+
+
 @router.get("/executive")
 async def executive(org: str = Depends(current_org)):
     base = {"organizationId": org}
@@ -120,6 +150,7 @@ async def executive(org: str = Depends(current_org)):
     health = await workspace_health(org)
     brief = await daily_brief(org)
     items = await _scan(org)
+    items = await _enrich_impact(org, items)
     sales = await sales_metrics(org)
 
     import server as S

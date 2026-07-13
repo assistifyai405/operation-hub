@@ -17,7 +17,7 @@ export function AIExecutiveBrief({ insights, hero, health }) {
     lines.push({ id: "risk", tone: "risk", title: `${money(hero.revenue_at_risk)} at risk`, why: "Across unpaid invoices and stalled open deals.", confidence: 90, action: { label: "Review", link: "/pipeline" } });
   }
   (insights || []).slice(0, 4).forEach((it) => {
-    lines.push({ id: it.id, tone: it.priority, icon: it.icon, title: it.title, why: it.why, confidence: it.confidence, action: it.action });
+    lines.push({ id: it.id, tone: it.priority, icon: it.icon, title: it.title, why: it.why, confidence: it.confidence, impact: it.revenue_impact, action: it.action });
   });
 
   return (
@@ -36,8 +36,9 @@ export function AIExecutiveBrief({ insights, hero, health }) {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-zinc-100">{l.title}</p>
               <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">{l.why}</p>
-              {(l.confidence || l.action) && (
+              {(l.confidence || l.action || l.impact) && (
                 <div className="mt-1.5 flex items-center gap-2">
+                  {l.impact ? <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300" data-testid={`brief-impact-${l.id}`}>≈{money(l.impact)}</span> : null}
                   {l.confidence ? <span className="text-[10px] text-zinc-600">{l.confidence}% confidence</span> : null}
                   {l.action?.link && (
                     <button onClick={() => navigate(l.action.link)} data-testid={`brief-action-${l.id}`}
