@@ -282,6 +282,17 @@ export const dashboardApi = {
 export const onboardingApi = {
   get: () => req("/onboarding"),
   complete: () => req("/onboarding/complete", { method: "POST" }),
+  getState: () => req("/onboarding/state"),
+  saveState: (body) => req("/onboarding/state", { method: "POST", body: JSON.stringify(body) }),
+  restart: () => req("/onboarding/restart", { method: "POST" }),
+  flag: (key) => req("/onboarding/flag", { method: "POST", body: JSON.stringify({ key }) }),
+  analyzeWebsite: (url) => req("/onboarding/analyze-website", { method: "POST", body: JSON.stringify({ url }) }),
+  generateProfile: (body) => req("/onboarding/profile", { method: "POST", body: JSON.stringify(body) }),
+  updateProfile: (sections) => req("/onboarding/profile", { method: "PUT", body: JSON.stringify({ sections }) }),
+  seedDemo: () => req("/onboarding/seed-demo", { method: "POST" }),
+  demoStatus: () => req("/onboarding/demo-status"),
+  clearDemo: () => req("/onboarding/demo-data", { method: "DELETE" }),
+  checklist: () => req("/onboarding/checklist"),
 };
 
 export const plansApi = {

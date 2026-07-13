@@ -19,8 +19,8 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password, remember);
-      navigate("/dashboard");
+      const data = await login(email, password, remember);
+      navigate(data?.user?.onboardingCompleted === false ? "/onboarding" : "/dashboard");
     } catch (err) {
       setError(err.message);
     } finally {

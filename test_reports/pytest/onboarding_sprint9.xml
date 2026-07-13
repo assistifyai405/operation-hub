@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="18" time="17.908" timestamp="2026-07-13T17:51:35.523890+00:00" hostname="agent-env-3fab08e7-707f-4061-9b17-03adccde9062"><testcase classname="tests.test_onboarding_sprint9" name="test_state_defaults_and_persistence" time="0.964" /><testcase classname="tests.test_onboarding_sprint9" name="test_flag_sets_and_reflects_in_state" time="0.692" /><testcase classname="tests.test_onboarding_sprint9" name="test_restart_resets_state_and_completed" time="1.137" /><testcase classname="tests.test_onboarding_sprint9" name="test_state_requires_auth" time="0.213" /><testcase classname="tests.test_onboarding_sprint9" name="test_analyze_website_bad_url_graceful" time="0.551" /><testcase classname="tests.test_onboarding_sprint9" name="test_analyze_website_real_url" time="2.110" /><testcase classname="tests.test_onboarding_sprint9" name="test_analyze_website_empty_url_400" time="0.514" /><testcase classname="tests.test_onboarding_sprint9" name="test_profile_returns_sections_memories_and_automations" time="4.044" /><testcase classname="tests.test_onboarding_sprint9" name="test_profile_memories_appear_in_memory_list" time="0.105" /><testcase classname="tests.test_onboarding_sprint9" name="test_profile_put_updates_sections" time="0.103" /><testcase classname="tests.test_onboarding_sprint9" name="test_seed_demo_idempotent_and_status_and_clear" time="1.030" /><testcase classname="tests.test_onboarding_sprint9" name="test_clear_demo_preserves_onboarding_memories" time="4.861" /><testcase classname="tests.test_onboarding_sprint9" name="test_checklist_shape_for_new_user" time="0.483" /><testcase classname="tests.test_onboarding_sprint9" name="test_checklist_reflects_flags_and_profile" time="0.113"><failure message="AssertionError: {&quot;detail&quot;:&quot;Too many requests. Please try again later.&quot;}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_onboarding_sprint9.py:218: in test_checklist_reflects_flags_and_profile
+    _, tok, _ = _register()
+                ^^^^^^^^^^^
+backend/tests/test_onboarding_sprint9.py:24: in _register
+    assert r.status_code == 200, r.text
+E   AssertionError: {"detail":"Too many requests. Please try again later."}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="tests.test_onboarding_sprint9" name="test_checklist_client_counts_only_non_demo" time="0.108"><failure message="AssertionError: {&quot;detail&quot;:&quot;Too many requests. Please try again later.&quot;}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_onboarding_sprint9.py:228: in test_checklist_client_counts_only_non_demo
+    _, tok, _ = _register()
+                ^^^^^^^^^^^
+backend/tests/test_onboarding_sprint9.py:24: in _register
+    assert r.status_code == 200, r.text
+E   AssertionError: {"detail":"Too many requests. Please try again later."}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="tests.test_onboarding_sprint9" name="test_org_isolation_between_two_new_users" time="0.140"><failure message="AssertionError: {&quot;detail&quot;:&quot;Too many requests. Please try again later.&quot;}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_onboarding_sprint9.py:245: in test_org_isolation_between_two_new_users
+    _, tokA, _ = _register()
+                 ^^^^^^^^^^^
+backend/tests/test_onboarding_sprint9.py:24: in _register
+    assert r.status_code == 200, r.text
+E   AssertionError: {"detail":"Too many requests. Please try again later."}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="tests.test_onboarding_sprint9" name="test_demo_user_completed_true_and_has_demo" time="0.497" /><testcase classname="tests.test_onboarding_sprint9" name="test_regression_core_endpoints_still_200" time="0.108"><failure message="AssertionError: {&quot;detail&quot;:&quot;Too many requests. Please try again later.&quot;}&#10;assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_onboarding_sprint9.py:267: in test_regression_core_endpoints_still_200
+    _, tok, _ = _register()
+                ^^^^^^^^^^^
+backend/tests/test_onboarding_sprint9.py:24: in _register
+    assert r.status_code == 200, r.text
+E   AssertionError: {"detail":"Too many requests. Please try again later."}
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase></testsuite></testsuites>

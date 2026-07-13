@@ -20,9 +20,8 @@ export default function Register() {
     if (form.password.length < 8) { setError("Password must be at least 8 characters"); return; }
     setLoading(true);
     try {
-      const data = await register(form);
-      if (data.verificationLink) toast.success("Account created! Verify your email from Settings anytime.");
-      navigate("/dashboard");
+      const data = await register(form);      if (data.verificationLink) toast.success("Account created! Verify your email from Settings anytime.");
+      navigate("/onboarding");
     } catch (err) {
       setError(err.message);
     } finally {

@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare, MessageSquare,
   Bot, FileText, FolderOpen, BarChart3, Settings as SettingsIcon,
-  Search, Bell, Menu, X, Sparkles, LogOut, MailWarning, ScrollText, Receipt, LayoutGrid, Target, TrendingUp, Brain, Zap,
+  Search, Bell, Menu, X, Sparkles, LogOut, MailWarning, ScrollText, Receipt, LayoutGrid, Target, TrendingUp, Brain, Zap, Rocket,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -11,10 +11,9 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
-import { authApi, notificationsApi, aiApi } from "@/lib/api";
+import { authApi, notificationsApi, aiApi, onboardingApi } from "@/lib/api";
 import { toast } from "sonner";
 import CommandPalette from "@/components/CommandPalette";
-import OnboardingWizard from "@/components/OnboardingWizard";
 import { AiIcon } from "@/components/ai/aiHelpers";
 import { BILLING_ENABLED } from "@/lib/config";
 import { AssistantProvider } from "@/context/AssistantContext";
@@ -107,7 +106,6 @@ const Sidebar = ({ onNavigate }) => (
 export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [wizardOpen, setWizardOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [bannerDismissed, setBannerDismissed] = useState(() => sessionStorage.getItem("verify_banner_dismissed") === "1");
   const location = useLocation();
@@ -116,17 +114,12 @@ export default function Layout() {
   const pageTitle = [...nav].reverse().find((n) => location.pathname === n.to || location.pathname.startsWith(n.to + "/"))?.label || "Dashboard";
 
   useEffect(() => {
-    if (user && user.onboardingCompleted === false) setWizardOpen(true);
-  }, [user]);
+    if (user && user.onboardingCompleted === false && location.pathname !== "/onboarding") navigate("/onboarding");
+  }, [user, location.pathname, navigate]);
 
   useEffect(() => {
     if (user) aiApi.notifications().then(setNotifications).catch(() => notificationsApi.list().then(setNotifications).catch(() => {}));
   }, [user, location.pathname]);
-
-  const finishOnboarding = () => {
-    setWizardOpen(false);
-    setUser((u) => (u ? { ...u, onboardingCompleted: true } : u));
-  };
 
   const fullName = user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email : "";
   const initials = user ? `${(user.firstName || user.email || "?")[0] || ""}${(user.lastName || "")[0] || ""}`.toUpperCase() : "";
@@ -249,6 +242,9 @@ export default function Layout() {
               <DropdownMenuItem className="focus:bg-zinc-900" onClick={() => navigate("/ai-workspace")} data-testid="menu-ai-history">
                 <Sparkles className="mr-2 h-4 w-4" /> AI Workspace
               </DropdownMenuItem>
+              <DropdownMenuItem className="focus:bg-zinc-900" onClick={async () => { try { await onboardingApi.restart(); } catch (_) {} setUser((u) => (u ? { ...u, onboardingCompleted: false } : u)); navigate("/onboarding"); }} data-testid="menu-restart-onboarding">
+                <Rocket className="mr-2 h-4 w-4" /> Restart onboarding
+              </DropdownMenuItem>
               <DropdownMenuItem className="focus:bg-zinc-900" onClick={() => navigate("/settings")}>
                 <SettingsIcon className="mr-2 h-4 w-4" /> Settings
               </DropdownMenuItem>
@@ -275,7 +271,6 @@ export default function Layout() {
         </main>
       </div>
       <CommandPalette open={paletteOpen} setOpen={setPaletteOpen} />
-      {wizardOpen && <OnboardingWizard open={wizardOpen} onDone={finishOnboarding} />}
       <FloatingAssistant />
     </div>
     </AssistantProvider>

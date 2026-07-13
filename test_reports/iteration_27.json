@@ -1,0 +1,29 @@
+{
+  "summary": "Sprint 9 WOW Onboarding: 18/18 backend tests pass (state/restart/flag, website analysis incl. graceful fallback, LLM profile + memory seed + 5 automations, PUT profile, seed-demo idempotent, demo-status, DELETE demo-data preserves Onboarding memories, checklist w/ non-demo counting, org isolation, regression on memory/opportunities/automation/crm). Full E2E playwright walk-through of steps 1-8 with a freshly registered user completed successfully — all 8 steps rendered, guards work (company_name required), analyze-website graceful on bad URL, discovery LLM completes and enables continue, brain edit+save works, 5 automation toggles present, demo counts populated (3 clients, 2 projects, 6 leads, 6 activities, 5 approvals), success screen shows 3 CTAs, CTA navigates to /ai-workspace and marks onboarding complete. Dashboard checklist + demo banner visible, user menu Restart onboarding present.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Step 8 Success", "issues": ["Only 1 summary chip ('Business profile created') visible in the summary; onb-success-summary appears to render just a single chip in the tested run — consider surfacing more (e.g., memories seeded, automations enabled, demo workspace ready) to reinforce the WOW moment."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_onboarding_sprint9.py", "/app/test_reports/pytest/onboarding_sprint9.xml"],
+  "action_items": [
+    "Optional polish: enrich onb-success-summary chips (memories seeded, automations count, demo counts) — currently only shows one chip.",
+    "Rate-limit note (not a bug): the 10/hr register+demo IP limit causes back-to-back agent runs to 429; documented in test_credentials.md. Consider allow-listing test IPs or raising during E2E."
+  ],
+  "critical_code_review_comments": [
+    "onboarding.py DELETE /demo-data deletes ALL automation_approvals/logs for the org (not just is_demo-derived). This is by design per spec ('clears automation approvals/logs') but worth confirming — a user who has manually generated approvals for REAL clients before clearing demo would lose them.",
+    "analyze-website ignores robots.txt and uses a 10s timeout — acceptable for MVP, but flag for later hardening.",
+    "State endpoints do not validate step upper bound; a malicious client could POST step=9999. Non-critical but consider clamping."
+  ],
+  "updated_files": ["/app/backend/tests/test_onboarding_sprint9.py", "/app/test_reports/iteration_27.json"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Registered ephemeral users e2e+*@example.com / NewPass123! ; demo via POST /api/auth/demo",
+  "seed_data_creation": "Multiple TEST_ prefixed clients/orgs created during tests; ephemeral onb9+*@example.com accounts registered.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Sprint 9 fully verified end-to-end. Backend pytest file: /app/backend/tests/test_onboarding_sprint9.py (run with REACT_APP_BACKEND_URL env var and -o addopts='' to bypass xdist). Rate limit 10/hr/IP on /register — restart backend to reset between runs. E2E script covers register->8 steps->dashboard checklist/demo-banner/user-menu restart. LLM profile generation succeeded (no fallback triggered) — memories with source='Onboarding' seeded and confirmed via /api/memory/memories.",
+  "rca of the issue": "No bugs found."
+}

@@ -44,6 +44,7 @@ from routers.memory import router as memory_router
 from routers.memory import build_memory_prompt
 from routers.automation import router as automation_router
 from routers.automation import seed_demo_automations
+from routers.onboarding import router as onboarding_router
 import ai_activity as aia
 
 app = FastAPI()
@@ -203,7 +204,7 @@ async def _seed_demo_data(org_id: str):
     client_ids = {}
     for c in clients:
         obj = Client(**c)
-        doc = obj.model_dump(); doc["organizationId"] = org_id
+        doc = obj.model_dump(); doc["organizationId"] = org_id; doc["is_demo"] = True
         await db.clients.insert_one(doc)
         client_ids[c["name"]] = obj.id
     projects = [
@@ -213,11 +214,11 @@ async def _seed_demo_data(org_id: str):
     proj_ids = []
     for p in projects:
         obj = Project(name=p["name"], client_id=client_ids.get(p["client"]), status=p["status"], description=p["description"])
-        doc = obj.model_dump(); doc["organizationId"] = org_id
+        doc = obj.model_dump(); doc["organizationId"] = org_id; doc["is_demo"] = True
         await db.projects.insert_one(doc)
         proj_ids.append(obj.id)
         await db.activities.insert_one({"id": str(uuid.uuid4()), "project_id": obj.id, "organizationId": org_id,
-                                        "type": "project_created", "message": f'Project "{obj.name}" was created', "created_at": now})
+                                        "type": "project_created", "message": f'Project "{obj.name}" was created', "created_at": now, "is_demo": True})
     tasks = [
         {"title": "Kickoff call with client", "priority": "High", "project_id": proj_ids[0]},
         {"title": "Draft moodboard", "priority": "Medium", "project_id": proj_ids[0]},
@@ -225,7 +226,7 @@ async def _seed_demo_data(org_id: str):
     ]
     for t in tasks:
         obj = Task(**t)
-        doc = obj.model_dump(); doc["organizationId"] = org_id
+        doc = obj.model_dump(); doc["organizationId"] = org_id; doc["is_demo"] = True
         await db.tasks.insert_one(doc)
 
     # Sample sales leads so the CRM pipeline demonstrates value immediately.
@@ -252,7 +253,7 @@ async def _seed_demo_data(org_id: str):
                "contact_name": ls.get("contact_name", ""), "email": ls.get("email", ""), "phone": "",
                "source": ls.get("source", ""), "notes": ls.get("notes", ""), "tags": ls.get("tags", []),
                "created_at": created, "updated_at": created, "stage_changed_at": created,
-               "stage_history": [{"stage": "New", "at": created}, {"stage": ls["stage"], "at": created}]}
+               "stage_history": [{"stage": "New", "at": created}, {"stage": ls["stage"], "at": created}], "is_demo": True}
         await db.leads.insert_one(doc)
 
     # Seed starter memories so the Knowledge Brain shows value immediately.
@@ -268,7 +269,7 @@ async def _seed_demo_data(org_id: str):
         await db.memories.insert_one({
             "id": str(uuid.uuid4()), "organizationId": org_id, "title": title, "category": cat,
             "content": content, "keywords": [], "confidence": conf, "source": src,
-            "times_used": (conf % 7), "pinned": cat == "Brand Voice", "learning_enabled": True,
+            "times_used": (conf % 7), "pinned": cat == "Brand Voice", "learning_enabled": True, "is_demo": True,
             "created_at": _iso_days(conf % 5), "updated_at": _iso_days(conf % 3)})
 
     # Sample AI activity so the AI Workspace demonstrates value from the first visit.
@@ -291,6 +292,7 @@ async def _seed_demo_data(org_id: str):
         when = (datetime.now(timezone.utc) - timedelta(days=days_ago, hours=days_ago)).isoformat()
         e = aia._entry(org_id, atype, title, expl, "Project Workspace", {"project_id": pid}, when,
                        meta={"gen_ms": gms, "client_name": cname, "project_name": pname})
+        e["is_demo"] = True
         await db.ai_activities.insert_one(dict(e))
 
     # A versioned proposal + plan so Version Compare has content on day one.
@@ -301,11 +303,11 @@ async def _seed_demo_data(org_id: str):
         "history": [
             {"version": 1, "title": f"{projects[0]['name']} — Proposal", "status": "Draft", "content": {}, "created_at": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()},
             {"version": 2, "title": f"{projects[0]['name']} — Proposal", "status": "Sent", "content": {}, "created_at": v_now},
-        ], "created_at": v_now, "updated_at": v_now,
+        ], "created_at": v_now, "updated_at": v_now, "is_demo": True,
     })
     for ver in (1, 2):
         await db.plans.insert_one({"id": str(uuid.uuid4()), "project_id": proj_ids[0], "organizationId": org_id,
-                                   "version": ver, "sections": {}, "created_at": (datetime.now(timezone.utc) - timedelta(days=2 - ver)).isoformat()})
+                                   "version": ver, "sections": {}, "is_demo": True, "created_at": (datetime.now(timezone.utc) - timedelta(days=2 - ver)).isoformat()})
     await db.organizations.update_one({"id": org_id}, {"$set": {"ai_backfilled": True}})
 
     # Provision the AI Automation Engine (defaults + templates) and run one pass so
@@ -2027,6 +2029,7 @@ app.include_router(opportunities_router)
 app.include_router(crm_router)
 app.include_router(memory_router)
 app.include_router(automation_router)
+app.include_router(onboarding_router)
 
 app.add_middleware(
     CORSMiddleware,

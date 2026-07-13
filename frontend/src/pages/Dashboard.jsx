@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import DashboardAIAssistant from "@/components/DashboardAIAssistant";
 import DashboardOpportunities from "@/components/DashboardOpportunities";
+import DemoDataBanner from "@/components/DemoDataBanner";
 import DashboardAutomations from "@/components/DashboardAutomations";
 import DashboardSales from "@/components/DashboardSales";
 
@@ -127,6 +128,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6" data-testid="dashboard-page">
       <OnboardingChecklist />
+      <DemoDataBanner />
       <GlobalSearch navigate={navigate} />
       <DashboardAIAssistant />
       <DashboardAutomations />

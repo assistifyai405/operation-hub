@@ -3,22 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Check, Circle, Sparkles, ChevronRight, X } from "lucide-react";
 import { onboardingApi } from "@/lib/api";
 
-const ITEMS = [
-  { key: "client", label: "Create your first client", to: "/clients" },
-  { key: "project", label: "Create your first project", to: "/projects" },
-  { key: "plan", label: "Generate an AI project plan", to: "/projects" },
-  { key: "proposal", label: "Generate a proposal", to: "/projects" },
-  { key: "contract", label: "Generate a contract", to: "/projects" },
-  { key: "invoice", label: "Generate an invoice", to: "/projects" },
-];
-
 export default function OnboardingChecklist() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem("onb_checklist_dismissed") === "1");
 
   useEffect(() => {
-    onboardingApi.get().then(setData).catch(() => {});
+    onboardingApi.checklist().then(setData).catch(() => {});
   }, []);
 
   if (!data || dismissed || data.percent === 100) return null;
@@ -31,8 +22,8 @@ export default function OnboardingChecklist() {
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600/20 text-violet-400"><Sparkles className="h-4 w-4" /></span>
           <div>
-            <h3 className="text-sm font-semibold text-zinc-100">Getting started</h3>
-            <p className="text-xs text-zinc-500">Complete these steps to unlock the full workflow.</p>
+            <h3 className="text-sm font-semibold text-zinc-100">Finish setting up your AI employee</h3>
+            <p className="text-xs text-zinc-500">Complete these to get the most out of Assistify.</p>
           </div>
         </div>
         <button onClick={dismiss} data-testid="dismiss-checklist" className="text-zinc-500 transition-colors hover:text-zinc-300"><X className="h-4 w-4" /></button>
@@ -44,24 +35,21 @@ export default function OnboardingChecklist() {
           <span className="font-semibold text-violet-400" data-testid="onboarding-percent">{data.percent}%</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
-          <div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${data.percent}%` }} />
+          <div className="h-full rounded-full bg-violet-500 transition-all duration-500" style={{ width: `${data.percent}%` }} />
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-        {ITEMS.map((it) => {
-          const done = data.checklist[it.key];
-          return (
-            <button key={it.key} onClick={() => navigate(it.to)} data-testid={`checklist-item-${it.key}`}
-              className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-white/5">
-              {done
-                ? <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400"><Check className="h-3 w-3" /></span>
-                : <Circle className="h-5 w-5 text-zinc-600" />}
-              <span className={`flex-1 text-sm ${done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>{it.label}</span>
-              {!done && <ChevronRight className="h-4 w-4 text-zinc-600 opacity-0 transition-opacity group-hover:opacity-100" />}
-            </button>
-          );
-        })}
+        {data.items.map((it) => (
+          <button key={it.key} onClick={() => navigate(it.to)} data-testid={`checklist-item-${it.key}`}
+            className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-white/5">
+            {it.done
+              ? <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400"><Check className="h-3 w-3" /></span>
+              : <Circle className="h-5 w-5 text-zinc-600" />}
+            <span className={`flex-1 text-sm ${it.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>{it.label}</span>
+            {!it.done && <ChevronRight className="h-4 w-4 text-zinc-600 opacity-0 transition-opacity group-hover:opacity-100" />}
+          </button>
+        ))}
       </div>
     </div>
   );

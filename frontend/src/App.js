@@ -30,6 +30,7 @@ import ContactDetail from "@/pages/ContactDetail";
 import Pipeline from "@/pages/Pipeline";
 import KnowledgeBrain from "@/pages/KnowledgeBrain";
 import Automations from "@/pages/Automations";
+import Onboarding from "@/pages/Onboarding";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/clients" element={<Clients />} />
