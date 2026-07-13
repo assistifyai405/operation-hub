@@ -25,6 +25,9 @@ import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
 import AIWorkspace from "@/pages/AIWorkspace";
 import Opportunities from "@/pages/Opportunities";
+import CRM from "@/pages/CRM";
+import ContactDetail from "@/pages/ContactDetail";
+import Pipeline from "@/pages/Pipeline";
 
 function App() {
   return (
@@ -55,6 +58,9 @@ function App() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/ai-workspace" element={<AIWorkspace />} />
               <Route path="/opportunities" element={<Opportunities />} />
+              <Route path="/crm" element={<CRM />} />
+              <Route path="/crm/:id" element={<ContactDetail />} />
+              <Route path="/pipeline" element={<Pipeline />} />
               <Route path="/ai-history" element={<Navigate to="/ai-workspace" replace />} />
             </Route>
           </Routes>

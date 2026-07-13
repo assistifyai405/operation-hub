@@ -1,0 +1,23 @@
+{
+  "summary": "Full E2E of AI CRM & Sales Pipeline (iter_24). Backend: 12/12 pytest passed on /app/backend/tests/test_crm_pipeline.py — pipeline shape/search/sort, leads full CRUD (create/get/put/patch stage/convert idempotent/delete), invalid stage 400 & unknown id 404, ai-brief generates all 10 keys, contacts list+detail enriched, /crm/search returns typed results, sales-metrics returns $132k pipeline + 100% win + insights, org isolation (fresh registered user sees 0 leads / 0 contacts), and enriched /api/clients regression works (industry/tags/website/company_size). Frontend: /login demo → dashboard shows Sales widgets ($132k pipeline, 1 closing, 1 attention, 100% win, $15.4k avg, 17% conv), AI Sales Insights, Leads needing attention block. /pipeline renders 7 columns with 6 seeded lead cards; search filters; sort works. DRAG & DROP: dragging 'Landing Page Sprint' from New→Qualified persists across page reload (native HTML5 drag events dispatched — Playwright drag_to unavailable on ElementHandle). Lead drawer opens with all 9 required testids (stage/value/title/save/convert/generate-brief/followups/timeline/one-click); Save persists; Generate AI Sales Brief returns full brief with deal health, win prob, urgency, risk & next action within ~10s. 'New lead' creates a lead and opens drawer. /crm renders 3 enriched contact cards; contact detail loads with AI Relationship Summary (generated successfully) and timeline. Regression: navigating CRM/Pipeline/Dashboard produces no infinite update loops or errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_crm_pipeline.py",
+    "/app/test_reports/pytest/crm.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "routers/crm.py is 470+ lines mixing leads, contacts, search, and metrics — consider splitting into leads.py / contacts.py / search.py sub-routers if more CRM features land.",
+    "list_contacts N+1: performs one activities lookup per client and a nested projects find inside the query — batch by aggregating over all client_ids to reduce round-trips.",
+    "_lead_timeline pulls 4 collections (proposals/contracts/invoices/activities/ai_activities) with .to_list(50) each per GET /leads/{id} — for orgs with many docs this is expensive; consider projection + limit and computing timeline only on demand or paginated.",
+    "ai-brief cache key uses md5 of ctx JSON — if ctx contains no significant change but datetime updated_at bumps, cache always misses; consider excluding updated_at from the signature or hashing only meaningful lead+client+doc fields."
+  ],
+  "updated_files": ["/app/backend/tests/test_crm_pipeline.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Explore Demo btn on /login (data-testid='explore-demo-btn'). Token in localStorage 'assistify_token'.",
+  "seed_data_creation": "None — used existing demo seed (3 enriched clients + 6 leads, ~$132k open pipeline). Test-created leads/clients are cleaned up in tests.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "CRM sprint fully passing. Drag-drop uses native HTML5 events — Playwright ElementHandle has no drag_to; use manual dispatch of dragstart/dragenter/dragover/drop with a shared DataTransfer instance (see test_crm_pipeline flow in iteration_24). Column testids follow pipeline-col-<stage-lowercased-hyphenated> e.g. 'pipeline-col-meeting-scheduled'. AI-brief and contact-ai-summary both invoke Emergent LLM (gpt-5.4) — 502 possible on budget/env issue; tests skip in that case."
+}

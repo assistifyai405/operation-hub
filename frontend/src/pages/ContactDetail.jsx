@@ -1,0 +1,128 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  ArrowLeft, Mail, Phone, Globe, Building2, MapPin, Sparkles, Loader2,
+  FolderKanban, FileText, Receipt, Target, RefreshCw, ArrowRight, ShieldCheck, AlertTriangle,
+} from "lucide-react";
+import { crmApi } from "@/lib/api";
+import { AiIcon, relTime } from "@/components/ai/aiHelpers";
+import { fmtMoneyFull, STAGE_META } from "@/components/crm/crmShared";
+
+export default function ContactDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [c, setC] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [genning, setGenning] = useState(false);
+
+  const load = () => crmApi.contact(id).then((data) => { setC(data); setSummary(data.ai_summary || null); }).catch(() => toast.error("Couldn't load contact"));
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+
+  const genSummary = async (refresh = false) => {
+    setGenning(true);
+    try { setSummary(await crmApi.contactSummary(id, refresh)); }
+    catch (e) { toast.error(e.message); } finally { setGenning(false); }
+  };
+
+  if (!c) return <div className="flex items-center justify-center py-24 text-zinc-600"><Loader2 className="h-7 w-7 animate-spin" /></div>;
+
+  const info = [
+    { icon: Mail, v: c.email }, { icon: Phone, v: c.phone }, { icon: Globe, v: c.website },
+    { icon: Building2, v: c.industry && `${c.industry}${c.company_size ? ` · ${c.company_size}` : ""}` }, { icon: MapPin, v: c.address },
+  ].filter((x) => x.v);
+
+  return (
+    <div className="space-y-5" data-testid="contact-detail-page">
+      <button onClick={() => navigate("/crm")} className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white"><ArrowLeft className="h-4 w-4" /> Back to CRM</button>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600/15 text-violet-300 text-lg font-bold">{c.name.slice(0, 2).toUpperCase()}</span>
+          <div>
+            <h1 className="text-2xl font-bold text-zinc-50" data-testid="contact-name">{c.name}</h1>
+            <p className="text-sm text-zinc-500">{c.contact || "—"} · {fmtMoneyFull(c.pipeline_value)} open pipeline</p>
+            <div className="mt-1 flex flex-wrap gap-1.5">{(c.tags || []).map((t) => <span key={t} className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] text-zinc-400">{t}</span>)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="space-y-5 lg:col-span-2">
+          {/* AI relationship summary */}
+          <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.05] p-4" data-testid="contact-ai-summary">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-violet-300"><Sparkles className="h-3.5 w-3.5" /> AI Relationship Summary</p>
+              {summary && <button onClick={() => genSummary(true)} disabled={genning} data-testid="contact-refresh-summary" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300">{genning ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />} Refresh</button>}
+            </div>
+            {!summary ? (
+              <button onClick={() => genSummary(false)} disabled={genning} data-testid="contact-generate-summary"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-violet-500/30 py-2.5 text-sm font-semibold text-violet-200 hover:bg-violet-500/10 disabled:opacity-60">
+                {genning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} {genning ? "Analyzing relationship…" : "Generate AI summary"}
+              </button>
+            ) : (
+              <div className="space-y-2.5">
+                <p className="text-sm text-zinc-200">{summary.summary}</p>
+                {summary.strengths?.length > 0 && <div><p className="flex items-center gap-1 text-xs font-semibold text-emerald-400"><ShieldCheck className="h-3.5 w-3.5" /> Strengths</p><ul className="mt-1 space-y-0.5">{summary.strengths.map((s, i) => <li key={i} className="text-xs text-zinc-300">• {s}</li>)}</ul></div>}
+                {summary.risks?.length > 0 && <div><p className="flex items-center gap-1 text-xs font-semibold text-amber-400"><AlertTriangle className="h-3.5 w-3.5" /> Risks</p><ul className="mt-1 space-y-0.5">{summary.risks.map((s, i) => <li key={i} className="text-xs text-zinc-300">• {s}</li>)}</ul></div>}
+                {summary.next_best_action && <div className="rounded-lg bg-zinc-900/60 p-2.5"><p className="flex items-center gap-1 text-xs font-semibold text-violet-300"><ArrowRight className="h-3.5 w-3.5" /> Next best action</p><p className="mt-0.5 text-sm text-zinc-200">{summary.next_best_action}</p></div>}
+              </div>
+            )}
+          </div>
+
+          {/* Linked entities */}
+          <LinkRow icon={Target} title="Deals" items={(c.leads || []).map((l) => ({ label: l.title, meta: l.stage, onClick: () => navigate("/pipeline") }))} empty="No deals yet" testid="contact-leads" />
+          <LinkRow icon={FolderKanban} title="Projects" items={(c.projects || []).map((p) => ({ label: p.name, meta: p.status, onClick: () => navigate(`/projects/${p.id}`) }))} empty="No projects yet" testid="contact-projects" />
+          <LinkRow icon={FileText} title="Documents" items={[
+            ...(c.proposals || []).map((p) => ({ label: p.title || "Proposal", meta: `Proposal · ${p.status}`, onClick: () => navigate(`/projects/${p.project_id}?tab=proposal`) })),
+            ...(c.invoices || []).map((i) => ({ label: i.invoice_number || "Invoice", meta: `Invoice · ${i.status}`, onClick: () => navigate(`/projects/${i.project_id}?tab=invoice`) })),
+          ]} empty="No documents yet" testid="contact-docs" />
+        </div>
+
+        {/* Right: info + timeline */}
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-white/10 bg-zinc-950 p-4">
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">Details</p>
+            <div className="space-y-2.5">
+              {info.map((x, i) => <p key={i} className="flex items-center gap-2 text-sm text-zinc-300"><x.icon className="h-4 w-4 shrink-0 text-zinc-500" /> {x.v}</p>)}
+              {c.owner && <p className="text-xs text-zinc-500">Owner: <span className="text-zinc-300">{c.owner}</span></p>}
+              {c.notes && <p className="border-t border-white/10 pt-2.5 text-sm text-zinc-400">{c.notes}</p>}
+            </div>
+          </div>
+          {c.timeline?.length > 0 && (
+            <div className="rounded-2xl border border-white/10 bg-zinc-950 p-4" data-testid="contact-timeline">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">Timeline</p>
+              <div className="space-y-3">
+                {c.timeline.map((e, i) => (
+                  <div key={i} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-600/15 text-violet-300"><AiIcon name={e.icon} className="h-3 w-3" /></span>
+                      {i < c.timeline.length - 1 && <span className="mt-1 h-full w-px flex-1 bg-white/10" />}
+                    </div>
+                    <div className="pb-1"><p className="text-sm text-zinc-200">{e.title}</p><p className="text-xs text-zinc-600">{relTime(e.when)}</p></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const LinkRow = ({ icon: Icon, title, items, empty, testid }) => (
+  <div className="rounded-2xl border border-white/10 bg-zinc-950 p-4" data-testid={testid}>
+    <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Icon className="h-3.5 w-3.5 text-violet-400" /> {title} <span className="rounded-full bg-white/5 px-1.5 text-[10px]">{items.length}</span></p>
+    {items.length === 0 ? <p className="text-xs text-zinc-600">{empty}</p> : (
+      <div className="space-y-1.5">
+        {items.map((it, i) => (
+          <button key={i} onClick={it.onClick} className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-zinc-900/40 px-3 py-2 text-left transition-all hover:border-violet-500/30">
+            <span className="truncate text-sm text-zinc-200">{it.label}</span>
+            <span className="shrink-0 text-xs text-zinc-500">{it.meta}</span>
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+);

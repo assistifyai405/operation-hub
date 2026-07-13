@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import DashboardAIAssistant from "@/components/DashboardAIAssistant";
 import DashboardOpportunities from "@/components/DashboardOpportunities";
+import DashboardSales from "@/components/DashboardSales";
 
 const money = (v) => `$${Number(v || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
@@ -127,6 +128,7 @@ export default function Dashboard() {
       <OnboardingChecklist />
       <GlobalSearch navigate={navigate} />
       <DashboardAIAssistant />
+      <DashboardSales />
       <DashboardOpportunities />
 
       {/* KPI cards */}

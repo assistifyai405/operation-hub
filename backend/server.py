@@ -39,6 +39,7 @@ from routers.exports import router as exports_router
 from routers.ai import router as ai_router
 from routers.assistant import router as assistant_router
 from routers.opportunities import router as opportunities_router
+from routers.crm import router as crm_router
 import ai_activity as aia
 
 app = FastAPI()
@@ -191,9 +192,9 @@ async def _seed_demo_data(org_id: str):
     """Seed a small, isolated set of sample data so a demo workspace isn't empty."""
     now = now_iso()
     clients = [
-        {"name": "Northwind Labs", "contact": "Dana Whitfield", "email": "dana@northwind.test", "value": 48200, "status": "Active"},
-        {"name": "Vertex Studio", "contact": "Marco Ruiz", "email": "marco@vertex.test", "value": 31900, "status": "Active"},
-        {"name": "Halcyon Group", "contact": "Priya Nair", "email": "priya@halcyon.test", "value": 62400, "status": "Active"},
+        {"name": "Northwind Labs", "contact": "Dana Whitfield", "email": "dana@northwind.test", "phone": "+1 415 555 0132", "value": 48200, "status": "Active", "industry": "SaaS", "company_size": "50-200", "website": "northwind.test", "owner": "You", "tags": ["priority", "retainer"], "notes": "Recurring web work. Responsive, values speed."},
+        {"name": "Vertex Studio", "contact": "Marco Ruiz", "email": "marco@vertex.test", "phone": "+1 646 555 0177", "value": 31900, "status": "Active", "industry": "Creative Agency", "company_size": "10-50", "website": "vertex.test", "owner": "You", "tags": ["design"], "notes": "Referral. Slow to reply lately."},
+        {"name": "Halcyon Group", "contact": "Priya Nair", "email": "priya@halcyon.test", "phone": "+44 20 7946 0958", "value": 62400, "status": "Active", "industry": "Finance", "company_size": "200-500", "website": "halcyon.test", "owner": "You", "tags": ["enterprise", "priority"], "notes": "High-value account. Brand redesign in progress."},
     ]
     client_ids = {}
     for c in clients:
@@ -222,6 +223,33 @@ async def _seed_demo_data(org_id: str):
         obj = Task(**t)
         doc = obj.model_dump(); doc["organizationId"] = org_id
         await db.tasks.insert_one(doc)
+
+    # Sample sales leads so the CRM pipeline demonstrates value immediately.
+    def _iso_days(d):
+        return (datetime.now(timezone.utc) - timedelta(days=d)).isoformat()
+    def _close_in(d):
+        return (datetime.now(timezone.utc) + timedelta(days=d)).strftime("%Y-%m-%d")
+    lead_samples = [
+        {"title": "Brand Redesign — Phase 2", "client": "Halcyon Group", "project": proj_ids[0], "stage": "Negotiating", "value": 42000, "expected_close": _close_in(5), "owner": "You", "source": "Existing client", "tags": ["enterprise"], "notes": "Wants a phase 2 covering the app UI. Budget approved, finalizing scope.", "age": 2},
+        {"title": "Q3 Marketing Site", "client": "Northwind Labs", "project": proj_ids[1], "stage": "Proposal Sent", "value": 28500, "expected_close": _close_in(12), "owner": "You", "source": "Inbound", "tags": ["web"], "notes": "Proposal sent, awaiting feedback from their marketing lead.", "age": 6},
+        {"title": "Rebrand + Website", "client": "Vertex Studio", "stage": "Qualified", "value": 19000, "expected_close": _close_in(25), "owner": "You", "source": "Referral", "tags": ["design"], "notes": "Interested but comparing options.", "age": 11},
+        {"title": "Marketing Retainer", "client": "Northwind Labs", "stage": "Meeting Scheduled", "value": 36000, "expected_close": _close_in(18), "owner": "You", "source": "Existing client", "tags": ["retainer"], "notes": "Monthly retainer discussion. Meeting booked.", "age": 1},
+        {"title": "Landing Page Sprint", "stage": "New", "value": 6500, "contact_name": "Alex Kim", "email": "alex@brightfold.test", "expected_close": _close_in(30), "owner": "You", "source": "Cold outreach", "tags": [], "notes": "New inbound from website form.", "age": 0},
+        {"title": "Annual Report Design", "client": "Halcyon Group", "stage": "Won", "value": 15400, "expected_close": _close_in(-3), "owner": "You", "source": "Existing client", "tags": ["enterprise"], "notes": "Closed and delivered.", "age": 20},
+    ]
+    for ls in lead_samples:
+        created = _iso_days(ls.pop("age", 0))
+        client_key = ls.pop("client", None)
+        pid = ls.pop("project", None)
+        doc = {"id": str(uuid.uuid4()), "organizationId": org_id, "title": ls["title"],
+               "client_id": client_ids.get(client_key) if client_key else None, "project_id": pid,
+               "stage": ls["stage"], "value": ls["value"], "probability": None,
+               "expected_close": ls.get("expected_close", ""), "owner": ls.get("owner", ""),
+               "contact_name": ls.get("contact_name", ""), "email": ls.get("email", ""), "phone": "",
+               "source": ls.get("source", ""), "notes": ls.get("notes", ""), "tags": ls.get("tags", []),
+               "created_at": created, "updated_at": created, "stage_changed_at": created,
+               "stage_history": [{"stage": "New", "at": created}, {"stage": ls["stage"], "at": created}]}
+        await db.leads.insert_one(doc)
 
     # Sample AI activity so the AI Workspace demonstrates value from the first visit.
     hal, nw = client_ids.get("Halcyon Group"), client_ids.get("Northwind Labs")
@@ -577,6 +605,15 @@ class ClientCreate(BaseModel):
     phone: str = ""
     value: float = 0
     status: str = "Active"
+    industry: str = ""
+    company_size: str = ""
+    website: str = ""
+    address: str = ""
+    notes: str = ""
+    owner: str = ""
+    next_follow_up: str = ""
+    source: str = ""
+    tags: List[str] = Field(default_factory=list)
 
 
 class Client(ClientCreate):
@@ -1960,6 +1997,7 @@ app.include_router(exports_router)
 app.include_router(ai_router)
 app.include_router(assistant_router)
 app.include_router(opportunities_router)
+app.include_router(crm_router)
 
 app.add_middleware(
     CORSMiddleware,

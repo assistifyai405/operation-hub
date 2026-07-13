@@ -160,6 +160,23 @@ export const aiApi = {
 };
 
 const API_BASE = `${process.env.REACT_APP_BACKEND_URL}/api`;
+export const crmApi = {
+  contacts: () => req("/crm/contacts"),
+  contact: (id) => req(`/crm/contacts/${id}`),
+  contactSummary: (id, refresh = false) => req(`/crm/contacts/${id}/ai-summary?refresh=${refresh}`, { method: "POST" }),
+  leads: () => req("/crm/leads"),
+  pipeline: (params = {}) => { const qs = new URLSearchParams(params).toString(); return req(`/crm/pipeline${qs ? `?${qs}` : ""}`); },
+  getLead: (id) => req(`/crm/leads/${id}`),
+  createLead: (body) => req("/crm/leads", { method: "POST", body: JSON.stringify(body) }),
+  updateLead: (id, body) => req(`/crm/leads/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  moveStage: (id, stage) => req(`/crm/leads/${id}/stage`, { method: "PATCH", body: JSON.stringify({ stage }) }),
+  deleteLead: (id) => req(`/crm/leads/${id}`, { method: "DELETE" }),
+  leadBrief: (id, refresh = false) => req(`/crm/leads/${id}/ai-brief?refresh=${refresh}`, { method: "POST" }),
+  convert: (id) => req(`/crm/leads/${id}/convert`, { method: "POST" }),
+  search: (q) => req(`/crm/search?q=${encodeURIComponent(q)}`),
+  salesMetrics: () => req("/crm/sales-metrics"),
+};
+
 export const opportunitiesApi = {
   list: () => req("/opportunities"),
   brief: () => req("/opportunities/brief"),
