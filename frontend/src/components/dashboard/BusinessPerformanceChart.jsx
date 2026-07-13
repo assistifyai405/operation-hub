@@ -43,7 +43,7 @@ export function BusinessPerformanceChart({ trends }) {
       </div>
 
       <div className="mt-2 h-56" data-testid={`chart-canvas-${active}`}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
           <AreaChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
             <defs>
               <linearGradient id="pcg" x1="0" y1="0" x2="0" y2="1">
