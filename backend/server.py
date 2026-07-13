@@ -45,6 +45,7 @@ from routers.memory import build_memory_prompt
 from routers.automation import router as automation_router
 from routers.automation import seed_demo_automations
 from routers.onboarding import router as onboarding_router
+from routers.dashboard_exec import router as dashboard_exec_router
 import ai_activity as aia
 
 app = FastAPI()
@@ -2030,6 +2031,7 @@ app.include_router(crm_router)
 app.include_router(memory_router)
 app.include_router(automation_router)
 app.include_router(onboarding_router)
+app.include_router(dashboard_exec_router)
 
 app.add_middleware(
     CORSMiddleware,

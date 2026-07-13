@@ -276,6 +276,7 @@ export const activitiesApi = {
 
 export const dashboardApi = {
   summary: () => req("/dashboard/summary"),
+  executive: () => req("/dashboard/executive"),
   search: (q) => req(`/dashboard/search?q=${encodeURIComponent(q)}`),
 };
 
