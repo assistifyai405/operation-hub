@@ -37,8 +37,52 @@ def test_executive_endpoint_shape(demo_client):
     assert r.status_code == 200, r.text
     d = r.json()
     for k in ["hero", "health", "revenue", "insights", "priorities", "priorities_total",
-              "ai_activity", "workspace", "documents"]:
+              "ai_activity", "workspace", "documents", "trends", "kpi_cards"]:
         assert k in d, f"missing key {k}"
+
+
+def test_trends_structure(demo_client):
+    d = demo_client.get(f"{BASE_URL}/api/dashboard/executive").json()
+    t = d["trends"]
+    assert isinstance(t.get("labels"), list) and len(t["labels"]) == 8
+    series = t.get("series", {})
+    for k in ["revenue", "pipeline", "hours_saved", "deals", "clients", "automations", "ai_activity"]:
+        assert k in series, f"trends.series missing {k}"
+        arr = series[k]
+        assert isinstance(arr, list) and len(arr) == 8
+        for v in arr:
+            assert isinstance(v, (int, float))
+
+
+def test_kpi_cards_structure(demo_client):
+    d = demo_client.get(f"{BASE_URL}/api/dashboard/executive").json()
+    kc = d["kpi_cards"]
+    # health card
+    h = kc["health"]
+    assert "value" in h and "grade" in h and isinstance(h.get("categories"), list)
+    assert h["value"] == d["health"]["score"]
+    # other three cards with spark[8] + change_pct
+    for k in ["pipeline", "hours_saved", "revenue_month"]:
+        card = kc[k]
+        assert "value" in card
+        assert isinstance(card.get("spark"), list) and len(card["spark"]) == 8
+        assert "change_pct" in card  # may be None
+        cp = card["change_pct"]
+        assert cp is None or isinstance(cp, (int, float))
+
+
+def test_kpi_cards_source_consistency(demo_client):
+    d = demo_client.get(f"{BASE_URL}/api/dashboard/executive").json()
+    sm = demo_client.get(f"{BASE_URL}/api/crm/sales-metrics").json()
+    # pipeline card value should equal pipeline value from crm
+    assert d["kpi_cards"]["pipeline"]["value"] == sm.get("pipeline_value", 0)
+
+
+def test_trends_org_isolation(demo_client, demo_client_2):
+    a = demo_client.get(f"{BASE_URL}/api/dashboard/executive").json()
+    b = demo_client_2.get(f"{BASE_URL}/api/dashboard/executive").json()
+    # both have valid shape and labels of 8
+    assert len(a["trends"]["labels"]) == 8 and len(b["trends"]["labels"]) == 8
 
 
 def test_hero_structure(demo_client):

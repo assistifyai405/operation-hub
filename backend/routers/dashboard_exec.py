@@ -57,6 +57,60 @@ async def _recent_docs(org):
     }
 
 
+def _week_buckets(n=8):
+    end = _now().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    out = []
+    for i in range(n):
+        start = end - timedelta(days=7 * (n - i))
+        stop = end - timedelta(days=7 * (n - i - 1))
+        out.append((start, stop, start.strftime("%b %d")))
+    return out
+
+
+def _in(iso, start, stop):
+    if not iso:
+        return False
+    try:
+        dt = datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return start <= dt < stop
+    except Exception:
+        return False
+
+
+def _pct(series):
+    if len(series) < 2 or not series[-2]:
+        return None
+    return round((series[-1] - series[-2]) / series[-2] * 100)
+
+
+async def _build_trends(org):
+    base = {"organizationId": org}
+    buckets = _week_buckets(8)
+    since = buckets[0][0].isoformat()
+    leads = await db.leads.find(base, {"_id": 0, "created_at": 1, "value": 1}).to_list(2000)
+    paid = await db.ai_invoices.find({**base, "status": "Paid"}, {"_id": 0, "total": 1, "updated_at": 1, "created_at": 1}).to_list(2000)
+    clients = await db.clients.find(base, {"_id": 0, "created_at": 1, "createdAt": 1}).to_list(2000)
+    acts = await db.ai_activities.find({**base, "created_at": {"$gt": since}}, {"_id": 0, "created_at": 1, "time_saved": 1}).to_list(5000)
+    apps = await db.automation_approvals.find({**base, "status": "executed", "executed_at": {"$gt": since}}, {"_id": 0, "executed_at": 1, "time_saved": 1}).to_list(5000)
+
+    series = {k: [] for k in ("revenue", "pipeline", "hours_saved", "deals", "clients", "automations", "ai_activity")}
+    labels = []
+    for start, stop, label in buckets:
+        labels.append(label)
+        series["revenue"].append(round(sum((i.get("total") or 0) for i in paid if _in(i.get("updated_at") or i.get("created_at"), start, stop))))
+        series["pipeline"].append(round(sum((l.get("value") or 0) for l in leads if _in(l.get("created_at"), start, stop))))
+        mins = sum(a.get("time_saved", 0) for a in acts if _in(a.get("created_at"), start, stop)) + \
+               sum(a.get("time_saved", 0) for a in apps if _in(a.get("executed_at"), start, stop))
+        series["hours_saved"].append(round(mins / 60, 1))
+        series["deals"].append(sum(1 for l in leads if _in(l.get("created_at"), start, stop)))
+        series["clients"].append(sum(1 for c in clients if _in(c.get("created_at") or c.get("createdAt"), start, stop)))
+        series["automations"].append(sum(1 for a in apps if _in(a.get("executed_at"), start, stop)))
+        series["ai_activity"].append(sum(1 for a in acts if _in(a.get("created_at"), start, stop)))
+    return {"labels": labels, "series": series}
+
+
 @router.get("/executive")
 async def executive(org: str = Depends(current_org)):
     base = {"organizationId": org}
@@ -123,6 +177,16 @@ async def executive(org: str = Depends(current_org)):
 
     top = items[0] if items else None
 
+    trends = await _build_trends(org)
+    s = trends["series"]
+    kpi_cards = {
+        "health": {"value": health.get("score", 0), "grade": health.get("grade"),
+                   "categories": health.get("categories", [])},
+        "pipeline": {"value": sales.get("pipeline_value", 0), "spark": s["pipeline"], "change_pct": _pct(s["pipeline"])},
+        "hours_saved": {"value": round(mins_week / 60, 1), "spark": s["hours_saved"], "change_pct": _pct(s["hours_saved"])},
+        "revenue_month": {"value": round(this30), "spark": s["revenue"], "change_pct": growth_pct},
+    }
+
     return {
         "hero": {
             "greeting": brief.get("greeting"),
@@ -158,4 +222,6 @@ async def executive(org: str = Depends(current_org)):
         } for a in recent_acts[:8]],
         "workspace": workspace,
         "documents": await _recent_docs(org),
+        "trends": trends,
+        "kpi_cards": kpi_cards,
     }
