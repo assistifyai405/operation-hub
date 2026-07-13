@@ -714,7 +714,8 @@ async def _execute_one(org, action, approval):
             "id": str(uuid.uuid4()), "organizationId": org, "text": payload.get("brief", ""),
             "entity": ent, "created_at": now_iso()})
     elif atype in ("prepare_email", "prepare_followup"):
-        # No real client-send integration — finalize the draft as "ready to send".
+        # No real client-send integration — the draft is finalized as ready-to-send;
+        # its "executed" approval status conveys completion.
         pass
     elif atype in ("generate_proposal", "generate_contract", "generate_invoice"):
         pid = ent.get("project_id")

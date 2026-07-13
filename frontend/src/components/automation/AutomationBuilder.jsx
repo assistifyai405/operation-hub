@@ -96,7 +96,7 @@ export function AutomationBuilder({ open, onOpenChange, options, initial, onSave
           <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-4">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">If <span className="font-normal normal-case text-zinc-600">(optional)</span></p>
-              <button onClick={() => setConditions((c) => [...c, emptyCond()])} data-testid="builder-add-condition" className="inline-flex items-center gap-1 text-xs font-medium text-violet-300 hover:text-violet-200"><Plus className="h-3.5 w-3.5" /> Add condition</button>
+              <button onClick={() => setConditions((c) => [...c, emptyCond()])} data-testid="add-condition" className="inline-flex items-center gap-1 text-xs font-medium text-violet-300 hover:text-violet-200"><Plus className="h-3.5 w-3.5" /> Add condition</button>
             </div>
             {conditions.length === 0 ? (
               <p className="text-xs text-zinc-600">No conditions — the automation runs for every match.</p>
