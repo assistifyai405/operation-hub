@@ -40,6 +40,8 @@ from routers.ai import router as ai_router
 from routers.assistant import router as assistant_router
 from routers.opportunities import router as opportunities_router
 from routers.crm import router as crm_router
+from routers.memory import router as memory_router
+from routers.memory import build_memory_prompt
 import ai_activity as aia
 
 app = FastAPI()
@@ -250,6 +252,22 @@ async def _seed_demo_data(org_id: str):
                "created_at": created, "updated_at": created, "stage_changed_at": created,
                "stage_history": [{"stage": "New", "at": created}, {"stage": ls["stage"], "at": created}]}
         await db.leads.insert_one(doc)
+
+    # Seed starter memories so the Knowledge Brain shows value immediately.
+    mem_seed = [
+        ("Prefers concise, confident introductions", "Writing Style", "Opening sections should be short and get to the value fast — avoid long preambles.", 88, "Learned from your edits"),
+        ("Signs documents with the company name", "Brand Voice", "Client documents close with the studio name and a warm line.", 82, "Learned from your edits"),
+        ("Prefers bullet lists over dense paragraphs", "Writing Style", "Deliverables, scope and next steps are formatted as scannable bullets.", 85, "Learned from your edits"),
+        ("Typical project pricing $20k–$60k", "Pricing", "Most engagements land between $20,000 and $60,000 depending on scope.", 78, "Business data"),
+        ("Core services: brand & web design", "Services", "The business focuses on brand identity, web design and marketing sites.", 90, "Business data"),
+        ("Communicates formally with enterprise clients", "Preferences", "Enterprise accounts (e.g. Halcyon) get a more formal, thorough tone.", 72, "Learned from your edits"),
+    ]
+    for title, cat, content, conf, src in mem_seed:
+        await db.memories.insert_one({
+            "id": str(uuid.uuid4()), "organizationId": org_id, "title": title, "category": cat,
+            "content": content, "keywords": [], "confidence": conf, "source": src,
+            "times_used": (conf % 7), "pinned": cat == "Brand Voice", "learning_enabled": True,
+            "created_at": _iso_days(conf % 5), "updated_at": _iso_days(conf % 3)})
 
     # Sample AI activity so the AI Workspace demonstrates value from the first visit.
     hal, nw = client_ids.get("Halcyon Group"), client_ids.get("Northwind Labs")
@@ -1453,6 +1471,7 @@ async def generate_plan(project_id: str, org: str = Depends(current_org)):
         '}\n'
         "Be specific and tailored to the actual project context above. Output JSON only."
     )
+    prompt += await build_memory_prompt(org, ["Processes", "Business", "Preferences", "Services"])
     chat = LlmChat(
         api_key=EMERGENT_LLM_KEY, session_id=f"planner-{project_id}-{uuid.uuid4()}",
         system_message=PLANNER_SYSTEM,
@@ -1649,6 +1668,7 @@ async def _build_contract_context(project_id: str, org: str):
 async def generate_contract(project_id: str, org: str = Depends(current_org)):
     p, context, proposal_id = await _build_contract_context(project_id, org)
     prompt = build_contract_prompt(context)
+    prompt += await build_memory_prompt(org, ["Policies", "Contract Style", "Business", "Preferences", "Brand Voice"])
     _t0 = time.perf_counter()
     try:
         content = await ai_service.complete_json(CONTRACT_SYSTEM, prompt, CONTRACT_SECTIONS, session_id=f"contract-{project_id}-{uuid.uuid4()}")
@@ -1780,6 +1800,7 @@ async def generate_invoice(project_id: str, org: str = Depends(current_org)):
         context += "\n\nSIGNED/DRAFT CONTRACT PAYMENT TERMS:\n" + json.dumps(contract.get("content", {}).get("payment_terms", []))
 
     prompt = build_invoice_prompt(context)
+    prompt += await build_memory_prompt(org, ["Pricing", "Business", "Preferences", "Policies"])
     _t0 = time.perf_counter()
     try:
         raw = await ai_service.complete(INVOICE_SYSTEM, prompt, session_id=f"invoice-{project_id}-{uuid.uuid4()}")
@@ -1998,6 +2019,7 @@ app.include_router(ai_router)
 app.include_router(assistant_router)
 app.include_router(opportunities_router)
 app.include_router(crm_router)
+app.include_router(memory_router)
 
 app.add_middleware(
     CORSMiddleware,

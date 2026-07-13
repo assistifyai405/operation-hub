@@ -160,6 +160,24 @@ export const aiApi = {
 };
 
 const API_BASE = `${process.env.REACT_APP_BACKEND_URL}/api`;
+export const memoryApi = {
+  memories: (params = {}) => { const qs = new URLSearchParams(params).toString(); return req(`/memory/memories${qs ? `?${qs}` : ""}`); },
+  stats: () => req("/memory/stats"),
+  create: (body) => req("/memory/memories", { method: "POST", body: JSON.stringify(body) }),
+  update: (id, body) => req(`/memory/memories/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  remove: (id) => req(`/memory/memories/${id}`, { method: "DELETE" }),
+  pin: (id, pinned) => req(`/memory/memories/${id}/pin`, { method: "PATCH", body: JSON.stringify({ pinned }) }),
+  toggleLearning: (id, learning_enabled) => req(`/memory/memories/${id}/learning`, { method: "PATCH", body: JSON.stringify({ learning_enabled }) }),
+  merge: (body) => req("/memory/memories/merge", { method: "POST", body: JSON.stringify(body) }),
+  learnEvent: (body) => req("/memory/learn/event", { method: "POST", body: JSON.stringify(body) }),
+  analyze: () => req("/memory/learn/analyze", { method: "POST" }),
+  businessProfile: () => req("/memory/business-profile"),
+  generateProfile: () => req("/memory/business-profile", { method: "POST" }),
+  insights: (refresh = false) => req(`/memory/insights?refresh=${refresh}`),
+  search: (q) => req(`/memory/search?q=${encodeURIComponent(q)}`),
+  ask: (question) => req("/memory/ask", { method: "POST", body: JSON.stringify({ question }) }),
+};
+
 export const crmApi = {
   contacts: () => req("/crm/contacts"),
   contact: (id) => req(`/crm/contacts/${id}`),

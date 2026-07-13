@@ -20,6 +20,7 @@ from core import db, now_iso, ai_service, EMERGENT_LLM_KEY
 from ai_service import extract_json
 from dependencies import current_org
 from routers.copilot import _copilot_snapshot
+from routers.memory import build_memory_context
 
 router = APIRouter(prefix="/api/assistant")
 
@@ -138,6 +139,7 @@ async def assistant_action(payload: ActionRequest, org: str = Depends(current_or
     section = ctx.get("section")
     sections = _sections_payload(ctx)
     where = _ctx_line(ctx)
+    mem = await build_memory_context(org)
     instr = (payload.instruction or "").strip()
     await _persist(payload.session_id, org, "user", f"/{payload.command}" + (f" {instr}" if instr else ""),
                    {"command": payload.command})
@@ -152,7 +154,7 @@ async def assistant_action(payload: ActionRequest, org: str = Depends(current_or
             system = (f"{_BASE_PERSONA}\n{verb}. You are editing the \"{section.get('label')}\" section of {where}. "
                       f"Return ONLY a JSON object: {{\"result\": {fmt}, \"what\": string, \"why\": string, \"impact\": string}}. "
                       f"\"result\" is the rewritten section content ONLY. what/why/impact are one short sentence each.")
-            prompt = f"CURRENT SECTION CONTENT:\n{val_str}\n\nADDITIONAL INSTRUCTION: {instr or '(none)'}"
+            prompt = f"CURRENT SECTION CONTENT:\n{val_str}\n\nADDITIONAL INSTRUCTION: {instr or '(none)'}{mem}"
             raw = await ai_service.complete(system, prompt, session_id=f"asst-{payload.session_id}")
             data = extract_json(raw)
             result = data.get("result", "")
@@ -171,7 +173,7 @@ async def assistant_action(payload: ActionRequest, org: str = Depends(current_or
                       "\"what\": string, \"why\": string, \"impact\": string}. "
                       "Preserve each section's type: text=string, list=array of strings. "
                       "Include ONLY sections you actually changed. Keep it professional and client-ready.")
-            prompt = f"DOCUMENT SECTIONS (JSON):\n{json.dumps(body, default=str)}\n\nADDITIONAL INSTRUCTION: {instr or '(none)'}"
+            prompt = f"DOCUMENT SECTIONS (JSON):\n{json.dumps(body, default=str)}\n\nADDITIONAL INSTRUCTION: {instr or '(none)'}{mem}"
             raw = await ai_service.complete(system, prompt, session_id=f"asst-{payload.session_id}")
             data = extract_json(raw)
             values = data.get("sections", {}) or {}
@@ -192,7 +194,7 @@ async def assistant_action(payload: ActionRequest, org: str = Depends(current_or
                       "Answer in clear, well-structured GitHub-flavored markdown (use headings, bold and bullet lists where helpful). "
                       "Then append a line that starts with '@@META@@' followed by a compact JSON object "
                       "{\"what\": string, \"why\": string, \"impact\": string} (one short sentence each). Output nothing after that JSON.")
-            prompt = f"DOCUMENT CONTENT:\n{ctx_blob or extra_ctx or '(no document content provided)'}\n\nUSER INSTRUCTION: {instr or '(none)'}"
+            prompt = f"DOCUMENT CONTENT:\n{ctx_blob or extra_ctx or '(no document content provided)'}\n\nUSER INSTRUCTION: {instr or '(none)'}{mem}"
             raw = await ai_service.complete(system, prompt, session_id=f"asst-{payload.session_id}")
             answer, meta = _split_meta(raw)
             report = {"what": meta.get("what", label), "why": meta.get("why", ""),
@@ -266,7 +268,7 @@ async def assistant_chat_stream(payload: ChatRequest, org: str = Depends(current
         "If the user wants to CREATE or GENERATE something (a new client, project, proposal, contract, invoice or plan), "
         "tell them you'll open the Copilot command center to do it — do not fabricate that it's done. Keep replies focused and concise."
     )
-    prompt = f"WORKSPACE DATA (JSON):\n{snapshot}{doc_ctx}\n\nUSER MESSAGE:\n{payload.message}"
+    prompt = f"WORKSPACE DATA (JSON):\n{snapshot}{doc_ctx}{await build_memory_context(org)}\n\nUSER MESSAGE:\n{payload.message}"
 
     chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"asst-chat-{payload.session_id}",
                    system_message=system).with_model("openai", "gpt-5.4")

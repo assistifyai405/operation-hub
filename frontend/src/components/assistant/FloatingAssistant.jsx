@@ -5,7 +5,7 @@ import {
   ChevronDown, CornerDownLeft, Loader2, CircleSlash,
 } from "lucide-react";
 import { toast } from "sonner";
-import { assistantApi, getAccessToken } from "@/lib/api";
+import { assistantApi, getAccessToken, memoryApi } from "@/lib/api";
 import { useAssistant } from "@/context/AssistantContext";
 import { Markdown } from "@/components/assistant/Markdown";
 

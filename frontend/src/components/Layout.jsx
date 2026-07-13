@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare, MessageSquare,
   Bot, FileText, FolderOpen, BarChart3, Settings as SettingsIcon,
-  Search, Bell, Menu, X, Sparkles, LogOut, MailWarning, ScrollText, Receipt, LayoutGrid, Target, TrendingUp,
+  Search, Bell, Menu, X, Sparkles, LogOut, MailWarning, ScrollText, Receipt, LayoutGrid, Target, TrendingUp, Brain,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -39,6 +39,7 @@ const nav = [
   { to: "/tasks", label: "Tasks", icon: CheckSquare },
   { to: "/ai-chat", label: "Copilot", icon: Sparkles },
   { to: "/ai-workspace", label: "AI Workspace", icon: LayoutGrid },
+  { to: "/knowledge-brain", label: "Knowledge Brain", icon: Brain },
   { to: "/ai-agents", label: "AI Agents", icon: Bot },
   { to: "/proposals", label: "Proposals", icon: FileText },
   { to: "/contracts", label: "Contracts", icon: ScrollText },
