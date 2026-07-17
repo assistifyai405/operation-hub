@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   Sparkles, ChevronDown, ArrowRight, Trophy, AlertTriangle, ListChecks, Activity, Loader2, Sun,
 } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { dashboardApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { AiIcon, fmtDuration } from "@/components/ai/aiHelpers";
@@ -57,6 +57,7 @@ export function MorningBrief({ open, onOpenChange }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto border-white/10 bg-zinc-950 p-0 text-zinc-100 sm:max-w-2xl" data-testid="morning-brief">
+        <DialogTitle className="sr-only">AI Morning Brief</DialogTitle>
         {/* Hero */}
         <div className="relative overflow-hidden rounded-t-lg border-b border-white/10 p-6">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-violet-600/20 blur-3xl" />
