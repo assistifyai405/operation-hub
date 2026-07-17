@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, ArrowRight, X, Bot } from "lucide-react";
+import { Search, ArrowRight, X, Bot, Sun } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { dashboardApi } from "@/lib/api";
@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { AiIcon } from "@/components/ai/aiHelpers";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import DemoDataBanner from "@/components/DemoDataBanner";
+import { MorningBrief } from "@/components/dashboard/MorningBrief";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { BusinessPerformanceChart } from "@/components/dashboard/BusinessPerformanceChart";
 import { AIExecutiveBrief } from "@/components/dashboard/AIExecutiveBrief";
@@ -75,9 +76,15 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [briefOpen, setBriefOpen] = useState(false);
   useEffect(() => {
     dashboardApi.executive().then(setData).catch((e) => toast.error(e.message)).finally(() => setLoading(false));
   }, []);
+  useEffect(() => {
+    if (!user) return;
+    const key = `mb_seen_${user.id}_${new Date().toISOString().slice(0, 10)}`;
+    if (!localStorage.getItem(key)) { setBriefOpen(true); localStorage.setItem(key, "1"); }
+  }, [user]);
   if (loading || !data) return <DashboardSkeleton />;
 
   const firstName = (user?.firstName || (user?.email || "").split("@")[0] || "").trim();
@@ -104,6 +111,9 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-2">
           <GlobalSearch navigate={navigate} />
+          <button onClick={() => setBriefOpen(true)} data-testid="open-morning-brief" className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-white/10 bg-zinc-950/80 px-3.5 py-2 text-sm font-medium text-zinc-300 backdrop-blur transition-all hover:border-violet-500/40 hover:text-zinc-100">
+            <Sun className="h-4 w-4 text-amber-400" /> Morning Brief
+          </button>
           <button onClick={() => navigate("/ai-chat")} data-testid="hero-ask-ai" className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-violet-600 px-3.5 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet">
             <Bot className="h-4 w-4" /> Ask AI
           </button>
@@ -135,6 +145,7 @@ export default function Dashboard() {
       </div>
 
       <QuickActions />
+      <MorningBrief open={briefOpen} onOpenChange={setBriefOpen} />
     </div>
   );
 }

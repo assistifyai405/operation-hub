@@ -1,0 +1,31 @@
+{
+  "summary": "Sprint 11 — AI Morning Brief verified end-to-end. Backend GET /api/dashboard/morning-brief returns the full documented payload (greeting, summary, wins, risks, recommendations with revenue_impact, numbers{6 keys}, what_ai_did) and stays consistent with /api/dashboard/executive (pipeline/revenue/hours_saved/business_health equal). Org isolation verified across two demo tenants. No regressions on executive/summary/opportunities/crm/automation/memory endpoints. Frontend: after clicking explore-demo-btn the Morning Brief modal auto-opens on first dashboard visit; the second same-day visit correctly does NOT auto-reopen (localStorage guard works). Hero greeting + 'Here's what happened while you were away' present. brief-numbers grid renders (6 tiles). All 5 collapsibles (brief-summary/-wins/-risks/-recommendations/-ai-activity) render and their -toggle buttons open/close smoothly. Summary/win/risk/rec items render (4/1/1/3 on seeded demo). brief-risk-action navigates (/clients) and closes modal. open-morning-brief reopens modal; hero-ask-ai present; brief-dismiss closes. Dashboard V2 KPIs/chart/exec brief still render — no regression.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Morning Brief modal", "issues": ["Radix a11y warning: DialogContent requires a DialogTitle for screen readers. Add a VisuallyHidden <DialogTitle> in MorningBrief.jsx to silence and improve a11y."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_morning_brief.py",
+    "/app/test_reports/pytest/morning_brief.xml"
+  ],
+  "action_items": [
+    "Minor: add a VisuallyHidden DialogTitle inside the MorningBrief Dialog for a11y (Radix warning in console)."
+  ],
+  "critical_code_review_comments": [
+    "MorningBrief.jsx: missing DialogTitle inside DialogContent — Radix a11y warning appears in console; wrap a hidden title (VisuallyHidden) to fix.",
+    "Pre-existing benign 401s during dashboard mount (likely notifications/billing polling) — unrelated to Morning Brief.",
+    "dashboard_exec.py morning_brief overdue detector compares ISO date strings — ok in practice but fragile; consider parsing dates.",
+    "Consider adding a DialogTitle/aria-label for a11y across all shadcn modals project-wide."
+  ],
+  "updated_files": ["/app/backend/tests/test_morning_brief.py"],
+  "success_rate": {"backend": "100% (10/10 new + existing suite unaffected)", "frontend": "100%"},
+  "test_credentials": "POST /api/auth/demo via explore-demo-btn (fresh seeded tenant).",
+  "seed_data_creation": "None (demo endpoint seeds).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Sprint 11 Morning Brief testids: morning-brief (Dialog), brief-numbers, brief-summary/-wins/-risks/-recommendations/-ai-activity each with -toggle, brief-summary-item, brief-win-item, brief-risk-item, brief-risk-action, brief-rec-item, brief-rec-action, brief-ai-item, brief-dismiss, plus open-morning-brief and hero-ask-ai on Dashboard hero. Auto-open localStorage key: mb_seen_{userId}_{YYYY-MM-DD}. Backend endpoint: GET /api/dashboard/morning-brief; reuses executive() for numbers/insights/ai_activity."
+}

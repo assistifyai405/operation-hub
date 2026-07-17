@@ -256,3 +256,98 @@ async def executive(org: str = Depends(current_org)):
         "trends": trends,
         "kpi_cards": kpi_cards,
     }
+
+
+def _m(v):
+    return f"${round(v or 0):,}"
+
+
+@router.get("/morning-brief")
+async def morning_brief(org: str = Depends(current_org)):
+    """AI Morning Brief — reuses the executive aggregation and adds a plain-English
+    summary, business wins and risks. No duplicate backend logic, no placeholder data."""
+    data = await executive(org)
+    base = {"organizationId": org}
+    week = (_now() - timedelta(days=7)).isoformat()
+    today = _now().strftime("%Y-%m-%d")
+    soon = (_now() + timedelta(days=3)).strftime("%Y-%m-%d")
+
+    invoices = await db.ai_invoices.find(base, {"_id": 0}).to_list(1000)
+    leads = await db.leads.find(base, {"_id": 0}).to_list(1000)
+    clients = await db.clients.find(base, {"_id": 0}).to_list(1000)
+    cname = {c["id"]: c.get("name") for c in clients}
+    proposals_waiting = await db.ai_proposals.count_documents({**base, "status": {"$in": ["Draft", "Generated", "Sent"]}})
+    memories_recent = await db.memories.count_documents({**base, "created_at": {"$gt": week}})
+    autos_done = await db.automation_approvals.count_documents({**base, "status": "executed", "executed_at": {"$gt": week}})
+
+    # ---- Wins (positive, last 7 days / current strong state) ----
+    wins = []
+    for inv in invoices:
+        if inv.get("status") == "Paid" and (inv.get("updated_at") or "") > week:
+            wins.append({"icon": "receipt", "title": f"{inv.get('invoice_number') or 'Invoice'} paid", "detail": f"{_m(inv.get('total'))} received", "project_id": inv.get("project_id")})
+    for l in leads:
+        if l.get("stage") == "Won" and (l.get("stage_changed_at") or l.get("updated_at") or "") > week:
+            wins.append({"icon": "trending-up", "title": f"Deal won — {l.get('title') or cname.get(l.get('client_id')) or 'Deal'}", "detail": f"{_m(l.get('value'))} closed"})
+    if autos_done:
+        wins.append({"icon": "zap", "title": f"{autos_done} automation{'s' if autos_done != 1 else ''} completed", "detail": "Ran successfully for you"})
+    if data["health"]["score"] >= 75:
+        wins.append({"icon": "check-square", "title": "Business health is strong", "detail": f"{data['health']['score']}/100 · {data['health']['grade']}"})
+    if (data["revenue"]["growth_pct"] or 0) > 0:
+        wins.append({"icon": "trending-up", "title": f"Revenue up {data['revenue']['growth_pct']}%", "detail": "vs the previous 30 days"})
+
+    # ---- Risks (problems needing attention) ----
+    risks = []
+    overdue = [i for i in invoices if i.get("status") == "Overdue" or (i.get("status") in ("Sent", "Overdue") and str((i.get("content") or {}).get("due_date") or i.get("due_date") or "")[:10] < today and (i.get("content") or {}).get("due_date"))]
+    if overdue:
+        risks.append({"icon": "receipt", "severity": "Critical", "title": f"{len(overdue)} overdue invoice{'s' if len(overdue) != 1 else ''}", "detail": f"{_m(sum(i.get('total') or 0 for i in overdue))} unpaid past due", "action": {"label": "Chase payment", "link": "/documents"}})
+    OPEN = ("New", "Qualified", "Meeting Scheduled", "Proposal Sent", "Negotiating")
+    stalled = [l for l in leads if l.get("stage") in OPEN and _age_days(l.get("stage_changed_at") or l.get("updated_at")) >= 14]
+    if stalled:
+        risks.append({"icon": "trending-up", "severity": "High", "title": f"{len(stalled)} stalled deal{'s' if len(stalled) != 1 else ''}", "detail": f"{_m(sum(l.get('value') or 0 for l in stalled))} at risk of going cold", "action": {"label": "Open pipeline", "link": "/pipeline"}})
+    # inactive clients — reuse scan items
+    for it in data["insights"]:
+        if it.get("type", "").startswith("client") and len(risks) < 5:
+            risks.append({"icon": it.get("icon"), "severity": it.get("priority"), "title": it.get("title"), "detail": it.get("why"), "action": it.get("action")})
+    tasks_due = await db.tasks.find({**base, "done": False, "due": {"$ne": None, "$lte": soon, "$gte": today}}, {"_id": 0, "title": 1}).to_list(20)
+    if tasks_due:
+        risks.append({"icon": "clock", "severity": "Medium", "title": f"{len(tasks_due)} deadline{'s' if len(tasks_due) != 1 else ''} in the next 3 days", "detail": ", ".join(t.get("title", "") for t in tasks_due[:3]), "action": {"label": "View tasks", "link": "/tasks"}})
+
+    # ---- Plain-English summary bullets ----
+    summary = []
+    if proposals_waiting:
+        summary.append({"icon": "file-text", "text": f"You have {proposals_waiting} proposal{'s' if proposals_waiting != 1 else ''} waiting."})
+    pipe_series = data["trends"]["series"]["pipeline"]
+    if len(pipe_series) >= 2 and pipe_series[-1]:
+        summary.append({"icon": "trending-up", "text": f"Revenue pipeline added {_m(pipe_series[-1])} this week."})
+    if overdue:
+        summary.append({"icon": "receipt", "text": f"{len(overdue)} invoice{'s' if len(overdue) != 1 else ''} {'are' if len(overdue) != 1 else 'is'} overdue ({_m(sum(i.get('total') or 0 for i in overdue))})."})
+    if memories_recent:
+        summary.append({"icon": "sparkles", "text": f"AI learned {memories_recent} new preference{'s' if memories_recent != 1 else ''} about your business."})
+    if autos_done:
+        summary.append({"icon": "zap", "text": f"{autos_done} automation{'s' if autos_done != 1 else ''} completed successfully."})
+    for it in data["insights"]:
+        if it.get("type", "").startswith("client"):
+            summary.append({"icon": "users", "text": it.get("title")})
+            break
+    if not summary:
+        summary.append({"icon": "check-square", "text": "Everything's calm — no urgent items while you were away."})
+
+    active_clients = sum(1 for c in clients if c.get("status") == "Active")
+    deals_closing = sum(1 for l in leads if l.get("stage") in ("Proposal Sent", "Negotiating"))
+
+    return {
+        "greeting": data["hero"]["greeting"],
+        "summary": summary,
+        "wins": wins[:6],
+        "risks": risks[:6],
+        "recommendations": data["insights"][:4],
+        "numbers": {
+            "revenue": data["kpi_cards"]["revenue_month"]["value"],
+            "pipeline": data["kpi_cards"]["pipeline"]["value"],
+            "hours_saved": data["kpi_cards"]["hours_saved"]["value"],
+            "business_health": data["health"]["score"],
+            "clients_active": active_clients,
+            "deals_closing": deals_closing,
+        },
+        "what_ai_did": data["ai_activity"],
+    }
