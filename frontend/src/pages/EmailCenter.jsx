@@ -3,6 +3,7 @@ import {
   Loader2, Mail, Plus, Send, Check, X, RotateCcw, Sparkles, Pencil, Ban, Search,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { emailsApi } from "@/lib/api";
 import EmptyState from "@/components/EmptyState";
@@ -31,6 +32,8 @@ const statusStyle = {
   sending: "bg-violet-500/15 text-violet-300",
   sent: "bg-emerald-500/15 text-emerald-300",
   failed: "bg-rose-500/15 text-rose-300",
+  needs_review: "bg-amber-500/15 text-amber-200",
+  delivery_unknown: "bg-amber-500/15 text-amber-200",
   cancelled: "bg-zinc-500/15 text-zinc-500",
   rejected: "bg-rose-500/15 text-rose-300",
 };
@@ -50,6 +53,7 @@ const emptyForm = () => ({
 
 export default function EmailCenter() {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const canApprove = user?.role === "owner" || user?.role === "admin";
   const [tab, setTab] = useState("drafts");
   const [q, setQ] = useState("");
@@ -94,6 +98,15 @@ export default function EmailCenter() {
       toast.error(e.message);
     }
   };
+
+  useEffect(() => {
+    const draftId = searchParams.get("draft");
+    if (draftId) {
+      openDetail(draftId);
+      setSearchParams({}, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const createDraft = async ({ generateAi = false } = {}) => {
     if (!form.to.trim()) { toast.error("Recipient is required"); return; }
@@ -175,9 +188,16 @@ export default function EmailCenter() {
   const blocked = statusInfo && !statusInfo.canSend;
 
   const detailEditable = useMemo(
-    () => detail && ["draft", "pending_approval", "approved", "rejected", "failed"].includes(detail.status),
+    () => detail && ["draft", "pending_approval", "approved", "rejected", "failed", "needs_review", "delivery_unknown"].includes(detail.status),
     [detail],
   );
+
+  const transport = detail?.transport;
+  const sendLabel = transport?.label
+    || (detail?.replyProvider === "google" ? "Send via Gmail"
+      : detail?.replyProvider === "microsoft" ? "Send via Outlook"
+        : "Send");
+  const transportBlocked = Boolean(transport?.reconnectRequired || (transport?.isThreadedReply && transport?.connected === false));
 
   return (
     <div className="space-y-5" data-testid="email-center-page">
@@ -360,20 +380,50 @@ export default function EmailCenter() {
                   </>
                 )}
                 {detail.failureReason && (
-                  <p className="text-xs text-rose-300">Failure: {detail.failureReason}</p>
+                  <p className="text-xs text-rose-300" data-testid="email-failure-reason">
+                    Failure: {detail.failureReason}
+                    {detail.failureActionable ? ` — ${detail.failureActionable}` : ""}
+                  </p>
                 )}
                 {detail.consolePreview && (
                   <pre className="overflow-x-auto rounded-lg border border-white/10 bg-zinc-900/60 p-3 text-[11px] text-zinc-400" data-testid="email-console-preview">{JSON.stringify(detail.consolePreview, null, 2)}</pre>
                 )}
-                {detail.inboxThreadId && (
+                {(detail.inboxThreadId || transport?.isThreadedReply) && (
                   <div className="rounded-lg border border-violet-500/20 bg-violet-600/10 p-3 text-xs text-zinc-300" data-testid="email-inbox-link">
                     <p className="font-medium text-violet-300">Linked inbox conversation</p>
-                    <p className="mt-1">Provider: {detail.replyProvider || "—"} · Mailbox: {detail.mailboxId || "—"}</p>
+                    <p className="mt-1">
+                      {transport?.label || (detail.replyProvider === "google" ? "Send via Gmail" : detail.replyProvider === "microsoft" ? "Send via Outlook" : "Provider reply")}
+                      {" · "}
+                      Mailbox: {transport?.mailboxEmail || detail.mailboxId || "—"}
+                      {" · "}
+                      <span className={transportBlocked ? "text-amber-300" : "text-emerald-300"}>
+                        {transportBlocked ? "Disconnected — reconnect required" : "Connected"}
+                      </span>
+                    </p>
+                    {transport?.providerThreadId && (
+                      <p className="mt-1 text-zinc-500">Thread: {transport.providerThreadId}</p>
+                    )}
+                    {transportBlocked && (
+                      <p className="mt-2 text-amber-200" data-testid="email-reconnect-warning">
+                        {transport?.warning || "Reconnect Google Workspace or Microsoft 365 under Integrations. Resend is not used for inbox replies."}
+                      </p>
+                    )}
                     {(detail.clientId || detail.leadId) && (
                       <p className="mt-1">CRM: {detail.clientId ? `client ${detail.clientId}` : ""}{detail.leadId ? ` lead ${detail.leadId}` : ""}</p>
                     )}
                     <a href={`/inbox?thread=${detail.inboxThreadId}`} className="mt-2 inline-block text-violet-400 hover:underline" data-testid="email-view-conversation">View conversation</a>
                   </div>
+                )}
+                {(detail.sentVia || detail.providerMessageId) && (
+                  <details className="text-xs text-zinc-500" data-testid="email-provider-debug">
+                    <summary className="cursor-pointer text-zinc-400">Provider details</summary>
+                    <ul className="mt-2 space-y-1">
+                      <li>Sent via: {detail.sentVia || detail.transportProvider || detail.provider || "—"}</li>
+                      <li>Provider message ID: {detail.providerMessageId || "—"}</li>
+                      <li>Internet Message-ID: {detail.internetMessageId || "—"}</li>
+                      <li>Thread: {detail.providerThreadId || detail.providerConversationId || "—"}</li>
+                    </ul>
+                  </details>
                 )}
                 {detail.originalAiSuggestion && (
                   <details className="text-xs text-zinc-500">
@@ -408,11 +458,19 @@ export default function EmailCenter() {
                     <button type="button" disabled={busyId === detail.id} onClick={() => setConfirm({ action: "reject", id: detail.id })} className="inline-flex items-center gap-1 rounded-lg border border-rose-500/30 px-3 py-2 text-sm text-rose-300" data-testid="detail-reject"><X className="h-3.5 w-3.5" /> Reject</button>
                   </>
                 )}
-                {["approved", "draft", "failed"].includes(detail.status) && (canApprove || !statusInfo?.approvalRequired) && (
-                  <button type="button" disabled={busyId === detail.id} onClick={() => setConfirm({ action: "send", id: detail.id })} className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white" data-testid="detail-send"><Send className="h-3.5 w-3.5" /> Send</button>
+                {["approved", "draft", "failed", "needs_review", "delivery_unknown"].includes(detail.status) && (canApprove || !statusInfo?.approvalRequired) && (
+                  <button
+                    type="button"
+                    disabled={busyId === detail.id || transportBlocked}
+                    onClick={() => setConfirm({ action: "send", id: detail.id })}
+                    className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                    data-testid="detail-send"
+                  >
+                    <Send className="h-3.5 w-3.5" /> {sendLabel}
+                  </button>
                 )}
-                {detail.status === "failed" && (
-                  <button type="button" disabled={busyId === detail.id} onClick={() => setConfirm({ action: "retry", id: detail.id })} className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-3 py-2 text-sm" data-testid="detail-retry"><RotateCcw className="h-3.5 w-3.5" /> Retry</button>
+                {["failed", "needs_review", "delivery_unknown"].includes(detail.status) && (
+                  <button type="button" disabled={busyId === detail.id || transportBlocked} onClick={() => setConfirm({ action: "retry", id: detail.id })} className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-3 py-2 text-sm" data-testid="detail-retry"><RotateCcw className="h-3.5 w-3.5" /> Retry</button>
                 )}
                 {!["sent", "sending", "cancelled"].includes(detail.status) && (
                   <button type="button" disabled={busyId === detail.id} onClick={() => setConfirm({ action: "cancel", id: detail.id })} className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-400" data-testid="detail-cancel"><Ban className="h-3.5 w-3.5" /> Cancel</button>
@@ -428,7 +486,11 @@ export default function EmailCenter() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm {confirm?.action}</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
-              This action cannot be undone for send/cancel. Continue?
+              {confirm?.action === "send" && transport?.isThreadedReply
+                ? `This reply will send via ${transport?.label || "the connected mailbox"} (${transport?.mailboxEmail || "mailbox"}). Resend is not used for inbox replies.`
+                : confirm?.action === "send"
+                  ? `This message will send via ${statusInfo?.provider || "the configured provider"}.`
+                  : "This action cannot be undone for send/cancel. Continue?"}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

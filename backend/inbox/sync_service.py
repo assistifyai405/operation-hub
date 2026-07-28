@@ -116,14 +116,21 @@ async def _upsert_message(org_id: str, mailbox: dict, parsed: dict) -> tuple[dic
     if existing:
         return existing, False
 
-    # Also skip if this was our outbound (same internet message id org-wide)
+    # Also skip if this was our outbound (same internet message id or provider message id)
+    outbound_q = [{"providerMessageId": parsed["providerMessageId"]}]
     if parsed.get("internetMessageId"):
-        outbound = await db.outbound_emails.find_one({
-            "organizationId": org_id,
-            "internetMessageId": parsed["internetMessageId"],
-        }, {"_id": 0, "id": 1})
-        if outbound:
-            return {"id": None, "skippedOutbound": True}, False
+        mid = (parsed.get("internetMessageId") or "").strip()
+        outbound_q.extend([
+            {"internetMessageId": mid},
+            {"internetMessageId": mid.strip("<>")},
+            {"internetMessageId": f"<{mid.strip('<>')}>"},
+        ])
+    outbound = await db.outbound_emails.find_one(
+        {"organizationId": org_id, "$or": outbound_q},
+        {"_id": 0, "id": 1},
+    )
+    if outbound:
+        return {"id": None, "skippedOutbound": True}, False
 
     match = await match_sender(org_id, parsed.get("from") or "")
     now = now_iso()

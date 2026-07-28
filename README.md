@@ -278,10 +278,48 @@ After deploying scope changes, users must **reconnect** Google/Microsoft under *
 
 ### Known limitations
 
-- **Provider-threaded send** (reply via Gmail API / Graph into the same provider thread) is **not** implemented this sprint. Threading headers are stored for a future send path; current send uses the Sprint 14 Resend/console provider and must not be treated as native Gmail/Outlook threading.
+- **Graph send confirmation:** Microsoft Graph often returns `202 Accepted` with an empty body. Assistify creates a draft then sends and re-reads the message; if confirmation fails, status becomes `delivery_unknown` / `needs_review` rather than blindly retrying.
 - Read/unread is local DB state (`gmail.readonly` / no modify scopes for labels).
 - Live Gmail/Outlook success requires real OAuth credentials and reconnect after scope updates — mocked provider tests do not prove live connectivity.
 - Inbox automation events are recorded and listed in trigger metadata; broad auto-execution of user workflows on those events is not enabled yet.
+- Large-file Graph upload sessions are not implemented; attachment total soft-cap is ~20 MB.
+
+## Native provider sending (Sprint 17)
+
+### Transport routing
+
+| Message type | Transport |
+|---|---|
+| Inbox-linked reply (`inboxThreadId` / `mailboxId` / `replyProvider`) | **Gmail** or **Microsoft Graph only** — never silent Resend fallback |
+| Standalone outbound email | Configured `EMAIL_PROVIDER` (`console` or `resend`) |
+
+Stored fields: `transportProvider`, `mailboxId`, `integrationId`, `providerThreadId`, `providerConversationId`, `internetMessageId`, `sentVia`, `providerRawStatus`, safe `transportMetadata`.
+
+### Gmail native send
+
+- MIME multipart (text + HTML), `In-Reply-To` / `References`, Gmail `threadId`
+- From = connected mailbox address (no spoofing)
+- Token refresh via Sprint 15 integration layer
+- Persists `providerMessageId` + `internetMessageId` for sync dedupe
+
+### Microsoft native send
+
+- Prefer `createReply` → patch → send when replying to an inbound Graph message
+- New mail: create draft → send → confirm by GET
+- Conversation ID / internetMessageId retained when Graph returns them
+
+### Idempotency & ambiguous delivery
+
+- Atomic `approved|failed|… → sending` claim with `lastSendAttemptId`
+- Confirmed success never re-calls the provider
+- Ambiguous Graph acceptance → `delivery_unknown` / `needs_review` (check mailbox before retry)
+- Clear failed sends may be retried; never retry when a provider message id already exists on an unconfirmed record
+
+### Attachment limits
+
+- Org-scoped document refs only; path-traversal rejected
+- ~10 MB per file / ~20 MB total soft limits for native send
+- Metadata preserved; no executable rendering
 
 Inbox API: `/api/inbox/mailboxes`, `/api/inbox/threads`, summarize, draft-reply, link/unlink, attachment download, events catalog.
 
@@ -291,10 +329,11 @@ Inbox API: `/api/inbox/mailboxes`, `/api/inbox/threads`, summarize, draft-reply,
 cd backend
 source .venv/bin/activate
 
-# Sprint 12–16 suite
+# Sprint 12–17 suite
 pytest tests/test_sprint12_hardening.py tests/test_sprint12_http.py \
        tests/test_sprint13_team.py tests/test_sprint14_email.py \
-       tests/test_sprint15_integrations.py tests/test_sprint16_inbox.py -n 0 -q
+       tests/test_sprint15_integrations.py tests/test_sprint16_inbox.py \
+       tests/test_sprint17_native_send.py -n 0 -q
 
 # Full HTTP suites need a running API + Mongo:
 export REACT_APP_BACKEND_URL=http://localhost:8000

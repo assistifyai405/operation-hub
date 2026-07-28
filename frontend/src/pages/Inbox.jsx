@@ -394,21 +394,31 @@ export default function Inbox() {
                 {messages.map((m) => (
                   <article key={`${m.kind}-${m.id}`} className="rounded-lg border border-white/10 bg-zinc-900/40 p-3">
                     <div className="mb-2 flex items-center justify-between text-[11px] text-zinc-500">
-                      <span>{m.kind === "outbound" ? "You (sent)" : (m.from || m.fromRaw || "—")}</span>
-                      <span>{fmtTime(m.receivedAt || m.sentAt)}</span>
+                      <span>
+                        {m.kind === "outbound"
+                          ? `You (sent${m.sentVia ? ` via ${m.sentVia}` : ""})`
+                          : (m.from || m.fromRaw || "—")}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        {m.deliveryWarning && <span className="text-amber-300">Delivery unconfirmed</span>}
+                        {m.kind === "outbound" && (
+                          <a href={`/emails?draft=${m.id}`} className="text-violet-400 hover:underline">Open in Email Center</a>
+                        )}
+                        <span>{fmtTime(m.receivedAt || m.sentAt)}</span>
+                      </span>
                     </div>
                     {m.kind === "inbound" && m.sanitizedHtmlBody ? (
                       <div className="prose-invert max-w-none text-sm text-zinc-300 [&_a]:text-violet-400" dangerouslySetInnerHTML={{ __html: m.sanitizedHtmlBody }} />
                     ) : (
                       <pre className="whitespace-pre-wrap font-sans text-sm text-zinc-300">{m.textBody || m.snippet || ""}</pre>
                     )}
-                                    {(m.attachments || []).length > 0 && (
-                                      <ul className="mt-2 space-y-1 text-xs text-zinc-500">
-                                        {m.attachments.map((a) => (
-                                          <li key={a.providerAttachmentId}>{a.filename} ({Math.round((a.size || 0) / 1024)} KB) — download via authenticated inbox API</li>
-                                        ))}
-                                      </ul>
-                                    )}
+                    {(m.attachments || []).length > 0 && (
+                      <ul className="mt-2 space-y-1 text-xs text-zinc-500">
+                        {m.attachments.map((a) => (
+                          <li key={a.providerAttachmentId}>{a.filename} ({Math.round((a.size || 0) / 1024)} KB) — download via authenticated inbox API</li>
+                        ))}
+                      </ul>
+                    )}
                   </article>
                 ))}
               </div>

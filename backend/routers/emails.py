@@ -20,17 +20,20 @@ from config import get_settings
 from core import db, now_iso, ai_service
 from dependencies import current_user, current_org
 from email_providers import EmailMessage, get_email_provider, outbound_sending_allowed
+from inbox.transport import execute_native_send, resolve_transport, transport_public
+from inbox.transport_errors import TransportError, AMBIGUOUS_DELIVERY, ACTIONABLE
 from permissions import normalize_role, require_admin, role_at_least
 
 router = APIRouter(prefix="/api/emails")
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 MAX_RECIPIENTS = 20
-EDITABLE = {"draft", "pending_approval", "approved", "rejected", "failed"}
+EDITABLE = {"draft", "pending_approval", "approved", "rejected", "failed", "needs_review", "delivery_unknown"}
 TERMINAL_SENT = {"sent", "sending"}
 STATUSES = {
     "draft", "pending_approval", "approved", "scheduled",
     "sending", "sent", "failed", "cancelled", "rejected",
+    "needs_review", "delivery_unknown",
 }
 
 DEFAULT_ORG_EMAIL = {
@@ -220,10 +223,22 @@ async def create_outbound_email(
         "inboxThreadId": inbox_thread_id,
         "mailboxId": mailbox_id,
         "providerThreadId": provider_thread_id,
+        "providerConversationId": provider_thread_id,
         "inReplyTo": in_reply_to,
         "references": references,
         "replyProvider": reply_provider,
         "internetMessageId": internet_message_id,
+        # Transport (resolved at send time; may be pre-set for inbox replies)
+        "transportProvider": (
+            "gmail" if reply_provider == "google"
+            else ("microsoft" if reply_provider == "microsoft" else None)
+        ),
+        "integrationId": None,
+        "sentVia": None,
+        "providerRawStatus": None,
+        "transportMetadata": None,
+        "lastSendAttemptId": None,
+        "lastSendAttemptAt": None,
         "createdAt": now_iso(),
         "updatedAt": now_iso(),
     }
@@ -260,26 +275,62 @@ async def _count_sent_today(org_id: str) -> int:
 
 
 async def perform_send(doc: dict, user: dict, *, force_retry: bool = False) -> dict:
-    """Atomically transition to sending and deliver via provider."""
+    """Atomically transition to sending and deliver via routed transport."""
     org_id = doc["organizationId"]
     settings = get_settings()
-    allowed, reason = outbound_sending_allowed(settings)
-    if not allowed:
-        raise HTTPException(status_code=403, detail=reason)
+
+    # Resolve transport early (threaded replies must not silently use Resend)
+    try:
+        plan = await resolve_transport(org_id, doc)
+    except TransportError as e:
+        raise HTTPException(
+            status_code=e.http_status,
+            detail={"code": e.code, "message": e.message, "actionable": e.actionable},
+        ) from e
+
+    if plan.is_threaded_reply:
+        # Native path: global EMAIL_SENDING_ENABLED still required; Resend config not required
+        import os
+        raw = os.environ.get("EMAIL_SENDING_ENABLED")
+        if raw is not None and str(raw).strip() != "":
+            enabled = str(raw).strip().lower() in {"1", "true", "yes", "on"}
+        else:
+            enabled = bool(settings.email_sending_enabled)
+        if not enabled:
+            raise HTTPException(status_code=403, detail="Email sending is disabled (EMAIL_SENDING_ENABLED=false)")
+        if plan.reconnect_required or not plan.connected:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "code": "disconnected_integration",
+                    "message": plan.warning or ACTIONABLE.get("disconnected_integration"),
+                    "actionable": plan.warning or ACTIONABLE.get("disconnected_integration"),
+                    "transport": transport_public(plan),
+                },
+            )
+    else:
+        allowed, reason = outbound_sending_allowed(settings)
+        if not allowed:
+            raise HTTPException(status_code=403, detail=reason)
 
     org_email = await get_org_email_settings(org_id)
     if not org_email.get("sendingEnabled"):
         raise HTTPException(status_code=403, detail="Organization email sending is disabled")
 
     if org_email.get("approvalRequired"):
-        if doc.get("status") not in ("approved", "failed") and not (
-            force_retry and doc.get("status") == "failed" and doc.get("approvalStatus") == "approved"
+        if doc.get("status") not in ("approved", "failed", "needs_review", "delivery_unknown") and not (
+            force_retry and doc.get("status") in ("failed", "needs_review", "delivery_unknown")
+            and doc.get("approvalStatus") == "approved"
         ):
             if doc.get("approvalStatus") != "approved" and doc.get("status") != "approved":
                 raise HTTPException(status_code=403, detail="Draft must be approved before sending")
 
     if doc.get("status") in ("sent", "cancelled", "rejected"):
         raise HTTPException(status_code=400, detail=f"Cannot send email in status '{doc.get('status')}'")
+
+    # Never retry a confirmed successful send
+    if doc.get("providerMessageId") and doc.get("status") == "sent":
+        raise HTTPException(status_code=400, detail="Email already sent")
 
     to_n = normalize_emails(doc.get("to"))
     cc_n = normalize_emails(doc.get("cc"))
@@ -294,13 +345,22 @@ async def perform_send(doc: dict, user: dict, *, force_retry: bool = False) -> d
     if sent_today >= limit:
         raise HTTPException(status_code=429, detail=f"Daily sending limit reached ({limit})")
 
+    attempt_id = str(uuid.uuid4())
     # Atomic claim — prevents double-send
-    allowed_from = ["approved", "scheduled", "draft", "pending_approval", "failed"]
+    allowed_from = ["approved", "scheduled", "draft", "pending_approval", "failed", "needs_review", "delivery_unknown"]
     if org_email.get("approvalRequired"):
-        allowed_from = ["approved", "scheduled", "failed"]
+        allowed_from = ["approved", "scheduled", "failed", "needs_review", "delivery_unknown"]
     claimed = await db.outbound_emails.find_one_and_update(
         {"id": doc["id"], "organizationId": org_id, "status": {"$in": allowed_from}},
-        {"$set": {"status": "sending", "updatedAt": now_iso()}, "$inc": {"sendAttempts": 1}},
+        {"$set": {
+            "status": "sending",
+            "updatedAt": now_iso(),
+            "lastSendAttemptId": attempt_id,
+            "lastSendAttemptAt": now_iso(),
+            "transportProvider": plan.transport_provider,
+            "mailboxId": plan.mailbox_id or doc.get("mailboxId"),
+            "integrationId": plan.integration_id,
+        }, "$inc": {"sendAttempts": 1}},
         return_document=ReturnDocument.AFTER,
     )
     if claimed:
@@ -316,8 +376,20 @@ async def perform_send(doc: dict, user: dict, *, force_retry: bool = False) -> d
     await write_audit(
         org_id, "email_send_attempted",
         actor_id=user.get("id"), actor_email=user.get("email"),
-        meta={"emailId": doc["id"], "attempt": (claimed.get("sendAttempts") or 1)},
+        meta={
+            "emailId": doc["id"],
+            "attempt": (claimed.get("sendAttempts") or 1),
+            "attemptId": attempt_id,
+            "transportProvider": plan.transport_provider,
+            "native": plan.is_threaded_reply,
+        },
     )
+    if plan.is_threaded_reply:
+        await write_audit(
+            org_id, "native_send_attempted",
+            actor_id=user.get("id"), actor_email=user.get("email"),
+            meta={"emailId": doc["id"], "transport": plan.transport_provider, "mailboxId": plan.mailbox_id},
+        )
 
     # Append signature if configured
     html_body = claimed.get("htmlBody") or ""
@@ -327,57 +399,173 @@ async def perform_send(doc: dict, user: dict, *, force_retry: bool = False) -> d
         html_body = html_body + "<br/><br/>" + _text_to_html(sig)
         text_body = (text_body or "") + "\n\n" + sig
 
-    from_email = (org_email.get("senderEmail") or settings.from_email or "").strip()
     from_name = (org_email.get("senderName") or settings.from_name or "").strip()
+    from_email = (org_email.get("senderEmail") or settings.from_email or "").strip()
     reply_to = (org_email.get("replyToEmail") or settings.reply_to_email or "").strip() or None
 
-    provider = get_email_provider(settings)
-    result = await provider.send(EmailMessage(
-        to=to_n, cc=cc_n or None, bcc=bcc_n or None,
-        subject=claimed["subject"], html=html_body, text=text_body or None,
-        from_email=from_email, from_name=from_name, reply_to=reply_to,
-        tags=[{"name": "outbound_id", "value": doc["id"][:50]}],
-    ))
+    try:
+        if plan.transport_provider in ("gmail", "microsoft"):
+            native = await execute_native_send(
+                org_id, claimed, plan,
+                to=to_n, cc=cc_n, bcc=bcc_n,
+                subject=claimed["subject"],
+                html_body=html_body, text_body=text_body,
+                from_name=from_name,
+            )
+            ambiguous = (native.get("providerRawStatus") == "accepted_unconfirmed") or not native.get("deliveryConfirmed", True)
+            versions = list(claimed.get("versions") or [])
+            versions.append(_version_entry(user, "sent", claimed["subject"], html_body, text_body))
+            status = "delivery_unknown" if ambiguous else "sent"
+            update = {
+                "status": status,
+                "provider": native.get("provider"),
+                "sentVia": native.get("provider"),
+                "transportProvider": plan.transport_provider,
+                "providerMessageId": native.get("providerMessageId"),
+                "providerThreadId": native.get("providerThreadId") or plan.provider_thread_id,
+                "providerConversationId": native.get("providerConversationId") or plan.provider_conversation_id,
+                "internetMessageId": native.get("internetMessageId"),
+                "providerRawStatus": native.get("providerRawStatus"),
+                "transportMetadata": {
+                    "mailboxEmail": plan.mailbox_email,
+                    "label": plan.label,
+                    "deliveryConfirmed": native.get("deliveryConfirmed", True),
+                },
+                "sentAt": now_iso(),
+                "failedAt": None,
+                "failureReason": None if not ambiguous else ACTIONABLE.get(AMBIGUOUS_DELIVERY),
+                "updatedAt": now_iso(),
+                "versions": versions,
+                "htmlBody": html_body,
+                "textBody": text_body,
+                "mailboxId": plan.mailbox_id,
+                "integrationId": plan.integration_id,
+            }
+            # Guard: only finalize if still sending (idempotent)
+            res = await db.outbound_emails.update_one(
+                {"id": doc["id"], "organizationId": org_id, "status": "sending", "lastSendAttemptId": attempt_id},
+                {"$set": update},
+            )
+            if res.matched_count == 0:
+                # Already finalized by another worker — return current
+                return public_email(await _get_owned(doc["id"], org_id), include_preview=settings.is_development)
 
-    if result.ok:
-        versions = list(claimed.get("versions") or [])
-        versions.append(_version_entry(user, "sent", claimed["subject"], html_body, text_body))
+            audit_event = (
+                "gmail_send_succeeded" if plan.transport_provider == "gmail" and status == "sent"
+                else "microsoft_send_succeeded" if plan.transport_provider == "microsoft" and status == "sent"
+                else "delivery_ambiguous"
+            )
+            await write_audit(
+                org_id, audit_event,
+                actor_id=user.get("id"), actor_email=user.get("email"),
+                meta={
+                    "emailId": doc["id"],
+                    "provider": native.get("provider"),
+                    "providerMessageId": native.get("providerMessageId"),
+                    "status": status,
+                },
+            )
+        else:
+            # Standalone console / Resend
+            provider = get_email_provider(settings)
+            result = await provider.send(EmailMessage(
+                to=to_n, cc=cc_n or None, bcc=bcc_n or None,
+                subject=claimed["subject"], html=html_body, text=text_body or None,
+                from_email=from_email, from_name=from_name, reply_to=reply_to,
+                tags=[{"name": "outbound_id", "value": doc["id"][:50]}],
+            ))
+            if result.ok:
+                versions = list(claimed.get("versions") or [])
+                versions.append(_version_entry(user, "sent", claimed["subject"], html_body, text_body))
+                update = {
+                    "status": "sent",
+                    "provider": result.provider,
+                    "sentVia": result.provider,
+                    "transportProvider": plan.transport_provider,
+                    "providerMessageId": result.provider_message_id,
+                    "sentAt": now_iso(),
+                    "failedAt": None,
+                    "failureReason": None,
+                    "updatedAt": now_iso(),
+                    "versions": versions,
+                    "htmlBody": html_body,
+                    "textBody": text_body,
+                }
+                if result.preview and settings.is_development:
+                    update["consolePreview"] = result.preview
+                await db.outbound_emails.update_one(
+                    {"id": doc["id"], "organizationId": org_id, "status": "sending", "lastSendAttemptId": attempt_id},
+                    {"$set": update},
+                )
+                await write_audit(
+                    org_id, "email_sent",
+                    actor_id=user.get("id"), actor_email=user.get("email"),
+                    meta={"emailId": doc["id"], "provider": result.provider, "providerMessageId": result.provider_message_id},
+                )
+            else:
+                update = {
+                    "status": "failed",
+                    "provider": result.provider,
+                    "sentVia": result.provider,
+                    "transportProvider": plan.transport_provider,
+                    "failedAt": now_iso(),
+                    "failureReason": (result.error or "Send failed")[:500],
+                    "updatedAt": now_iso(),
+                }
+                await db.outbound_emails.update_one(
+                    {"id": doc["id"], "organizationId": org_id, "status": "sending"},
+                    {"$set": update},
+                )
+                await write_audit(
+                    org_id, "email_failed",
+                    actor_id=user.get("id"), actor_email=user.get("email"),
+                    meta={"emailId": doc["id"], "error": update["failureReason"]},
+                )
+    except TransportError as e:
+        fail_status = "delivery_unknown" if e.code == AMBIGUOUS_DELIVERY else "failed"
+        if e.code == AMBIGUOUS_DELIVERY:
+            fail_status = "needs_review"
         update = {
-            "status": "sent",
-            "provider": result.provider,
-            "providerMessageId": result.provider_message_id,
-            "sentAt": now_iso(),
-            "failedAt": None,
-            "failureReason": None,
-            "updatedAt": now_iso(),
-            "versions": versions,
-            "htmlBody": html_body,
-            "textBody": text_body,
-        }
-        if result.preview and settings.is_development:
-            update["consolePreview"] = result.preview
-        await db.outbound_emails.update_one({"id": doc["id"], "organizationId": org_id}, {"$set": update})
-        await write_audit(
-            org_id, "email_sent",
-            actor_id=user.get("id"), actor_email=user.get("email"),
-            meta={"emailId": doc["id"], "provider": result.provider, "providerMessageId": result.provider_message_id},
-        )
-    else:
-        update = {
-            "status": "failed",
-            "provider": result.provider,
+            "status": fail_status,
+            "provider": plan.transport_provider,
+            "sentVia": plan.transport_provider,
+            "transportProvider": plan.transport_provider,
             "failedAt": now_iso(),
-            "failureReason": (result.error or "Send failed")[:500],
+            "failureReason": e.message[:500],
+            "failureCode": e.code,
+            "failureActionable": e.actionable,
             "updatedAt": now_iso(),
         }
-        await db.outbound_emails.update_one({"id": doc["id"], "organizationId": org_id}, {"$set": update})
-        await write_audit(
-            org_id, "email_failed",
-            actor_id=user.get("id"), actor_email=user.get("email"),
-            meta={"emailId": doc["id"], "error": update["failureReason"]},
+        await db.outbound_emails.update_one(
+            {"id": doc["id"], "organizationId": org_id, "status": "sending"},
+            {"$set": update},
         )
+        event = (
+            "gmail_send_failed" if plan.transport_provider == "gmail"
+            else "microsoft_send_failed" if plan.transport_provider == "microsoft"
+            else "email_failed"
+        )
+        if e.code == AMBIGUOUS_DELIVERY:
+            event = "delivery_ambiguous"
+        if e.code in ("expired_authorization", "disconnected_integration"):
+            event = "provider_reconnection_required"
+        await write_audit(
+            org_id, event,
+            actor_id=user.get("id"), actor_email=user.get("email"),
+            meta={"emailId": doc["id"], "code": e.code, "error": e.message[:200]},
+        )
+        raise HTTPException(
+            status_code=e.http_status,
+            detail={"code": e.code, "message": e.message, "actionable": e.actionable},
+        ) from e
 
-    return public_email(await _get_owned(doc["id"], org_id), include_preview=settings.is_development)
+    out = public_email(await _get_owned(doc["id"], org_id), include_preview=settings.is_development)
+    try:
+        out["transport"] = transport_public(plan)
+    except Exception:
+        pass
+    return out
+
 
 
 # ---------------- routes ----------------
@@ -436,7 +624,7 @@ async def list_emails(
             "awaiting_approval": ["pending_approval"],
             "scheduled": ["scheduled"],
             "sent": ["sent"],
-            "failed": ["failed"],
+            "failed": ["failed", "needs_review", "delivery_unknown"],
         }
         query["status"] = {"$in": buckets[status]} if status in buckets else status
     if q:
@@ -454,7 +642,7 @@ async def list_emails(
         ("awaiting_approval", ["pending_approval"]),
         ("scheduled", ["scheduled"]),
         ("sent", ["sent"]),
-        ("failed", ["failed"]),
+        ("failed", ["failed", "needs_review", "delivery_unknown"]),
         ("cancelled", ["cancelled"]),
     ]:
         counts[key] = await db.outbound_emails.count_documents({**base, "status": {"$in": statuses}})
@@ -489,7 +677,22 @@ async def get_email(email_id: str, org: str = Depends(current_org), user: dict =
     if not _can_manage(user, doc) and not role_at_least(user.get("role"), "admin"):
         raise HTTPException(status_code=403, detail="Not allowed")
     settings = get_settings()
-    return public_email(doc, include_preview=settings.is_development)
+    out = public_email(doc, include_preview=settings.is_development)
+    try:
+        plan = await resolve_transport(org, doc)
+        out["transport"] = transport_public(plan)
+    except TransportError as e:
+        out["transport"] = {
+            "transportProvider": doc.get("transportProvider") or doc.get("replyProvider"),
+            "reconnectRequired": True,
+            "connected": False,
+            "warning": e.message,
+            "actionable": e.actionable,
+            "isThreadedReply": bool(doc.get("inboxThreadId") or doc.get("mailboxId")),
+            "label": "Reconnect required",
+        }
+    return out
+
 
 
 @router.post("")
@@ -655,12 +858,16 @@ async def reject_email(email_id: str, payload: RejectBody, org: str = Depends(cu
 @router.post("/{email_id}/send")
 async def send_email(email_id: str, org: str = Depends(current_org), user: dict = Depends(current_user)):
     doc = await _get_owned(email_id, org)
+    if doc.get("status") == "sent":
+        raise HTTPException(status_code=400, detail="Email already sent")
+    if doc.get("status") == "sending":
+        raise HTTPException(status_code=409, detail="Send already in progress")
     role = normalize_role(user.get("role"))
     org_email = await get_org_email_settings(org)
     if org_email.get("approvalRequired"):
         if not role_at_least(role, "admin"):
             raise HTTPException(status_code=403, detail="Only owners and admins can send when approval is required")
-        if doc.get("status") not in ("approved", "failed", "scheduled"):
+        if doc.get("status") not in ("approved", "failed", "scheduled", "needs_review", "delivery_unknown"):
             raise HTTPException(status_code=403, detail="Draft must be approved before sending")
     else:
         if not _can_manage(user, doc):
@@ -693,16 +900,22 @@ async def cancel_email(email_id: str, org: str = Depends(current_org), user: dic
 @router.post("/{email_id}/retry")
 async def retry_email(email_id: str, org: str = Depends(current_org), user: dict = Depends(current_user)):
     doc = await _get_owned(email_id, org)
-    if doc.get("status") != "failed":
-        raise HTTPException(status_code=400, detail="Only failed emails can be retried")
+    if doc.get("status") not in ("failed", "needs_review", "delivery_unknown"):
+        raise HTTPException(status_code=400, detail="Only failed or unconfirmed emails can be retried")
+    if doc.get("status") in ("needs_review", "delivery_unknown") and doc.get("providerMessageId"):
+        raise HTTPException(
+            status_code=400,
+            detail="Delivery may have succeeded — confirm in the provider mailbox before retrying",
+        )
     role = normalize_role(user.get("role"))
     if not role_at_least(role, "admin") and doc.get("createdBy") != user["id"]:
         raise HTTPException(status_code=403, detail="Not allowed")
     await write_audit(org, "email_retried", actor_id=user.get("id"), actor_email=user.get("email"), meta={"emailId": email_id})
     # Move back to approved so perform_send can claim
+    next_status = "approved" if doc.get("approvalStatus") in ("approved", "not_required") else "draft"
     await db.outbound_emails.update_one(
-        {"id": email_id, "organizationId": org, "status": "failed"},
-        {"$set": {"status": "approved" if doc.get("approvalStatus") in ("approved", "not_required") else "draft", "updatedAt": now_iso()}},
+        {"id": email_id, "organizationId": org, "status": {"$in": ["failed", "needs_review", "delivery_unknown"]}},
+        {"$set": {"status": next_status, "updatedAt": now_iso(), "failureReason": None, "failureCode": None}},
     )
     doc = await _get_owned(email_id, org)
     return await perform_send(doc, user, force_retry=True)

@@ -268,9 +268,13 @@ async def list_messages(thread_id: str, org: str = Depends(current_org), user: d
     msgs = await db.inbound_messages.find(
         {"threadId": thread_id, "organizationId": org}, {"_id": 0},
     ).sort("receivedAt", 1).to_list(500)
-    # Outbound replies linked to this thread
+    # Outbound replies linked to this thread (sent or delivery-unknown for visibility)
     outbound = await db.outbound_emails.find(
-        {"organizationId": org, "inboxThreadId": thread_id, "status": "sent"},
+        {
+            "organizationId": org,
+            "inboxThreadId": thread_id,
+            "status": {"$in": ["sent", "delivery_unknown", "needs_review"]},
+        },
         {"_id": 0, "versions": 0},
     ).sort("sentAt", 1).to_list(100)
     timeline = []
@@ -285,7 +289,12 @@ async def list_messages(thread_id: str, org: str = Depends(current_org), user: d
             "to": o.get("to"),
             "sentAt": o.get("sentAt"),
             "status": o.get("status"),
-            "provider": o.get("provider"),
+            "provider": o.get("provider") or o.get("sentVia"),
+            "sentVia": o.get("sentVia") or o.get("transportProvider"),
+            "providerMessageId": o.get("providerMessageId"),
+            "deliveryWarning": o.get("status") in ("delivery_unknown", "needs_review"),
+            "failureReason": o.get("failureReason"),
+            "failureActionable": o.get("failureActionable"),
         })
     timeline.sort(key=lambda x: x.get("receivedAt") or x.get("sentAt") or "")
     return {"thread": _public_thread(t), "messages": [_public_message(m) for m in msgs], "timeline": timeline}

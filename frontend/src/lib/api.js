@@ -22,7 +22,11 @@ export function formatApiErrorDetail(detail) {
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail))
     return detail.map((e) => (e && typeof e.msg === "string" ? e.msg : JSON.stringify(e))).filter(Boolean).join(" ");
-  if (detail && typeof detail.msg === "string") return detail.msg;
+  if (detail && typeof detail === "object") {
+    if (detail.actionable && detail.message) return `${detail.message} — ${detail.actionable}`;
+    if (typeof detail.message === "string") return detail.message;
+    if (typeof detail.msg === "string") return detail.msg;
+  }
   return String(detail);
 }
 

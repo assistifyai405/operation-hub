@@ -2177,6 +2177,7 @@ async def startup():
     await db.outbound_emails.create_index([("organizationId", 1), ("status", 1), ("updatedAt", -1)])
     await db.outbound_emails.create_index([("organizationId", 1), ("createdBy", 1)])
     await db.outbound_emails.create_index("providerMessageId")
+    await db.outbound_emails.create_index([("organizationId", 1), ("internetMessageId", 1)])
     await db.outbound_emails.create_index([("organizationId", 1), ("automationApprovalId", 1)])
     await db.email_webhook_events.create_index("svixId", unique=True, sparse=True)
     await db.integrations.create_index([("organizationId", 1), ("provider", 1)], unique=True)
