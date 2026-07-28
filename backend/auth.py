@@ -13,7 +13,14 @@ REFRESH_TOKEN_DAYS = 7
 
 
 def _secret() -> str:
-    return os.environ["JWT_SECRET"]
+    try:
+        from config import get_settings
+        return get_settings().jwt_secret
+    except Exception:
+        secret = os.environ.get("JWT_SECRET")
+        if not secret:
+            raise RuntimeError("JWT_SECRET is not configured")
+        return secret
 
 
 def hash_password(password: str) -> str:

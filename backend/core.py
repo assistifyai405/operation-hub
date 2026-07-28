@@ -1,3 +1,8 @@
+"""Core database + shared services.
+
+Loads dotenv, validates environment via config.load_settings(), then opens Mongo.
+AI and storage providers are selected by env (see config.py / README).
+"""
 import os
 import uuid
 from pathlib import Path
@@ -7,16 +12,22 @@ from typing import Optional
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from ai_service import AIService
-
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-client = AsyncIOMotorClient(os.environ['MONGO_URL'])
-db = client[os.environ['DB_NAME']]
+from config import load_settings, get_settings, ConfigError  # noqa: E402
+from ai_service import build_ai_service_from_settings, AIService  # noqa: E402
 
-EMERGENT_LLM_KEY = os.environ['EMERGENT_LLM_KEY']
-ai_service = AIService(api_key=EMERGENT_LLM_KEY)
+# Validate required env before opening DB connections
+settings = load_settings(strict=True)
+
+client = AsyncIOMotorClient(settings.mongo_url)
+db = client[settings.db_name]
+
+# Backward-compatible export: may be None when using OpenAI-only setup
+EMERGENT_LLM_KEY = settings.emergent_llm_key or ""
+
+ai_service: AIService = build_ai_service_from_settings()
 
 
 def now_iso():

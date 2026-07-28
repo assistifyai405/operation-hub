@@ -12,7 +12,9 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 ## Architecture
 - Frontend: React 19 + React Router 7, Tailwind, shadcn/ui, Recharts, lucide-react. Fixed sidebar layout + glass header. AuthProvider context + ProtectedRoute; api.js token store (Bearer + refresh interceptor).
 - Backend: FastAPI + MongoDB. Auth via PyJWT + bcrypt (auth.py). Access token (30m, Bearer + cookie) + rotating refresh token (httpOnly cookie /api/auth). All CRUD/AI/dashboard endpoints org-scoped via current_org dependency + require_project guard.
-- LLM: emergentintegrations LlmChat, model openai/gpt-5.4, EMERGENT_LLM_KEY.
+- Config (Sprint 12): `config.py` validates MONGO_URL/DB_NAME/JWT_SECRET; production rejects weak JWT secrets and wildcard CORS; demo seed is opt-in via ENABLE_DEMO_SEED.
+- LLM: `AI_PROVIDER=openai` (OPENAI_API_KEY) or `AI_PROVIDER=emergent` (EMERGENT_LLM_KEY); `AI_MODEL` configurable; `ai_service.AIService` is the single product interface.
+- Storage: `STORAGE_PROVIDER=local` (UPLOAD_DIR) or `emergent`; existing document/branding download routes remain the auth boundary.
 
 ## User Personas
 - Solo founders / agency owners managing multiple clients and projects who want AI leverage.
@@ -79,15 +81,19 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 - Verified: backend 100%, frontend 100% (testing agent iteration_1).
 
 ## Known Status
-- AI Chat/Agents return live responses ONLY once the Emergent LLM key has balance. Currently $0 → returns budget error (user opted to fund later). UI flow works end-to-end.
+- AI features require a configured provider key (`OPENAI_API_KEY` when `AI_PROVIDER=openai`, or `EMERGENT_LLM_KEY` when `AI_PROVIDER=emergent`). Without a key/balance, AI endpoints return clear configuration or budget errors; non-AI CRUD continues to work.
+- Sprint 12 (2026-07): production hardening & local portability — env validation, opt-in demo seed, localhost HTTP cookies, OpenAI + local storage providers, README + `.env.example` files.
 
 ## Backlog
 - P1: Persist assistant error markers / show error toast on AI failure.
 - P1: Add data-testid to kanban columns/cards.
-- P2: CRUD persistence for clients/projects/tasks (currently mock).
-- P2: Real auth + multi-user.
+- P1: Team invites / multi-member roles (org scaffolding exists; invites not built).
+- P2: Stripe billing integration (`REACT_APP_BILLING_ENABLED` remains false).
+- P2: Public API keys & third-party integrations (Settings placeholders only).
+- P2: Collapse dual onboarding APIs (legacy GET/POST in server.py + Sprint 9 router) after client migration.
 - P2: Health endpoint to verify LLM key validity.
 
 ## Next Tasks
-- Fund LLM key and validate live AI chat.
-- Wire real data persistence for core entities if requested.
+- Configure OpenAI (or Emergent) keys in each environment and validate live AI flows.
+- Team invites sprint (after hardening).
+- Stripe / billing when monetization is ready.
