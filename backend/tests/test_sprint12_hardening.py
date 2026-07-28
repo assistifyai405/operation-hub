@@ -39,6 +39,9 @@ def _clean_env(monkeypatch):
             "AI_PROVIDER", "AI_MODEL", "OPENAI_API_KEY", "EMERGENT_LLM_KEY",
             "STORAGE_PROVIDER", "UPLOAD_DIR", "COOKIE_SECURE", "COOKIE_SAMESITE",
             "DEMO_EMAIL", "DEMO_PASSWORD", "INVITATION_EXPIRY_DAYS",
+            "EMAIL_PROVIDER", "EMAIL_SENDING_ENABLED", "EMAIL_DAILY_LIMIT",
+            "RESEND_API_KEY", "FROM_EMAIL", "FROM_NAME", "REPLY_TO_EMAIL",
+            "RESEND_WEBHOOK_SECRET",
         }:
             monkeypatch.delenv(k, raising=False)
     import config

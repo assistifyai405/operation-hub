@@ -31,6 +31,11 @@ _TEST_ENV = {
     "CORS_ORIGINS": "http://localhost:3000",
     "ENABLE_DEMO_SEED": "false",
     "INVITATION_EXPIRY_DAYS": "7",
+    "EMAIL_PROVIDER": "console",
+    "EMAIL_SENDING_ENABLED": "false",
+    "EMAIL_DAILY_LIMIT": "100",
+    "FROM_EMAIL": "onboarding@resend.dev",
+    "FROM_NAME": "Assistify OS",
 }
 
 for _k, _v in _TEST_ENV.items():

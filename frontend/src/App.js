@@ -32,6 +32,7 @@ import KnowledgeBrain from "@/pages/KnowledgeBrain";
 import Automations from "@/pages/Automations";
 import Onboarding from "@/pages/Onboarding";
 import InviteAccept from "@/pages/InviteAccept";
+import EmailCenter from "@/pages/EmailCenter";
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
               <Route path="/contracts" element={<Contracts />} />
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/documents" element={<Documents />} />
+              <Route path="/emails" element={<EmailCenter />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/ai-workspace" element={<AIWorkspace />} />

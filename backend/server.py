@@ -46,6 +46,8 @@ from routers.automation import seed_demo_automations
 from routers.onboarding import router as onboarding_router
 from routers.dashboard_exec import router as dashboard_exec_router
 from routers.team import router as team_router
+from routers.emails import router as emails_router
+from routers.webhooks import router as webhooks_router
 from routers import team as team_mod
 from permissions import require_admin, normalize_role
 import ai_activity as aia
@@ -1231,6 +1233,11 @@ DEFAULT_ORG_SETTINGS = {
         "proposalPrefix": "PROP", "contractPrefix": "CTR", "invoicePrefix": "INV",
         "numberingStart": 1, "pdfPageSize": "A4", "pdfAccentColor": "#8b5cf6",
     },
+    "email": {
+        "senderName": "", "senderEmail": "", "replyToEmail": "", "companySignature": "",
+        "sendingEnabled": False, "dailySendingLimit": 50,
+        "approvalRequired": True, "autoSendFromAutomation": False,
+    },
 }
 DEFAULT_NOTIF_PREFS = {
     "emailNotifications": True, "productUpdates": True, "securityAlerts": True,
@@ -1311,6 +1318,42 @@ async def update_ai_settings(payload: SectionUpdate, org: str = Depends(current_
 @api_router.patch("/settings/documents")
 async def update_doc_settings(payload: SectionUpdate, org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
     return await _update_section(org, "documents", payload.values)
+
+
+class EmailSettingsUpdate(BaseModel):
+    values: dict
+
+
+@api_router.patch("/settings/email")
+async def update_email_settings(payload: EmailSettingsUpdate, org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
+    """Organization outbound email settings (no provider API keys)."""
+    import re as _re
+    values = dict(payload.values or {})
+    email_re = _re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    for key in ("senderEmail", "replyToEmail"):
+        if key in values and values[key]:
+            v = str(values[key]).strip().lower()
+            if not email_re.match(v):
+                raise HTTPException(status_code=400, detail=f"Invalid {key}")
+            values[key] = v
+        elif key in values and values[key] == "":
+            values[key] = ""
+    if "dailySendingLimit" in values:
+        try:
+            lim = int(values["dailySendingLimit"])
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="dailySendingLimit must be an integer")
+        if lim < 1 or lim > 10000:
+            raise HTTPException(status_code=400, detail="dailySendingLimit must be between 1 and 10000")
+        values["dailySendingLimit"] = lim
+    for bkey in ("sendingEnabled", "approvalRequired", "autoSendFromAutomation"):
+        if bkey in values:
+            values[bkey] = bool(values[bkey])
+    if "senderName" in values:
+        values["senderName"] = str(values["senderName"] or "")[:120]
+    if "companySignature" in values:
+        values["companySignature"] = str(values["companySignature"] or "")[:2000]
+    return await _update_section(org, "email", values)
 
 
 @api_router.patch("/settings/notifications")
@@ -2075,6 +2118,8 @@ app.include_router(automation_router)
 app.include_router(onboarding_router)
 app.include_router(dashboard_exec_router)
 app.include_router(team_router)
+app.include_router(emails_router)
+app.include_router(webhooks_router)
 
 def _cors_origins() -> List[str]:
     try:
@@ -2125,7 +2170,16 @@ async def startup():
     await db.organization_invitations.create_index("tokenHash", unique=True)
     await db.organization_invitations.create_index([("organizationId", 1), ("email", 1), ("status", 1)])
     await db.audit_logs.create_index([("organizationId", 1), ("createdAt", -1)])
+    await db.outbound_emails.create_index([("organizationId", 1), ("status", 1), ("updatedAt", -1)])
+    await db.outbound_emails.create_index([("organizationId", 1), ("createdBy", 1)])
+    await db.outbound_emails.create_index("providerMessageId")
+    await db.outbound_emails.create_index([("organizationId", 1), ("automationApprovalId", 1)])
+    await db.email_webhook_events.create_index("svixId", unique=True, sparse=True)
 
+    logger.info(
+        "Email provider=%s sending_enabled=%s",
+        cfg.email_provider, cfg.email_sending_enabled,
+    )
     # Demo account seeding is OPT-IN via ENABLE_DEMO_SEED=true (never automatic in production).
     org_id = None
     if cfg.enable_demo_seed:

@@ -84,6 +84,7 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 - AI features require a configured provider key (`OPENAI_API_KEY` when `AI_PROVIDER=openai`, or `EMERGENT_LLM_KEY` when `AI_PROVIDER=emergent`). Without a key/balance, AI endpoints return clear configuration or budget errors; non-AI CRUD continues to work.
 - Sprint 12 (2026-07): production hardening & local portability — env validation, opt-in demo seed, localhost HTTP cookies, OpenAI + local storage providers, README + `.env.example` files.
 - Sprint 13 (2026-07): Team members, invitations, RBAC (owner/admin/member), hashed invite tokens, Settings → Team UI, `/invite/:token` acceptance flow, audit log, seat-count helper (no Stripe enforcement yet).
+- Sprint 14 (2026-07): Real outbound email — Resend/console providers, org email settings, draft + approval workflow, Email Center UI, automation → outbound drafts, audit events, Resend webhooks for delivery state. `EMAIL_SENDING_ENABLED` defaults false; no Stripe.
 
 ## Backlog
 - P1: Persist assistant error markers / show error toast on AI failure.
@@ -93,7 +94,7 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 - P2: Collapse dual onboarding APIs (legacy GET/POST in server.py + Sprint 9 router) after client migration.
 - P2: Health endpoint to verify LLM key validity.
 - P2: Multi-organization membership per user (currently one org per user).
-
+- P2: Richer email delivery analytics (opened/clicked) once product requires it — webhook already stores delivered/bounced/complained.
 ## Next Tasks
 - Configure OpenAI (or Emergent) keys in each environment and validate live AI flows.
 - Stripe / billing when monetization is ready (enforce seat_limit via seats helper).

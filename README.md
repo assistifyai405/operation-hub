@@ -189,14 +189,38 @@ Ownership transfer: **Settings → Team → Transfer** (owner only). Owners cann
 
 Seat helper `GET /api/team/seats` reports `active_members` + `pending_invitations` for future Stripe limits (not enforced yet).
 
+## Outbound email (Email Center)
+
+Providers (`EMAIL_PROVIDER`):
+
+| Provider | Behavior |
+|---|---|
+| **console** | Default in development. Validates and records sends; never calls external APIs. Safe metadata may appear in API responses in development only. |
+| **resend** | Production provider. Requires `RESEND_API_KEY` + `FROM_EMAIL`. |
+
+**Important:** `EMAIL_SENDING_ENABLED` defaults to **false**. Outbound product mail also requires **Settings → Email → Enable organization sending**. Transactional mail (verify / reset / invite) uses the provider without that outbound gate so auth still works.
+
+### Approval workflow
+
+1. Compose a draft in **Emails** (or let an automation create one).
+2. If org `approvalRequired` is on, submit for approval; owners/admins approve (admins cannot self-approve).
+3. Send only when approved (and gates above pass). Atomic status transition prevents duplicate provider calls.
+4. Daily org limit: `min(org.dailySendingLimit, EMAIL_DAILY_LIMIT)`. Max 20 recipients per message.
+
+Automations (`prepare_email` / `prepare_followup`) create real `outbound_emails` drafts linked by `automationApprovalId` (deduped). They never silent-send unless org `autoSendFromAutomation` is on, approval is off, and global/org sending is enabled.
+
+### Resend webhooks
+
+`POST /api/webhooks/resend` verifies Svix signatures with `RESEND_WEBHOOK_SECRET` and updates `deliveryStatus` (`delivered` / `bounced` / `complained`). No JWT. Idempotent via `svix-id`.
+
 ## Running tests
 
 ```bash
 cd backend
 source .venv/bin/activate
 
-# Unit + team HTTP tests
-pytest tests/test_sprint12_hardening.py tests/test_sprint12_http.py tests/test_sprint13_team.py -n 0 -q
+# Sprint 12–14 suite
+pytest tests/test_sprint12_hardening.py tests/test_sprint12_http.py tests/test_sprint13_team.py tests/test_sprint14_email.py -n 0 -q
 
 # Full HTTP suites need a running API + Mongo:
 export REACT_APP_BACKEND_URL=http://localhost:8000
@@ -212,9 +236,10 @@ pytest tests/test_auth.py -n 0 -q
 5. `ENABLE_DEMO_SEED=false` (or unset)
 6. Choose AI: `OPENAI_API_KEY` + `AI_PROVIDER=openai` **or** Emergent key
 7. Choose storage: durable `STORAGE_PROVIDER` (local disk only if the volume is persistent)
-8. Set `RESEND_API_KEY` + verified `FROM_EMAIL` for real email
-9. Confirm cookies are Secure on HTTPS
-10. Do not ship default demo passwords
+8. Email: `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `FROM_EMAIL` / `FROM_NAME`; keep `EMAIL_SENDING_ENABLED=false` until org settings and approval rules are reviewed, then enable deliberately
+9. Optional: `RESEND_WEBHOOK_SECRET` + Resend dashboard webhook → `/api/webhooks/resend`
+10. Confirm cookies are Secure on HTTPS
+11. Do not ship default demo passwords
 
 ## Product docs
 

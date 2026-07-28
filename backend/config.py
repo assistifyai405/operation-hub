@@ -70,6 +70,12 @@ class Settings:
     upload_dir: str
     resend_api_key: Optional[str]
     from_email: str
+    from_name: str
+    reply_to_email: Optional[str]
+    email_provider: str  # resend | console
+    email_sending_enabled: bool
+    email_daily_limit: int
+    resend_webhook_secret: Optional[str]
     cookie_secure: bool
     cookie_samesite: str  # lax | none | strict
     invitation_expiry_days: int
@@ -223,6 +229,17 @@ def load_settings(*, strict: bool = True) -> Settings:
     if invitation_expiry_days < 1 or invitation_expiry_days > 90:
         raise ConfigError("INVITATION_EXPIRY_DAYS must be between 1 and 90")
 
+    email_provider = (_env("EMAIL_PROVIDER") or ("console" if environment != "production" else "resend")).lower()
+    if email_provider not in {"resend", "console"}:
+        raise ConfigError(f"EMAIL_PROVIDER must be 'resend' or 'console', got {email_provider!r}")
+    email_sending_enabled = _truthy("EMAIL_SENDING_ENABLED", False)
+    try:
+        email_daily_limit = int(_env("EMAIL_DAILY_LIMIT", "100") or "100")
+    except ValueError as e:
+        raise ConfigError("EMAIL_DAILY_LIMIT must be an integer") from e
+    if email_daily_limit < 1 or email_daily_limit > 10000:
+        raise ConfigError("EMAIL_DAILY_LIMIT must be between 1 and 10000")
+
     settings = Settings(
         environment=environment,
         mongo_url=mongo_url or "",
@@ -241,6 +258,12 @@ def load_settings(*, strict: bool = True) -> Settings:
         upload_dir=upload_dir,
         resend_api_key=_env("RESEND_API_KEY"),
         from_email=_env("FROM_EMAIL", "onboarding@resend.dev") or "onboarding@resend.dev",
+        from_name=_env("FROM_NAME", "Assistify OS") or "Assistify OS",
+        reply_to_email=_env("REPLY_TO_EMAIL"),
+        email_provider=email_provider,
+        email_sending_enabled=email_sending_enabled,
+        email_daily_limit=email_daily_limit,
+        resend_webhook_secret=_env("RESEND_WEBHOOK_SECRET"),
         cookie_secure=cookie_secure,
         cookie_samesite=cookie_samesite,
         invitation_expiry_days=invitation_expiry_days,

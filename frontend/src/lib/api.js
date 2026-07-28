@@ -246,6 +246,7 @@ export const settingsApi = {
   updateBranding: (values) => req("/settings/branding", { method: "PATCH", body: JSON.stringify({ values }) }),
   updateAI: (values) => req("/settings/ai", { method: "PATCH", body: JSON.stringify({ values }) }),
   updateDocuments: (values) => req("/settings/documents", { method: "PATCH", body: JSON.stringify({ values }) }),
+  updateEmail: (values) => req("/settings/email", { method: "PATCH", body: JSON.stringify({ values }) }),
   updateNotifications: (values) => req("/settings/notifications", { method: "PATCH", body: JSON.stringify({ values }) }),
   billing: () => req("/settings/billing"),
   apiKeys: () => req("/settings/api-keys"),
@@ -344,4 +345,25 @@ export const teamApi = {
   changeRole: (userId, role) => req(`/team/members/${userId}/role`, { method: "PATCH", body: JSON.stringify({ role }) }),
   removeMember: (userId) => req(`/team/members/${userId}`, { method: "DELETE" }),
   transferOwnership: (userId) => req("/team/transfer-ownership", { method: "POST", body: JSON.stringify({ userId }) }),
+};
+
+export const emailsApi = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.status) qs.set("status", params.status);
+    if (params.q) qs.set("q", params.q);
+    const s = qs.toString();
+    return req(`/emails${s ? `?${s}` : ""}`);
+  },
+  status: () => req("/emails/status"),
+  get: (id) => req(`/emails/${id}`),
+  create: (body) => req("/emails", { method: "POST", body: JSON.stringify(body) }),
+  update: (id, body) => req(`/emails/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  submit: (id) => req(`/emails/${id}/submit`, { method: "POST" }),
+  approve: (id) => req(`/emails/${id}/approve`, { method: "POST" }),
+  reject: (id, reason) => req(`/emails/${id}/reject`, { method: "POST", body: JSON.stringify({ reason }) }),
+  send: (id) => req(`/emails/${id}/send`, { method: "POST" }),
+  cancel: (id) => req(`/emails/${id}/cancel`, { method: "POST" }),
+  retry: (id) => req(`/emails/${id}/retry`, { method: "POST" }),
+  improve: (id, body = {}) => req(`/emails/${id}/improve`, { method: "POST", body: JSON.stringify(body) }),
 };
