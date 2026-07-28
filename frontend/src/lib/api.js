@@ -376,3 +376,26 @@ export const integrationsApi = {
   refresh: (body) => req("/integrations/refresh", { method: "POST", body: JSON.stringify(body) }),
   health: (body) => req("/integrations/health", { method: "POST", body: JSON.stringify(body) }),
 };
+
+export const inboxApi = {
+  mailboxes: () => req("/inbox/mailboxes"),
+  ensureMailbox: (provider) => req("/inbox/mailboxes/ensure", { method: "POST", body: JSON.stringify({ provider }) }),
+  patchMailbox: (id, body) => req(`/inbox/mailboxes/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  syncMailbox: (id, forceFull = false) => req(`/inbox/mailboxes/${id}/sync?force_full=${forceFull ? "true" : "false"}`, { method: "POST" }),
+  threads: (params = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === "") return;
+      qs.set(k, String(v));
+    });
+    const s = qs.toString();
+    return req(`/inbox/threads${s ? `?${s}` : ""}`);
+  },
+  getThread: (id) => req(`/inbox/threads/${id}`),
+  patchThread: (id, body) => req(`/inbox/threads/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  messages: (id) => req(`/inbox/threads/${id}/messages`),
+  summarize: (id) => req(`/inbox/threads/${id}/summarize`, { method: "POST" }),
+  draftReply: (id) => req(`/inbox/threads/${id}/draft-reply`, { method: "POST" }),
+  link: (id, body) => req(`/inbox/threads/${id}/link`, { method: "POST", body: JSON.stringify(body) }),
+  unlink: (id) => req(`/inbox/threads/${id}/link`, { method: "DELETE" }),
+};

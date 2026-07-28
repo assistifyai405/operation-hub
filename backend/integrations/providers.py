@@ -22,6 +22,7 @@ GOOGLE_SCOPES = [
     "openid",
     "email",
     "profile",
+    "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.send",
     "https://www.googleapis.com/auth/calendar.events",
     "https://www.googleapis.com/auth/tasks",
@@ -145,7 +146,7 @@ class MicrosoftProvider:
         s = get_settings()
         scopes = " ".join([
             "openid", "email", "profile", "offline_access",
-            "Mail.Send", "Calendars.ReadWrite", "User.Read",
+            "Mail.Read", "Mail.Send", "Calendars.ReadWrite", "User.Read",
         ])
         params = {
             "client_id": s.microsoft_client_id,

@@ -144,6 +144,13 @@ async def create_outbound_email(
     contact_id: Optional[str] = None,
     original_ai: Optional[dict] = None,
     status: Optional[str] = None,
+    inbox_thread_id: Optional[str] = None,
+    mailbox_id: Optional[str] = None,
+    provider_thread_id: Optional[str] = None,
+    in_reply_to: Optional[str] = None,
+    references: Optional[str] = None,
+    reply_provider: Optional[str] = None,
+    internet_message_id: Optional[str] = None,
 ) -> dict:
     to_n = normalize_emails(to)
     cc_n = normalize_emails(cc)
@@ -209,6 +216,14 @@ async def create_outbound_email(
         "sendAttempts": 0,
         "originalAiSuggestion": original_ai,
         "versions": versions,
+        # Inbox reply threading (optional; standalone outbound emails leave these null)
+        "inboxThreadId": inbox_thread_id,
+        "mailboxId": mailbox_id,
+        "providerThreadId": provider_thread_id,
+        "inReplyTo": in_reply_to,
+        "references": references,
+        "replyProvider": reply_provider,
+        "internetMessageId": internet_message_id,
         "createdAt": now_iso(),
         "updatedAt": now_iso(),
     }

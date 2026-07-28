@@ -26,11 +26,12 @@ PROVIDER_CATALOG: Dict[str, ProviderMeta] = {
         auth_type="oauth",
         services=["gmail", "calendar", "tasks"],
         permissions=[
+            "gmail.readonly",
             "gmail.send",
             "calendar.events",
             "tasks",
         ],
-        description="Gmail, Google Calendar, and Google Tasks.",
+        description="Gmail inbox sync, send, Google Calendar, and Google Tasks.",
         oauth_configurable=True,
     ),
     "microsoft": ProviderMeta(
@@ -40,11 +41,12 @@ PROVIDER_CATALOG: Dict[str, ProviderMeta] = {
         auth_type="oauth",
         services=["outlook", "calendar"],
         permissions=[
+            "Mail.Read",
             "Mail.Send",
             "Calendars.ReadWrite",
             "offline_access",
         ],
-        description="Outlook mail and Microsoft Calendar.",
+        description="Outlook inbox sync, mail send, and Microsoft Calendar.",
         oauth_configurable=True,
     ),
     "slack": ProviderMeta(

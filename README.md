@@ -219,8 +219,8 @@ Organization-scoped connections for Google Workspace, Microsoft 365, Slack, Disc
 
 | Provider | Auth | Capabilities |
 |---|---|---|
-| Google Workspace | OAuth | Gmail send scope, Calendar events, Google Tasks |
-| Microsoft 365 | OAuth | Outlook mail send, Calendar events |
+| Google Workspace | OAuth | Gmail inbox sync (`gmail.readonly`), Gmail send, Calendar events, Google Tasks |
+| Microsoft 365 | OAuth | Outlook inbox sync (`Mail.Read`), Outlook send (`Mail.Send`), Calendar events |
 | Slack | OAuth or Incoming Webhook | `chat.postMessage` / webhook |
 | Discord | Incoming Webhook | Channel messages |
 | Zapier | Catch Hook URL | Automation triggers |
@@ -230,16 +230,71 @@ API: `GET /api/integrations`, `GET /api/integrations/status`, `POST /api/integra
 
 Automations can run: `create_calendar_event`, `create_google_task`, `send_slack_message`, `send_discord_message`, `trigger_webhook` (external / approval-gated by default).
 
+## Shared Inbox (Sprint 16)
+
+Turns connected Google Workspace / Microsoft 365 accounts into an organization-scoped business inbox.
+
+### Required OAuth scopes
+
+**Google** (see `GOOGLE_SCOPES` in `backend/integrations/providers.py`):
+
+- `openid`, `email`, `profile`
+- `https://www.googleapis.com/auth/gmail.readonly` — inbox sync
+- `https://www.googleapis.com/auth/gmail.send` — existing outbound send
+- `https://www.googleapis.com/auth/calendar.events`, `https://www.googleapis.com/auth/tasks`
+
+**Microsoft Graph**:
+
+- `openid`, `email`, `profile`, `offline_access`, `User.Read`
+- `Mail.Read` — inbox sync
+- `Mail.Send` — existing outbound send
+- `Calendars.ReadWrite`
+
+After deploying scope changes, users must **reconnect** Google/Microsoft under **Integrations** so consent includes mail read.
+
+### Sync behavior
+
+- Manual: Inbox UI sync buttons, or `POST /api/inbox/mailboxes/{id}/sync` (owner/admin; rate-limited).
+- Scheduled-ready: `python -m inbox.sync_all` (optional `--org`, `--mailbox`, `--force-full`).
+- Gmail: history API when `syncCursor` (historyId) is valid; falls back to INBOX list + cursor reset when history is stale (404).
+- Outlook: Graph Inbox delta queries; 410/404 resets the delta link and re-bootstraps.
+- Per-mailbox in-process lock prevents overlapping sync jobs. Bounded page/message limits. Spam/trash (Gmail) and Junk/Deleted (Outlook) are not ingested by default.
+- Provider rate limits surface as clear mailbox `lastError` / HTTP 400 — retry later.
+- Dedup: unique `(organizationId, mailboxId, providerMessageId)`; also skip by `internetMessageId` and outbound-sent IDs.
+
+### AI reply workflow
+
+1. Open a thread → **Summarize** or **Draft reply**.
+2. Draft reply creates a Sprint 14 `outbound_emails` document (`source=ai`, usually `pending_approval`) with threading metadata (`inboxThreadId`, `providerThreadId`, `inReplyTo`, `references`, `replyProvider`).
+3. Edit/approve/send only via Email Center — **never auto-sent** from inbox endpoints.
+4. Email Center shows linked conversation + “View conversation”.
+
+### Privacy & retention
+
+- Strict org isolation on all inbox collections and attachment downloads.
+- HTML sanitized server-side (scripts/images stripped; safe `https`/`mailto` links only). External images are not auto-loaded.
+- Attachment metadata synced only; bytes fetched on demand via authenticated API (15 MB cap, safe filenames, `Content-Disposition: attachment`).
+- OAuth tokens stay encrypted; never logged or returned to the frontend.
+
+### Known limitations
+
+- **Provider-threaded send** (reply via Gmail API / Graph into the same provider thread) is **not** implemented this sprint. Threading headers are stored for a future send path; current send uses the Sprint 14 Resend/console provider and must not be treated as native Gmail/Outlook threading.
+- Read/unread is local DB state (`gmail.readonly` / no modify scopes for labels).
+- Live Gmail/Outlook success requires real OAuth credentials and reconnect after scope updates — mocked provider tests do not prove live connectivity.
+- Inbox automation events are recorded and listed in trigger metadata; broad auto-execution of user workflows on those events is not enabled yet.
+
+Inbox API: `/api/inbox/mailboxes`, `/api/inbox/threads`, summarize, draft-reply, link/unlink, attachment download, events catalog.
+
 ## Running tests
 
 ```bash
 cd backend
 source .venv/bin/activate
 
-# Sprint 12–15 suite
+# Sprint 12–16 suite
 pytest tests/test_sprint12_hardening.py tests/test_sprint12_http.py \
        tests/test_sprint13_team.py tests/test_sprint14_email.py \
-       tests/test_sprint15_integrations.py -n 0 -q
+       tests/test_sprint15_integrations.py tests/test_sprint16_inbox.py -n 0 -q
 
 # Full HTTP suites need a running API + Mongo:
 export REACT_APP_BACKEND_URL=http://localhost:8000

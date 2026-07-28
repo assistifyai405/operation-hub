@@ -73,6 +73,11 @@ TRIGGER_META = {
     "project_completed":   {"label": "Project completed",          "desc": "A project was completed — prepare the invoice.",      "days": 0,  "icon": "check-square"},
     "new_client":          {"label": "New client added",           "desc": "A client was added within the last X days.",          "days": 3,  "icon": "users"},
     "task_overdue":        {"label": "Task overdue",               "desc": "A task is past its due date.",                        "days": 0,  "icon": "check-square"},
+    "inbound_message_received": {"label": "Inbound email received", "desc": "A new inbox message was synchronized.", "days": 0, "icon": "mail"},
+    "unread_message_received":  {"label": "Unread inbox message",   "desc": "An unread inbound message arrived.", "days": 0, "icon": "mail"},
+    "thread_created":           {"label": "Email thread created",   "desc": "A new conversation thread was created from sync.", "days": 0, "icon": "mail"},
+    "message_linked_to_client": {"label": "Email linked to client", "desc": "An inbox thread was linked to a client.", "days": 0, "icon": "users"},
+    "message_linked_to_lead":   {"label": "Email linked to lead",   "desc": "An inbox thread was linked to a lead.", "days": 0, "icon": "trending-up"},
 }
 
 CONDITION_FIELDS = [

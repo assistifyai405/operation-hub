@@ -365,6 +365,16 @@ export default function EmailCenter() {
                 {detail.consolePreview && (
                   <pre className="overflow-x-auto rounded-lg border border-white/10 bg-zinc-900/60 p-3 text-[11px] text-zinc-400" data-testid="email-console-preview">{JSON.stringify(detail.consolePreview, null, 2)}</pre>
                 )}
+                {detail.inboxThreadId && (
+                  <div className="rounded-lg border border-violet-500/20 bg-violet-600/10 p-3 text-xs text-zinc-300" data-testid="email-inbox-link">
+                    <p className="font-medium text-violet-300">Linked inbox conversation</p>
+                    <p className="mt-1">Provider: {detail.replyProvider || "—"} · Mailbox: {detail.mailboxId || "—"}</p>
+                    {(detail.clientId || detail.leadId) && (
+                      <p className="mt-1">CRM: {detail.clientId ? `client ${detail.clientId}` : ""}{detail.leadId ? ` lead ${detail.leadId}` : ""}</p>
+                    )}
+                    <a href={`/inbox?thread=${detail.inboxThreadId}`} className="mt-2 inline-block text-violet-400 hover:underline" data-testid="email-view-conversation">View conversation</a>
+                  </div>
+                )}
                 {detail.originalAiSuggestion && (
                   <details className="text-xs text-zinc-500">
                     <summary className="cursor-pointer text-zinc-400">Original AI suggestion</summary>
