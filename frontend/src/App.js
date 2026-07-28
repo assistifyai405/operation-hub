@@ -31,6 +31,7 @@ import Pipeline from "@/pages/Pipeline";
 import KnowledgeBrain from "@/pages/KnowledgeBrain";
 import Automations from "@/pages/Automations";
 import Onboarding from "@/pages/Onboarding";
+import InviteAccept from "@/pages/InviteAccept";
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/invite/:token" element={<InviteAccept />} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<Dashboard />} />

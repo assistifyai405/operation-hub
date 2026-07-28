@@ -83,17 +83,17 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 ## Known Status
 - AI features require a configured provider key (`OPENAI_API_KEY` when `AI_PROVIDER=openai`, or `EMERGENT_LLM_KEY` when `AI_PROVIDER=emergent`). Without a key/balance, AI endpoints return clear configuration or budget errors; non-AI CRUD continues to work.
 - Sprint 12 (2026-07): production hardening & local portability — env validation, opt-in demo seed, localhost HTTP cookies, OpenAI + local storage providers, README + `.env.example` files.
+- Sprint 13 (2026-07): Team members, invitations, RBAC (owner/admin/member), hashed invite tokens, Settings → Team UI, `/invite/:token` acceptance flow, audit log, seat-count helper (no Stripe enforcement yet).
 
 ## Backlog
 - P1: Persist assistant error markers / show error toast on AI failure.
 - P1: Add data-testid to kanban columns/cards.
-- P1: Team invites / multi-member roles (org scaffolding exists; invites not built).
-- P2: Stripe billing integration (`REACT_APP_BILLING_ENABLED` remains false).
+- P2: Stripe billing integration (`REACT_APP_BILLING_ENABLED` remains false); use `GET /api/team/seats` for plan limits.
 - P2: Public API keys & third-party integrations (Settings placeholders only).
 - P2: Collapse dual onboarding APIs (legacy GET/POST in server.py + Sprint 9 router) after client migration.
 - P2: Health endpoint to verify LLM key validity.
+- P2: Multi-organization membership per user (currently one org per user).
 
 ## Next Tasks
 - Configure OpenAI (or Emergent) keys in each environment and validate live AI flows.
-- Team invites sprint (after hardening).
-- Stripe / billing when monetization is ready.
+- Stripe / billing when monetization is ready (enforce seat_limit via seats helper).

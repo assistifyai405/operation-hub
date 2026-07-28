@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  User, Building2, Palette, Sparkles, FileText, Bell, Shield, KeyRound, CreditCard, Plug, Loader2,
+  User, Building2, Palette, Sparkles, FileText, Bell, Shield, KeyRound, CreditCard, Plug, Loader2, Users,
 } from "lucide-react";
 import { settingsApi } from "@/lib/api";
 import { toast } from "sonner";
@@ -8,10 +8,12 @@ import {
   GeneralSection, OrganizationSection, BrandingSection, AISection, DocumentsSection,
   NotificationsSection, SecuritySection, ApiKeysSection, IntegrationsSection, BillingSection,
 } from "@/components/settings/sections";
+import { TeamSection } from "@/components/settings/TeamSection";
 
 const TABS = [
   { id: "general", label: "General", icon: User },
   { id: "organization", label: "Organization", icon: Building2 },
+  { id: "team", label: "Team", icon: Users },
   { id: "branding", label: "Branding", icon: Palette },
   { id: "ai", label: "AI Settings", icon: Sparkles },
   { id: "documents", label: "Documents", icon: FileText },
@@ -49,6 +51,7 @@ export default function Settings() {
           <>
             {tab === "general" && <GeneralSection />}
             {tab === "organization" && <OrganizationSection data={data} reload={load} />}
+            {tab === "team" && <TeamSection />}
             {tab === "branding" && <BrandingSection data={data} />}
             {tab === "ai" && <AISection data={data} />}
             {tab === "documents" && <DocumentsSection data={data} />}

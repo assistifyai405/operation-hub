@@ -332,3 +332,16 @@ export const invoiceWriterApi = {
   restore: (projectId, version) => req(`/projects/${projectId}/invoice/restore/${version}`, { method: "POST" }),
   exportUrl: (projectId, fmt) => `${process.env.REACT_APP_BACKEND_URL}/api/projects/${projectId}/invoice/export/${fmt}`,
 };
+
+export const teamApi = {
+  members: () => req("/team/members"),
+  seats: () => req("/team/seats"),
+  invitations: () => req("/team/invitations"),
+  invite: (body) => req("/team/invitations", { method: "POST", body: JSON.stringify(body) }),
+  cancelInvitation: (id) => req(`/team/invitations/${id}`, { method: "DELETE" }),
+  previewInvitation: (token) => req(`/team/invitations/preview/${encodeURIComponent(token)}`),
+  acceptInvitation: (token) => req(`/team/invitations/${encodeURIComponent(token)}/accept`, { method: "POST" }),
+  changeRole: (userId, role) => req(`/team/members/${userId}/role`, { method: "PATCH", body: JSON.stringify({ role }) }),
+  removeMember: (userId) => req(`/team/members/${userId}`, { method: "DELETE" }),
+  transferOwnership: (userId) => req("/team/transfer-ownership", { method: "POST", body: JSON.stringify({ userId }) }),
+};

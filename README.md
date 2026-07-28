@@ -168,18 +168,38 @@ When `ENVIRONMENT=development` and `FRONTEND_URL` is `http://…`, cookies use `
 
 In production (or HTTPS frontend URLs), cookies stay `Secure=True` and `SameSite=None` for cross-origin SPAs.
 
+## Team members & invitations
+
+Roles on `users.role` (org-scoped via `organizationId`):
+
+| Role | Capabilities |
+|---|---|
+| **owner** | Full access; invite; change roles; remove members; transfer ownership |
+| **admin** | Product access; invite; remove regular members; cannot touch owner/ownership |
+| **member** | Product access only; cannot manage team or org settings (branding/org/docs/AI settings) |
+
+### Invite flow
+
+1. Owner/Admin opens **Settings → Team** and invites by email + role (`admin` or `member`).
+2. Email is sent via Resend when `RESEND_API_KEY` is set. In development without Resend, the API returns `invitationLink` (never in production).
+3. Invitee opens `/invite/:token`, then registers or signs in with the invited email.
+4. Accept connects them to the organization. Tokens are single-use, hashed at rest (`tokenHash`), and expire after `INVITATION_EXPIRY_DAYS` (default 7).
+
+Ownership transfer: **Settings → Team → Transfer** (owner only). Owners cannot leave/remove themselves without transferring first.
+
+Seat helper `GET /api/team/seats` reports `active_members` + `pending_invitations` for future Stripe limits (not enforced yet).
+
 ## Running tests
 
 ```bash
 cd backend
 source .venv/bin/activate
 
-# Unit tests (config / AI / storage / auth helpers) — no live server required
-pytest tests/test_sprint12_hardening.py -n 0 -q
+# Unit + team HTTP tests
+pytest tests/test_sprint12_hardening.py tests/test_sprint12_http.py tests/test_sprint13_team.py -n 0 -q
 
 # Full HTTP suites need a running API + Mongo:
 export REACT_APP_BACKEND_URL=http://localhost:8000
-# ENABLE_DEMO_SEED=true if a suite expects the seeded demo user
 pytest tests/test_auth.py -n 0 -q
 ```
 

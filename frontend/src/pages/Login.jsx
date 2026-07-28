@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { AuthShell, inputClass } from "@/components/AuthShell";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const inviteToken = params.get("invite") || sessionStorage.getItem("pending_invite_token") || "";
   const { login, demo } = useAuth();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(params.get("email") || "");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
@@ -20,6 +22,10 @@ export default function Login() {
     setLoading(true);
     try {
       const data = await login(email, password, remember);
+      if (inviteToken) {
+        navigate(`/invite/${inviteToken}`);
+        return;
+      }
       navigate(data?.user?.onboardingCompleted === false ? "/onboarding" : "/dashboard");
     } catch (err) {
       setError(err.message);
@@ -44,11 +50,17 @@ export default function Login() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Sign in to your operating system."
+      subtitle={inviteToken ? "Sign in to accept your team invitation." : "Sign in to your operating system."}
       footer={
         <p className="mt-6 text-center text-xs text-zinc-500">
           Don't have an account?{" "}
-          <Link to="/register" className="text-violet-400 hover:text-violet-300" data-testid="go-register-link">Start free trial</Link>
+          <Link
+            to={inviteToken ? `/register?invite=${encodeURIComponent(inviteToken)}&email=${encodeURIComponent(email)}` : "/register"}
+            className="text-violet-400 hover:text-violet-300"
+            data-testid="go-register-link"
+          >
+            Start free trial
+          </Link>
         </p>
       }
     >
@@ -72,15 +84,19 @@ export default function Login() {
         <button type="submit" disabled={loading || demoLoading} data-testid="login-submit" className="group flex w-full items-center justify-center gap-2 rounded-lg bg-violet-600 py-2.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 glow-violet">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Sign in <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>}
         </button>
-        <div className="flex items-center gap-3 py-1">
-          <div className="h-px flex-1 bg-white/10" />
-          <span className="text-[11px] uppercase tracking-wide text-zinc-600">or</span>
-          <div className="h-px flex-1 bg-white/10" />
-        </div>
-        <button type="button" onClick={handleDemo} disabled={loading || demoLoading} data-testid="explore-demo-btn" className="flex w-full items-center justify-center gap-2 rounded-lg border border-violet-500/40 bg-violet-500/10 py-2.5 text-sm font-semibold text-violet-200 transition-all hover:bg-violet-500/20 disabled:opacity-60">
-          {demoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Sparkles className="h-4 w-4" /> Explore demo workspace</>}
-        </button>
-        <p className="text-center text-[11px] text-zinc-600">No signup needed — opens a private sample workspace just for you.</p>
+        {!inviteToken && (
+          <>
+            <div className="flex items-center gap-3 py-1">
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="text-[11px] uppercase tracking-wide text-zinc-600">or</span>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
+            <button type="button" onClick={handleDemo} disabled={loading || demoLoading} data-testid="explore-demo-btn" className="flex w-full items-center justify-center gap-2 rounded-lg border border-violet-500/40 bg-violet-500/10 py-2.5 text-sm font-semibold text-violet-200 transition-all hover:bg-violet-500/20 disabled:opacity-60">
+              {demoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Sparkles className="h-4 w-4" /> Explore demo workspace</>}
+            </button>
+            <p className="text-center text-[11px] text-zinc-600">No signup needed — opens a private sample workspace just for you.</p>
+          </>
+        )}
       </form>
     </AuthShell>
   );

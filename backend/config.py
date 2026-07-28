@@ -72,6 +72,7 @@ class Settings:
     from_email: str
     cookie_secure: bool
     cookie_samesite: str  # lax | none | strict
+    invitation_expiry_days: int
 
     @property
     def is_development(self) -> bool:
@@ -215,6 +216,13 @@ def load_settings(*, strict: bool = True) -> Settings:
     else:
         enable_demo_seed = _truthy("ENABLE_DEMO_SEED", False)
 
+    try:
+        invitation_expiry_days = int(_env("INVITATION_EXPIRY_DAYS", "7") or "7")
+    except ValueError as e:
+        raise ConfigError("INVITATION_EXPIRY_DAYS must be an integer") from e
+    if invitation_expiry_days < 1 or invitation_expiry_days > 90:
+        raise ConfigError("INVITATION_EXPIRY_DAYS must be between 1 and 90")
+
     settings = Settings(
         environment=environment,
         mongo_url=mongo_url or "",
@@ -235,6 +243,7 @@ def load_settings(*, strict: bool = True) -> Settings:
         from_email=_env("FROM_EMAIL", "onboarding@resend.dev") or "onboarding@resend.dev",
         cookie_secure=cookie_secure,
         cookie_samesite=cookie_samesite,
+        invitation_expiry_days=invitation_expiry_days,
     )
     _settings = settings
     return settings

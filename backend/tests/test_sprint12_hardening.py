@@ -38,13 +38,18 @@ def _clean_env(monkeypatch):
             "CORS_ORIGINS", "FRONTEND_URL", "ENABLE_DEMO_SEED",
             "AI_PROVIDER", "AI_MODEL", "OPENAI_API_KEY", "EMERGENT_LLM_KEY",
             "STORAGE_PROVIDER", "UPLOAD_DIR", "COOKIE_SECURE", "COOKIE_SAMESITE",
-            "DEMO_EMAIL", "DEMO_PASSWORD",
+            "DEMO_EMAIL", "DEMO_PASSWORD", "INVITATION_EXPIRY_DAYS",
         }:
             monkeypatch.delenv(k, raising=False)
     import config
     config.reset_settings_for_tests()
     yield
-    config.reset_settings_for_tests()
+    # Restore defaults so session HTTP fixtures / other modules keep working
+    try:
+        from conftest import ensure_test_settings
+        ensure_test_settings()
+    except Exception:
+        config.reset_settings_for_tests()
 
 
 def _load(**extra):

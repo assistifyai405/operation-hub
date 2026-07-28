@@ -45,6 +45,9 @@ from routers.automation import router as automation_router
 from routers.automation import seed_demo_automations
 from routers.onboarding import router as onboarding_router
 from routers.dashboard_exec import router as dashboard_exec_router
+from routers.team import router as team_router
+from routers import team as team_mod
+from permissions import require_admin, normalize_role
 import ai_activity as aia
 
 app = FastAPI()
@@ -67,6 +70,7 @@ class RegisterRequest(BaseModel):
     email: str
     password: str = Field(..., min_length=8, max_length=128)
     company: str = ""
+    invitationToken: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
@@ -164,19 +168,44 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
         raise HTTPException(status_code=409, detail="An account with this email already exists")
 
     now = now_iso()
-    org_id = A.gen_id()
-    org_name = payload.company.strip() or f"{payload.firstName}'s Organization"
     user_id = A.gen_id()
-    await db.organizations.insert_one({
-        "id": org_id, "name": org_name, "ownerId": user_id, "createdAt": now, "updatedAt": now,
-    })
+    invite = None
+    if payload.invitationToken:
+        invite = await team_mod.consume_invitation_for_new_user(payload.invitationToken.strip(), email)
+        org_id = invite["organizationId"]
+        role = normalize_role(invite.get("role"))
+        onboarding_done = True
+    else:
+        org_id = A.gen_id()
+        org_name = payload.company.strip() or f"{payload.firstName}'s Organization"
+        await db.organizations.insert_one({
+            "id": org_id, "name": org_name, "ownerId": user_id, "createdAt": now, "updatedAt": now,
+        })
+        role = "owner"
+        onboarding_done = False
+
     user = {
         "id": user_id, "firstName": payload.firstName.strip(), "lastName": payload.lastName.strip(),
         "email": email, "passwordHash": A.hash_password(payload.password), "emailVerified": False,
-        "avatar": "", "role": "owner", "organizationId": org_id, "timezone": "UTC", "language": "en",
-        "createdAt": now, "updatedAt": now, "lastLogin": now, "onboardingCompleted": False,
+        "avatar": "", "role": role, "organizationId": org_id, "timezone": "UTC", "language": "en",
+        "createdAt": now, "updatedAt": now, "lastLogin": now, "joinedAt": now,
+        "onboardingCompleted": onboarding_done,
     }
     await db.users.insert_one(user)
+
+    if invite:
+        ok = await team_mod.mark_invitation_accepted(invite["id"], user_id, invite["tokenHash"])
+        if not ok:
+            # Extremely rare race — roll back user to avoid orphan invite acceptance
+            await db.users.delete_one({"id": user_id})
+            raise HTTPException(status_code=409, detail="This invitation has already been used")
+        from audit import write_audit
+        await write_audit(
+            org_id, "invitation_accepted",
+            actor_id=user_id, actor_email=email,
+            target_user_id=user_id, target_email=email,
+            meta={"role": role, "invitationId": invite["id"], "via": "register"},
+        )
 
     # Email verification — send via Resend when configured, else dev-mode fallback
     vtoken = A.gen_token()
@@ -191,7 +220,7 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     access, refresh = await _create_session(user, request, True)
     _set_refresh_cookie(response, refresh, True)
     _set_access_cookie(response, access)
-    out = {"user": public_user(user), "accessToken": access}
+    out = {"user": public_user(user), "accessToken": access, "joinedViaInvitation": bool(invite)}
     if not email_service.is_enabled():
         # Dev-mode only: expose the link so the flow is testable without a mail provider.
         logger.info(f"[EMAIL:VERIFY:DEV] {email} -> {verify_link}")
@@ -1258,7 +1287,7 @@ async def _update_section(org: str, section: str, values: dict):
 
 
 @api_router.patch("/settings/organization")
-async def update_org_profile(payload: OrgProfileUpdate, org: str = Depends(current_org)):
+async def update_org_profile(payload: OrgProfileUpdate, org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
     data = {k: v for k, v in payload.model_dump().items() if v is not None}
     name = data.pop("name", None)
     if name is not None and name.strip():
@@ -1270,17 +1299,17 @@ async def update_org_profile(payload: OrgProfileUpdate, org: str = Depends(curre
 
 
 @api_router.patch("/settings/branding")
-async def update_branding(payload: SectionUpdate, org: str = Depends(current_org)):
+async def update_branding(payload: SectionUpdate, org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
     return await _update_section(org, "branding", payload.values)
 
 
 @api_router.patch("/settings/ai")
-async def update_ai_settings(payload: SectionUpdate, org: str = Depends(current_org)):
+async def update_ai_settings(payload: SectionUpdate, org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
     return await _update_section(org, "ai", payload.values)
 
 
 @api_router.patch("/settings/documents")
-async def update_doc_settings(payload: SectionUpdate, org: str = Depends(current_org)):
+async def update_doc_settings(payload: SectionUpdate, org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
     return await _update_section(org, "documents", payload.values)
 
 
@@ -1293,7 +1322,7 @@ async def update_notif_prefs(payload: NotifPrefsUpdate, user: dict = Depends(cur
 
 
 @api_router.post("/settings/upload-image")
-async def upload_branding_image(file: UploadFile = File(...), org: str = Depends(current_org)):
+async def upload_branding_image(file: UploadFile = File(...), org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
     data = await file.read()
     if len(data) > 5 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="Image exceeds 5MB limit")
@@ -1350,7 +1379,8 @@ async def recent_logins(user: dict = Depends(current_user)):
 async def get_billing(user: dict = Depends(current_user)):
     org = user["organizationId"]
     base = {"organizationId": org}
-    seats = await db.users.count_documents({"organizationId": org})
+    from seats import seat_usage
+    seats_info = await seat_usage(org)
     usage = {
         "clients": await db.clients.count_documents(base),
         "projects": await db.projects.count_documents(base),
@@ -1361,7 +1391,12 @@ async def get_billing(user: dict = Depends(current_user)):
     }
     return {
         "plan": "Pro", "price": 99, "interval": "month", "status": "active",
-        "seats": {"used": seats, "included": 5},
+        "seats": {
+            "used": seats_info["active_members"],
+            "pending": seats_info["pending_invitations"],
+            "included": 5,
+        },
+        "seatUsage": seats_info,
         "usage": usage,
         "limits": {"projects": 100, "documents": 1000, "ai_generations": 500},
         "renews_on": "2026-09-01",
@@ -2039,12 +2074,20 @@ app.include_router(memory_router)
 app.include_router(automation_router)
 app.include_router(onboarding_router)
 app.include_router(dashboard_exec_router)
+app.include_router(team_router)
 
-_cors = get_app_settings().cors_origins
+def _cors_origins() -> List[str]:
+    try:
+        return get_app_settings().cors_origins
+    except Exception:
+        raw = os.environ.get("CORS_ORIGINS", "*")
+        return ["*"] if raw.strip() == "*" else [o.strip() for o in raw.split(",") if o.strip()]
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=_cors,
+    allow_origins=_cors_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -2072,12 +2115,16 @@ async def startup():
     except Exception as e:
         logger.error(f"Storage init failed: {e}")
     await db.users.create_index("email", unique=True)
+    await db.users.create_index([("organizationId", 1), ("role", 1)])
     await db.sessions.create_index("jti")
     await db.sessions.create_index("userId")
     await db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
     await db.email_verification_tokens.create_index("expires_at", expireAfterSeconds=0)
     await db.login_attempts.create_index("identifier")
     await db.ai_activities.create_index([("organizationId", 1), ("created_at", -1)])
+    await db.organization_invitations.create_index("tokenHash", unique=True)
+    await db.organization_invitations.create_index([("organizationId", 1), ("email", 1), ("status", 1)])
+    await db.audit_logs.create_index([("organizationId", 1), ("createdAt", -1)])
 
     # Demo account seeding is OPT-IN via ENABLE_DEMO_SEED=true (never automatic in production).
     org_id = None

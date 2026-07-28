@@ -118,3 +118,28 @@ async def send_password_reset_email(to_email: str, reset_link: str, brand: dict 
         "This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.",
     )
     return await _send(to_email, f"Reset your password · {company}", html_content)
+
+
+async def send_invitation_email(
+    to_email: str,
+    invite_link: str,
+    brand: dict = None,
+    *,
+    inviter_name: str = "",
+    role: str = "member",
+    org_name: str = "your team",
+) -> dict:
+    company = (brand or {}).get("company_name") or org_name or "Assistify OS"
+    who = html.escape(inviter_name or "A teammate")
+    org = html.escape(org_name or company)
+    role_label = html.escape((role or "member").capitalize())
+    body = (
+        f"{who} invited you to join <strong style=\"color:#f4f4f6;\">{org}</strong> "
+        f"on Assistify OS as a <strong style=\"color:#f4f4f6;\">{role_label}</strong>."
+    )
+    html_content = _shell(
+        brand, f"Join {org}", body,
+        "Accept invitation", invite_link,
+        "This invitation expires soon. If you weren't expecting it, you can ignore this email.",
+    )
+    return await _send(to_email, f"You're invited to {company}", html_content)

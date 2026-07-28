@@ -17,36 +17,9 @@ if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
 
-def _ensure_env(tmp_path_factory):
-    upload = tmp_path_factory.mktemp("uploads")
-    os.environ.setdefault("ENVIRONMENT", "development")
-    os.environ.setdefault("MONGO_URL", "mongodb://127.0.0.1:27017")
-    os.environ.setdefault("DB_NAME", "assistify_sprint12_http")
-    os.environ.setdefault("JWT_SECRET", "unit-test-secret-key-with-32plus-chars!!")
-    os.environ.setdefault("AI_PROVIDER", "openai")
-    os.environ.setdefault("OPENAI_API_KEY", "sk-test-not-real")
-    os.environ["STORAGE_PROVIDER"] = "local"
-    os.environ["UPLOAD_DIR"] = str(upload)
-    os.environ.setdefault("FRONTEND_URL", "http://localhost:3000")
-    os.environ.setdefault("CORS_ORIGINS", "http://localhost:3000")
-    os.environ["ENABLE_DEMO_SEED"] = "false"
-    return upload
-
-
-@pytest.fixture(scope="module")
-def app_client(tmp_path_factory):
-    upload = _ensure_env(tmp_path_factory)
-    # Reload config/core/server against this env
-    import config
-    config.reset_settings_for_tests()
-    # Import after env is set
-    from fastapi.testclient import TestClient
-    import server
-    # Force settings refresh if already loaded with different upload dir
-    config.reset_settings_for_tests()
-    config.load_settings(strict=True)
-    with TestClient(server.app) as client:
-        yield client, upload
+@pytest.fixture
+def app_client(api_client):
+    return api_client
 
 
 def _register(client, email=None):
