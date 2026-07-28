@@ -85,12 +85,13 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 - Sprint 12 (2026-07): production hardening & local portability — env validation, opt-in demo seed, localhost HTTP cookies, OpenAI + local storage providers, README + `.env.example` files.
 - Sprint 13 (2026-07): Team members, invitations, RBAC (owner/admin/member), hashed invite tokens, Settings → Team UI, `/invite/:token` acceptance flow, audit log, seat-count helper (no Stripe enforcement yet).
 - Sprint 14 (2026-07): Real outbound email — Resend/console providers, org email settings, draft + approval workflow, Email Center UI, automation → outbound drafts, audit events, Resend webhooks for delivery state. `EMAIL_SENDING_ENABLED` defaults false; no Stripe.
+- Sprint 15 (2026-07): Universal Integrations Hub — Google Workspace / Microsoft 365 OAuth, Slack / Discord / Zapier / REST webhooks, Fernet-encrypted credentials, Integrations page, automation actions (calendar, Google Tasks, Slack, Discord, webhooks). No Stripe.
 
 ## Backlog
 - P1: Persist assistant error markers / show error toast on AI failure.
 - P1: Add data-testid to kanban columns/cards.
 - P2: Stripe billing integration (`REACT_APP_BILLING_ENABLED` remains false); use `GET /api/team/seats` for plan limits.
-- P2: Public API keys & third-party integrations (Settings placeholders only).
+- P2: Deeper Gmail/Outlook sync (inbox ingest, two-way calendar sync).
 - P2: Collapse dual onboarding APIs (legacy GET/POST in server.py + Sprint 9 router) after client migration.
 - P2: Health endpoint to verify LLM key validity.
 - P2: Multi-organization membership per user (currently one org per user).

@@ -48,6 +48,7 @@ from routers.dashboard_exec import router as dashboard_exec_router
 from routers.team import router as team_router
 from routers.emails import router as emails_router
 from routers.webhooks import router as webhooks_router
+from routers.integrations import router as integrations_router
 from routers import team as team_mod
 from permissions import require_admin, normalize_role
 import ai_activity as aia
@@ -2120,6 +2121,7 @@ app.include_router(dashboard_exec_router)
 app.include_router(team_router)
 app.include_router(emails_router)
 app.include_router(webhooks_router)
+app.include_router(integrations_router)
 
 def _cors_origins() -> List[str]:
     try:
@@ -2175,6 +2177,9 @@ async def startup():
     await db.outbound_emails.create_index("providerMessageId")
     await db.outbound_emails.create_index([("organizationId", 1), ("automationApprovalId", 1)])
     await db.email_webhook_events.create_index("svixId", unique=True, sparse=True)
+    await db.integrations.create_index([("organizationId", 1), ("provider", 1)], unique=True)
+    await db.integration_oauth_states.create_index("state", unique=True)
+    await db.integration_oauth_states.create_index("expiresAt")
 
     logger.info(
         "Email provider=%s sending_enabled=%s",

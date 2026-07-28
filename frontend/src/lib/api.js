@@ -367,3 +367,12 @@ export const emailsApi = {
   retry: (id) => req(`/emails/${id}/retry`, { method: "POST" }),
   improve: (id, body = {}) => req(`/emails/${id}/improve`, { method: "POST", body: JSON.stringify(body) }),
 };
+
+export const integrationsApi = {
+  list: () => req("/integrations"),
+  status: () => req("/integrations/status"),
+  connect: (body) => req("/integrations/connect", { method: "POST", body: JSON.stringify(body) }),
+  disconnect: (body) => req("/integrations/disconnect", { method: "POST", body: JSON.stringify(body) }),
+  refresh: (body) => req("/integrations/refresh", { method: "POST", body: JSON.stringify(body) }),
+  health: (body) => req("/integrations/health", { method: "POST", body: JSON.stringify(body) }),
+};

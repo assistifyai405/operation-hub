@@ -76,6 +76,17 @@ class Settings:
     email_sending_enabled: bool
     email_daily_limit: int
     resend_webhook_secret: Optional[str]
+    integration_encryption_key: Optional[str]
+    google_client_id: Optional[str]
+    google_client_secret: Optional[str]
+    google_redirect_uri: Optional[str]
+    microsoft_client_id: Optional[str]
+    microsoft_client_secret: Optional[str]
+    microsoft_tenant: str
+    microsoft_redirect_uri: Optional[str]
+    slack_client_id: Optional[str]
+    slack_client_secret: Optional[str]
+    slack_redirect_uri: Optional[str]
     cookie_secure: bool
     cookie_samesite: str  # lax | none | strict
     invitation_expiry_days: int
@@ -264,6 +275,17 @@ def load_settings(*, strict: bool = True) -> Settings:
         email_sending_enabled=email_sending_enabled,
         email_daily_limit=email_daily_limit,
         resend_webhook_secret=_env("RESEND_WEBHOOK_SECRET"),
+        integration_encryption_key=_env("INTEGRATION_ENCRYPTION_KEY"),
+        google_client_id=_env("GOOGLE_CLIENT_ID"),
+        google_client_secret=_env("GOOGLE_CLIENT_SECRET"),
+        google_redirect_uri=_env("GOOGLE_REDIRECT_URI"),
+        microsoft_client_id=_env("MICROSOFT_CLIENT_ID"),
+        microsoft_client_secret=_env("MICROSOFT_CLIENT_SECRET"),
+        microsoft_tenant=_env("MICROSOFT_TENANT", "common") or "common",
+        microsoft_redirect_uri=_env("MICROSOFT_REDIRECT_URI"),
+        slack_client_id=_env("SLACK_CLIENT_ID"),
+        slack_client_secret=_env("SLACK_CLIENT_SECRET"),
+        slack_redirect_uri=_env("SLACK_REDIRECT_URI"),
         cookie_secure=cookie_secure,
         cookie_samesite=cookie_samesite,
         invitation_expiry_days=invitation_expiry_days,

@@ -41,7 +41,11 @@ def _clean_env(monkeypatch):
             "DEMO_EMAIL", "DEMO_PASSWORD", "INVITATION_EXPIRY_DAYS",
             "EMAIL_PROVIDER", "EMAIL_SENDING_ENABLED", "EMAIL_DAILY_LIMIT",
             "RESEND_API_KEY", "FROM_EMAIL", "FROM_NAME", "REPLY_TO_EMAIL",
-            "RESEND_WEBHOOK_SECRET",
+            "RESEND_WEBHOOK_SECRET", "INTEGRATION_ENCRYPTION_KEY",
+            "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI",
+            "MICROSOFT_CLIENT_ID", "MICROSOFT_CLIENT_SECRET", "MICROSOFT_TENANT",
+            "MICROSOFT_REDIRECT_URI", "SLACK_CLIENT_ID", "SLACK_CLIENT_SECRET",
+            "SLACK_REDIRECT_URI",
         }:
             monkeypatch.delenv(k, raising=False)
     import config

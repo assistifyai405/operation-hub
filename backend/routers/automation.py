@@ -32,7 +32,11 @@ THROTTLE_SECONDS = 120
 # Catalogs
 # ---------------------------------------------------------------------------
 SAFE_INTERNAL = {"create_task", "add_note", "change_internal_status", "notify_user", "add_to_brief"}
-EXTERNAL = {"prepare_email", "prepare_followup"}
+EXTERNAL = {
+    "prepare_email", "prepare_followup",
+    "create_calendar_event", "create_google_task",
+    "send_slack_message", "send_discord_message", "trigger_webhook",
+}
 GENERATIVE = {"generate_proposal", "generate_contract", "generate_invoice"}
 DESTRUCTIVE = {"archive_project"}
 
@@ -44,6 +48,11 @@ ACTION_META = {
     "add_to_brief":           {"label": "Add to your AI Brief",     "risk": "low",    "time": 2,  "icon": "sparkles",     "kind": "internal"},
     "prepare_email":          {"label": "Prepare an email",         "risk": "medium", "time": 9,  "icon": "mail",         "kind": "external"},
     "prepare_followup":       {"label": "Prepare a follow-up",      "risk": "medium", "time": 9,  "icon": "mail",         "kind": "external"},
+    "create_calendar_event":  {"label": "Create calendar event",    "risk": "medium", "time": 6,  "icon": "calendar",     "kind": "external"},
+    "create_google_task":     {"label": "Create Google Task",       "risk": "medium", "time": 4,  "icon": "check-square", "kind": "external"},
+    "send_slack_message":     {"label": "Send Slack message",       "risk": "medium", "time": 3,  "icon": "message-square", "kind": "external"},
+    "send_discord_message":   {"label": "Send Discord message",     "risk": "medium", "time": 3,  "icon": "message-square", "kind": "external"},
+    "trigger_webhook":        {"label": "Trigger webhook",          "risk": "medium", "time": 3,  "icon": "zap",          "kind": "external"},
     "generate_proposal":      {"label": "Generate a proposal draft","risk": "medium", "time": 23, "icon": "file-text",    "kind": "generative"},
     "generate_contract":      {"label": "Generate a contract draft","risk": "medium", "time": 12, "icon": "scroll-text",  "kind": "generative"},
     "generate_invoice":       {"label": "Prepare an invoice draft", "risk": "medium", "time": 6,  "icon": "receipt",      "kind": "generative"},
@@ -439,6 +448,33 @@ def _prepare_action_payload(action, m):
     if atype in ("prepare_email", "prepare_followup"):
         kind = cfg.get("kind") or "followup"
         return {"email": _draft_email(kind, m)}
+    if atype == "create_calendar_event":
+        return {"calendar": {
+            "title": cfg.get("title") or f"Follow up — {m.get('entity_name') or pn or 'Assistify'}",
+            "description": cfg.get("description") or f"Automation: {m.get('entity_name')}",
+            "provider": cfg.get("provider") or "auto",
+        }}
+    if atype == "create_google_task":
+        return {"task": {
+            "title": cfg.get("title") or f"Follow up on {m.get('entity_name') or 'item'}",
+            "notes": cfg.get("notes") or "",
+        }}
+    if atype == "send_slack_message":
+        return {"slack": {
+            "text": cfg.get("text") or f"Assistify: {m.get('entity_name') or 'an item'} needs attention.",
+            "channel": cfg.get("channel"),
+        }}
+    if atype == "send_discord_message":
+        return {"discord": {
+            "content": cfg.get("content") or cfg.get("text") or f"Assistify: {m.get('entity_name') or 'an item'} needs attention.",
+        }}
+    if atype == "trigger_webhook":
+        return {"webhook": {
+            "event": cfg.get("event") or "automation",
+            "message": cfg.get("message") or f"{m.get('entity_name')} triggered an automation",
+            "data": {"entity": m.get("entity_name"), "client": cn, "project": pn},
+            "prefer": cfg.get("prefer") or "auto",
+        }}
     if atype == "create_task":
         title = (cfg.get("title") or "").replace("{client}", cn or "the client").replace("{project}", pn or "the project")
         if not title:
@@ -555,6 +591,16 @@ def _expected(a, actions_out, m):
         t = x["type"]
         if t in ("prepare_email", "prepare_followup"):
             parts.append("A ready-to-send email draft you can review, edit and send")
+        elif t == "create_calendar_event":
+            parts.append("A calendar event on Google or Microsoft Calendar")
+        elif t == "create_google_task":
+            parts.append("A Google Task")
+        elif t == "send_slack_message":
+            parts.append("A Slack message")
+        elif t == "send_discord_message":
+            parts.append("A Discord message")
+        elif t == "trigger_webhook":
+            parts.append("An outbound webhook / Zapier trigger")
         elif t == "create_task":
             parts.append(f"A new task: “{(x['payload'].get('task') or {}).get('title', 'follow-up')}”")
         elif t == "add_note":
@@ -794,6 +840,27 @@ async def _execute_one(org, action, approval):
                 await perform_send(refreshed, owner)
             except Exception:
                 logging.exception("automation auto-send blocked or failed for %s", doc["id"])
+    elif atype == "create_calendar_event":
+        from integrations.actions import create_calendar_event
+        result = await create_calendar_event(org, payload.get("calendar") or {})
+        action["result"] = result
+    elif atype == "create_google_task":
+        from integrations.actions import create_google_task
+        result = await create_google_task(org, payload.get("task") or {})
+        action["result"] = result
+    elif atype == "send_slack_message":
+        from integrations.actions import send_slack_message
+        result = await send_slack_message(org, payload.get("slack") or {})
+        action["result"] = result
+    elif atype == "send_discord_message":
+        from integrations.actions import send_discord_message
+        result = await send_discord_message(org, payload.get("discord") or {})
+        action["result"] = result
+    elif atype == "trigger_webhook":
+        from integrations.actions import trigger_webhook
+        wh = payload.get("webhook") or {}
+        result = await trigger_webhook(org, wh, prefer=wh.get("prefer") or "auto")
+        action["result"] = result
     elif atype in ("generate_proposal", "generate_contract", "generate_invoice"):
         pid = ent.get("project_id")
         if pid:

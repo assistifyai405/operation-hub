@@ -213,14 +213,33 @@ Automations (`prepare_email` / `prepare_followup`) create real `outbound_emails`
 
 `POST /api/webhooks/resend` verifies Svix signatures with `RESEND_WEBHOOK_SECRET` and updates `deliveryStatus` (`delivered` / `bounced` / `complained`). No JWT. Idempotent via `svix-id`.
 
+## Integrations Hub
+
+Organization-scoped connections for Google Workspace, Microsoft 365, Slack, Discord, Zapier, and generic REST webhooks.
+
+| Provider | Auth | Capabilities |
+|---|---|---|
+| Google Workspace | OAuth | Gmail send scope, Calendar events, Google Tasks |
+| Microsoft 365 | OAuth | Outlook mail send, Calendar events |
+| Slack | OAuth or Incoming Webhook | `chat.postMessage` / webhook |
+| Discord | Incoming Webhook | Channel messages |
+| Zapier | Catch Hook URL | Automation triggers |
+| Webhook | HTTPS URL | Generic JSON POST |
+
+API: `GET /api/integrations`, `GET /api/integrations/status`, `POST /api/integrations/connect|disconnect|refresh|health`, OAuth callback at `/api/integrations/oauth/callback/{provider}`. Refresh tokens and webhook secrets are Fernet-encrypted; never returned to the frontend.
+
+Automations can run: `create_calendar_event`, `create_google_task`, `send_slack_message`, `send_discord_message`, `trigger_webhook` (external / approval-gated by default).
+
 ## Running tests
 
 ```bash
 cd backend
 source .venv/bin/activate
 
-# Sprint 12–14 suite
-pytest tests/test_sprint12_hardening.py tests/test_sprint12_http.py tests/test_sprint13_team.py tests/test_sprint14_email.py -n 0 -q
+# Sprint 12–15 suite
+pytest tests/test_sprint12_hardening.py tests/test_sprint12_http.py \
+       tests/test_sprint13_team.py tests/test_sprint14_email.py \
+       tests/test_sprint15_integrations.py -n 0 -q
 
 # Full HTTP suites need a running API + Mongo:
 export REACT_APP_BACKEND_URL=http://localhost:8000
@@ -240,6 +259,7 @@ pytest tests/test_auth.py -n 0 -q
 9. Optional: `RESEND_WEBHOOK_SECRET` + Resend dashboard webhook → `/api/webhooks/resend`
 10. Confirm cookies are Secure on HTTPS
 11. Do not ship default demo passwords
+12. Integrations: set `INTEGRATION_ENCRYPTION_KEY`, Google/Microsoft/Slack OAuth client credentials, and redirect URIs pointing at `/api/integrations/oauth/callback/{provider}`
 
 ## Product docs
 
