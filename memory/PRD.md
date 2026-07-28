@@ -88,6 +88,7 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 - Sprint 15 (2026-07): Universal Integrations Hub — Google Workspace / Microsoft 365 OAuth, Slack / Discord / Zapier / REST webhooks, Fernet-encrypted credentials, Integrations page, automation actions (calendar, Google Tasks, Slack, Discord, webhooks). No Stripe.
 - Sprint 16 (2026-07): Shared business inbox — Gmail + Outlook sync (history/delta + cursor reset), mailboxes/threads/inbound_messages, CRM matching, AI summary + reply drafts via Sprint 14 outbound approval, Inbox UI, attachment on-demand download, inbox automation event metadata. Provider-threaded send deferred. No Stripe.
 - Sprint 17 (2026-07): Native Gmail & Outlook sending for inbox-linked replies — transport routing (gmail/microsoft vs console/resend), MIME/Graph threading, idempotent send attempts, ambiguous-delivery statuses, Email Center transport UX. Standalone Resend/console preserved. No Stripe.
+- Sprint 18 (2026-07): Production deployment & reliability — Docker/compose, Redis locks & rate limits, job queue + worker/scheduler, health endpoints, structured logging, ops Settings tab, CI, reconciliation, webhook dedupe. No Stripe.
 
 ## Backlog
 - P1: Persist assistant error markers / show error toast on AI failure.
@@ -95,11 +96,10 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 - P2: Stripe billing integration (`REACT_APP_BILLING_ENABLED` remains false); use `GET /api/team/seats` for plan limits.
 - P2: Two-way calendar sync; Graph large-file upload sessions for oversized attachments.
 - P2: Collapse dual onboarding APIs (legacy GET/POST in server.py + Sprint 9 router) after client migration.
-- P2: Health endpoint to verify LLM key validity.
 - P2: Multi-organization membership per user (currently one org per user).
 - P2: Richer email delivery analytics (opened/clicked) once product requires it — webhook already stores delivered/bounced/complained.
 - P2: Event-driven automations on inbox events (`inbound_message_received`, etc.) beyond metadata/logging.
 ## Next Tasks
 - Configure OpenAI (or Emergent) keys in each environment and validate live AI flows.
-- Reconnect Google/Microsoft OAuth; validate **live** native inbox reply send with real credentials (mocked tests only in CI).
+- Deploy controlled beta: Atlas + Redis + worker/scheduler; reconnect OAuth callbacks to production URLs.
 - Stripe / billing when monetization is ready (enforce seat_limit via seats helper).

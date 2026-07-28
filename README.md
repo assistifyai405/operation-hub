@@ -323,21 +323,75 @@ Stored fields: `transportProvider`, `mailboxId`, `integrationId`, `providerThrea
 
 Inbox API: `/api/inbox/mailboxes`, `/api/inbox/threads`, summarize, draft-reply, link/unlink, attachment download, events catalog.
 
+## Deployment (Sprint 18)
+
+Assistify is deployable outside Emergent. There is **no one-click cloud deploy** in this repo — use Docker Compose locally and your preferred hosts in production.
+
+### Local Docker Compose
+
+```bash
+docker compose config
+docker compose up --build
+# API http://localhost:8000  ·  UI http://localhost:3000  ·  Mongo/Redis included
+# Worker: python -m jobs.worker   Scheduler: python -m jobs.scheduler
+```
+
+Health: `GET /api/health/live`, `/api/health/ready`, `/api/health`.
+
+### Recommended production layout
+
+| Component | Suggestion |
+|---|---|
+| API | Render / Railway / any container host running `backend` image |
+| Worker | Same image, `python -m jobs.worker` |
+| Scheduler | Same image, `python -m jobs.scheduler` (one replica) |
+| Frontend | Vercel / Netlify / static nginx (`frontend` image) |
+| MongoDB | **MongoDB Atlas** (do not require self-hosted Mongo in cloud) |
+| Redis | Upstash / Redis Cloud / managed Redis (`REDIS_URL`) |
+
+See `docker-compose.production.example.yml`. Set strong `JWT_SECRET`, explicit `CORS_ORIGINS`, HTTPS `FRONTEND_URL`, OAuth redirect URIs to the production API host, verify Resend domain, reconnect Google/Microsoft after URL/scope changes.
+
+### Workers & jobs
+
+- Without Redis / with `WORKER_ENABLED=false`, jobs run **inline** (dev-friendly).
+- Production multi-worker mode requires `REDIS_URL` (+ `REQUIRE_REDIS` / `WORKER_ENABLED`).
+- Job payloads store **IDs only** (never OAuth tokens).
+- Intervals: `INBOX_SYNC_INTERVAL_MINUTES`, `INTEGRATION_HEALTH_INTERVAL_MINUTES`, `EMAIL_RECONCILIATION_INTERVAL_MINUTES`.
+
+### Observability
+
+- Structured JSON logs when `JSON_LOGS=true` (default in production).
+- Optional `SENTRY_DSN` (disabled when unset).
+- Settings → **Operations** (owner/admin): readiness, failed jobs, stuck emails, mailbox sync, reconcile.
+
+### Backups
+
+```bash
+export MONGO_URL='mongodb+srv://…'
+export DB_NAME=assistify
+./scripts/backup-mongo.sh ./backups
+```
+
+Also back up env secrets and object-storage uploads. Roll back by redeploying the previous image tag and restoring Atlas point-in-time / dump if needed.
+
+### CI
+
+GitHub Actions (`.github/workflows/ci.yml`): backend pytest Sprint 12–18, frontend build, Docker image builds, basic secret scan.
+
 ## Running tests
 
 ```bash
 cd backend
 source .venv/bin/activate
 
-# Sprint 12–17 suite
+# Sprint 12–18 suite
 pytest tests/test_sprint12_hardening.py tests/test_sprint12_http.py \
        tests/test_sprint13_team.py tests/test_sprint14_email.py \
        tests/test_sprint15_integrations.py tests/test_sprint16_inbox.py \
-       tests/test_sprint17_native_send.py -n 0 -q
+       tests/test_sprint17_native_send.py tests/test_sprint18_ops.py -n 0 -q
 
-# Full HTTP suites need a running API + Mongo:
-export REACT_APP_BACKEND_URL=http://localhost:8000
-pytest tests/test_auth.py -n 0 -q
+# Optional Redis integration (when REDIS_URL is set):
+# REDIS_URL=redis://localhost:6379/0 pytest tests/test_sprint18_ops.py -n 0 -q
 ```
 
 ## Deployment checklist

@@ -90,6 +90,21 @@ class Settings:
     cookie_secure: bool
     cookie_samesite: str  # lax | none | strict
     invitation_expiry_days: int
+    # Sprint 18 ops / deployment
+    redis_url: Optional[str]
+    log_level: str
+    trusted_hosts: list
+    worker_enabled: bool
+    scheduler_enabled: bool
+    require_redis: bool
+    sentry_dsn: Optional[str]
+    release_version: str
+    app_url: Optional[str]
+    api_url: Optional[str]
+    inbox_sync_interval_minutes: int
+    integration_health_interval_minutes: int
+    email_reconciliation_interval_minutes: int
+    json_logs: bool
 
     @property
     def is_development(self) -> bool:
@@ -251,6 +266,29 @@ def load_settings(*, strict: bool = True) -> Settings:
     if email_daily_limit < 1 or email_daily_limit > 10000:
         raise ConfigError("EMAIL_DAILY_LIMIT must be between 1 and 10000")
 
+    # Reject credentialed CORS that includes wildcard mixed with origins in production
+    if environment == "production" and any(o == "*" for o in cors_origins):
+        raise ConfigError("CORS_ORIGINS must not include '*' in production")
+
+    redis_url = _env("REDIS_URL")
+    worker_enabled = _truthy("WORKER_ENABLED", False)
+    scheduler_enabled = _truthy("SCHEDULER_ENABLED", False)
+    require_redis = _truthy("REQUIRE_REDIS", worker_enabled if environment == "production" else False)
+    if environment == "production" and (worker_enabled or require_redis) and not redis_url:
+        raise ConfigError("REDIS_URL is required in production when WORKER_ENABLED or REQUIRE_REDIS is true")
+
+    def _int_env(name: str, default: str, lo: int, hi: int) -> int:
+        try:
+            v = int(_env(name, default) or default)
+        except ValueError as e:
+            raise ConfigError(f"{name} must be an integer") from e
+        if v < lo or v > hi:
+            raise ConfigError(f"{name} must be between {lo} and {hi}")
+        return v
+
+    trusted_raw = _env("TRUSTED_HOSTS", "") or ""
+    trusted_hosts = [h.strip() for h in trusted_raw.split(",") if h.strip()]
+
     settings = Settings(
         environment=environment,
         mongo_url=mongo_url or "",
@@ -289,8 +327,31 @@ def load_settings(*, strict: bool = True) -> Settings:
         cookie_secure=cookie_secure,
         cookie_samesite=cookie_samesite,
         invitation_expiry_days=invitation_expiry_days,
+        redis_url=redis_url,
+        log_level=(_env("LOG_LEVEL", "INFO") or "INFO").upper(),
+        trusted_hosts=trusted_hosts,
+        worker_enabled=worker_enabled,
+        scheduler_enabled=scheduler_enabled,
+        require_redis=require_redis,
+        sentry_dsn=_env("SENTRY_DSN"),
+        release_version=_env("RELEASE_VERSION", "dev") or "dev",
+        app_url=_env("APP_URL"),
+        api_url=_env("API_URL"),
+        inbox_sync_interval_minutes=_int_env("INBOX_SYNC_INTERVAL_MINUTES", "15", 1, 1440),
+        integration_health_interval_minutes=_int_env("INTEGRATION_HEALTH_INTERVAL_MINUTES", "60", 1, 1440),
+        email_reconciliation_interval_minutes=_int_env("EMAIL_RECONCILIATION_INTERVAL_MINUTES", "10", 1, 1440),
+        json_logs=_truthy("JSON_LOGS", environment == "production"),
     )
     _settings = settings
+    # Safe startup log (no secrets)
+    logger.info(
+        "Settings loaded env=%s worker=%s scheduler=%s redis=%s release=%s",
+        settings.environment,
+        settings.worker_enabled,
+        settings.scheduler_enabled,
+        "configured" if settings.redis_url else "unset",
+        settings.release_version,
+    )
     return settings
 
 

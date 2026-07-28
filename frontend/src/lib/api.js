@@ -23,9 +23,17 @@ export function formatApiErrorDetail(detail) {
   if (Array.isArray(detail))
     return detail.map((e) => (e && typeof e.msg === "string" ? e.msg : JSON.stringify(e))).filter(Boolean).join(" ");
   if (detail && typeof detail === "object") {
+    // Sprint 18 envelope: { error: { code, message, requestId } }
+    if (detail.error && typeof detail.error === "object") {
+      const e = detail.error;
+      if (e.actionable && e.message) return `${e.message} — ${e.actionable}`;
+      if (typeof e.message === "string") return e.message;
+    }
     if (detail.actionable && detail.message) return `${detail.message} — ${detail.actionable}`;
     if (typeof detail.message === "string") return detail.message;
     if (typeof detail.msg === "string") return detail.msg;
+    // readiness body embedded in detail
+    if (detail.status === "degraded" && detail.checks) return "Service not ready";
   }
   return String(detail);
 }
@@ -73,7 +81,7 @@ async function req(path, options = {}) {
   }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(formatApiErrorDetail(err.detail) || "Request failed");
+    throw new Error(formatApiErrorDetail(err.detail || err.error || err) || "Request failed");
   }
   if (res.status === 204) return null;
   return res.json();
@@ -402,4 +410,13 @@ export const inboxApi = {
   draftReply: (id) => req(`/inbox/threads/${id}/draft-reply`, { method: "POST" }),
   link: (id, body) => req(`/inbox/threads/${id}/link`, { method: "POST", body: JSON.stringify(body) }),
   unlink: (id) => req(`/inbox/threads/${id}/link`, { method: "DELETE" }),
+};
+
+export const opsApi = {
+  status: () => req("/ops/status"),
+  retryJob: (id) => req(`/ops/jobs/${id}/retry`, { method: "POST" }),
+  syncMailbox: (id) => req(`/ops/mailboxes/${id}/sync`, { method: "POST" }),
+  reconcile: () => req("/ops/emails/reconcile", { method: "POST" }),
+  resolveEmail: (id, body) => req(`/ops/emails/${id}/resolve`, { method: "POST", body: JSON.stringify(body) }),
+  integrationHealth: (provider) => req(`/ops/integrations/${provider}/health`, { method: "POST" }),
 };

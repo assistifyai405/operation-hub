@@ -5,6 +5,7 @@ import json
 import logging
 
 from fastapi import APIRouter, HTTPException, Request
+from pymongo.errors import DuplicateKeyError
 
 from config import get_settings
 from core import db, now_iso
@@ -17,8 +18,7 @@ router = APIRouter(prefix="/api/webhooks")
 async def resend_webhook(request: Request):
     """Verify Svix signature and update delivery state idempotently.
 
-    Configure in Resend dashboard → Webhooks → endpoint
-    ``https://<api-host>/api/webhooks/resend`` with secret as RESEND_WEBHOOK_SECRET.
+    Invalid signatures are never acknowledged as successful.
     """
     settings = get_settings()
     secret = (settings.resend_webhook_secret or "").strip()
@@ -39,10 +39,10 @@ async def resend_webhook(request: Request):
             "webhook_secret": secret,
         })
     except ValueError as e:
-        logger.warning("Resend webhook verification failed: %s", e)
+        logger.warning("Resend webhook verification failed")
         raise HTTPException(status_code=401, detail="Invalid webhook signature") from e
     except Exception as e:
-        logger.error("Resend webhook verify error: %s", e)
+        logger.error("Resend webhook verify error: %s", type(e).__name__)
         raise HTTPException(status_code=401, detail="Webhook verification failed") from e
 
     try:
@@ -55,36 +55,47 @@ async def resend_webhook(request: Request):
     provider_id = data.get("email_id") or data.get("id")
     svix_id = headers["id"]
 
-    # Idempotency: skip if we've already processed this svix id
+    # Atomic idempotency via unique svixId
     if svix_id:
-        existing = await db.email_webhook_events.find_one({"svixId": svix_id})
-        if existing:
+        try:
+            await db.email_webhook_events.insert_one({
+                "svixId": svix_id,
+                "type": event_type,
+                "providerMessageId": provider_id,
+                "deliveryStatus": None,
+                "createdAt": now_iso(),
+                "processedAt": None,
+            })
+        except DuplicateKeyError:
             return {"ok": True, "duplicate": True}
+        except Exception:
+            existing = await db.email_webhook_events.find_one({"svixId": svix_id})
+            if existing:
+                return {"ok": True, "duplicate": True}
+            raise
 
-    delivery_map = {
-        "email.delivered": "delivered",
-        "email.bounced": "bounced",
-        "email.complained": "complained",
-        "email.failed": "failed",
-        "email.delivery_delayed": "delayed",
-    }
-    delivery = delivery_map.get(event_type)
-
-    if provider_id and delivery:
-        await db.outbound_emails.update_one(
-            {"providerMessageId": provider_id},
-            {"$set": {
-                "deliveryStatus": delivery,
-                "deliveryUpdatedAt": now_iso(),
-                "updatedAt": now_iso(),
-            }},
+    # Enqueue async processing (or run inline in sync mode)
+    try:
+        from jobs import enqueue
+        import jobs.handlers  # noqa: F401
+        await enqueue(
+            "process_webhook",
+            payload={
+                "type": event_type,
+                "data": {"email_id": provider_id, "id": provider_id},
+                "providerMessageId": provider_id,
+                "svixId": svix_id,
+            },
+            idempotency_key=f"webhook:resend:{svix_id}" if svix_id else None,
         )
+    except Exception:
+        # Fallback synchronous apply
+        from jobs.webhooks import apply_resend_event
+        await apply_resend_event({
+            "type": event_type,
+            "data": data,
+            "providerMessageId": provider_id,
+            "svixId": svix_id,
+        })
 
-    await db.email_webhook_events.insert_one({
-        "svixId": svix_id,
-        "type": event_type,
-        "providerMessageId": provider_id,
-        "deliveryStatus": delivery,
-        "createdAt": now_iso(),
-    })
-    return {"ok": True, "type": event_type, "deliveryStatus": delivery}
+    return {"ok": True, "type": event_type, "accepted": True}

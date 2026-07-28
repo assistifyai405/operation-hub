@@ -1,0 +1,69 @@
+# Example production-oriented compose (use managed MongoDB Atlas + Redis in real deploys).
+# Copy and fill secrets via env file — never commit real credentials.
+services:
+  backend:
+    image: ghcr.io/example/assistify-backend:${RELEASE_VERSION:-latest}
+    environment:
+      ENVIRONMENT: production
+      MONGO_URL: ${MONGO_URL}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      FRONTEND_URL: ${FRONTEND_URL}
+      APP_URL: ${APP_URL}
+      API_URL: ${API_URL}
+      REDIS_URL: ${REDIS_URL}
+      WORKER_ENABLED: "true"
+      REQUIRE_REDIS: "true"
+      SCHEDULER_ENABLED: "false"
+      EMAIL_PROVIDER: resend
+      EMAIL_SENDING_ENABLED: ${EMAIL_SENDING_ENABLED:-false}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      FROM_EMAIL: ${FROM_EMAIL}
+      INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      RELEASE_VERSION: ${RELEASE_VERSION:-}
+      JSON_LOGS: "true"
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  worker:
+    image: ghcr.io/example/assistify-backend:${RELEASE_VERSION:-latest}
+    command: ["python", "-m", "jobs.worker"]
+    environment:
+      ENVIRONMENT: production
+      MONGO_URL: ${MONGO_URL}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: ${REDIS_URL}
+      WORKER_ENABLED: "true"
+      REQUIRE_REDIS: "true"
+      EMAIL_PROVIDER: resend
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY}
+      RELEASE_VERSION: ${RELEASE_VERSION:-}
+      JSON_LOGS: "true"
+    restart: unless-stopped
+
+  scheduler:
+    image: ghcr.io/example/assistify-backend:${RELEASE_VERSION:-latest}
+    command: ["python", "-m", "jobs.scheduler"]
+    environment:
+      ENVIRONMENT: production
+      MONGO_URL: ${MONGO_URL}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: ${REDIS_URL}
+      SCHEDULER_ENABLED: "true"
+      WORKER_ENABLED: "true"
+      REQUIRE_REDIS: "true"
+      RELEASE_VERSION: ${RELEASE_VERSION:-}
+      JSON_LOGS: "true"
+    restart: unless-stopped
+
+  # Prefer static hosting (Vercel) for frontend; optional container:
+  # frontend:
+  #   image: ghcr.io/example/assistify-frontend:${RELEASE_VERSION:-latest}
+  #   ports: ["80:80"]

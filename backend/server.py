@@ -50,11 +50,17 @@ from routers.emails import router as emails_router
 from routers.webhooks import router as webhooks_router
 from routers.integrations import router as integrations_router
 from routers.inbox import router as inbox_router
+from routers.health import router as health_router
+from routers.ops import router as ops_router
 from routers import team as team_mod
 from permissions import require_admin, normalize_role
 import ai_activity as aia
+from observability import RequestContextMiddleware, configure_logging
+from errors import install_error_handlers
 
 app = FastAPI()
+install_error_handlers(app)
+app.add_middleware(RequestContextMiddleware)
 api_router = APIRouter(prefix="/api")
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -2124,6 +2130,8 @@ app.include_router(emails_router)
 app.include_router(webhooks_router)
 app.include_router(integrations_router)
 app.include_router(inbox_router)
+app.include_router(health_router)
+app.include_router(ops_router)
 
 def _cors_origins() -> List[str]:
     try:
@@ -2142,6 +2150,24 @@ app.add_middleware(
 )
 
 logging.basicConfig(level=logging.INFO)
+try:
+    cfg0 = get_app_settings()
+    configure_logging(cfg0.log_level, json_logs=cfg0.json_logs)
+    if cfg0.sentry_dsn:
+        try:
+            import sentry_sdk
+            from sentry_sdk.integrations.fastapi import FastApiIntegration
+            sentry_sdk.init(
+                dsn=cfg0.sentry_dsn,
+                environment=cfg0.environment,
+                release=cfg0.release_version,
+                integrations=[FastApiIntegration()],
+                send_default_pii=False,
+            )
+        except Exception as e:
+            logging.getLogger(__name__).warning("Sentry init skipped: %s", e)
+except Exception:
+    pass
 logger = logging.getLogger(__name__)
 
 
@@ -2163,35 +2189,16 @@ async def startup():
         logger.info("Object storage initialized (%s)", cfg.storage_provider)
     except Exception as e:
         logger.error(f"Storage init failed: {e}")
-    await db.users.create_index("email", unique=True)
-    await db.users.create_index([("organizationId", 1), ("role", 1)])
-    await db.sessions.create_index("jti")
-    await db.sessions.create_index("userId")
-    await db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
-    await db.email_verification_tokens.create_index("expires_at", expireAfterSeconds=0)
-    await db.login_attempts.create_index("identifier")
-    await db.ai_activities.create_index([("organizationId", 1), ("created_at", -1)])
-    await db.organization_invitations.create_index("tokenHash", unique=True)
-    await db.organization_invitations.create_index([("organizationId", 1), ("email", 1), ("status", 1)])
-    await db.audit_logs.create_index([("organizationId", 1), ("createdAt", -1)])
-    await db.outbound_emails.create_index([("organizationId", 1), ("status", 1), ("updatedAt", -1)])
-    await db.outbound_emails.create_index([("organizationId", 1), ("createdBy", 1)])
-    await db.outbound_emails.create_index("providerMessageId")
-    await db.outbound_emails.create_index([("organizationId", 1), ("internetMessageId", 1)])
-    await db.outbound_emails.create_index([("organizationId", 1), ("automationApprovalId", 1)])
-    await db.email_webhook_events.create_index("svixId", unique=True, sparse=True)
-    await db.integrations.create_index([("organizationId", 1), ("provider", 1)], unique=True)
-    await db.integration_oauth_states.create_index("state", unique=True)
-    await db.integration_oauth_states.create_index("expiresAt")
-    await db.mailboxes.create_index([("organizationId", 1), ("provider", 1), ("providerAccountId", 1)], unique=True)
-    await db.email_threads.create_index([("organizationId", 1), ("mailboxId", 1), ("providerThreadId", 1)], unique=True)
-    await db.email_threads.create_index([("organizationId", 1), ("latestMessageAt", -1)])
-    await db.inbound_messages.create_index(
-        [("organizationId", 1), ("mailboxId", 1), ("providerMessageId", 1)], unique=True,
-    )
-    await db.inbound_messages.create_index([("organizationId", 1), ("internetMessageId", 1)])
-    await db.inbound_messages.create_index([("organizationId", 1), ("threadId", 1), ("receivedAt", 1)])
-    await db.inbox_events.create_index([("organizationId", 1), ("createdAt", -1)])
+    from indexes import ensure_indexes
+    idx = await ensure_indexes(db)
+    if not idx.get("ok"):
+        logger.error("Index initialization reported errors: %s", idx.get("errors"))
+
+    # Import job handlers for registration
+    try:
+        import jobs.handlers  # noqa: F401
+    except Exception as e:
+        logger.warning("Job handlers import failed: %s", e)
 
     logger.info(
         "Email provider=%s sending_enabled=%s",
