@@ -1,57 +1,63 @@
-"""Transactional email delivery via Resend, with a safe dev-mode fallback.
+"""Transactional email delivery (verify / reset / invite).
 
-If RESEND_API_KEY is not set, emails are NOT sent — the caller falls back to
-dev mode (link logged + surfaced in the API response). Set RESEND_API_KEY in
-the environment to switch on real delivery with zero code changes.
+Uses the shared email provider (Resend or console). Transactional mail is NOT
+gated by EMAIL_SENDING_ENABLED so auth flows keep working in development.
 """
-import os
-import html
-import asyncio
-import logging
+from __future__ import annotations
 
-import resend
+import html
+import logging
+from typing import Optional
+
+from email_providers import EmailMessage, get_email_provider
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_FROM = "onboarding@resend.dev"
-
-
-def _api_key() -> str:
-    return (os.environ.get("RESEND_API_KEY") or "").strip()
-
-
-def _from_email() -> str:
-    return (os.environ.get("FROM_EMAIL") or DEFAULT_FROM).strip()
-
 
 def is_enabled() -> bool:
-    """True when real email delivery is configured."""
-    return bool(_api_key())
+    """True when real (external) email delivery is configured — i.e. Resend with a key.
+
+    Console provider is always "configured" for local testing but is not real delivery;
+    callers use this to decide whether to surface invitation links in API responses.
+    """
+    try:
+        from config import get_settings
+        import os
+        provider = (os.environ.get("EMAIL_PROVIDER") or get_settings().email_provider or "console").lower()
+        if provider != "resend":
+            return False
+        return get_email_provider().is_configured()
+    except Exception:
+        return False
 
 
 async def _send(to_email: str, subject: str, html_content: str) -> dict:
-    """Send one email. Never raises — returns a status dict the caller can log."""
-    key = _api_key()
-    if not key:
-        logger.info(f"[EMAIL:DEV] Skipped '{subject}' to {to_email} (RESEND_API_KEY not set)")
-        return {"sent": False, "mode": "dev"}
-    resend.api_key = key
-    params = {"from": _from_email(), "to": [to_email], "subject": subject, "html": html_content}
+    """Send one transactional email. Never raises — returns a status dict."""
     try:
-        res = await asyncio.to_thread(resend.Emails.send, params)
-        email_id = res.get("id") if isinstance(res, dict) else getattr(res, "id", None)
-        logger.info(f"[EMAIL:SENT] '{subject}' to {to_email} id={email_id}")
-        return {"sent": True, "mode": "resend", "id": email_id}
+        provider = get_email_provider()
     except Exception as e:
-        logger.error(f"[EMAIL:FAIL] '{subject}' to {to_email}: {e}")
+        logger.error("[EMAIL:TX] provider unavailable: %s", e)
         return {"sent": False, "mode": "error", "error": str(e)}
+
+    if not provider.is_configured():
+        logger.info("[EMAIL:TX] Skipped '%s' to %s (provider not configured)", subject, to_email)
+        return {"sent": False, "mode": "unconfigured"}
+
+    result = await provider.send(EmailMessage(to=[to_email], subject=subject, html=html_content))
+    if result.ok:
+        return {
+            "sent": True,
+            "mode": result.provider,
+            "id": result.provider_message_id,
+            "preview": result.preview,
+        }
+    return {"sent": False, "mode": "error", "error": result.error}
 
 
 def _shell(brand: dict, heading: str, body_html: str, cta_label: str, cta_url: str, footer_note: str) -> str:
     company = html.escape((brand or {}).get("company_name") or "Assistify OS")
     primary = (brand or {}).get("primary") or "#7C3AED"
     logo_url = (brand or {}).get("logo_url") or ""
-    # Only embed logos that are publicly fetchable (email clients cannot pass auth).
     show_logo = logo_url.startswith("http") and "/api/settings/image/" not in logo_url
     header_inner = (
         f'<img src="{html.escape(logo_url)}" alt="{company}" height="36" style="height:36px;display:block;border:0;" />'
@@ -118,3 +124,28 @@ async def send_password_reset_email(to_email: str, reset_link: str, brand: dict 
         "This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.",
     )
     return await _send(to_email, f"Reset your password · {company}", html_content)
+
+
+async def send_invitation_email(
+    to_email: str,
+    invite_link: str,
+    brand: dict = None,
+    *,
+    inviter_name: str = "",
+    role: str = "member",
+    org_name: str = "your team",
+) -> dict:
+    company = (brand or {}).get("company_name") or org_name or "Assistify OS"
+    who = html.escape(inviter_name or "A teammate")
+    org = html.escape(org_name or company)
+    role_label = html.escape((role or "member").capitalize())
+    body = (
+        f"{who} invited you to join <strong style=\"color:#f4f4f6;\">{org}</strong> "
+        f"on Assistify OS as a <strong style=\"color:#f4f4f6;\">{role_label}</strong>."
+    )
+    html_content = _shell(
+        brand, f"Join {org}", body,
+        "Accept invitation", invite_link,
+        "This invitation expires soon. If you weren't expecting it, you can ignore this email.",
+    )
+    return await _send(to_email, f"You're invited to {company}", html_content)

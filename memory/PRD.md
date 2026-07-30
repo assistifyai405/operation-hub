@@ -12,7 +12,9 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 ## Architecture
 - Frontend: React 19 + React Router 7, Tailwind, shadcn/ui, Recharts, lucide-react. Fixed sidebar layout + glass header. AuthProvider context + ProtectedRoute; api.js token store (Bearer + refresh interceptor).
 - Backend: FastAPI + MongoDB. Auth via PyJWT + bcrypt (auth.py). Access token (30m, Bearer + cookie) + rotating refresh token (httpOnly cookie /api/auth). All CRUD/AI/dashboard endpoints org-scoped via current_org dependency + require_project guard.
-- LLM: emergentintegrations LlmChat, model openai/gpt-5.4, EMERGENT_LLM_KEY.
+- Config (Sprint 12): `config.py` validates MONGO_URL/DB_NAME/JWT_SECRET; production rejects weak JWT secrets and wildcard CORS; demo seed is opt-in via ENABLE_DEMO_SEED.
+- LLM: `AI_PROVIDER=openai` (OPENAI_API_KEY) or `AI_PROVIDER=emergent` (EMERGENT_LLM_KEY); `AI_MODEL` configurable; `ai_service.AIService` is the single product interface.
+- Storage: `STORAGE_PROVIDER=local` (UPLOAD_DIR) or `emergent`; existing document/branding download routes remain the auth boundary.
 
 ## User Personas
 - Solo founders / agency owners managing multiple clients and projects who want AI leverage.
@@ -79,15 +81,25 @@ Build a premium AI business operating system called Assistify OS — an all-in-o
 - Verified: backend 100%, frontend 100% (testing agent iteration_1).
 
 ## Known Status
-- AI Chat/Agents return live responses ONLY once the Emergent LLM key has balance. Currently $0 → returns budget error (user opted to fund later). UI flow works end-to-end.
+- AI features require a configured provider key (`OPENAI_API_KEY` when `AI_PROVIDER=openai`, or `EMERGENT_LLM_KEY` when `AI_PROVIDER=emergent`). Without a key/balance, AI endpoints return clear configuration or budget errors; non-AI CRUD continues to work.
+- Sprint 12 (2026-07): production hardening & local portability — env validation, opt-in demo seed, localhost HTTP cookies, OpenAI + local storage providers, README + `.env.example` files.
+- Sprint 13 (2026-07): Team members, invitations, RBAC (owner/admin/member), hashed invite tokens, Settings → Team UI, `/invite/:token` acceptance flow, audit log, seat-count helper (no Stripe enforcement yet).
+- Sprint 14 (2026-07): Real outbound email — Resend/console providers, org email settings, draft + approval workflow, Email Center UI, automation → outbound drafts, audit events, Resend webhooks for delivery state. `EMAIL_SENDING_ENABLED` defaults false; no Stripe.
+- Sprint 15 (2026-07): Universal Integrations Hub — Google Workspace / Microsoft 365 OAuth, Slack / Discord / Zapier / REST webhooks, Fernet-encrypted credentials, Integrations page, automation actions (calendar, Google Tasks, Slack, Discord, webhooks). No Stripe.
+- Sprint 16 (2026-07): Shared business inbox — Gmail + Outlook sync (history/delta + cursor reset), mailboxes/threads/inbound_messages, CRM matching, AI summary + reply drafts via Sprint 14 outbound approval, Inbox UI, attachment on-demand download, inbox automation event metadata. Provider-threaded send deferred. No Stripe.
+- Sprint 17 (2026-07): Native Gmail & Outlook sending for inbox-linked replies — transport routing (gmail/microsoft vs console/resend), MIME/Graph threading, idempotent send attempts, ambiguous-delivery statuses, Email Center transport UX. Standalone Resend/console preserved. No Stripe.
+- Sprint 18 (2026-07): Production deployment & reliability — Docker/compose, Redis locks & rate limits, job queue + worker/scheduler, health endpoints, structured logging, ops Settings tab, CI, reconciliation, webhook dedupe. No Stripe.
 
 ## Backlog
 - P1: Persist assistant error markers / show error toast on AI failure.
 - P1: Add data-testid to kanban columns/cards.
-- P2: CRUD persistence for clients/projects/tasks (currently mock).
-- P2: Real auth + multi-user.
-- P2: Health endpoint to verify LLM key validity.
-
+- P2: Stripe billing integration (`REACT_APP_BILLING_ENABLED` remains false); use `GET /api/team/seats` for plan limits.
+- P2: Two-way calendar sync; Graph large-file upload sessions for oversized attachments.
+- P2: Collapse dual onboarding APIs (legacy GET/POST in server.py + Sprint 9 router) after client migration.
+- P2: Multi-organization membership per user (currently one org per user).
+- P2: Richer email delivery analytics (opened/clicked) once product requires it — webhook already stores delivered/bounced/complained.
+- P2: Event-driven automations on inbox events (`inbound_message_received`, etc.) beyond metadata/logging.
 ## Next Tasks
-- Fund LLM key and validate live AI chat.
-- Wire real data persistence for core entities if requested.
+- Configure OpenAI (or Emergent) keys in each environment and validate live AI flows.
+- Deploy controlled beta: Atlas + Redis + worker/scheduler; reconnect OAuth callbacks to production URLs.
+- Stripe / billing when monetization is ready (enforce seat_limit via seats helper).

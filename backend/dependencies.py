@@ -4,6 +4,7 @@ from fastapi import Request, HTTPException, Depends
 
 from core import db
 import auth as A
+from rate_limit import rate_limit, _rl_store  # noqa: F401 — re-export for tests
 
 
 def public_user(u: dict) -> dict:
@@ -50,19 +51,6 @@ async def require_project(project_id: str, org: str) -> dict:
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
     return p
-
-
-# --- simple in-memory rate limiter (per process) ---
-_rl_store: dict = {}
-
-
-def rate_limit(key: str, max_calls: int, window_s: int):
-    now = time.time()
-    calls = [t for t in _rl_store.get(key, []) if now - t < window_s]
-    if len(calls) >= max_calls:
-        raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
-    calls.append(now)
-    _rl_store[key] = calls
 
 
 def _client_ip(request: Request) -> str:

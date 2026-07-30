@@ -5,6 +5,11 @@ AI discovery, Knowledge Brain business-profile generation, smart automation
 recommendations, labeled demo workspace seeding, first-success and a persistent
 checklist. Everything is org-scoped and reuses existing engines (memory profile,
 automation templates, demo seed).
+
+NOTE (Sprint 12): This router owns /api/onboarding/* for the Sprint 9 wizard
+(state, profile, seed-demo, checklist, …). Legacy GET /api/onboarding and
+POST /api/onboarding/complete still live in server.py for backward compatibility.
+Both are intentional — do not collapse them without a dedicated migration sprint.
 """
 import re
 import json

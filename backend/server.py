@@ -16,9 +16,7 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
-
-from ai_service import AIService, extract_json
+from ai_service import AIService, extract_json, AIConfigError
 from proposal_config import PROPOSAL_SECTIONS, PROPOSAL_STATUSES, PROPOSAL_SYSTEM, build_proposal_prompt
 from contract_config import CONTRACT_SECTIONS, CONTRACT_STATUSES, CONTRACT_SYSTEM, build_contract_prompt
 from invoice_config import INVOICE_STATUSES, INVOICE_FIELDS, INVOICE_SYSTEM, build_invoice_prompt
@@ -31,7 +29,8 @@ import email_service
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-from core import client, db, now_iso, log_activity, ai_service, EMERGENT_LLM_KEY
+from core import client, db, now_iso, log_activity, ai_service
+from config import get_settings as get_app_settings
 from dependencies import (public_user, current_user, current_org, require_project,
                           rate_limit, _client_ip)
 from routers.copilot import router as copilot_router
@@ -46,9 +45,22 @@ from routers.automation import router as automation_router
 from routers.automation import seed_demo_automations
 from routers.onboarding import router as onboarding_router
 from routers.dashboard_exec import router as dashboard_exec_router
+from routers.team import router as team_router
+from routers.emails import router as emails_router
+from routers.webhooks import router as webhooks_router
+from routers.integrations import router as integrations_router
+from routers.inbox import router as inbox_router
+from routers.health import router as health_router
+from routers.ops import router as ops_router
+from routers import team as team_mod
+from permissions import require_admin, normalize_role
 import ai_activity as aia
+from observability import RequestContextMiddleware, configure_logging
+from errors import install_error_handlers
 
 app = FastAPI()
+install_error_handlers(app)
+app.add_middleware(RequestContextMiddleware)
 api_router = APIRouter(prefix="/api")
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -68,6 +80,7 @@ class RegisterRequest(BaseModel):
     email: str
     password: str = Field(..., min_length=8, max_length=128)
     company: str = ""
+    invitationToken: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
@@ -99,16 +112,22 @@ class ChangePassword(BaseModel):
     newPassword: str = Field(..., min_length=8, max_length=128)
 
 
+def _cookie_flags() -> dict:
+    """httpOnly cookies: secure+SameSite=None in production/HTTPS; lax+insecure on local HTTP."""
+    s = get_app_settings()
+    return {"httponly": True, "secure": s.cookie_secure, "samesite": s.cookie_samesite}
+
+
 def _set_refresh_cookie(response: Response, token: str, remember: bool):
     max_age = A.REFRESH_TOKEN_DAYS * 86400 if remember else 86400
-    response.set_cookie(key=REFRESH_COOKIE, value=token, httponly=True, secure=True,
-                        samesite="none", max_age=max_age, path=COOKIE_PATH)
+    response.set_cookie(key=REFRESH_COOKIE, value=token, max_age=max_age, path=COOKIE_PATH, **_cookie_flags())
 
 
 def _set_access_cookie(response: Response, access: str):
     # Enables direct-link authenticated downloads (PDF/DOCX exports via window.open)
-    response.set_cookie(key="access_token", value=access, httponly=True, secure=True,
-                        samesite="none", max_age=A.ACCESS_TOKEN_MINUTES * 60, path="/api")
+    response.set_cookie(
+        key="access_token", value=access, max_age=A.ACCESS_TOKEN_MINUTES * 60, path="/api", **_cookie_flags()
+    )
 
 
 async def _create_session(user: dict, request: Request, remember: bool):
@@ -127,7 +146,7 @@ async def _create_session(user: dict, request: Request, remember: bool):
 
 
 def _dev_link(path: str, token: str) -> str:
-    base = os.environ.get("FRONTEND_URL", "").rstrip("/")
+    base = get_app_settings().frontend_url.rstrip("/")
     return f"{base}{path}?token={token}"
 
 
@@ -159,19 +178,44 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
         raise HTTPException(status_code=409, detail="An account with this email already exists")
 
     now = now_iso()
-    org_id = A.gen_id()
-    org_name = payload.company.strip() or f"{payload.firstName}'s Organization"
     user_id = A.gen_id()
-    await db.organizations.insert_one({
-        "id": org_id, "name": org_name, "ownerId": user_id, "createdAt": now, "updatedAt": now,
-    })
+    invite = None
+    if payload.invitationToken:
+        invite = await team_mod.consume_invitation_for_new_user(payload.invitationToken.strip(), email)
+        org_id = invite["organizationId"]
+        role = normalize_role(invite.get("role"))
+        onboarding_done = True
+    else:
+        org_id = A.gen_id()
+        org_name = payload.company.strip() or f"{payload.firstName}'s Organization"
+        await db.organizations.insert_one({
+            "id": org_id, "name": org_name, "ownerId": user_id, "createdAt": now, "updatedAt": now,
+        })
+        role = "owner"
+        onboarding_done = False
+
     user = {
         "id": user_id, "firstName": payload.firstName.strip(), "lastName": payload.lastName.strip(),
         "email": email, "passwordHash": A.hash_password(payload.password), "emailVerified": False,
-        "avatar": "", "role": "owner", "organizationId": org_id, "timezone": "UTC", "language": "en",
-        "createdAt": now, "updatedAt": now, "lastLogin": now, "onboardingCompleted": False,
+        "avatar": "", "role": role, "organizationId": org_id, "timezone": "UTC", "language": "en",
+        "createdAt": now, "updatedAt": now, "lastLogin": now, "joinedAt": now,
+        "onboardingCompleted": onboarding_done,
     }
     await db.users.insert_one(user)
+
+    if invite:
+        ok = await team_mod.mark_invitation_accepted(invite["id"], user_id, invite["tokenHash"])
+        if not ok:
+            # Extremely rare race — roll back user to avoid orphan invite acceptance
+            await db.users.delete_one({"id": user_id})
+            raise HTTPException(status_code=409, detail="This invitation has already been used")
+        from audit import write_audit
+        await write_audit(
+            org_id, "invitation_accepted",
+            actor_id=user_id, actor_email=email,
+            target_user_id=user_id, target_email=email,
+            meta={"role": role, "invitationId": invite["id"], "via": "register"},
+        )
 
     # Email verification — send via Resend when configured, else dev-mode fallback
     vtoken = A.gen_token()
@@ -186,7 +230,7 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     access, refresh = await _create_session(user, request, True)
     _set_refresh_cookie(response, refresh, True)
     _set_access_cookie(response, access)
-    out = {"user": public_user(user), "accessToken": access}
+    out = {"user": public_user(user), "accessToken": access, "joinedViaInvitation": bool(invite)}
     if not email_service.is_enabled():
         # Dev-mode only: expose the link so the flow is testable without a mail provider.
         logger.info(f"[EMAIL:VERIFY:DEV] {email} -> {verify_link}")
@@ -543,6 +587,13 @@ ONBOARDING_STEPS = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Legacy onboarding endpoints (Sprint 1 first-run checklist)
+# Kept for backward compatibility with older clients and tests.
+# The Sprint 9 full-screen wizard uses routers/onboarding.py under the same
+# /api/onboarding prefix (state/profile/seed-demo/checklist/…). Do NOT remove
+# these legacy routes in this sprint — they remain intentional dual APIs.
+# ---------------------------------------------------------------------------
 @api_router.get("/onboarding")
 async def get_onboarding(user: dict = Depends(current_user)):
     org = user["organizationId"]
@@ -730,19 +781,14 @@ async def chat_stream(req: ChatRequest, org: str = Depends(current_org)):
     um["organizationId"] = org
     await db.chat_messages.insert_one(um)
 
-    chat = LlmChat(
-        api_key=EMERGENT_LLM_KEY, session_id=req.session_id, system_message=agent["system_message"],
-    ).with_model("openai", "gpt-5.4")
-
     async def event_generator():
         full = ""
         try:
-            async for event in chat.stream_message(UserMessage(text=req.message)):
-                if isinstance(event, TextDelta):
-                    full += event.content
-                    yield f"data: {json.dumps({'delta': event.content})}\n\n"
-                elif isinstance(event, StreamDone):
-                    break
+            async for delta in ai_service.stream(agent["system_message"], req.message, session_id=req.session_id):
+                full += delta
+                yield f"data: {json.dumps({'delta': delta})}\n\n"
+        except AIConfigError as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
         except Exception as e:
             logging.exception("stream error")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
@@ -996,6 +1042,11 @@ async def rename_document(document_id: str, payload: DocumentRename, org: str = 
     return {**res, "name": payload.name.strip()}
 
 
+def _safe_filename(name: str) -> str:
+    ascii_name = "".join(c if (c.isalnum() or c in " -_") else "_" for c in (name or "file"))
+    return ascii_name.strip().replace(" ", "_")[:60] or "file"
+
+
 @api_router.get("/documents/{document_id}/file")
 async def download_document(document_id: str, request: Request):
     # Authenticated via Bearer header or the httpOnly access_token cookie (no token in URL).
@@ -1190,6 +1241,11 @@ DEFAULT_ORG_SETTINGS = {
         "proposalPrefix": "PROP", "contractPrefix": "CTR", "invoicePrefix": "INV",
         "numberingStart": 1, "pdfPageSize": "A4", "pdfAccentColor": "#8b5cf6",
     },
+    "email": {
+        "senderName": "", "senderEmail": "", "replyToEmail": "", "companySignature": "",
+        "sendingEnabled": False, "dailySendingLimit": 50,
+        "approvalRequired": True, "autoSendFromAutomation": False,
+    },
 }
 DEFAULT_NOTIF_PREFS = {
     "emailNotifications": True, "productUpdates": True, "securityAlerts": True,
@@ -1246,7 +1302,7 @@ async def _update_section(org: str, section: str, values: dict):
 
 
 @api_router.patch("/settings/organization")
-async def update_org_profile(payload: OrgProfileUpdate, org: str = Depends(current_org)):
+async def update_org_profile(payload: OrgProfileUpdate, org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
     data = {k: v for k, v in payload.model_dump().items() if v is not None}
     name = data.pop("name", None)
     if name is not None and name.strip():
@@ -1258,18 +1314,54 @@ async def update_org_profile(payload: OrgProfileUpdate, org: str = Depends(curre
 
 
 @api_router.patch("/settings/branding")
-async def update_branding(payload: SectionUpdate, org: str = Depends(current_org)):
+async def update_branding(payload: SectionUpdate, org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
     return await _update_section(org, "branding", payload.values)
 
 
 @api_router.patch("/settings/ai")
-async def update_ai_settings(payload: SectionUpdate, org: str = Depends(current_org)):
+async def update_ai_settings(payload: SectionUpdate, org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
     return await _update_section(org, "ai", payload.values)
 
 
 @api_router.patch("/settings/documents")
-async def update_doc_settings(payload: SectionUpdate, org: str = Depends(current_org)):
+async def update_doc_settings(payload: SectionUpdate, org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
     return await _update_section(org, "documents", payload.values)
+
+
+class EmailSettingsUpdate(BaseModel):
+    values: dict
+
+
+@api_router.patch("/settings/email")
+async def update_email_settings(payload: EmailSettingsUpdate, org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
+    """Organization outbound email settings (no provider API keys)."""
+    import re as _re
+    values = dict(payload.values or {})
+    email_re = _re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    for key in ("senderEmail", "replyToEmail"):
+        if key in values and values[key]:
+            v = str(values[key]).strip().lower()
+            if not email_re.match(v):
+                raise HTTPException(status_code=400, detail=f"Invalid {key}")
+            values[key] = v
+        elif key in values and values[key] == "":
+            values[key] = ""
+    if "dailySendingLimit" in values:
+        try:
+            lim = int(values["dailySendingLimit"])
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="dailySendingLimit must be an integer")
+        if lim < 1 or lim > 10000:
+            raise HTTPException(status_code=400, detail="dailySendingLimit must be between 1 and 10000")
+        values["dailySendingLimit"] = lim
+    for bkey in ("sendingEnabled", "approvalRequired", "autoSendFromAutomation"):
+        if bkey in values:
+            values[bkey] = bool(values[bkey])
+    if "senderName" in values:
+        values["senderName"] = str(values["senderName"] or "")[:120]
+    if "companySignature" in values:
+        values["companySignature"] = str(values["companySignature"] or "")[:2000]
+    return await _update_section(org, "email", values)
 
 
 @api_router.patch("/settings/notifications")
@@ -1281,7 +1373,7 @@ async def update_notif_prefs(payload: NotifPrefsUpdate, user: dict = Depends(cur
 
 
 @api_router.post("/settings/upload-image")
-async def upload_branding_image(file: UploadFile = File(...), org: str = Depends(current_org)):
+async def upload_branding_image(file: UploadFile = File(...), org: str = Depends(current_org), _admin: dict = Depends(require_admin)):
     data = await file.read()
     if len(data) > 5 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="Image exceeds 5MB limit")
@@ -1338,7 +1430,8 @@ async def recent_logins(user: dict = Depends(current_user)):
 async def get_billing(user: dict = Depends(current_user)):
     org = user["organizationId"]
     base = {"organizationId": org}
-    seats = await db.users.count_documents({"organizationId": org})
+    from seats import seat_usage
+    seats_info = await seat_usage(org)
     usage = {
         "clients": await db.clients.count_documents(base),
         "projects": await db.projects.count_documents(base),
@@ -1349,7 +1442,12 @@ async def get_billing(user: dict = Depends(current_user)):
     }
     return {
         "plan": "Pro", "price": 99, "interval": "month", "status": "active",
-        "seats": {"used": seats, "included": 5},
+        "seats": {
+            "used": seats_info["active_members"],
+            "pending": seats_info["pending_invitations"],
+            "included": 5,
+        },
+        "seatUsage": seats_info,
         "usage": usage,
         "limits": {"projects": 100, "documents": 1000, "ai_generations": 500},
         "renews_on": "2026-09-01",
@@ -1481,13 +1579,8 @@ async def generate_plan(project_id: str, org: str = Depends(current_org)):
         "Be specific and tailored to the actual project context above. Output JSON only."
     )
     prompt += await build_memory_prompt(org, ["Processes", "Business", "Preferences", "Services"])
-    chat = LlmChat(
-        api_key=EMERGENT_LLM_KEY, session_id=f"planner-{project_id}-{uuid.uuid4()}",
-        system_message=PLANNER_SYSTEM,
-    ).with_model("openai", "gpt-5.4")
     try:
-        resp = await chat.send_message(UserMessage(text=prompt))
-        text = resp if isinstance(resp, str) else str(resp)
+        text = await ai_service.complete(PLANNER_SYSTEM, prompt, session_id=f"planner-{project_id}-{uuid.uuid4()}")
         sections = parse_plan_json(text)
     except json.JSONDecodeError:
         raise HTTPException(status_code=502, detail="AI returned an unparseable plan. Please regenerate.")
@@ -2032,16 +2125,49 @@ app.include_router(memory_router)
 app.include_router(automation_router)
 app.include_router(onboarding_router)
 app.include_router(dashboard_exec_router)
+app.include_router(team_router)
+app.include_router(emails_router)
+app.include_router(webhooks_router)
+app.include_router(integrations_router)
+app.include_router(inbox_router)
+app.include_router(health_router)
+app.include_router(ops_router)
+
+def _cors_origins() -> List[str]:
+    try:
+        return get_app_settings().cors_origins
+    except Exception:
+        raw = os.environ.get("CORS_ORIGINS", "*")
+        return ["*"] if raw.strip() == "*" else [o.strip() for o in raw.split(",") if o.strip()]
+
 
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=_cors_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 logging.basicConfig(level=logging.INFO)
+try:
+    cfg0 = get_app_settings()
+    configure_logging(cfg0.log_level, json_logs=cfg0.json_logs)
+    if cfg0.sentry_dsn:
+        try:
+            import sentry_sdk
+            from sentry_sdk.integrations.fastapi import FastApiIntegration
+            sentry_sdk.init(
+                dsn=cfg0.sentry_dsn,
+                environment=cfg0.environment,
+                release=cfg0.release_version,
+                integrations=[FastApiIntegration()],
+                send_default_pii=False,
+            )
+        except Exception as e:
+            logging.getLogger(__name__).warning("Sentry init skipped: %s", e)
+except Exception:
+    pass
 logger = logging.getLogger(__name__)
 
 
@@ -2053,46 +2179,64 @@ SCOPED_COLLECTIONS = [
 
 @app.on_event("startup")
 async def startup():
+    cfg = get_app_settings()
+    logger.info(
+        "Starting Assistify OS (%s) storage=%s ai=%s cookie_secure=%s samesite=%s",
+        cfg.environment, cfg.storage_provider, cfg.ai_provider, cfg.cookie_secure, cfg.cookie_samesite,
+    )
     try:
         await asyncio.to_thread(S.init_storage)
-        logger.info("Object storage initialized")
+        logger.info("Object storage initialized (%s)", cfg.storage_provider)
     except Exception as e:
         logger.error(f"Storage init failed: {e}")
-    await db.users.create_index("email", unique=True)
-    await db.sessions.create_index("jti")
-    await db.sessions.create_index("userId")
-    await db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
-    await db.email_verification_tokens.create_index("expires_at", expireAfterSeconds=0)
-    await db.login_attempts.create_index("identifier")
-    await db.ai_activities.create_index([("organizationId", 1), ("created_at", -1)])
+    from indexes import ensure_indexes
+    idx = await ensure_indexes(db)
+    if not idx.get("ok"):
+        logger.error("Index initialization reported errors: %s", idx.get("errors"))
 
-    # Seed demo account + backfill existing (pre-auth) data to its organization
-    demo_email = os.environ.get("DEMO_EMAIL", "jordan@assistify.io").lower()
-    demo_password = os.environ.get("DEMO_PASSWORD", "Assistify2026!")
-    demo = await db.users.find_one({"email": demo_email})
-    now = now_iso()
-    if not demo:
-        org_id = A.gen_id()
-        user_id = A.gen_id()
-        await db.organizations.insert_one({
-            "id": org_id, "name": "Assistify Inc.", "ownerId": user_id, "createdAt": now, "updatedAt": now})
-        await db.users.insert_one({
-            "id": user_id, "firstName": "Jordan", "lastName": "Reyes", "email": demo_email,
-            "passwordHash": A.hash_password(demo_password), "emailVerified": True,
-            "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
-            "role": "owner", "organizationId": org_id, "timezone": "UTC", "language": "en",
-            "createdAt": now, "updatedAt": now, "lastLogin": now, "onboardingCompleted": True})
-        logger.info(f"[SEED] Created demo account {demo_email} / org {org_id}")
+    # Import job handlers for registration
+    try:
+        import jobs.handlers  # noqa: F401
+    except Exception as e:
+        logger.warning("Job handlers import failed: %s", e)
+
+    logger.info(
+        "Email provider=%s sending_enabled=%s",
+        cfg.email_provider, cfg.email_sending_enabled,
+    )
+    # Demo account seeding is OPT-IN via ENABLE_DEMO_SEED=true (never automatic in production).
+    org_id = None
+    if cfg.enable_demo_seed:
+        demo_email = cfg.demo_email
+        demo_password = cfg.demo_password
+        demo = await db.users.find_one({"email": demo_email})
+        now = now_iso()
+        if not demo:
+            org_id = A.gen_id()
+            user_id = A.gen_id()
+            await db.organizations.insert_one({
+                "id": org_id, "name": "Assistify Inc.", "ownerId": user_id, "createdAt": now, "updatedAt": now})
+            await db.users.insert_one({
+                "id": user_id, "firstName": "Jordan", "lastName": "Reyes", "email": demo_email,
+                "passwordHash": A.hash_password(demo_password), "emailVerified": True,
+                "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
+                "role": "owner", "organizationId": org_id, "timezone": "UTC", "language": "en",
+                "createdAt": now, "updatedAt": now, "lastLogin": now, "onboardingCompleted": True})
+            logger.info(f"[SEED] Created demo account {demo_email} / org {org_id}")
+        else:
+            org_id = demo["organizationId"]
+            # Only sync demo password when seeding is explicitly enabled
+            if not A.verify_password(demo_password, demo["passwordHash"]):
+                await db.users.update_one({"email": demo_email}, {"$set": {"passwordHash": A.hash_password(demo_password)}})
+                logger.info("[SEED] Synced demo account password from DEMO_PASSWORD")
+
+        # Backfill any legacy documents that lack organizationId (only when demo seed is on)
+        for coll in SCOPED_COLLECTIONS:
+            res = await db[coll].update_many({"organizationId": {"$exists": False}}, {"$set": {"organizationId": org_id}})
+            if res.modified_count:
+                logger.info(f"[BACKFILL] {coll}: {res.modified_count} docs -> org {org_id}")
     else:
-        org_id = demo["organizationId"]
-        if not A.verify_password(demo_password, demo["passwordHash"]):
-            await db.users.update_one({"email": demo_email}, {"$set": {"passwordHash": A.hash_password(demo_password)}})
-
-    # Backfill any legacy documents that lack organizationId
-    for coll in SCOPED_COLLECTIONS:
-        res = await db[coll].update_many({"organizationId": {"$exists": False}}, {"$set": {"organizationId": org_id}})
-        if res.modified_count:
-            logger.info(f"[BACKFILL] {coll}: {res.modified_count} docs -> org {org_id}")
+        logger.info("[SEED] Demo seed disabled (set ENABLE_DEMO_SEED=true to enable)")
 
     # Existing users (pre-onboarding sprint) should not see the wizard
     await db.users.update_many({"onboardingCompleted": {"$exists": False}}, {"$set": {"onboardingCompleted": True}})

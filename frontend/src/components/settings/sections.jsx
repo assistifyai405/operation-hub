@@ -266,19 +266,20 @@ export function ApiKeysSection() {
   );
 }
 
-// ---------------- Integrations (placeholder) ----------------
+// ---------------- Integrations (links to hub) ----------------
 export function IntegrationsSection() {
-  const integrations = ["Stripe", "Slack", "Google Calendar", "Gmail", "Zapier", "QuickBooks"];
+  const navigate = useNavigate();
   return (
-    <SectionCard title="Integrations" description="Connect Assistify with the tools you already use." testid="settings-integrations">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {integrations.map((i) => (
-          <div key={i} className="flex items-center justify-between rounded-lg border border-white/10 bg-zinc-900/50 p-4">
-            <div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-600/15 text-violet-400"><Plug className="h-4 w-4" /></div><span className="text-sm font-medium text-zinc-200">{i}</span></div>
-            <span className="rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs text-zinc-500">Soon</span>
-          </div>
-        ))}
-      </div>
+    <SectionCard title="Integrations" description="Connect Google, Microsoft, Slack, Discord, Zapier, and webhooks." testid="settings-integrations">
+      <p className="text-sm text-zinc-400">Manage connections, permissions, health checks, and OAuth from the Integrations hub.</p>
+      <button
+        type="button"
+        data-testid="settings-open-integrations"
+        onClick={() => navigate("/integrations")}
+        className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500"
+      >
+        <Plug className="h-4 w-4" /> Open Integrations
+      </button>
     </SectionCard>
   );
 }

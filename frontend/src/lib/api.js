@@ -22,7 +22,19 @@ export function formatApiErrorDetail(detail) {
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail))
     return detail.map((e) => (e && typeof e.msg === "string" ? e.msg : JSON.stringify(e))).filter(Boolean).join(" ");
-  if (detail && typeof detail.msg === "string") return detail.msg;
+  if (detail && typeof detail === "object") {
+    // Sprint 18 envelope: { error: { code, message, requestId } }
+    if (detail.error && typeof detail.error === "object") {
+      const e = detail.error;
+      if (e.actionable && e.message) return `${e.message} — ${e.actionable}`;
+      if (typeof e.message === "string") return e.message;
+    }
+    if (detail.actionable && detail.message) return `${detail.message} — ${detail.actionable}`;
+    if (typeof detail.message === "string") return detail.message;
+    if (typeof detail.msg === "string") return detail.msg;
+    // readiness body embedded in detail
+    if (detail.status === "degraded" && detail.checks) return "Service not ready";
+  }
   return String(detail);
 }
 
@@ -69,7 +81,7 @@ async function req(path, options = {}) {
   }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(formatApiErrorDetail(err.detail) || "Request failed");
+    throw new Error(formatApiErrorDetail(err.detail || err.error || err) || "Request failed");
   }
   if (res.status === 204) return null;
   return res.json();
@@ -246,6 +258,7 @@ export const settingsApi = {
   updateBranding: (values) => req("/settings/branding", { method: "PATCH", body: JSON.stringify({ values }) }),
   updateAI: (values) => req("/settings/ai", { method: "PATCH", body: JSON.stringify({ values }) }),
   updateDocuments: (values) => req("/settings/documents", { method: "PATCH", body: JSON.stringify({ values }) }),
+  updateEmail: (values) => req("/settings/email", { method: "PATCH", body: JSON.stringify({ values }) }),
   updateNotifications: (values) => req("/settings/notifications", { method: "PATCH", body: JSON.stringify({ values }) }),
   billing: () => req("/settings/billing"),
   apiKeys: () => req("/settings/api-keys"),
@@ -331,4 +344,79 @@ export const invoiceWriterApi = {
   versions: (projectId) => req(`/projects/${projectId}/invoice/versions`),
   restore: (projectId, version) => req(`/projects/${projectId}/invoice/restore/${version}`, { method: "POST" }),
   exportUrl: (projectId, fmt) => `${process.env.REACT_APP_BACKEND_URL}/api/projects/${projectId}/invoice/export/${fmt}`,
+};
+
+export const teamApi = {
+  members: () => req("/team/members"),
+  seats: () => req("/team/seats"),
+  invitations: () => req("/team/invitations"),
+  invite: (body) => req("/team/invitations", { method: "POST", body: JSON.stringify(body) }),
+  cancelInvitation: (id) => req(`/team/invitations/${id}`, { method: "DELETE" }),
+  previewInvitation: (token) => req(`/team/invitations/preview/${encodeURIComponent(token)}`),
+  acceptInvitation: (token) => req(`/team/invitations/${encodeURIComponent(token)}/accept`, { method: "POST" }),
+  changeRole: (userId, role) => req(`/team/members/${userId}/role`, { method: "PATCH", body: JSON.stringify({ role }) }),
+  removeMember: (userId) => req(`/team/members/${userId}`, { method: "DELETE" }),
+  transferOwnership: (userId) => req("/team/transfer-ownership", { method: "POST", body: JSON.stringify({ userId }) }),
+};
+
+export const emailsApi = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.status) qs.set("status", params.status);
+    if (params.q) qs.set("q", params.q);
+    const s = qs.toString();
+    return req(`/emails${s ? `?${s}` : ""}`);
+  },
+  status: () => req("/emails/status"),
+  get: (id) => req(`/emails/${id}`),
+  create: (body) => req("/emails", { method: "POST", body: JSON.stringify(body) }),
+  update: (id, body) => req(`/emails/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  submit: (id) => req(`/emails/${id}/submit`, { method: "POST" }),
+  approve: (id) => req(`/emails/${id}/approve`, { method: "POST" }),
+  reject: (id, reason) => req(`/emails/${id}/reject`, { method: "POST", body: JSON.stringify({ reason }) }),
+  send: (id) => req(`/emails/${id}/send`, { method: "POST" }),
+  cancel: (id) => req(`/emails/${id}/cancel`, { method: "POST" }),
+  retry: (id) => req(`/emails/${id}/retry`, { method: "POST" }),
+  improve: (id, body = {}) => req(`/emails/${id}/improve`, { method: "POST", body: JSON.stringify(body) }),
+};
+
+export const integrationsApi = {
+  list: () => req("/integrations"),
+  status: () => req("/integrations/status"),
+  connect: (body) => req("/integrations/connect", { method: "POST", body: JSON.stringify(body) }),
+  disconnect: (body) => req("/integrations/disconnect", { method: "POST", body: JSON.stringify(body) }),
+  refresh: (body) => req("/integrations/refresh", { method: "POST", body: JSON.stringify(body) }),
+  health: (body) => req("/integrations/health", { method: "POST", body: JSON.stringify(body) }),
+};
+
+export const inboxApi = {
+  mailboxes: () => req("/inbox/mailboxes"),
+  ensureMailbox: (provider) => req("/inbox/mailboxes/ensure", { method: "POST", body: JSON.stringify({ provider }) }),
+  patchMailbox: (id, body) => req(`/inbox/mailboxes/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  syncMailbox: (id, forceFull = false) => req(`/inbox/mailboxes/${id}/sync?force_full=${forceFull ? "true" : "false"}`, { method: "POST" }),
+  threads: (params = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === "") return;
+      qs.set(k, String(v));
+    });
+    const s = qs.toString();
+    return req(`/inbox/threads${s ? `?${s}` : ""}`);
+  },
+  getThread: (id) => req(`/inbox/threads/${id}`),
+  patchThread: (id, body) => req(`/inbox/threads/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  messages: (id) => req(`/inbox/threads/${id}/messages`),
+  summarize: (id) => req(`/inbox/threads/${id}/summarize`, { method: "POST" }),
+  draftReply: (id) => req(`/inbox/threads/${id}/draft-reply`, { method: "POST" }),
+  link: (id, body) => req(`/inbox/threads/${id}/link`, { method: "POST", body: JSON.stringify(body) }),
+  unlink: (id) => req(`/inbox/threads/${id}/link`, { method: "DELETE" }),
+};
+
+export const opsApi = {
+  status: () => req("/ops/status"),
+  retryJob: (id) => req(`/ops/jobs/${id}/retry`, { method: "POST" }),
+  syncMailbox: (id) => req(`/ops/mailboxes/${id}/sync`, { method: "POST" }),
+  reconcile: () => req("/ops/emails/reconcile", { method: "POST" }),
+  resolveEmail: (id, body) => req(`/ops/emails/${id}/resolve`, { method: "POST", body: JSON.stringify(body) }),
+  integrationHealth: (provider) => req(`/ops/integrations/${provider}/health`, { method: "POST" }),
 };

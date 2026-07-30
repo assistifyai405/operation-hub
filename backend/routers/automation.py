@@ -32,7 +32,11 @@ THROTTLE_SECONDS = 120
 # Catalogs
 # ---------------------------------------------------------------------------
 SAFE_INTERNAL = {"create_task", "add_note", "change_internal_status", "notify_user", "add_to_brief"}
-EXTERNAL = {"prepare_email", "prepare_followup"}
+EXTERNAL = {
+    "prepare_email", "prepare_followup",
+    "create_calendar_event", "create_google_task",
+    "send_slack_message", "send_discord_message", "trigger_webhook",
+}
 GENERATIVE = {"generate_proposal", "generate_contract", "generate_invoice"}
 DESTRUCTIVE = {"archive_project"}
 
@@ -44,6 +48,11 @@ ACTION_META = {
     "add_to_brief":           {"label": "Add to your AI Brief",     "risk": "low",    "time": 2,  "icon": "sparkles",     "kind": "internal"},
     "prepare_email":          {"label": "Prepare an email",         "risk": "medium", "time": 9,  "icon": "mail",         "kind": "external"},
     "prepare_followup":       {"label": "Prepare a follow-up",      "risk": "medium", "time": 9,  "icon": "mail",         "kind": "external"},
+    "create_calendar_event":  {"label": "Create calendar event",    "risk": "medium", "time": 6,  "icon": "calendar",     "kind": "external"},
+    "create_google_task":     {"label": "Create Google Task",       "risk": "medium", "time": 4,  "icon": "check-square", "kind": "external"},
+    "send_slack_message":     {"label": "Send Slack message",       "risk": "medium", "time": 3,  "icon": "message-square", "kind": "external"},
+    "send_discord_message":   {"label": "Send Discord message",     "risk": "medium", "time": 3,  "icon": "message-square", "kind": "external"},
+    "trigger_webhook":        {"label": "Trigger webhook",          "risk": "medium", "time": 3,  "icon": "zap",          "kind": "external"},
     "generate_proposal":      {"label": "Generate a proposal draft","risk": "medium", "time": 23, "icon": "file-text",    "kind": "generative"},
     "generate_contract":      {"label": "Generate a contract draft","risk": "medium", "time": 12, "icon": "scroll-text",  "kind": "generative"},
     "generate_invoice":       {"label": "Prepare an invoice draft", "risk": "medium", "time": 6,  "icon": "receipt",      "kind": "generative"},
@@ -64,6 +73,11 @@ TRIGGER_META = {
     "project_completed":   {"label": "Project completed",          "desc": "A project was completed — prepare the invoice.",      "days": 0,  "icon": "check-square"},
     "new_client":          {"label": "New client added",           "desc": "A client was added within the last X days.",          "days": 3,  "icon": "users"},
     "task_overdue":        {"label": "Task overdue",               "desc": "A task is past its due date.",                        "days": 0,  "icon": "check-square"},
+    "inbound_message_received": {"label": "Inbound email received", "desc": "A new inbox message was synchronized.", "days": 0, "icon": "mail"},
+    "unread_message_received":  {"label": "Unread inbox message",   "desc": "An unread inbound message arrived.", "days": 0, "icon": "mail"},
+    "thread_created":           {"label": "Email thread created",   "desc": "A new conversation thread was created from sync.", "days": 0, "icon": "mail"},
+    "message_linked_to_client": {"label": "Email linked to client", "desc": "An inbox thread was linked to a client.", "days": 0, "icon": "users"},
+    "message_linked_to_lead":   {"label": "Email linked to lead",   "desc": "An inbox thread was linked to a lead.", "days": 0, "icon": "trending-up"},
 }
 
 CONDITION_FIELDS = [
@@ -439,6 +453,33 @@ def _prepare_action_payload(action, m):
     if atype in ("prepare_email", "prepare_followup"):
         kind = cfg.get("kind") or "followup"
         return {"email": _draft_email(kind, m)}
+    if atype == "create_calendar_event":
+        return {"calendar": {
+            "title": cfg.get("title") or f"Follow up — {m.get('entity_name') or pn or 'Assistify'}",
+            "description": cfg.get("description") or f"Automation: {m.get('entity_name')}",
+            "provider": cfg.get("provider") or "auto",
+        }}
+    if atype == "create_google_task":
+        return {"task": {
+            "title": cfg.get("title") or f"Follow up on {m.get('entity_name') or 'item'}",
+            "notes": cfg.get("notes") or "",
+        }}
+    if atype == "send_slack_message":
+        return {"slack": {
+            "text": cfg.get("text") or f"Assistify: {m.get('entity_name') or 'an item'} needs attention.",
+            "channel": cfg.get("channel"),
+        }}
+    if atype == "send_discord_message":
+        return {"discord": {
+            "content": cfg.get("content") or cfg.get("text") or f"Assistify: {m.get('entity_name') or 'an item'} needs attention.",
+        }}
+    if atype == "trigger_webhook":
+        return {"webhook": {
+            "event": cfg.get("event") or "automation",
+            "message": cfg.get("message") or f"{m.get('entity_name')} triggered an automation",
+            "data": {"entity": m.get("entity_name"), "client": cn, "project": pn},
+            "prefer": cfg.get("prefer") or "auto",
+        }}
     if atype == "create_task":
         title = (cfg.get("title") or "").replace("{client}", cn or "the client").replace("{project}", pn or "the project")
         if not title:
@@ -555,6 +596,16 @@ def _expected(a, actions_out, m):
         t = x["type"]
         if t in ("prepare_email", "prepare_followup"):
             parts.append("A ready-to-send email draft you can review, edit and send")
+        elif t == "create_calendar_event":
+            parts.append("A calendar event on Google or Microsoft Calendar")
+        elif t == "create_google_task":
+            parts.append("A Google Task")
+        elif t == "send_slack_message":
+            parts.append("A Slack message")
+        elif t == "send_discord_message":
+            parts.append("A Discord message")
+        elif t == "trigger_webhook":
+            parts.append("An outbound webhook / Zapier trigger")
         elif t == "create_task":
             parts.append(f"A new task: “{(x['payload'].get('task') or {}).get('title', 'follow-up')}”")
         elif t == "add_note":
@@ -714,9 +765,107 @@ async def _execute_one(org, action, approval):
             "id": str(uuid.uuid4()), "organizationId": org, "text": payload.get("brief", ""),
             "entity": ent, "created_at": now_iso()})
     elif atype in ("prepare_email", "prepare_followup"):
-        # No real client-send integration — the draft is finalized as ready-to-send;
-        # its "executed" approval status conveys completion.
-        pass
+        # Create a real outbound email draft (never silent-send unless explicitly allowed).
+        email_payload = (payload.get("email") or {})
+        subject = email_payload.get("subject") or "Follow-up"
+        body = email_payload.get("body") or ""
+        # Resolve recipient from linked client / entity
+        to_email = None
+        cid = ent.get("client_id") or (ent.get("id") if ent.get("type") == "client" else None)
+        if cid:
+            client = await db.clients.find_one({"id": cid, "organizationId": org}, {"_id": 0, "email": 1})
+            to_email = (client or {}).get("email")
+        if not to_email and ent.get("type") == "contact" and ent.get("id"):
+            contact = await db.contacts.find_one({"id": ent["id"], "organizationId": org}, {"_id": 0, "email": 1})
+            to_email = (contact or {}).get("email")
+        if not to_email:
+            # Fall back to any email embedded in action payload
+            to_email = email_payload.get("to") or email_payload.get("email")
+        if not to_email:
+            logging.warning("automation email skipped — no recipient for approval %s", approval.get("id"))
+            return
+
+        # Deduplicate by automation approval + action type
+        existing = await db.outbound_emails.find_one({
+            "organizationId": org,
+            "automationApprovalId": approval.get("id"),
+            "source": "automation",
+            "status": {"$nin": ["cancelled"]},
+        }, {"_id": 0, "id": 1})
+        if existing:
+            return
+
+        from routers.emails import create_outbound_email, get_org_email_settings, perform_send
+
+        org_email = await get_org_email_settings(org)
+        # Actor: org owner (system) for audit trail
+        owner = await db.users.find_one(
+            {"organizationId": org, "role": "owner"},
+            {"_id": 0},
+        ) or await db.users.find_one({"organizationId": org}, {"_id": 0})
+        if not owner:
+            return
+
+        status = "pending_approval" if org_email.get("approvalRequired") else "draft"
+        original = {"subject": subject, "textBody": body, "htmlBody": ""}
+        doc = await create_outbound_email(
+            org_id=org,
+            user=owner,
+            to=[to_email],
+            subject=subject,
+            text_body=body,
+            source="automation",
+            automation_id=approval.get("automation_id"),
+            automation_approval_id=approval.get("id"),
+            client_id=ent.get("client_id"),
+            lead_id=ent.get("lead_id"),
+            contact_id=ent.get("contact_id"),
+            original_ai=original,
+            status=status,
+        )
+        # Link back on approval
+        await db.automation_approvals.update_one(
+            {"id": approval.get("id"), "organizationId": org},
+            {"$set": {"outboundEmailId": doc["id"], "updated_at": now_iso()}},
+        )
+        # Auto-send only when explicitly enabled at org level AND approval not required
+        # AND automation mode was auto — still never bypass global/org sending gates inside perform_send
+        if (
+            not org_email.get("approvalRequired")
+            and org_email.get("autoSendFromAutomation")
+            and approval.get("auto_executed")
+        ):
+            # Mark approved/not_required then attempt send (may still be blocked by EMAIL_SENDING_ENABLED)
+            await db.outbound_emails.update_one(
+                {"id": doc["id"], "organizationId": org},
+                {"$set": {"status": "approved", "approvalStatus": "not_required", "updatedAt": now_iso()}},
+            )
+            refreshed = await db.outbound_emails.find_one({"id": doc["id"], "organizationId": org}, {"_id": 0})
+            try:
+                await perform_send(refreshed, owner)
+            except Exception:
+                logging.exception("automation auto-send blocked or failed for %s", doc["id"])
+    elif atype == "create_calendar_event":
+        from integrations.actions import create_calendar_event
+        result = await create_calendar_event(org, payload.get("calendar") or {})
+        action["result"] = result
+    elif atype == "create_google_task":
+        from integrations.actions import create_google_task
+        result = await create_google_task(org, payload.get("task") or {})
+        action["result"] = result
+    elif atype == "send_slack_message":
+        from integrations.actions import send_slack_message
+        result = await send_slack_message(org, payload.get("slack") or {})
+        action["result"] = result
+    elif atype == "send_discord_message":
+        from integrations.actions import send_discord_message
+        result = await send_discord_message(org, payload.get("discord") or {})
+        action["result"] = result
+    elif atype == "trigger_webhook":
+        from integrations.actions import trigger_webhook
+        wh = payload.get("webhook") or {}
+        result = await trigger_webhook(org, wh, prefer=wh.get("prefer") or "auto")
+        action["result"] = result
     elif atype in ("generate_proposal", "generate_contract", "generate_invoice"):
         pid = ent.get("project_id")
         if pid:

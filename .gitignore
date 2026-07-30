@@ -105,6 +105,12 @@ frontend/node_modules/.cache/default-development/17.pack
 .env
 .env.*
 *.env
+!.env.example
+!**/.env.example
 credentials.json
 *.key
 .credentials
+
+# Local upload storage
+backend/uploads/
+uploads/

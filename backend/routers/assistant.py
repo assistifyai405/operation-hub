@@ -14,10 +14,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
-
-from core import db, now_iso, ai_service, EMERGENT_LLM_KEY
-from ai_service import extract_json
+from core import db, now_iso, ai_service
+from ai_service import extract_json, AIConfigError
 from dependencies import current_org
 from routers.copilot import _copilot_snapshot
 from routers.memory import build_memory_context
@@ -270,18 +268,14 @@ async def assistant_chat_stream(payload: ChatRequest, org: str = Depends(current
     )
     prompt = f"WORKSPACE DATA (JSON):\n{snapshot}{doc_ctx}{await build_memory_context(org)}\n\nUSER MESSAGE:\n{payload.message}"
 
-    chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"asst-chat-{payload.session_id}",
-                   system_message=system).with_model("openai", "gpt-5.4")
-
     async def gen():
         full = ""
         try:
-            async for event in chat.stream_message(UserMessage(text=prompt)):
-                if isinstance(event, TextDelta):
-                    full += event.content
-                    yield f"data: {json.dumps({'delta': event.content})}\n\n"
-                elif isinstance(event, StreamDone):
-                    break
+            async for delta in ai_service.stream(system, prompt, session_id=f"asst-chat-{payload.session_id}"):
+                full += delta
+                yield f"data: {json.dumps({'delta': delta})}\n\n"
+        except AIConfigError as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
         except Exception as e:
             logging.exception("assistant stream error")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
