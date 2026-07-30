@@ -3,7 +3,8 @@ FROM python:3.12-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    PIP_EXTRA_INDEX_URL=https://d33sy5i8bnduwe.cloudfront.net/simple/
 
 WORKDIR /app
 
@@ -12,6 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
+# emergentintegrations is hosted on Emergent's private index (see PIP_EXTRA_INDEX_URL);
+# the package itself is py3-none-any and runs on linux/amd64 and linux/arm64.
 RUN pip install -r requirements.txt && pip install 'redis>=5.0.0' 'uvicorn[standard]==0.25.0'
 
 COPY . ./
