@@ -5,7 +5,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_EXTRA_INDEX_URL=https://d33sy5i8bnduwe.cloudfront.net/simple/
-    PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
