@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bot, MessageSquare, Zap, Plus } from "lucide-react";
+import { getAccessToken } from "@/lib/api";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -17,13 +18,65 @@ const accentText = {
   amber: "text-amber-400",
 };
 
+function normalizeAgents(payload) {
+  if (!Array.isArray(payload)) return [];
+  return payload.filter(Boolean).map((a, i) => ({
+    id: a.id || `agent-${i}`,
+    name: a.name || "Untitled agent",
+    role: a.role || "Assistant",
+    description: a.description || "",
+    avatar: a.avatar || "",
+    accent: a.accent || "violet",
+  }));
+}
+
 export default function AIAgents() {
   const [agents, setAgents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`${API}/agents`).then((r) => r.json()).then(setAgents).catch(() => {});
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    fetch(`${API}/agents`, {
+      headers: { Authorization: `Bearer ${getAccessToken()}` },
+      credentials: "include",
+    })
+      .then(async (r) => {
+        const data = await r.json().catch(() => null);
+        if (!r.ok) {
+          const msg =
+            (data && (data.detail || data.error?.message)) ||
+            `Could not load agents (${r.status})`;
+          throw new Error(typeof msg === "string" ? msg : "Could not load agents");
+        }
+        if (!Array.isArray(data)) {
+          throw new Error("Unexpected agents response");
+        }
+        return data;
+      })
+      .then((data) => {
+        if (!cancelled) setAgents(normalizeAgents(data));
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setAgents([]);
+          setError(e?.message || "Could not load agents");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  const list = Array.isArray(agents) ? agents : [];
 
   return (
     <div className="space-y-5" data-testid="ai-agents-page">
@@ -34,8 +87,18 @@ export default function AIAgents() {
         </button>
       </div>
 
+      {error && (
+        <div
+          className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+          data-testid="ai-agents-error"
+          role="alert"
+        >
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {agents.map((a, i) => (
+        {list.map((a, i) => (
           <div
             key={a.id}
             style={{ animationDelay: `${i * 70}ms` }}
@@ -44,7 +107,13 @@ export default function AIAgents() {
           >
             <div className={`pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br ${accentBg[a.accent] || accentBg.violet} to-transparent blur-2xl opacity-60`} />
             <div className="relative flex items-start gap-3">
-              <img src={a.avatar} alt={a.name} className="h-12 w-12 rounded-xl border border-white/10 object-cover" />
+              {a.avatar ? (
+                <img src={a.avatar} alt={a.name} className="h-12 w-12 rounded-xl border border-white/10 object-cover" />
+              ) : (
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-zinc-900">
+                  <Bot className={`h-5 w-5 ${accentText[a.accent] || accentText.violet}`} />
+                </div>
+              )}
               <div className="flex-1">
                 <p className="text-sm font-semibold text-zinc-100">{a.name}</p>
                 <p className={`text-xs font-medium ${accentText[a.accent] || accentText.violet}`}>{a.role}</p>
@@ -68,10 +137,16 @@ export default function AIAgents() {
             </div>
           </div>
         ))}
-        {agents.length === 0 && (
-          <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 py-16 text-zinc-600">
+        {loading && (
+          <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 py-16 text-zinc-600" data-testid="ai-agents-loading">
             <Bot className="h-8 w-8" />
             <p className="mt-2 text-sm">Loading agents…</p>
+          </div>
+        )}
+        {!loading && !error && list.length === 0 && (
+          <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 py-16 text-zinc-600" data-testid="ai-agents-empty">
+            <Bot className="h-8 w-8" />
+            <p className="mt-2 text-sm">No AI agents yet.</p>
           </div>
         )}
       </div>
