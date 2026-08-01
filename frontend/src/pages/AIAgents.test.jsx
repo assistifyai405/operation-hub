@@ -24,35 +24,45 @@ describe("AIAgents page crash guards", () => {
 
   test("guards non-array API payloads before map", () => {
     expect(pageSrc).toMatch(/Array\.isArray/);
+    expect(pageSrc).toMatch(/extractAgentsList/);
     expect(pageSrc).toMatch(/normalizeAgents/);
+    expect(pageSrc).toMatch(/console\.log\(\"\[AIAgents\]/);
     expect(pageSrc).toMatch(/ai-agents-error/);
     expect(pageSrc).toMatch(/ai-agents-empty/);
     expect(pageSrc).toMatch(/ai-agents-loading/);
+    // Never map agents state directly without an Array.isArray guard
+    expect(pageSrc).not.toMatch(/\{agents\.map\(/);
   });
 
-  test("reproduces prior crash and validates safe normalize", () => {
-    // Prior bug: 401 JSON object assigned to agents → agents.map throws
+  test("reproduces prior crash and validates safe extract/normalize", () => {
     const errorBody = { detail: "Not authenticated", error: { message: "Not authenticated" } };
     expect(Array.isArray(errorBody)).toBe(false);
     expect(() => errorBody.map(() => null)).toThrow(/map is not a function/);
 
+    function extractAgentsList(payload) {
+      if (Array.isArray(payload)) return payload;
+      if (payload && typeof payload === "object") {
+        if (Array.isArray(payload.agents)) return payload.agents;
+        if (Array.isArray(payload.data)) return payload.data;
+        if (Array.isArray(payload.items)) return payload.items;
+      }
+      return [];
+    }
+
     function normalizeAgents(payload) {
-      if (!Array.isArray(payload)) return [];
-      return payload.filter(Boolean).map((a, i) => ({
+      const raw = extractAgentsList(payload);
+      if (!Array.isArray(raw)) return [];
+      return raw.filter((a) => a && typeof a === "object").map((a, i) => ({
         id: a.id || `agent-${i}`,
         name: a.name || "Untitled agent",
-        role: a.role || "Assistant",
-        description: a.description || "",
-        avatar: a.avatar || "",
-        accent: a.accent || "violet",
       }));
     }
 
     expect(normalizeAgents(errorBody)).toEqual([]);
     expect(normalizeAgents(null)).toEqual([]);
     expect(normalizeAgents([])).toEqual([]);
-    expect(normalizeAgents([{ id: "x" }, null]).map((a) => a.id)).toEqual(["x"]);
+    expect(normalizeAgents({ agents: [{ id: "copilot" }] }).map((a) => a.id)).toEqual(["copilot"]);
     const list = normalizeAgents([{ id: "copilot", name: "Assistify Copilot" }]);
-    expect(() => list.map((a) => a.id)).not.toThrow();
+    expect(Array.isArray(list) ? list.map((a) => a.id) : []).toEqual(["copilot"]);
   });
 });

@@ -18,9 +18,24 @@ const accentText = {
   amber: "text-amber-400",
 };
 
+/** Always return an array — never pass API error objects to .map(). */
+function extractAgentsList(payload) {
+  // Keep this log while debugging /ai-agents crashes.
+  console.log("[AIAgents] API response:", payload, "isArray=", Array.isArray(payload));
+
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    if (Array.isArray(payload.agents)) return payload.agents;
+    if (Array.isArray(payload.data)) return payload.data;
+    if (Array.isArray(payload.items)) return payload.items;
+  }
+  return [];
+}
+
 function normalizeAgents(payload) {
-  if (!Array.isArray(payload)) return [];
-  return payload.filter(Boolean).map((a, i) => ({
+  const raw = extractAgentsList(payload);
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((a) => a && typeof a === "object").map((a, i) => ({
     id: a.id || `agent-${i}`,
     name: a.name || "Untitled agent",
     role: a.role || "Assistant",
@@ -36,47 +51,59 @@ export default function AIAgents() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Hard guarantee: state used for rendering is always an array.
+  const list = Array.isArray(agents) ? agents : [];
+
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
-    fetch(`${API}/agents`, {
-      headers: { Authorization: `Bearer ${getAccessToken()}` },
-      credentials: "include",
-    })
-      .then(async (r) => {
-        const data = await r.json().catch(() => null);
-        if (!r.ok) {
+    async function loadAgents() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`${API}/agents`, {
+          headers: { Authorization: `Bearer ${getAccessToken()}` },
+          credentials: "include",
+        });
+        const data = await res.json().catch(() => null);
+        console.log("[AIAgents] status=", res.status, "body=", data);
+
+        if (cancelled) return;
+
+        // Default to [] whenever the body is not a usable agents list.
+        const next = normalizeAgents(data);
+        setAgents(Array.isArray(next) ? next : []);
+
+        if (!res.ok) {
           const msg =
-            (data && (data.detail || data.error?.message)) ||
-            `Could not load agents (${r.status})`;
-          throw new Error(typeof msg === "string" ? msg : "Could not load agents");
+            (data && typeof data.detail === "string" && data.detail) ||
+            (data && data.error && data.error.message) ||
+            `Could not load agents (${res.status})`;
+          setError(msg);
+          return;
         }
-        if (!Array.isArray(data)) {
-          throw new Error("Unexpected agents response");
+        if (!Array.isArray(data) && !(data && Array.isArray(data.agents))) {
+          // Still show empty list; surface a soft warning for unexpected shapes.
+          if (next.length === 0) {
+            setError("Unexpected agents response");
+          }
         }
-        return data;
-      })
-      .then((data) => {
-        if (!cancelled) setAgents(normalizeAgents(data));
-      })
-      .catch((e) => {
+      } catch (e) {
+        console.error("[AIAgents] fetch failed:", e);
         if (!cancelled) {
           setAgents([]);
           setError(e?.message || "Could not load agents");
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
 
+    loadAgents();
     return () => {
       cancelled = true;
     };
   }, []);
-
-  const list = Array.isArray(agents) ? agents : [];
 
   return (
     <div className="space-y-5" data-testid="ai-agents-page">
@@ -98,7 +125,7 @@ export default function AIAgents() {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map((a, i) => (
+        {Array.isArray(list) ? list.map((a, i) => (
           <div
             key={a.id}
             style={{ animationDelay: `${i * 70}ms` }}
@@ -136,14 +163,14 @@ export default function AIAgents() {
               </button>
             </div>
           </div>
-        ))}
+        )) : null}
         {loading && (
           <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 py-16 text-zinc-600" data-testid="ai-agents-loading">
             <Bot className="h-8 w-8" />
             <p className="mt-2 text-sm">Loading agents…</p>
           </div>
         )}
-        {!loading && !error && list.length === 0 && (
+        {!loading && !error && Array.isArray(list) && list.length === 0 && (
           <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 py-16 text-zinc-600" data-testid="ai-agents-empty">
             <Bot className="h-8 w-8" />
             <p className="mt-2 text-sm">No AI agents yet.</p>
