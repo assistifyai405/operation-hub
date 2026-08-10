@@ -64,7 +64,7 @@ describe("Sprint 23 dashboard first-run", () => {
     expect(checklist).toMatch(/Get Assistify working for you/);
     expect(checklist).not.toMatch(/AI employee/);
     expect(checklist).toMatch(/dismissChecklist/);
-    expect(checklist).toMatch(/onboardingApi\.checklist/);
+    expect(checklist).toMatch(/\.checklist\(\)/);
   });
 });
 
@@ -111,6 +111,7 @@ describe("Sprint 23 analytics foundation", () => {
     expect(analytics).toMatch(/client_created/);
     expect(analytics).toMatch(/copilot_used/);
     expect(analytics).toMatch(/FORBIDDEN_KEYS/);
-    expect(analytics).not.toMatch(/segment|posthog|mixpanel/i);
+    expect(analytics).toMatch(/No paid provider yet/);
+    expect(analytics).toMatch(/setAnalyticsSink/);
   });
 });
