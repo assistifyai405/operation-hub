@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { projectsApi, clientsApi } from "@/lib/api";
 import { asArray } from "@/lib/safe";
 import EmptyState from "@/components/EmptyState";
+import { LoadError } from "@/components/LoadError";
 
 const columns = ["In Progress", "Review", "Completed", "Blocked"];
 const dot = { "In Progress": "bg-violet-400", Review: "bg-cyan-400", Completed: "bg-emerald-400", Blocked: "bg-red-400" };
@@ -128,12 +129,15 @@ export default function Projects() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [loadError, setLoadError] = useState(null);
 
   const load = () => {
     setLoading(true);
+    setLoadError(null);
     Promise.all([projectsApi.list(), clientsApi.list()])
       .then(([p, c]) => { setProjects(asArray(p)); setClients(asArray(c)); })
-      .catch((e) => { toast.error(e.message); setProjects([]); setClients([]); }).finally(() => setLoading(false));
+      .catch((e) => { toast.error(e.message); setProjects([]); setClients([]); setLoadError(e.message || "Couldn't load projects"); })
+      .finally(() => setLoading(false));
   };
   useEffect(load, []);
 
@@ -158,7 +162,9 @@ export default function Projects() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
+        <div className="flex items-center justify-center py-20 text-zinc-500" aria-label="Loading projects"><Loader2 className="h-6 w-6 animate-spin" /></div>
+      ) : loadError ? (
+        <LoadError message={loadError} onRetry={load} testid="projects-load-error" />
       ) : projectList.length === 0 ? (
         <EmptyState
           icon={FolderKanban}

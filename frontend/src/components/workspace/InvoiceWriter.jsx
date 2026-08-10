@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Receipt, Loader2, RefreshCw, Save, Download, History, GitCompare,
   Pencil, X, RotateCcw, FileText, Sparkles, Plus, Trash2,
@@ -88,15 +88,15 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
 
   const totals = useMemo(() => computeTotals(lineItems, content?.vat_rate), [lineItems, content]);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const cfg = await invoiceWriterApi.config();
       setStatuses(cfg.statuses);
       const doc = await invoiceWriterApi.get(projectId);
       if (doc) { setInvoice(doc); setNumber(doc.invoice_number); setTitle(doc.title); setStatus(doc.status); setContent(doc.content); setLineItems(doc.line_items); setDirtyVersion(doc.version); }
     } catch (e) { /* ignore */ } finally { setLoading(false); }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [projectId]);
+  }, [projectId]);
+  useEffect(() => { load(); }, [load]);
 
   const generate = async () => {
     setGenerating(true); setCompareWith(null); setEditing(false); setReport(null);

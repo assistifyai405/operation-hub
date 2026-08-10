@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FileSignature, Loader2, RefreshCw, Save, Download, History, GitCompare,
   Pencil, X, RotateCcw, FileText, Sparkles, ChevronDown,
@@ -70,15 +70,15 @@ export default function ProposalWriter({ projectId, projectName, onSaved }) {
   const [report, setReport] = useState(null);
   const [durationMs, setDurationMs] = useState(0);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const meta = await proposalWriterApi.sections();
       setSections(meta.sections); setStatuses(meta.statuses);
       const doc = await proposalWriterApi.get(projectId);
       if (doc) { setProposal(doc); setTitle(doc.title); setStatus(doc.status); setContent(doc.content); setDirtyVersion(doc.version); }
     } catch (e) { /* ignore */ } finally { setLoading(false); }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [projectId]);
+  }, [projectId]);
+  useEffect(() => { load(); }, [load]);
 
   const generate = async () => {
     setGenerating(true); setCompareWith(null); setEditing(false); setReport(null);

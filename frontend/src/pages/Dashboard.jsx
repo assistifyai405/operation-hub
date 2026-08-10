@@ -17,6 +17,7 @@ import { TodayPriorities } from "@/components/dashboard/TodayPriorities";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { DashboardFirstRun } from "@/components/dashboard/DashboardFirstRun";
 import { Skeleton, money } from "@/components/dashboard/execShared";
+import { LoadError } from "@/components/LoadError";
 
 function GlobalSearch({ navigate }) {
   const [q, setQ] = useState("");
@@ -88,10 +89,17 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [briefOpen, setBriefOpen] = useState(false);
-  useEffect(() => {
-    dashboardApi.executive().then(setData).catch((e) => toast.error(e.message)).finally(() => setLoading(false));
-  }, []);
+  const load = () => {
+    setLoading(true);
+    setLoadError(null);
+    dashboardApi.executive()
+      .then(setData)
+      .catch((e) => { toast.error(e.message); setLoadError(e.message || "Couldn't load dashboard"); })
+      .finally(() => setLoading(false));
+  };
+  useEffect(() => { load(); }, []);
   useEffect(() => {
     if (!user || !data) return;
     // Don't auto-open Morning Brief on an empty workspace — it feels like fake insights
@@ -102,7 +110,10 @@ export default function Dashboard() {
       localStorage.setItem(key, "1");
     }
   }, [user, data]);
-  if (loading || !data) return <DashboardSkeleton />;
+  if (loading) return <DashboardSkeleton />;
+  if (loadError || !data) {
+    return <LoadError message={loadError || "Couldn't load dashboard"} onRetry={load} testid="dashboard-load-error" />;
+  }
 
   const firstName = (user?.firstName || (user?.email || "").split("@")[0] || "").trim();
   const { hero } = data;

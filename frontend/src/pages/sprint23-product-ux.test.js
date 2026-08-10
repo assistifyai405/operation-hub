@@ -81,11 +81,10 @@ describe("Sprint 23 empty states and CTAs", () => {
     expect(read("AICopilot.jsx")).toMatch(/copilot-empty/);
   });
 
-  test("AI Agents new-agent CTA is disabled/coming-later not a dead button", () => {
+  test("AI Agents custom creation is hidden (no dead New Agent CTA)", () => {
     const agents = read("AIAgents.jsx");
-    expect(agents).toMatch(/disabled/);
-    expect(agents).toMatch(/Soon/);
-    expect(agents).toMatch(/coming later/i);
+    expect(agents).not.toMatch(/new-agent-btn/);
+    expect(agents).toMatch(/custom-agents-note/);
   });
 
   test("landing/auth copy avoids fake trial language", () => {

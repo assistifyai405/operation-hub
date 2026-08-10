@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Brain, Search, Sparkles, Loader2, Pin, PinOff, Pencil, Trash2, Power, PowerOff,
@@ -92,11 +92,14 @@ export default function KnowledgeBrain() {
   const [analyzing, setAnalyzing] = useState(false);
   const [genProfile, setGenProfile] = useState(false);
 
-  const load = () => {
+  const load = useCallback(() => {
     memoryApi.memories({ q, category: cat, sort }).then(setMems).catch(() => setMems([]));
     memoryApi.stats().then(setStats).catch(() => {});
-  };
-  useEffect(() => { const t = setTimeout(load, q ? 250 : 0); return () => clearTimeout(t); /* eslint-disable-next-line */ }, [q, cat, sort]);
+  }, [q, cat, sort]);
+  useEffect(() => {
+    const t = setTimeout(load, q ? 250 : 0);
+    return () => clearTimeout(t);
+  }, [load, q]);
   useEffect(() => {
     setLoading(true);
     Promise.all([memoryApi.memories({ sort: "recent" }).then(setMems), memoryApi.stats().then(setStats),

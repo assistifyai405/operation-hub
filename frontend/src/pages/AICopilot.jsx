@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Sparkles, Send, Loader2, Check, X, Receipt, TriangleAlert, Clock, FolderKanban,
   Users, User, Wand2, ArrowRight,
@@ -46,6 +46,7 @@ function ActionCard({ action, onConfirm, onCancel, busy, done }) {
 
 export default function AICopilot() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sessionId] = useState(() => {
     let s = sessionStorage.getItem(SESSION_KEY);
     if (!s) { s = `cp-${Date.now()}`; sessionStorage.setItem(SESSION_KEY, s); }
@@ -57,21 +58,16 @@ export default function AICopilot() {
   const [suggestions, setSuggestions] = useState([]);
   const [execBusy, setExecBusy] = useState(null);
   const endRef = useRef(null);
-
-  useEffect(() => {
-    copilotApi.suggestions().then((s) => setSuggestions(asArray(s))).catch(() => setSuggestions([]));
-    copilotApi.history(sessionId).then((h) => {
-      if (Array.isArray(h) && h.length) setMessages(h.map((m) => ({ role: m.role, content: m.content, action: m.action, done: Boolean(m.action) })));
-    }).catch(() => {});
-  }, [sessionId]);
-
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
+  const bootstrappedQ = useRef(false);
+  const loadingRef = useRef(false);
+  const sendRef = useRef(null);
 
   const send = async (text) => {
     const msg = (text ?? input).trim();
-    if (!msg || loading) return;
+    if (!msg || loadingRef.current) return;
     setInput("");
     setMessages((m) => [...m, { role: "user", content: msg }]);
+    loadingRef.current = true;
     setLoading(true);
     events.copilotUsed();
     onboardingApi.flag("copilot").catch(() => {});
@@ -80,8 +76,38 @@ export default function AICopilot() {
       setMessages((m) => [...m, { role: "assistant", content: res.reply, action: res.action, done: false }]);
     } catch (e) {
       setMessages((m) => [...m, { role: "assistant", content: `⚠️ ${e.message}`, error: true }]);
-    } finally { setLoading(false); }
+    } finally {
+      loadingRef.current = false;
+      setLoading(false);
+    }
   };
+  sendRef.current = send;
+
+  useEffect(() => {
+    copilotApi.suggestions().then((s) => setSuggestions(asArray(s))).catch(() => setSuggestions([]));
+    copilotApi.history(sessionId).then((h) => {
+      if (Array.isArray(h) && h.length) setMessages(h.map((m) => ({ role: m.role, content: m.content, action: m.action, done: Boolean(m.action) })));
+    }).catch(() => {});
+  }, [sessionId]);
+
+  // Prefill / auto-send from command palette or agent CTAs (?q=…)
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (!q || bootstrappedQ.current) return;
+    bootstrappedQ.current = true;
+    setSearchParams({}, { replace: true });
+    setInput(q);
+    let cancelled = false;
+    const t = setTimeout(() => {
+      if (!cancelled) sendRef.current?.(q);
+    }, 50);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
 
   const confirmAction = async (idx, action) => {
     setExecBusy(idx);

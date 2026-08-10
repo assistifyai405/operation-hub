@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { onboardingApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { events } from "@/lib/analytics";
+import { markProductTourEligible } from "@/lib/productTour";
 import { ProgressRail } from "@/components/onboarding/onboardingShared";
 import { StepWelcome } from "@/components/onboarding/StepWelcome";
 import { StepCompany } from "@/components/onboarding/StepCompany";
@@ -93,7 +94,11 @@ export default function Onboarding() {
         });
         await onboardingApi.complete().catch(() => {});
         setUser((u) => (u ? { ...u, onboardingCompleted: true } : u));
-        if (refreshUser) await refreshUser().catch(() => {});
+        if (user?.id) markProductTourEligible(user.id);
+        if (refreshUser) {
+          const me = await refreshUser().catch(() => null);
+          if (me?.id) markProductTourEligible(me.id);
+        }
         if (reason === "skipped") events.onboardingSkipped();
         else events.onboardingCompleted({ goal: data.primaryGoal || "none" });
       } catch (e) {

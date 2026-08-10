@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { tasksApi, projectsApi } from "@/lib/api";
 import { asArray } from "@/lib/safe";
 import EmptyState from "@/components/EmptyState";
+import { LoadError } from "@/components/LoadError";
 
 const priorityStyle = {
   High: "bg-red-500/10 text-red-400 border-red-500/20",
@@ -109,12 +110,15 @@ export default function Tasks() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [loadError, setLoadError] = useState(null);
 
   const load = () => {
     setLoading(true);
+    setLoadError(null);
     Promise.all([tasksApi.list(), projectsApi.list()])
       .then(([t, p]) => { setTasks(asArray(t)); setProjects(asArray(p)); })
-      .catch((e) => { toast.error(e.message); setTasks([]); setProjects([]); }).finally(() => setLoading(false));
+      .catch((e) => { toast.error(e.message); setTasks([]); setProjects([]); setLoadError(e.message || "Couldn't load tasks"); })
+      .finally(() => setLoading(false));
   };
   useEffect(load, []);
 
@@ -153,7 +157,9 @@ export default function Tasks() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
+        <div className="flex items-center justify-center py-20 text-zinc-500" aria-label="Loading tasks"><Loader2 className="h-6 w-6 animate-spin" /></div>
+      ) : loadError ? (
+        <LoadError message={loadError} onRetry={load} testid="tasks-load-error" />
       ) : taskList.length === 0 ? (
         <EmptyState
           icon={CheckSquare}

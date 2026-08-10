@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { clientsApi } from "@/lib/api";
 import { asArray } from "@/lib/safe";
 import EmptyState from "@/components/EmptyState";
+import { LoadError } from "@/components/LoadError";
 
 const statusStyle = {
   Active: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
@@ -128,10 +129,15 @@ export default function Clients() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [loadError, setLoadError] = useState(null);
 
   const load = () => {
     setLoading(true);
-    clientsApi.list().then((data) => setClients(asArray(data))).catch((e) => { toast.error(e.message); setClients([]); }).finally(() => setLoading(false));
+    setLoadError(null);
+    clientsApi.list()
+      .then((data) => setClients(asArray(data)))
+      .catch((e) => { toast.error(e.message); setClients([]); setLoadError(e.message || "Couldn't load clients"); })
+      .finally(() => setLoading(false));
   };
   useEffect(load, []);
 
@@ -167,7 +173,9 @@ export default function Clients() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
+        <div className="flex items-center justify-center py-20 text-zinc-500" aria-label="Loading clients"><Loader2 className="h-6 w-6 animate-spin" /></div>
+      ) : loadError ? (
+        <LoadError message={loadError} onRetry={load} testid="clients-load-error" />
       ) : list.length === 0 ? (
         <EmptyState
           icon={Users}

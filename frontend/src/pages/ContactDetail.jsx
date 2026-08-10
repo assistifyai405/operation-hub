@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -8,6 +8,7 @@ import {
 import { crmApi } from "@/lib/api";
 import { AiIcon, relTime } from "@/components/ai/aiHelpers";
 import { fmtMoneyFull, STAGE_META } from "@/components/crm/crmShared";
+import { LoadError } from "@/components/LoadError";
 
 export default function ContactDetail() {
   const { id } = useParams();
@@ -15,9 +16,19 @@ export default function ContactDetail() {
   const [c, setC] = useState(null);
   const [summary, setSummary] = useState(null);
   const [genning, setGenning] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
-  const load = () => crmApi.contact(id).then((data) => { setC(data); setSummary(data.ai_summary || null); }).catch(() => toast.error("Couldn't load contact"));
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  const load = useCallback(() => {
+    setLoadError(null);
+    return crmApi.contact(id)
+      .then((data) => { setC(data); setSummary(data.ai_summary || null); })
+      .catch((e) => {
+        setC(null);
+        setLoadError(e.message || "Couldn't load contact");
+        toast.error("Couldn't load contact");
+      });
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const genSummary = async (refresh = false) => {
     setGenning(true);
@@ -25,7 +36,10 @@ export default function ContactDetail() {
     catch (e) { toast.error(e.message); } finally { setGenning(false); }
   };
 
-  if (!c) return <div className="flex items-center justify-center py-24 text-zinc-600"><Loader2 className="h-7 w-7 animate-spin" /></div>;
+  if (loadError && !c) {
+    return <LoadError message={loadError} onRetry={load} testid="contact-load-error" />;
+  }
+  if (!c) return <div className="flex items-center justify-center py-24 text-zinc-600" aria-label="Loading contact"><Loader2 className="h-7 w-7 animate-spin" /></div>;
 
   const info = [
     { icon: Mail, v: c.email }, { icon: Phone, v: c.phone }, { icon: Globe, v: c.website },

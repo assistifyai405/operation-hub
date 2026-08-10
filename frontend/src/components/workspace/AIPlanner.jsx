@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Sparkles, Loader2, RefreshCw, Save, Download, History, GitCompare,
   Pencil, X, FileText, Target, Cpu, ListChecks, Flag, ListTodo,
@@ -107,12 +107,20 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
   const [report, setReport] = useState(null);
   const [durationMs, setDurationMs] = useState(0);
 
-  const loadVersions = () => plansApi.list(projectId).then((v) => {
-    setVersions(v);
-    if (v.length && draft === null) { setDraft(v[0].sections); setDraftVersion(v[0].version); }
-  }).catch(() => {});
+  const loadVersions = useCallback(() => {
+    plansApi.list(projectId).then((v) => {
+      setVersions(v);
+      setDraft((current) => {
+        if (current === null && v.length) {
+          setDraftVersion(v[0].version);
+          return v[0].sections;
+        }
+        return current;
+      });
+    }).catch(() => {});
+  }, [projectId]);
 
-  useEffect(() => { loadVersions(); /* eslint-disable-next-line */ }, [projectId]);
+  useEffect(() => { loadVersions(); }, [loadVersions]);
 
   const generate = async () => {
     setGenerating(true); setCompareWith(null); setEditing(false); setReport(null);

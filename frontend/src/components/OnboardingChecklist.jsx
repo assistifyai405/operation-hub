@@ -3,17 +3,28 @@ import { useNavigate } from "react-router-dom";
 import { Check, Circle, Sparkles, ChevronRight, X } from "lucide-react";
 import { onboardingApi } from "@/lib/api";
 
+const SESSION_KEY = "onb_checklist_dismissed";
+
 export default function OnboardingChecklist() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem(SESSION_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     onboardingApi
       .checklist()
       .then((r) => {
         setData(r);
-        if (r?.dismissed) setDismissed(true);
+        if (r?.dismissed) {
+          setDismissed(true);
+          try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* ignore */ }
+        }
       })
       .catch(() => {});
   }, []);
@@ -22,11 +33,11 @@ export default function OnboardingChecklist() {
 
   const dismiss = async () => {
     setDismissed(true);
+    try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* ignore */ }
     try {
       await onboardingApi.dismissChecklist();
     } catch {
-      /* local dismiss still stands for this session */
-      sessionStorage.setItem("onb_checklist_dismissed", "1");
+      /* session dismiss still stands for this browser session */
     }
   };
 
@@ -50,7 +61,7 @@ export default function OnboardingChecklist() {
           onClick={dismiss}
           data-testid="dismiss-checklist"
           aria-label="Dismiss setup checklist"
-          className="text-zinc-500 transition-colors hover:text-zinc-300"
+          className="text-zinc-500 transition-colors hover:text-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 rounded"
         >
           <X className="h-4 w-4" />
         </button>
@@ -65,7 +76,7 @@ export default function OnboardingChecklist() {
             {data.percent}%
           </span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-zinc-800" role="progressbar" aria-valuenow={data.percent} aria-valuemin={0} aria-valuemax={100}>
+        <div className="h-2 overflow-hidden rounded-full bg-zinc-800" role="progressbar" aria-valuenow={data.percent} aria-valuemin={0} aria-valuemax={100} aria-label="Workspace setup progress">
           <div className="h-full rounded-full bg-violet-500 transition-all duration-500" style={{ width: `${data.percent}%` }} />
         </div>
       </div>

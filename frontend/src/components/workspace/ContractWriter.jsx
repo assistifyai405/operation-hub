@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ScrollText, Loader2, RefreshCw, Save, Download, History, GitCompare,
   Pencil, X, RotateCcw, FileText, Sparkles,
@@ -71,15 +71,15 @@ export default function ContractWriter({ projectId, projectName, onSaved }) {
   const [report, setReport] = useState(null);
   const [durationMs, setDurationMs] = useState(0);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const meta = await contractWriterApi.sections();
       setSections(meta.sections); setStatuses(meta.statuses);
       const doc = await contractWriterApi.get(projectId);
       if (doc) { setContract(doc); setTitle(doc.title); setStatus(doc.status); setContent(doc.content); setDirtyVersion(doc.version); }
     } catch (e) { /* ignore */ } finally { setLoading(false); }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [projectId]);
+  }, [projectId]);
+  useEffect(() => { load(); }, [load]);
 
   const generate = async () => {
     setGenerating(true); setCompareWith(null); setEditing(false); setReport(null);

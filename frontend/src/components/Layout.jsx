@@ -14,6 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import { authApi, notificationsApi, aiApi, onboardingApi } from "@/lib/api";
 import { toast } from "sonner";
 import CommandPalette from "@/components/CommandPalette";
+import ProductTour from "@/components/ProductTour";
 import { AiIcon } from "@/components/ai/aiHelpers";
 import { BILLING_ENABLED } from "@/lib/config";
 import { AssistantProvider } from "@/context/AssistantContext";
@@ -53,8 +54,8 @@ const nav = [
 ];
 
 const Sidebar = ({ onNavigate }) => (
-  <div className="flex h-full flex-col">
-    <div className="flex items-center gap-2.5 px-6 py-6">
+  <div className="flex h-full min-h-0 flex-col">
+    <div className="flex shrink-0 items-center gap-2.5 px-6 py-6">
       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet">
         <Sparkles className="h-5 w-5 text-white" />
       </div>
@@ -63,7 +64,7 @@ const Sidebar = ({ onNavigate }) => (
         <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-violet-400">OS</p>
       </div>
     </div>
-    <nav className="flex-1 space-y-1 px-3 py-2" data-testid="sidebar-nav">
+    <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-2" data-testid="sidebar-nav">
       {nav.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}
@@ -80,23 +81,23 @@ const Sidebar = ({ onNavigate }) => (
         >
           {({ isActive }) => (
             <>
-              <Icon className={`h-[18px] w-[18px] transition-colors ${isActive ? "text-violet-400" : "text-zinc-500 group-hover:text-zinc-300"}`} />
-              {label}
+              <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${isActive ? "text-violet-400" : "text-zinc-500 group-hover:text-zinc-300"}`} />
+              <span className="truncate">{label}</span>
             </>
           )}
         </NavLink>
       ))}
     </nav>
     {BILLING_ENABLED ? (
-      <div className="m-3 rounded-xl border border-white/10 bg-gradient-to-br from-violet-600/20 to-transparent p-4" data-testid="sidebar-billing">
+      <div className="m-3 shrink-0 rounded-xl border border-white/10 bg-gradient-to-br from-violet-600/20 to-transparent p-4" data-testid="sidebar-billing">
         <p className="text-sm font-semibold text-zinc-100">Upgrade to Pro</p>
         <p className="mt-1 text-xs text-zinc-400">Unlock unlimited AI agents & automations.</p>
-        <button data-testid="upgrade-btn" className="mt-3 w-full rounded-lg bg-violet-600 py-2 text-xs font-semibold text-white transition-all hover:bg-violet-500">
+        <button type="button" data-testid="upgrade-btn" className="mt-3 w-full rounded-lg bg-violet-600 py-2 text-xs font-semibold text-white transition-all hover:bg-violet-500">
           Upgrade
         </button>
       </div>
     ) : (
-      <div className="m-3 rounded-xl border border-dashed border-white/10 bg-zinc-950/60 p-4" data-testid="sidebar-billing-pending">
+      <div className="m-3 shrink-0 rounded-xl border border-dashed border-white/10 bg-zinc-950/60 p-4" data-testid="sidebar-billing-pending">
         <p className="text-sm font-semibold text-zinc-300">Billing setup pending</p>
         <p className="mt-1 text-xs text-zinc-500">Payments are not configured. No active plan or charges apply.</p>
       </div>
@@ -171,7 +172,7 @@ export default function Layout() {
           <button className="lg:hidden text-zinc-400" onClick={() => setMobileOpen(true)} data-testid="mobile-menu" aria-label="Open navigation menu">
             <Menu className="h-5 w-5" />
           </button>
-          <h1 className="text-lg font-semibold tracking-tight" data-testid="page-title">{pageTitle}</h1>
+          <h1 className="min-w-0 truncate text-lg font-semibold tracking-tight" data-testid="page-title">{pageTitle}</h1>
           <div className="relative ml-auto hidden max-w-xs flex-1 sm:block">
             <button
               onClick={() => setPaletteOpen(true)}
@@ -272,6 +273,9 @@ export default function Layout() {
         </main>
       </div>
       <CommandPalette open={paletteOpen} setOpen={setPaletteOpen} />
+      {user?.onboardingCompleted !== false && (
+        <ProductTour onOpenCommandPalette={() => setPaletteOpen(true)} />
+      )}
       <FloatingAssistant />
     </div>
     </AssistantProvider>

@@ -30,10 +30,12 @@ describe("AIAgents page crash guards", () => {
     expect(pageSrc).toMatch(/ai-agents-error/);
     expect(pageSrc).toMatch(/ai-agents-empty/);
     expect(pageSrc).toMatch(/ai-agents-loading/);
-    expect(pageSrc).toMatch(/New Agent/);
-    expect(pageSrc).toMatch(/Soon/);
-    // Never map agents state directly without an Array.isArray guard
     expect(pageSrc).not.toMatch(/\{agents\.map\(/);
+  });
+
+  test("custom agent creation is hidden for launch", () => {
+    expect(pageSrc).not.toMatch(/new-agent-btn/);
+    expect(pageSrc).toMatch(/custom-agents-note/);
   });
 
   test("reproduces prior crash and validates safe extract/normalize", () => {
