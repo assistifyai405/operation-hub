@@ -93,8 +93,10 @@ export default function Onboarding() {
           completed: true,
         });
         await onboardingApi.complete().catch(() => {});
-        setUser((u) => (u ? { ...u, onboardingCompleted: true } : u));
-        if (user?.id) markProductTourEligible(user.id);
+        setUser((u) => {
+          if (u?.id) markProductTourEligible(u.id);
+          return u ? { ...u, onboardingCompleted: true } : u;
+        });
         if (refreshUser) {
           const me = await refreshUser().catch(() => null);
           if (me?.id) markProductTourEligible(me.id);
