@@ -419,14 +419,48 @@ async def create_demo(request: Request, response: Response):
 
 @api_router.get("/config/public")
 async def public_config():
-    """Non-secret feature flags for the frontend (demo login, billing stub)."""
+    """Non-secret feature flags + staging readiness (never exposes secrets)."""
     from config import get_settings
+    from email_providers import get_email_provider, outbound_sending_allowed
     cfg = get_settings()
+    email_ok, email_reason = outbound_sending_allowed(cfg)
+    provider = get_email_provider(cfg)
+    email_configured = provider.is_configured() if cfg.email_provider == "resend" else cfg.email_provider == "console"
+
+    def _oauth_status(pid: str) -> str:
+        try:
+            from routers.integrations import _oauth_ready
+            return "configured" if _oauth_ready(pid) else "not_configured"
+        except Exception:
+            return "not_configured"
+
     return {
         "demoLoginEnabled": bool(cfg.enable_demo_login),
         "demoSeedEnabled": bool(cfg.enable_demo_seed),
         "billingEnabled": False,  # Stripe not integrated; frontend also gates via REACT_APP_BILLING_ENABLED
         "environment": cfg.environment,
+        "email": {
+            "provider": cfg.email_provider,
+            "sendingEnabled": bool(cfg.email_sending_enabled),
+            "configured": bool(email_configured),
+            "canSend": bool(email_ok and cfg.email_sending_enabled),
+            "status": (
+                "ready" if (email_ok and cfg.email_sending_enabled and email_configured)
+                else ("configured_disabled" if email_configured and not cfg.email_sending_enabled
+                      else ("not_configured" if not email_configured else "blocked"))
+            ),
+            # reason is safe/non-secret (e.g. kill-switch message)
+            "blockedReason": None if email_ok else email_reason,
+        },
+        "oauth": {
+            "google": _oauth_status("google"),
+            "microsoft": _oauth_status("microsoft"),
+            "slack": _oauth_status("slack"),
+        },
+        "cookies": {
+            "secure": bool(cfg.cookie_secure),
+            "sameSite": cfg.cookie_samesite,
+        },
     }
 
 

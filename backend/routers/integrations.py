@@ -46,10 +46,14 @@ def _redirect_uri(provider: str, request: Request = None) -> str:
     }.get(provider)
     if explicit:
         return explicit.rstrip("/")
-    # Derive from request base or FRONTEND is wrong — use API host from request
+    # Prefer API_URL (canonical API origin), then request base, never the SPA origin.
+    api_base = (getattr(s, "api_url", None) or "").rstrip("/")
+    if api_base:
+        return f"{api_base}/api/integrations/oauth/callback/{provider}"
     if request is not None:
         return str(request.base_url).rstrip("/") + f"/api/integrations/oauth/callback/{provider}"
-    return f"{s.frontend_url.rstrip('/')}/api/integrations/oauth/callback/{provider}"
+    # Last resort — still API-shaped path (operators should set API_URL / *_REDIRECT_URI)
+    return f"/api/integrations/oauth/callback/{provider}"
 
 
 class ConnectBody(BaseModel):
@@ -106,6 +110,22 @@ async def integrations_status(org: str = Depends(current_org), user: dict = Depe
     items = await store.list_integrations(org)
     connected = [i for i in items if i.get("status") == "connected"]
     errors = [i for i in items if i.get("status") == "error"]
+    by_provider = {i["provider"]: i for i in items}
+
+    def _readiness(provider: str) -> str:
+        """configured | not_configured | reconnect_required | connected"""
+        oauth = _oauth_ready(provider)
+        doc = by_provider.get(provider)
+        if doc and doc.get("status") == "error":
+            return "reconnect_required"
+        if doc and doc.get("status") == "connected":
+            if (doc.get("healthStatus") or "") in ("error", "unhealthy", "expired"):
+                return "reconnect_required"
+            return "connected"
+        if provider in ("google", "microsoft", "slack"):
+            return "configured" if oauth else "not_configured"
+        return "configured" if doc else "not_configured"
+
     return {
         "connectedCount": len(connected),
         "errorCount": len(errors),
@@ -116,8 +136,19 @@ async def integrations_status(org: str = Depends(current_org), user: dict = Depe
                 "lastSyncAt": i.get("lastSyncAt"),
                 "accountEmail": i.get("accountEmail"),
                 "permissions": i.get("permissions") or [],
+                "readiness": _readiness(i["provider"]),
             }
             for i in items
+        },
+        "oauthReadiness": {
+            "google": _readiness("google"),
+            "microsoft": _readiness("microsoft"),
+            "slack": _readiness("slack"),
+        },
+        "redirectUriTemplates": {
+            "google": _redirect_uri("google"),
+            "microsoft": _redirect_uri("microsoft"),
+            "slack": _redirect_uri("slack"),
         },
     }
 

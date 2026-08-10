@@ -1,6 +1,6 @@
 # End-to-end smoke (Playwright)
 
-Targets a **running** frontend + backend (local compose or staging). Does not mock the app.
+Targets a **running** frontend + backend (local compose or real staging). Does not mock the app.
 Auth is **cookie-only** — tests assert no JWT in `localStorage` / `sessionStorage`.
 
 ## Local
@@ -18,10 +18,16 @@ npx serve -s build -l 3000
 cd e2e
 yarn install
 npx playwright install chromium
+yarn test:local
+# or:
 E2E_BASE_URL=http://127.0.0.1:3000 E2E_API_URL=http://127.0.0.1:8000 yarn test
 ```
 
-## Staging
+If the API is unreachable, tests are **skipped** (pending) — not failed, not faked as pass.
+
+## Staging (external HTTPS)
+
+Requires real URLs — `yarn test:staging` exits with code `2` (PENDING) if `STAGING_BASE_URL` is missing or localhost.
 
 ```bash
 cd e2e
@@ -31,9 +37,9 @@ npx playwright install chromium
 STAGING_BASE_URL=https://staging.example.com \
 E2E_BASE_URL=https://staging.example.com \
 E2E_API_URL=https://api.staging.example.com \
-yarn test
+yarn test:staging
 ```
 
-If the API is unreachable, tests are **skipped** (pending) — not failed, not faked as pass.
+Artifacts on failure: `e2e/test-results/` (screenshots, traces, video).
 
-See `docs/STAGING.md` for deployment prerequisites.
+See `docs/STAGING_DEPLOYMENT_RUNBOOK.md` and `docs/RELEASE_CANDIDATE_CHECKLIST.md`.

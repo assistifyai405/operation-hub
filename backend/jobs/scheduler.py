@@ -79,6 +79,15 @@ async def _tick():
                 idempotency_key=f"reconcile:{int(now // (getattr(s, 'email_reconciliation_interval_minutes', 10) * 60))}",
             )
             await enqueue("cleanup_expired", payload={}, idempotency_key=f"cleanup:{int(now // 3600)}")
+            # Optional alert webhook delivery (disabled unless ALERT_DELIVERY_ENABLED=true)
+            try:
+                from alerts_delivery import deliver_alerts, delivery_enabled
+                if delivery_enabled():
+                    result = await deliver_alerts(force=False)
+                    if result.get("delivered"):
+                        logger.info("Alert delivery ok codes=%s", result.get("codes"))
+            except Exception:
+                logger.exception("Alert delivery tick failed")
             logger.info("Scheduler tick enqueued mailboxes=%d due_emails=%d integrations=%d", len(mailboxes), len(due), len(integrations))
     except RuntimeError:
         logger.info("Scheduler tick skipped — lock held")

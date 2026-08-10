@@ -43,7 +43,17 @@ Before enabling real send in staging/production:
 4. Optional: `REPLY_TO_EMAIL`, `RESEND_WEBHOOK_SECRET`
 5. Flip `EMAIL_SENDING_ENABLED=true` only after a successful test send
 
+## Staging status endpoints (no API key)
+
+| Endpoint | Fields |
+|----------|--------|
+| `GET /api/health` | `email.provider`, `sendingEnabled`, `configured`, `canSend`, `status`, `blockedReason` |
+| `GET /api/config/public` | same safe email summary |
+| `GET /api/emails/status` | auth’d org sending status |
+
 ## Automated tests
 
 Tests use `EMAIL_PROVIDER=console` and `EMAIL_SENDING_ENABLED=false`.  
 **Do not** require live Resend credentials in CI.
+
+**Do not** set `EMAIL_SENDING_ENABLED=true` automatically in deploy scripts — enable only after DNS verification.

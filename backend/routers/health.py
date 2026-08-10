@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -144,6 +145,20 @@ async def health():
             "sendingEnabled": s.email_sending_enabled,
             "configured": get_email_provider(s).is_configured() if s.email_provider == "resend" else True,
             "canSend": email_ok,
+            "status": (
+                "ready" if email_ok and (s.email_provider != "resend" or get_email_provider(s).is_configured())
+                else ("disabled" if not s.email_sending_enabled else "not_configured")
+            ),
+            "blockedReason": None if email_ok else email_reason,
+        },
+        "oauthProviders": {
+            "google": "configured" if bool(s.google_client_id and s.google_client_secret) else "not_configured",
+            "microsoft": "configured" if bool(s.microsoft_client_id and s.microsoft_client_secret) else "not_configured",
+            "slack": "configured" if bool(s.slack_client_id and s.slack_client_secret) else "not_configured",
+        },
+        "alertDelivery": {
+            "enabled": bool((os.environ.get("ALERT_DELIVERY_ENABLED") or "").lower() in {"1", "true", "yes", "on"}),
+            "webhookConfigured": bool((os.environ.get("ALERT_WEBHOOK_URL") or "").strip()),
         },
     }
 

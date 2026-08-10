@@ -2,6 +2,14 @@
 
 Staging is the first non-local environment that uses **real MongoDB**, **real Redis**, **HTTPS**, and **cookie-only browser auth**.
 
+**Full step-by-step runbook:** [`docs/STAGING_DEPLOYMENT_RUNBOOK.md`](./STAGING_DEPLOYMENT_RUNBOOK.md)  
+**Release candidate checklist:** [`docs/RELEASE_CANDIDATE_CHECKLIST.md`](./RELEASE_CANDIDATE_CHECKLIST.md)  
+**Env validator (no secrets printed):**
+
+```bash
+python scripts/validate_staging_env.py --env-file .env.staging --strict
+```
+
 ## Prerequisites
 
 1. MongoDB (Atlas or self-hosted) — dedicated `assistify_staging` database

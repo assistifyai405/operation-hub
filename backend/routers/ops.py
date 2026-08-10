@@ -152,3 +152,20 @@ async def ops_integration_health(provider: str, org: str = Depends(current_org),
         payload={"provider": provider},
     )
     return {"job": job}
+
+
+@router.post("/alerts/dispatch")
+async def ops_dispatch_alerts(org: str = Depends(current_org), user: dict = Depends(require_admin)):
+    """Manually evaluate + deliver health alerts to the optional webhook (admin).
+
+    Safe response — never includes webhook URL or secrets.
+    """
+    rate_limit(f"ops-alerts:{user['id']}", 10, 3600)
+    from alerts_delivery import deliver_alerts, delivery_enabled
+    result = await deliver_alerts(force=True)
+    await write_audit(
+        org, "ops_alerts_dispatched",
+        actor_id=user.get("id"), actor_email=user.get("email"),
+        meta={"delivered": result.get("delivered"), "reason": result.get("reason"), "alertCount": result.get("alertCount")},
+    )
+    return {"ok": True, "deliveryEnabled": delivery_enabled(), **{k: v for k, v in result.items() if k != "webhook"}}

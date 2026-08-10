@@ -48,6 +48,16 @@ SLACK_CLIENT_SECRET=
 SLACK_REDIRECT_URI=...
 ```
 
+## Staging readiness (no secrets)
+
+| Endpoint | Fields |
+|----------|--------|
+| `GET /api/config/public` → `oauth` | `configured` / `not_configured` per provider |
+| `GET /api/integrations/status` → `oauthReadiness` | `configured` / `not_configured` / `connected` / `reconnect_required` |
+| `redirectUriTemplates` | Exact callback URLs derived from `API_URL` / explicit `*_REDIRECT_URI` |
+
+Callback URL construction prefers (in order): explicit `*_REDIRECT_URI` → `API_URL` → request base URL.
+
 ## Automated tests
 
 Integration tests mock providers / use fixtures.  

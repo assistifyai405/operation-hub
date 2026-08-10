@@ -50,6 +50,9 @@ services:
       SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET:-}
       SLACK_REDIRECT_URI: ${SLACK_REDIRECT_URI:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      ALERT_DELIVERY_ENABLED: ${ALERT_DELIVERY_ENABLED:-false}
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
+      ALERT_DEDUPE_SECONDS: ${ALERT_DEDUPE_SECONDS:-900}
     volumes:
       - staging_uploads:/data/uploads
     ports:

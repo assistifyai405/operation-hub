@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "test": "playwright test",
-    "test:headed": "playwright test --headed"
+    "test:local": "E2E_BASE_URL=${E2E_BASE_URL:-http://127.0.0.1:3000} E2E_API_URL=${E2E_API_URL:-http://127.0.0.1:8000} playwright test",
+    "test:staging": "node ./run-staging.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0"
