@@ -722,7 +722,8 @@ async def create_email(payload: EmailCreate, org: str = Depends(current_org), us
             html_body = _text_to_html(text_body)
             original_ai = {"subject": subject, "textBody": text_body, "htmlBody": html_body}
         except Exception as e:
-            raise HTTPException(status_code=502, detail=f"AI draft generation failed: {e}")
+            from ai_service import public_ai_error
+            raise HTTPException(status_code=502, detail=public_ai_error(e, "AI draft generation failed. Please try again."))
 
     if not subject:
         subject = "Untitled draft"
@@ -948,7 +949,8 @@ async def improve_email(email_id: str, payload: ImproveBody, org: str = Depends(
             ["subject", "body"],
         )
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"AI improve failed: {e}")
+        from ai_service import public_ai_error
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "AI improve failed. Please try again."))
 
     subject = (data.get("subject") or doc["subject"]).strip()
     text_body = data.get("body") or body

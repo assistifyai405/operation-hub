@@ -123,6 +123,7 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
   useEffect(() => { loadVersions(); }, [loadVersions]);
 
   const generate = async () => {
+    if (generating) return;
     setGenerating(true); setCompareWith(null); setEditing(false); setReport(null);
     const start = Date.now();
     try {
@@ -133,7 +134,7 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
   };
 
   const save = async () => {
-    if (!draft) return;
+    if (saving || !draft) return;
     setSaving(true);
     try {
       const saved = await plansApi.save(projectId, draft);

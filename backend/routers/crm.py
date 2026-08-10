@@ -329,7 +329,8 @@ async def lead_ai_brief(lead_id: str, org: str = Depends(current_org), refresh: 
         brief = extract_json(raw)
     except Exception as e:
         logging.exception("lead ai brief failed")
-        raise HTTPException(status_code=502, detail=f"AI Sales Assistant is unavailable: {e}")
+        from ai_service import public_ai_error
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "AI Sales Assistant is unavailable. Please try again."))
     brief.setdefault("win_probability", lead.get("probability", 0))
     brief["generated_at"] = now_iso()
     await db.lead_ai_briefs.update_one({"lead_id": lead_id, "organizationId": org},
@@ -404,7 +405,8 @@ async def contact_ai_summary(client_id: str, org: str = Depends(current_org), re
         raw = await ai_service.complete(CONTACT_SUMMARY_SYSTEM, prompt, session_id=f"contact-{client_id}")
         summary = extract_json(raw)
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"AI relationship analyst is unavailable: {e}")
+        from ai_service import public_ai_error
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "AI relationship analyst is unavailable. Please try again."))
     summary["generated_at"] = now_iso()
     await db.clients.update_one({"id": client_id, "organizationId": org}, {"$set": {"ai_summary": summary}})
     return summary

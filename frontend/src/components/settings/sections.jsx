@@ -298,7 +298,7 @@ export function BillingSection() {
   ];
   return (
     <SectionCard title="Billing" description="Plans and usage." testid="settings-billing">
-      {BILLING_ENABLED ? (
+      {BILLING_ENABLED && (b.status === "active" || b.subscriptionStatus === "active") ? (
         <div className="rounded-xl border border-violet-500/25 bg-gradient-to-br from-violet-600/15 to-transparent p-5">
           <div className="flex items-start justify-between">
             <div>

@@ -22,6 +22,24 @@ class AIConfigError(RuntimeError):
     """Raised when the selected AI provider has no usable API key."""
 
 
+_SECRETISH = ("sk-", "api_key", "apikey", "bearer ", "authorization", "emergent")
+
+
+def public_ai_error(exc: BaseException, fallback: str = "AI is unavailable right now. Please try again.") -> str:
+    """Return a user-safe AI error string — never include API keys or raw provider payloads."""
+    msg = str(exc or "")
+    low = msg.lower()
+    if any(s in low for s in _SECRETISH):
+        if "incorrect api key" in low or "invalid_api_key" in low or "authentication" in low:
+            return "AI is not configured correctly. Ask your admin to check the API key."
+        return fallback
+    # Keep short, non-sensitive operational messages
+    cleaned = msg.strip().split("\n")[0][:180]
+    if not cleaned or cleaned.startswith("Error code:"):
+        return fallback
+    return cleaned or fallback
+
+
 class AIService:
     def __init__(self, api_key: str = None, provider: str = None, model: str = None):
         # Lazy import config to avoid circular imports at module load in tests
@@ -91,42 +109,62 @@ class AIService:
         if not self.api_key:
             raise AIConfigError("OPENAI_API_KEY is not configured")
         try:
-            from openai import AsyncOpenAI
+            from openai import AsyncOpenAI, AuthenticationError, RateLimitError, APIStatusError
         except ImportError as e:
             raise AIConfigError("openai package is not installed") from e
         client = AsyncOpenAI(api_key=self.api_key)
-        resp = await client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": prompt},
-            ],
-        )
+        try:
+            resp = await client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt},
+                ],
+            )
+        except AuthenticationError as e:
+            logger.warning("openai auth failed: %s", public_ai_error(e))
+            raise AIConfigError("OPENAI_API_KEY is invalid or missing") from e
+        except RateLimitError as e:
+            logger.warning("openai rate limited")
+            raise RuntimeError("AI rate limit reached. Please try again shortly.") from e
+        except APIStatusError as e:
+            logger.warning("openai api status %s", getattr(e, "status_code", "?"))
+            raise RuntimeError("AI provider returned an error. Please try again.") from e
         return (resp.choices[0].message.content or "").strip()
 
     async def _stream_openai(self, system_message: str, prompt: str) -> AsyncIterator[str]:
         if not self.api_key:
             raise AIConfigError("OPENAI_API_KEY is not configured")
         try:
-            from openai import AsyncOpenAI
+            from openai import AsyncOpenAI, AuthenticationError, RateLimitError, APIStatusError
         except ImportError as e:
             raise AIConfigError("openai package is not installed") from e
         client = AsyncOpenAI(api_key=self.api_key)
-        stream = await client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": prompt},
-            ],
-            stream=True,
-        )
-        async for event in stream:
-            try:
-                delta = event.choices[0].delta.content
-            except Exception:
-                delta = None
-            if delta:
-                yield delta
+        try:
+            stream = await client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt},
+                ],
+                stream=True,
+            )
+            async for event in stream:
+                try:
+                    delta = event.choices[0].delta.content
+                except Exception:
+                    delta = None
+                if delta:
+                    yield delta
+        except AuthenticationError as e:
+            logger.warning("openai stream auth failed: %s", public_ai_error(e))
+            raise AIConfigError("OPENAI_API_KEY is invalid or missing") from e
+        except RateLimitError as e:
+            logger.warning("openai stream rate limited")
+            raise RuntimeError("AI rate limit reached. Please try again shortly.") from e
+        except APIStatusError as e:
+            logger.warning("openai stream api status %s", getattr(e, "status_code", "?"))
+            raise RuntimeError("AI provider returned an error. Please try again.") from e
 
     # ---- Emergent (optional) ----
     async def _complete_emergent(self, system_message: str, prompt: str, session_id: str = None) -> str:

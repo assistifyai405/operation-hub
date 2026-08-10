@@ -34,6 +34,7 @@ function TaskForm({ open, setOpen, initial, projects, onSaved }) {
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async () => {
+    if (saving) return;
     if (!form.title.trim()) { setErrors({ title: "Task title is required" }); return; }
     setSaving(true);
     const payload = {

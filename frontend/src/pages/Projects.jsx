@@ -34,6 +34,7 @@ function ProjectForm({ open, setOpen, initial, clients, onSaved }) {
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async () => {
+    if (saving) return;
     if (!form.name.trim()) { setErrors({ name: "Project name is required" }); return; }
     setSaving(true);
     const payload = {

@@ -81,6 +81,7 @@ export default function ProposalWriter({ projectId, projectName, onSaved }) {
   useEffect(() => { load(); }, [load]);
 
   const generate = async () => {
+    if (generating) return;
     setGenerating(true); setCompareWith(null); setEditing(false); setReport(null);
     const start = Date.now();
     try {
@@ -101,7 +102,7 @@ export default function ProposalWriter({ projectId, projectName, onSaved }) {
   };
 
   const save = async () => {
-    if (!content) return;
+    if (saving || !content) return;
     setSaving(true);
     try {
       const doc = await proposalWriterApi.save(projectId, { title: title || `${projectName} — Proposal`, status, content });

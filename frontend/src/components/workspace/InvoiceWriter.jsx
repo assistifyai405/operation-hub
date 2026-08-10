@@ -99,6 +99,7 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
   useEffect(() => { load(); }, [load]);
 
   const generate = async () => {
+    if (generating) return;
     setGenerating(true); setCompareWith(null); setEditing(false); setReport(null);
     const start = Date.now();
     try {
@@ -118,7 +119,7 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
   };
 
   const save = async () => {
-    if (!content) return;
+    if (saving || !content) return;
     setSaving(true);
     try {
       const doc = await invoiceWriterApi.save(projectId, { invoice_number: number, title: title || `${projectName} — Invoice`, status, content, line_items: lineItems });

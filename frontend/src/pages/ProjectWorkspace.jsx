@@ -190,6 +190,7 @@ function TasksTab({ projectId, tasks, reload }) {
   const [saving, setSaving] = useState(false);
 
   const add = async () => {
+    if (saving) return;
     if (!title.trim()) { toast.error("Task title is required"); return; }
     setSaving(true);
     try { await tasksApi.create({ title: title.trim(), project_id: projectId, priority, due, done: false }); toast.success("Task created"); setOpen(false); setTitle(""); setPriority("Medium"); setDue(""); reload(); }
@@ -246,6 +247,7 @@ function DocumentsTab({ projectId, documents, reload }) {
   const [saving, setSaving] = useState(false);
 
   const add = async () => {
+    if (saving) return;
     if (!name.trim()) { toast.error("Document name is required"); return; }
     setSaving(true);
     try { await documentsApi.create({ name: name.trim(), type, project_id: projectId, size: "—" }); toast.success("Document uploaded"); setOpen(false); setName(""); setType("Doc"); reload(); }

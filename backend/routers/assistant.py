@@ -204,7 +204,8 @@ async def assistant_action(payload: ActionRequest, org: str = Depends(current_or
         raise HTTPException(status_code=502, detail="The assistant returned an unexpected format. Please try again.")
     except Exception as e:
         logging.exception("assistant action failed")
-        raise HTTPException(status_code=502, detail=f"The assistant is unavailable right now: {e}")
+        from ai_service import public_ai_error
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "The assistant is unavailable right now. Please try again."))
 
     await _persist(payload.session_id, org, "assistant", answer,
                    {"report": report, "apply": apply, "command": payload.command})

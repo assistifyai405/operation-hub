@@ -376,7 +376,8 @@ async def summarize_thread(thread_id: str, org: str = Depends(current_org), user
             ],
         )
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"AI summary failed: {e}") from e
+        from ai_service import public_ai_error
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "AI summary failed. Please try again.")) from e
 
     summary = {
         "summary": data.get("summary") or "",
@@ -435,7 +436,8 @@ async def draft_reply(thread_id: str, org: str = Depends(current_org), user: dic
             [{"key": "subject", "type": "text"}, {"key": "body", "type": "text"}],
         )
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"AI draft failed: {e}") from e
+        from ai_service import public_ai_error
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "AI draft failed. Please try again.")) from e
 
     subject = (data.get("subject") or t.get("subject") or "Re:").strip()
     if not subject.lower().startswith("re:"):

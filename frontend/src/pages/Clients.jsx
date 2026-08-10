@@ -48,6 +48,7 @@ function ClientForm({ open, setOpen, initial, onSaved }) {
   };
 
   const submit = async () => {
+    if (saving) return;
     if (!validate()) return;
     setSaving(true);
     const payload = {

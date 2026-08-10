@@ -119,7 +119,8 @@ async def copilot_message(payload: CopilotMessage, org: str = Depends(current_or
         result = {"reply": "I had trouble understanding that. Could you rephrase?", "action": None}
     except Exception as e:
         logging.exception("copilot failed")
-        raise HTTPException(status_code=502, detail=f"Copilot is unavailable right now: {e}")
+        from ai_service import public_ai_error
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "Copilot is unavailable right now. Please try again."))
 
     reply = result.get("reply", "I'm not sure how to help with that.")
     raw_action = result.get("action")
@@ -233,7 +234,8 @@ async def copilot_execute(payload: CopilotExecute, org: str = Depends(current_or
             raise
         except Exception as e:
             logging.exception("copilot generate failed")
-            raise HTTPException(status_code=502, detail=f"Generation failed: {e}")
+            from ai_service import public_ai_error
+            raise HTTPException(status_code=502, detail=public_ai_error(e, "Generation failed. Please try again."))
         await _log_copilot_action(org, pid, f'Copilot generated a {msg} for "{project["name"]}"')
         result = {"reply": f'Generated a {msg} for "{project["name"]}".', "navigate": f"/projects/{pid}?tab={tab}", "created": {"type": tool, "project": project["name"]}}
         if tab == "plan":

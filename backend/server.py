@@ -16,7 +16,7 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
 
-from ai_service import AIService, extract_json, AIConfigError
+from ai_service import AIService, extract_json, AIConfigError, public_ai_error
 from proposal_config import PROPOSAL_SECTIONS, PROPOSAL_STATUSES, PROPOSAL_SYSTEM, build_proposal_prompt
 from contract_config import CONTRACT_SECTIONS, CONTRACT_STATUSES, CONTRACT_SYSTEM, build_contract_prompt
 from invoice_config import INVOICE_STATUSES, INVOICE_FIELDS, INVOICE_SYSTEM, build_invoice_prompt
@@ -1664,9 +1664,12 @@ async def generate_plan(project_id: str, org: str = Depends(current_org)):
         sections = parse_plan_json(text)
     except json.JSONDecodeError:
         raise HTTPException(status_code=502, detail="AI returned an unparseable plan. Please regenerate.")
+    except AIConfigError as e:
+        logging.warning("plan generation config: %s", e)
+        raise HTTPException(status_code=503, detail=public_ai_error(e, "AI is not configured. Please try again later."))
     except Exception as e:
         logging.exception("plan generation failed")
-        raise HTTPException(status_code=502, detail=f"Plan generation failed: {e}")
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "Plan generation failed. Please try again."))
     await aia.log_ai_activity(org, "plan", f'Project plan created for {p.get("name")}',
                               f'Assistify analyzed {p.get("name")} and produced a structured delivery plan with phases, milestones and tasks.',
                               "Project Workspace", {"project_id": project_id},
@@ -1721,9 +1724,12 @@ async def generate_proposal(project_id: str, org: str = Depends(current_org)):
         content = await ai_service.complete_json(PROPOSAL_SYSTEM, prompt, PROPOSAL_SECTIONS, session_id=f"proposal-{project_id}-{uuid.uuid4()}")
     except json.JSONDecodeError:
         raise HTTPException(status_code=502, detail="AI returned an unparseable proposal. Please regenerate.")
+    except AIConfigError as e:
+        logging.warning("proposal generation config: %s", e)
+        raise HTTPException(status_code=503, detail=public_ai_error(e, "AI is not configured. Please try again later."))
     except Exception as e:
         logging.exception("proposal generation failed")
-        raise HTTPException(status_code=502, detail=f"Proposal generation failed: {e}")
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "Proposal generation failed. Please try again."))
 
     await log_activity(project_id, "proposal_generated", f'Proposal for "{p.get("name")}" was generated')
     _cn = f' for {p.get("client_name")}' if p.get("client_name") else ""
@@ -1856,9 +1862,12 @@ async def generate_contract(project_id: str, org: str = Depends(current_org)):
         content = await ai_service.complete_json(CONTRACT_SYSTEM, prompt, CONTRACT_SECTIONS, session_id=f"contract-{project_id}-{uuid.uuid4()}")
     except json.JSONDecodeError:
         raise HTTPException(status_code=502, detail="AI returned an unparseable contract. Please regenerate.")
+    except AIConfigError as e:
+        logging.warning("contract generation config: %s", e)
+        raise HTTPException(status_code=503, detail=public_ai_error(e, "AI is not configured. Please try again later."))
     except Exception as e:
         logging.exception("contract generation failed")
-        raise HTTPException(status_code=502, detail=f"Contract generation failed: {e}")
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "Contract generation failed. Please try again."))
 
     await log_activity(project_id, "contract_generated", f'Service agreement for "{p.get("name")}" was generated')
     _cn = f' with {p.get("client_name")}' if p.get("client_name") else ""
@@ -1989,9 +1998,12 @@ async def generate_invoice(project_id: str, org: str = Depends(current_org)):
         data = extract_json(raw)
     except json.JSONDecodeError:
         raise HTTPException(status_code=502, detail="AI returned an unparseable invoice. Please regenerate.")
+    except AIConfigError as e:
+        logging.warning("invoice generation config: %s", e)
+        raise HTTPException(status_code=503, detail=public_ai_error(e, "AI is not configured. Please try again later."))
     except Exception as e:
         logging.exception("invoice generation failed")
-        raise HTTPException(status_code=502, detail=f"Invoice generation failed: {e}")
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "Invoice generation failed. Please try again."))
 
     vat_rate = float(data.get("vat_rate", 0) or 0)
     items, subtotal, vat_amount, total = _compute_invoice(data.get("line_items", []), vat_rate)

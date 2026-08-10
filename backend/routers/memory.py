@@ -300,7 +300,8 @@ async def analyze_learning(org: str = Depends(current_org)):
     try:
         n = await _analyze_events(org)
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Learning engine unavailable: {e}")
+        from ai_service import public_ai_error
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "Learning engine unavailable. Please try again."))
     return {"ok": True, "learned": n}
 
 
@@ -335,7 +336,8 @@ async def generate_business_profile(org: str = Depends(current_org)):
         raw = await ai_service.complete(PROFILE_SYSTEM, f"WORKSPACE DATA (JSON):\n{json.dumps(ctx, default=str)}", session_id=f"profile-{org}")
         sections = extract_json(raw)
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Business analyst unavailable: {e}")
+        from ai_service import public_ai_error
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "Business analyst unavailable. Please try again."))
     doc = {"organizationId": org, "sections": sections, "generated_at": now_iso()}
     await db.business_profiles.update_one({"organizationId": org}, {"$set": doc}, upsert=True)
     doc.pop("_id", None)
@@ -372,7 +374,8 @@ async def memory_insights(org: str = Depends(current_org), refresh: bool = False
         data = _parse_flexible(raw)
         insights = data if isinstance(data, list) else data.get("insights", [])
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Pattern analyst unavailable: {e}")
+        from ai_service import public_ai_error
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "Pattern analyst unavailable. Please try again."))
     await db.memory_insights_cache.update_one({"organizationId": org},
                                               {"$set": {"organizationId": org, "insights": insights, "created_at": now_iso()}}, upsert=True)
     return insights
@@ -407,5 +410,6 @@ async def ask_brain(body: AskBody, org: str = Depends(current_org)):
     try:
         answer = await ai_service.complete(system, prompt, session_id=f"ask-brain-{org}")
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Knowledge Brain unavailable: {e}")
+        from ai_service import public_ai_error
+        raise HTTPException(status_code=502, detail=public_ai_error(e, "Knowledge Brain unavailable. Please try again."))
     return {"answer": answer.strip(), "used": len(mems)}
