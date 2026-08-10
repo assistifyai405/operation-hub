@@ -87,22 +87,20 @@ const Sidebar = ({ onNavigate }) => (
         </NavLink>
       ))}
     </nav>
-    <div className="m-3 rounded-xl border border-white/10 bg-gradient-to-br from-violet-600/20 to-transparent p-4">
-      {BILLING_ENABLED ? (
-        <>
-          <p className="text-sm font-semibold text-zinc-100">Upgrade to Pro</p>
-          <p className="mt-1 text-xs text-zinc-400">Unlock unlimited AI agents & automations.</p>
-          <button data-testid="upgrade-btn" className="mt-3 w-full rounded-lg bg-violet-600 py-2 text-xs font-semibold text-white transition-all hover:bg-violet-500">
-            Upgrade
-          </button>
-        </>
-      ) : (
-        <>
-          <p className="flex items-center gap-1.5 text-sm font-semibold text-zinc-100"><Sparkles className="h-3.5 w-3.5 text-violet-400" /> Pro plan</p>
-          <p className="mt-1 text-xs text-zinc-400">Unlimited AI agents & automations — coming soon.</p>
-        </>
-      )}
-    </div>
+    {BILLING_ENABLED ? (
+      <div className="m-3 rounded-xl border border-white/10 bg-gradient-to-br from-violet-600/20 to-transparent p-4" data-testid="sidebar-billing">
+        <p className="text-sm font-semibold text-zinc-100">Upgrade to Pro</p>
+        <p className="mt-1 text-xs text-zinc-400">Unlock unlimited AI agents & automations.</p>
+        <button data-testid="upgrade-btn" className="mt-3 w-full rounded-lg bg-violet-600 py-2 text-xs font-semibold text-white transition-all hover:bg-violet-500">
+          Upgrade
+        </button>
+      </div>
+    ) : (
+      <div className="m-3 rounded-xl border border-dashed border-white/10 bg-zinc-950/60 p-4" data-testid="sidebar-billing-pending">
+        <p className="text-sm font-semibold text-zinc-300">Billing setup pending</p>
+        <p className="mt-1 text-xs text-zinc-500">Payments are not configured. No active plan or charges apply.</p>
+      </div>
+    )}
   </div>
 );
 

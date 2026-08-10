@@ -363,7 +363,13 @@ async def _seed_demo_data(org_id: str):
 @api_router.post("/auth/demo")
 async def create_demo(request: Request, response: Response):
     """Provision a brand-new ISOLATED demo tenant (own org + anonymous user) and sign in.
-    Each call creates a fresh workspace — demo users never share data."""
+    Each call creates a fresh workspace — demo users never share data.
+
+    Disabled unless ENABLE_DEMO_LOGIN=true (never on by default in any environment).
+    """
+    from config import get_settings
+    if not get_settings().enable_demo_login:
+        raise HTTPException(status_code=404, detail="Demo login is disabled")
     rate_limit(f"demo:{_client_ip(request)}", 10, 3600)
     now = now_iso()
     org_id = A.gen_id()
@@ -386,6 +392,19 @@ async def create_demo(request: Request, response: Response):
     _set_refresh_cookie(response, refresh, False)
     _set_access_cookie(response, access)
     return {"user": public_user(user), "accessToken": access, "isDemo": True}
+
+
+@api_router.get("/config/public")
+async def public_config():
+    """Non-secret feature flags for the frontend (demo login, billing stub)."""
+    from config import get_settings
+    cfg = get_settings()
+    return {
+        "demoLoginEnabled": bool(cfg.enable_demo_login),
+        "demoSeedEnabled": bool(cfg.enable_demo_seed),
+        "billingEnabled": False,  # Stripe not integrated; frontend also gates via REACT_APP_BILLING_ENABLED
+        "environment": cfg.environment,
+    }
 
 
 
@@ -1428,6 +1447,7 @@ async def recent_logins(user: dict = Depends(current_user)):
 
 @api_router.get("/settings/billing")
 async def get_billing(user: dict = Depends(current_user)):
+    """Usage + seat info. Plan/payment fields stay pending until Stripe is integrated."""
     org = user["organizationId"]
     base = {"organizationId": org}
     from seats import seat_usage
@@ -1441,16 +1461,21 @@ async def get_billing(user: dict = Depends(current_user)):
         "invoices": await db.ai_invoices.count_documents(base),
     }
     return {
-        "plan": "Pro", "price": 99, "interval": "month", "status": "active",
+        "plan": None,
+        "price": None,
+        "interval": None,
+        "status": "pending",
+        "billingConfigured": False,
+        "message": "Billing setup pending — Stripe is not configured.",
         "seats": {
             "used": seats_info["active_members"],
             "pending": seats_info["pending_invitations"],
-            "included": 5,
+            "included": None,
         },
         "seatUsage": seats_info,
         "usage": usage,
-        "limits": {"projects": 100, "documents": 1000, "ai_generations": 500},
-        "renews_on": "2026-09-01",
+        "limits": {"projects": None, "documents": None, "ai_generations": None},
+        "renews_on": None,
     }
 
 

@@ -7,7 +7,11 @@ RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
     else yarn install; fi
 COPY . ./
 ARG REACT_APP_BACKEND_URL=http://localhost:8000
+ARG REACT_APP_BILLING_ENABLED=false
+ARG REACT_APP_ENABLE_DEMO_LOGIN=false
 ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
+ENV REACT_APP_BILLING_ENABLED=$REACT_APP_BILLING_ENABLED
+ENV REACT_APP_ENABLE_DEMO_LOGIN=$REACT_APP_ENABLE_DEMO_LOGIN
 RUN yarn build || npm run build
 
 FROM nginx:1.27-alpine

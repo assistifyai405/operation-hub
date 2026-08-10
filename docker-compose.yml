@@ -40,6 +40,8 @@ services:
       STORAGE_PROVIDER: local
       WORKER_ENABLED: "false"
       SCHEDULER_ENABLED: "false"
+      ENABLE_DEMO_SEED: "false"
+      ENABLE_DEMO_LOGIN: "false"
       LOG_LEVEL: INFO
     ports:
       - "8000:8000"
@@ -98,6 +100,8 @@ services:
       context: ./frontend
       args:
         REACT_APP_BACKEND_URL: http://localhost:8000
+        REACT_APP_BILLING_ENABLED: "false"
+        REACT_APP_ENABLE_DEMO_LOGIN: "false"
     ports:
       - "3000:80"
     depends_on:

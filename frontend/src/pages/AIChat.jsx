@@ -23,7 +23,15 @@ export default function AIChat() {
   const endRef = useRef(null);
 
   useEffect(() => {
-    fetch(`${API}/agents`, { headers: { Authorization: `Bearer ${getAccessToken()}` }, credentials: "include" }).then((r) => r.json()).then(setAgents).catch(() => {});
+    fetch(`${API}/agents`, { headers: { Authorization: `Bearer ${getAccessToken()}` }, credentials: "include" })
+      .then(async (r) => {
+        const data = await r.json().catch(() => null);
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.agents)) return data.agents;
+        return [];
+      })
+      .then((list) => setAgents(Array.isArray(list) ? list : []))
+      .catch(() => setAgents([]));
   }, []);
 
   useEffect(() => {
@@ -35,7 +43,7 @@ export default function AIChat() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streaming]);
 
-  const activeAgent = agents.find((a) => a.id === agentId);
+  const activeAgent = (Array.isArray(agents) ? agents : []).find((a) => a.id === agentId);
 
   const send = async (text) => {
     const content = (text ?? input).trim();
@@ -89,14 +97,18 @@ export default function AIChat() {
     <div className="flex h-[calc(100vh-9rem)] flex-col" data-testid="ai-chat-page">
       {/* Agent selector */}
       <div className="mb-4 flex flex-wrap gap-2">
-        {agents.map((a) => (
+        {(Array.isArray(agents) ? agents : []).map((a) => (
           <button
             key={a.id}
             onClick={() => setAgentId(a.id)}
             data-testid={`select-agent-${a.id}`}
             className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${agentId === a.id ? "border-violet-500 bg-violet-600/15 text-violet-300" : "border-white/10 bg-zinc-950 text-zinc-400 hover:text-zinc-200"}`}
           >
-            <img src={a.avatar} alt={`${a.name || "AI agent"} avatar`} className="h-5 w-5 rounded-full object-cover" />
+            {a.avatar ? (
+              <img src={a.avatar} alt={`${a.name || "AI agent"} avatar`} className="h-5 w-5 rounded-full object-cover" />
+            ) : (
+              <Bot className="h-4 w-4" />
+            )}
             {a.name}
           </button>
         ))}

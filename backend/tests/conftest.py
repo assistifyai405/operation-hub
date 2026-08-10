@@ -30,6 +30,7 @@ _TEST_ENV = {
     "FRONTEND_URL": "http://localhost:3000",
     "CORS_ORIGINS": "http://localhost:3000",
     "ENABLE_DEMO_SEED": "false",
+    "ENABLE_DEMO_LOGIN": "false",
     "INVITATION_EXPIRY_DAYS": "7",
     "EMAIL_PROVIDER": "console",
     "EMAIL_SENDING_ENABLED": "false",

@@ -289,10 +289,12 @@ export function BillingSection() {
   const [b, setB] = useState(null);
   useEffect(() => { settingsApi.billing().then(setB).catch(() => {}); }, []);
   if (!b) return <div className="flex items-center justify-center py-16 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  const usage = b.usage || {};
+  const limits = b.limits || {};
   const usageRows = [
-    ["Projects", b.usage.projects, b.limits.projects],
-    ["Documents", b.usage.documents, b.limits.documents],
-    ["Proposals", b.usage.proposals, null], ["Contracts", b.usage.contracts, null], ["Invoices", b.usage.invoices, null],
+    ["Projects", usage.projects ?? 0, limits.projects],
+    ["Documents", usage.documents ?? 0, limits.documents],
+    ["Proposals", usage.proposals ?? 0, null], ["Contracts", usage.contracts ?? 0, null], ["Invoices", usage.invoices ?? 0, null],
   ];
   return (
     <SectionCard title="Billing" description="Plans and usage." testid="settings-billing">
@@ -308,10 +310,10 @@ export function BillingSection() {
           </div>
         </div>
       ) : (
-        <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-6 text-center" data-testid="billing-coming-soon">
-          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600/15 text-violet-400"><Sparkles className="h-5 w-5" /></div>
-          <p className="mt-3 text-sm font-semibold text-zinc-100">Plans &amp; billing are coming soon</p>
-          <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">Assistify OS is free while we're in early access. We'll let you know before any paid plans go live — no surprises.</p>
+        <div className="rounded-xl border border-dashed border-white/10 bg-zinc-900/60 p-6 text-center" data-testid="billing-coming-soon">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400"><Sparkles className="h-5 w-5" /></div>
+          <p className="mt-3 text-sm font-semibold text-zinc-100">Billing setup pending</p>
+          <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">Stripe is not configured. No active subscription or payment method is implied — usage below is informational only.</p>
         </div>
       )}
       <div>

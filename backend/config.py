@@ -60,6 +60,7 @@ class Settings:
     cors_origins: list
     frontend_url: str
     enable_demo_seed: bool
+    enable_demo_login: bool
     demo_email: str
     demo_password: str
     ai_provider: str  # openai | emergent
@@ -242,11 +243,19 @@ def load_settings(*, strict: bool = True) -> Settings:
 
     upload_dir = _env("UPLOAD_DIR", os.path.join(os.path.dirname(__file__), "uploads")) or "uploads"
 
-    # Demo seed: NEVER default-on in production. Explicit ENABLE_DEMO_SEED=true required.
-    if environment == "production":
-        enable_demo_seed = _truthy("ENABLE_DEMO_SEED", False)
-    else:
-        enable_demo_seed = _truthy("ENABLE_DEMO_SEED", False)
+    # Demo tooling: NEVER default-on. Explicit ENABLE_DEMO_SEED / ENABLE_DEMO_LOGIN required.
+    enable_demo_seed = _truthy("ENABLE_DEMO_SEED", False)
+    enable_demo_login = _truthy("ENABLE_DEMO_LOGIN", False)
+
+    demo_email = (_env("DEMO_EMAIL", "jordan@assistify.io") or "jordan@assistify.io").lower()
+    demo_password = _env("DEMO_PASSWORD", "change-me-demo-password") or "change-me-demo-password"
+    _WEAK_DEMO_PASSWORDS = {"change-me-demo-password", "Assistify2026!", "password", "demo", "changeme"}
+    if enable_demo_seed and environment == "production" and demo_password in _WEAK_DEMO_PASSWORDS:
+        raise ConfigError(
+            "DEMO_PASSWORD must be set to a strong unique value when ENABLE_DEMO_SEED=true in production"
+        )
+    if enable_demo_seed and environment == "production" and not demo_password.strip():
+        raise ConfigError("DEMO_PASSWORD is required when ENABLE_DEMO_SEED=true in production")
 
     try:
         invitation_expiry_days = int(_env("INVITATION_EXPIRY_DAYS", "7") or "7")
@@ -297,8 +306,9 @@ def load_settings(*, strict: bool = True) -> Settings:
         cors_origins=cors_origins,
         frontend_url=frontend_url.rstrip("/"),
         enable_demo_seed=enable_demo_seed,
-        demo_email=(_env("DEMO_EMAIL", "jordan@assistify.io") or "jordan@assistify.io").lower(),
-        demo_password=_env("DEMO_PASSWORD", "change-me-demo-password") or "change-me-demo-password",
+        enable_demo_login=enable_demo_login,
+        demo_email=demo_email,
+        demo_password=demo_password,
         ai_provider=ai_provider,
         ai_model=ai_model,
         openai_api_key=_env("OPENAI_API_KEY"),

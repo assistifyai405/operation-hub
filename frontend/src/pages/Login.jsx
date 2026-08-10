@@ -3,6 +3,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { AuthShell, inputClass } from "@/components/AuthShell";
+import { DEMO_LOGIN_ENABLED } from "@/lib/config";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ export default function Login() {
         <button type="submit" disabled={loading || demoLoading} data-testid="login-submit" className="group flex w-full items-center justify-center gap-2 rounded-lg bg-violet-600 py-2.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 glow-violet">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Sign in <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>}
         </button>
-        {!inviteToken && (
+        {!inviteToken && DEMO_LOGIN_ENABLED && (
           <>
             <div className="flex items-center gap-3 py-1">
               <div className="h-px flex-1 bg-white/10" />

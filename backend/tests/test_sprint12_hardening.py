@@ -117,6 +117,27 @@ class TestConfigValidation:
         s = _load(ENVIRONMENT="development", ENABLE_DEMO_SEED="true")
         assert s.enable_demo_seed is True
 
+    def test_demo_login_off_by_default(self):
+        s = _load(ENVIRONMENT="development")
+        assert s.enable_demo_login is False
+
+    def test_demo_login_opt_in(self):
+        s = _load(ENVIRONMENT="development", ENABLE_DEMO_LOGIN="true")
+        assert s.enable_demo_login is True
+
+    def test_production_weak_demo_password_rejected(self):
+        import pytest
+        from config import ConfigError
+        with pytest.raises(ConfigError, match="DEMO_PASSWORD"):
+            _load(
+                ENVIRONMENT="production",
+                JWT_SECRET="a" * 40,
+                CORS_ORIGINS="https://app.example.com",
+                FRONTEND_URL="https://app.example.com",
+                ENABLE_DEMO_SEED="true",
+                DEMO_PASSWORD="change-me-demo-password",
+            )
+
 
 class TestCookiePolicy:
     def test_localhost_http_uses_lax_insecure(self):

@@ -241,6 +241,11 @@ def _recommended_automations():
 # ---------------------------------------------------------------------------
 @router.post("/seed-demo")
 async def seed_demo(user: dict = Depends(current_user)):
+    """Seed labeled demo workspace data. Gated by ENABLE_DEMO_SEED (or ENABLE_DEMO_LOGIN)."""
+    from config import get_settings
+    cfg = get_settings()
+    if not (cfg.enable_demo_seed or cfg.enable_demo_login):
+        raise HTTPException(status_code=404, detail="Demo workspace seeding is disabled")
     org = user["organizationId"]
     existing = await db.clients.count_documents({"organizationId": org, "is_demo": True})
     if existing == 0:
