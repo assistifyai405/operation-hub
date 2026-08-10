@@ -47,11 +47,12 @@ def _invite_member(client, owner_token):
     raw = (inv.get("invitationLink") or "").rsplit("/invite/", 1)[-1]
     assert raw, inv
     _rl_store.clear()
-    mem = client.post("/api/auth/register", json={
+    r = client.post("/api/auth/register", json={
         "firstName": "M", "lastName": "M", "email": inv["email"],
         "password": "Password123!", "invitationToken": raw,
-    }).json()
-    return mem
+    })
+    assert r.status_code == 200, r.text
+    return auth_json(client, r)
 
 
 class TestCatalogAndList:

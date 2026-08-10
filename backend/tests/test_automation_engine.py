@@ -11,8 +11,10 @@ BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://operations-hub-75.pr
 def _new_demo():
     r = requests.post(f"{BASE_URL}/api/auth/demo", timeout=30)
     assert r.status_code == 200, r.text
-    data = auth_json(client, r)
-    return {"Authorization": f"Bearer {data['accessToken']}"}, data["user"]["organizationId"]
+    data = auth_json(None, r)
+    tok = data.get("accessToken")
+    assert tok, "demo login did not set access_token cookie"
+    return {"Authorization": f"Bearer {tok}"}, data["user"]["organizationId"]
 
 
 @pytest.fixture(scope="module")

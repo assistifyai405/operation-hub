@@ -15,7 +15,7 @@ def demo_client():
     if r.status_code == 429:
         pytest.skip(f"Rate limited on demo: {r.text}")
     assert r.status_code == 200, f"demo failed: {r.status_code} {r.text}"
-    token = auth_json(client, r).get("accessToken")
+    token = auth_json(s, r).get("accessToken")
     assert token
     s.headers.update({"Authorization": f"Bearer {token}"})
     return s
@@ -29,7 +29,9 @@ def demo_client_2():
     if r.status_code == 429:
         pytest.skip(f"Rate limited on demo: {r.text}")
     assert r.status_code == 200
-    s.headers.update({"Authorization": f"Bearer {r.json()['accessToken']}"})
+    token = auth_json(s, r).get("accessToken")
+    assert token
+    s.headers.update({"Authorization": f"Bearer {token}"})
     return s
 
 
