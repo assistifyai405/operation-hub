@@ -23,20 +23,25 @@ def _release() -> str:
 
 @router.get("/live")
 async def live():
-    """Lightweight liveness — process is up."""
-    return {"status": "ok", "check": "live"}
+    """Liveness — process is up. Never checks dependencies."""
+    return {"status": "ok", "check": "live", "release": _release()}
 
 
 @router.get("/ready")
 async def ready():
-    """Readiness — required dependencies available."""
+    """Readiness — required dependencies available.
+
+    Returns 503 when a production-required dependency is unavailable.
+    Never silently reports healthy Redis when REQUIRE_REDIS / workers need it.
+    """
     from fastapi.responses import JSONResponse
     from config import get_settings
-    from redis_client import ping_redis
+    from redis_client import ping_redis, redis_required_for_production
 
     s = get_settings()
     checks = {}
     overall = True
+    reasons = []
 
     try:
         from core import db
@@ -45,11 +50,14 @@ async def ready():
     except Exception as e:
         checks["mongodb"] = {"ok": False, "error": str(e)[:120]}
         overall = False
+        reasons.append("mongodb")
 
     rp = ping_redis()
     checks["redis"] = rp
-    if s.is_production and getattr(s, "worker_enabled", False) and not rp.get("ok"):
+    redis_required = redis_required_for_production() or bool(getattr(s, "require_redis", False))
+    if redis_required and not rp.get("ok"):
         overall = False
+        reasons.append("redis")
 
     try:
         from storage import _provider
@@ -58,6 +66,25 @@ async def ready():
         checks["storage"] = {"ok": False, "error": str(e)[:80]}
         if s.is_production:
             overall = False
+            reasons.append("storage")
+
+    checks["jobs"] = {
+        "workerEnabled": bool(getattr(s, "worker_enabled", False)),
+        "schedulerEnabled": bool(getattr(s, "scheduler_enabled", False)),
+        "requireRedis": redis_required,
+        "syncMode": not bool(getattr(s, "worker_enabled", False)) or not rp.get("ok"),
+    }
+
+    # Queue depth is informational only (never secrets)
+    try:
+        from redis_client import get_redis
+        from jobs import QUEUE_KEY, FAILED_KEY
+        r = get_redis()
+        if r:
+            checks["jobs"]["queueDepth"] = int(r.llen(QUEUE_KEY) or 0)
+            checks["jobs"]["failedDepth"] = int(r.llen(FAILED_KEY) or 0)
+    except Exception:
+        pass
 
     body = {
         "status": "ok" if overall else "degraded",
@@ -65,6 +92,7 @@ async def ready():
         "release": _release(),
         "environment": s.environment,
         "checks": checks,
+        "failedChecks": reasons,
     }
     if not overall:
         return JSONResponse(status_code=503, content=body)
@@ -73,9 +101,9 @@ async def ready():
 
 @router.get("")
 async def health():
-    """General health (safe, no secrets)."""
+    """General health (safe, no secrets). Always 200; status may be degraded."""
     from config import get_settings
-    from redis_client import ping_redis
+    from redis_client import ping_redis, redis_required_for_production
     from email_providers import get_email_provider, outbound_sending_allowed
 
     s = get_settings()
@@ -93,16 +121,24 @@ async def health():
         (s.ai_provider == "openai" and s.openai_api_key)
         or (s.ai_provider == "emergent" and s.emergent_llm_key)
     )
+    redis_required = redis_required_for_production() or bool(getattr(s, "require_redis", False))
+    degraded = (not mongo_ok) or (redis_required and not redis.get("ok"))
     return {
-        "status": "ok" if mongo_ok else "degraded",
+        "status": "degraded" if degraded else "ok",
         "release": _release(),
         "environment": s.environment,
         "mongodb": {"ok": mongo_ok},
         "redis": redis,
         "worker": {"enabled": bool(getattr(s, "worker_enabled", False))},
         "scheduler": {"enabled": bool(getattr(s, "scheduler_enabled", False))},
+        "requireRedis": redis_required,
         "storage": {"provider": s.storage_provider},
         "ai": {"provider": s.ai_provider, "configured": ai_configured},
+        "billing": {"configured": False, "status": "pending"},
+        "demo": {
+            "loginEnabled": bool(s.enable_demo_login),
+            "seedEnabled": bool(s.enable_demo_seed),
+        },
         "email": {
             "provider": s.email_provider,
             "sendingEnabled": s.email_sending_enabled,

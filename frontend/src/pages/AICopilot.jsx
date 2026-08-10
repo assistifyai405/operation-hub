@@ -5,6 +5,7 @@ import {
   Users, User, Wand2, ArrowRight,
 } from "lucide-react";
 import { copilotApi } from "@/lib/api";
+import { asArray } from "@/lib/safe";
 import { toast } from "sonner";
 
 const SESSION_KEY = "copilot_session";
@@ -24,7 +25,7 @@ function ActionCard({ action, onConfirm, onCancel, busy, done }) {
       </div>
       <p className="mt-2 text-xs text-zinc-400">I'm about to create:</p>
       <ul className="mt-1 space-y-1">
-        {(action.preview || []).map((p, i) => <li key={i} className="text-sm text-zinc-200">• {p}</li>)}
+        {(asArray(action.preview)).map((p, i) => <li key={i} className="text-sm text-zinc-200">• {p}</li>)}
       </ul>
       {done ? (
         <p className="mt-3 flex items-center gap-1.5 text-sm text-emerald-400"><Check className="h-4 w-4" /> Done</p>
@@ -57,7 +58,7 @@ export default function AICopilot() {
   const endRef = useRef(null);
 
   useEffect(() => {
-    copilotApi.suggestions().then(setSuggestions).catch(() => {});
+    copilotApi.suggestions().then((s) => setSuggestions(asArray(s))).catch(() => setSuggestions([]));
     copilotApi.history(sessionId).then((h) => {
       if (Array.isArray(h) && h.length) setMessages(h.map((m) => ({ role: m.role, content: m.content, action: m.action, done: Boolean(m.action) })));
     }).catch(() => {});
@@ -85,7 +86,7 @@ export default function AICopilot() {
       const res = await copilotApi.execute(sessionId, action.action_id);
       setMessages((m) => m.map((msg, i) => i === idx ? { ...msg, done: true } : msg));
       setMessages((m) => [...m, { role: "assistant", content: res.reply, navigate: res.navigate }]);
-      copilotApi.suggestions().then(setSuggestions).catch(() => {});
+      copilotApi.suggestions().then((s) => setSuggestions(asArray(s))).catch(() => setSuggestions([]));
       toast.success(res.reply);
     } catch (e) { toast.error(e.message); }
     finally { setExecBusy(null); }
@@ -103,7 +104,7 @@ export default function AICopilot() {
           <h1 className="mt-5 text-2xl font-bold tracking-tight text-zinc-50">Assistify Copilot</h1>
           <p className="mt-2 max-w-md text-sm text-zinc-400">Your AI command center. Ask about your business or tell me what to create — I'll handle it.</p>
           <div className="mt-6 grid w-full max-w-xl grid-cols-1 gap-2 sm:grid-cols-2">
-            {suggestions.map((s, i) => {
+            {asArray(suggestions).map((s, i) => {
               const Icon = icons[s.icon] || Sparkles;
               return (
                 <button key={i} onClick={() => send(s.prompt)} data-testid={`copilot-suggestion-${i}`}

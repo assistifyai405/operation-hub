@@ -1,5 +1,10 @@
-# Example production-oriented compose (use managed MongoDB Atlas + Redis in real deploys).
-# Copy and fill secrets via env file — never commit real credentials.
+# Example production-oriented compose.
+# Prefer managed MongoDB Atlas + Redis in real deploys.
+# Fill secrets via env / secret manager — never commit credentials.
+#
+# Required host env: MONGO_URL DB_NAME JWT_SECRET CORS_ORIGINS FRONTEND_URL
+# REDIS_URL INTEGRATION_ENCRYPTION_KEY OPENAI_API_KEY (or EMERGENT_LLM_KEY)
+
 services:
   backend:
     image: ghcr.io/example/assistify-backend:${RELEASE_VERSION:-latest}
@@ -16,18 +21,31 @@ services:
       WORKER_ENABLED: "true"
       REQUIRE_REDIS: "true"
       SCHEDULER_ENABLED: "false"
-      EMAIL_PROVIDER: resend
+      ENABLE_DEMO_SEED: "false"
+      ENABLE_DEMO_LOGIN: "false"
+      ALLOW_DEMO_IN_PRODUCTION: "false"
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-resend}
       EMAIL_SENDING_ENABLED: ${EMAIL_SENDING_ENABLED:-false}
-      RESEND_API_KEY: ${RESEND_API_KEY}
-      FROM_EMAIL: ${FROM_EMAIL}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      FROM_EMAIL: ${FROM_EMAIL:-}
       INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
       SENTRY_DSN: ${SENTRY_DSN:-}
       RELEASE_VERSION: ${RELEASE_VERSION:-}
       JSON_LOGS: "true"
       LOG_LEVEL: INFO
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-}
     ports:
       - "8000:8000"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/health/ready"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   worker:
     image: ghcr.io/example/assistify-backend:${RELEASE_VERSION:-latest}
@@ -40,12 +58,20 @@ services:
       REDIS_URL: ${REDIS_URL}
       WORKER_ENABLED: "true"
       REQUIRE_REDIS: "true"
-      EMAIL_PROVIDER: resend
-      RESEND_API_KEY: ${RESEND_API_KEY}
+      ENABLE_DEMO_SEED: "false"
+      ENABLE_DEMO_LOGIN: "false"
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-resend}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
       INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
       RELEASE_VERSION: ${RELEASE_VERSION:-}
       JSON_LOGS: "true"
     restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
 
   scheduler:
     image: ghcr.io/example/assistify-backend:${RELEASE_VERSION:-latest}
@@ -59,11 +85,23 @@ services:
       SCHEDULER_ENABLED: "true"
       WORKER_ENABLED: "true"
       REQUIRE_REDIS: "true"
+      ENABLE_DEMO_SEED: "false"
+      ENABLE_DEMO_LOGIN: "false"
+      INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
       RELEASE_VERSION: ${RELEASE_VERSION:-}
       JSON_LOGS: "true"
     restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
 
-  # Prefer static hosting (Vercel) for frontend; optional container:
+  # Prefer static hosting for frontend; optional container:
   # frontend:
   #   image: ghcr.io/example/assistify-frontend:${RELEASE_VERSION:-latest}
   #   ports: ["80:80"]
+  #   restart: unless-stopped
+  #   depends_on:
+  #     backend:
+  #       condition: service_healthy

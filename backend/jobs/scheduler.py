@@ -89,9 +89,18 @@ async def main():
     root = Path(__file__).resolve().parents[2]
     load_dotenv(root / ".env")
     load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
-    from config import load_settings
+    from config import load_settings, get_settings
+    from redis_client import ping_redis, redis_required_for_production
     load_settings()
-    logger.info("Scheduler started")
+    s = get_settings()
+    if not getattr(s, "scheduler_enabled", False):
+        logger.error("SCHEDULER_ENABLED is false — refusing to start scheduler process")
+        raise SystemExit(1)
+    rp = ping_redis()
+    if not rp.get("ok") and (redis_required_for_production() or s.is_production):
+        logger.error("Redis unavailable and required — scheduler cannot start: %s", rp)
+        raise SystemExit(1)
+    logger.info("Scheduler started redis=%s", "ok" if rp.get("ok") else "unavailable")
     while True:
         try:
             await _tick()

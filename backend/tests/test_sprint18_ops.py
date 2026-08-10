@@ -65,6 +65,8 @@ def test_production_config_requires_redis_when_workers(monkeypatch):
     monkeypatch.setenv("JWT_SECRET", "production-grade-secret-key-32chars-min!!")
     monkeypatch.setenv("CORS_ORIGINS", "https://app.example.com")
     monkeypatch.setenv("FRONTEND_URL", "https://app.example.com")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-prod")
+    monkeypatch.setenv("INTEGRATION_ENCRYPTION_KEY", "integration-key-for-unit-tests-32")
     monkeypatch.setenv("WORKER_ENABLED", "true")
     monkeypatch.delenv("REDIS_URL", raising=False)
     with pytest.raises(ConfigError, match="REDIS_URL"):

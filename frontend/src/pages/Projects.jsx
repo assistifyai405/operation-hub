@@ -10,6 +10,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { projectsApi, clientsApi } from "@/lib/api";
+import { asArray } from "@/lib/safe";
 import EmptyState from "@/components/EmptyState";
 
 const columns = ["In Progress", "Review", "Completed", "Blocked"];
@@ -67,7 +68,7 @@ function ProjectForm({ open, setOpen, initial, clients, onSaved }) {
               <SelectTrigger data-testid="project-client-trigger" className="border-white/10 bg-zinc-900"><SelectValue placeholder="No client" /></SelectTrigger>
               <SelectContent className="border-white/10 bg-zinc-900 text-zinc-100">
                 <SelectItem value="none">No client</SelectItem>
-                {clients.map((c) => <SelectItem key={c.id} value={c.id} data-testid={`project-client-${c.id}`}>{c.name}</SelectItem>)}
+                {asArray(clients).map((c) => <SelectItem key={c.id} value={c.id} data-testid={`project-client-${c.id}`}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -127,8 +128,8 @@ export default function Projects() {
   const load = () => {
     setLoading(true);
     Promise.all([projectsApi.list(), clientsApi.list()])
-      .then(([p, c]) => { setProjects(p); setClients(c); })
-      .catch((e) => toast.error(e.message)).finally(() => setLoading(false));
+      .then(([p, c]) => { setProjects(asArray(p)); setClients(asArray(c)); })
+      .catch((e) => { toast.error(e.message); setProjects([]); setClients([]); }).finally(() => setLoading(false));
   };
   useEffect(load, []);
 
@@ -139,12 +140,14 @@ export default function Projects() {
     catch (e) { toast.error(e.message); }
   };
 
+  const projectList = asArray(projects);
+  const clientList = asArray(clients);
   const fmtDue = (d) => d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—";
 
   return (
     <div className="space-y-5" data-testid="projects-page">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-zinc-400">{projects.length} project{projects.length !== 1 && "s"} across their lifecycle.</p>
+        <p className="text-sm text-zinc-400">{projectList.length} project{projectList.length !== 1 && "s"} across their lifecycle.</p>
         <button onClick={openNew} data-testid="new-project-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet">
           <Plus className="h-4 w-4" /> New Project
         </button>
@@ -152,12 +155,12 @@ export default function Projects() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
-      ) : projects.length === 0 ? (
+      ) : projectList.length === 0 ? (
         <EmptyState icon={FolderKanban} title="No projects yet" description="Create your first project and link it to a client to start tracking work." actionLabel="New Project" onAction={openNew} testid="projects-empty" />
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {columns.map((col) => {
-            const items = projects.filter((p) => p.status === col);
+            const items = projectList.filter((p) => p.status === col);
             return (
               <div key={col} className="space-y-3" data-testid={`kanban-col-${col.toLowerCase().replace(/\s/g, "-")}`}>
                 <div className="flex items-center gap-2 px-1">
@@ -196,7 +199,7 @@ export default function Projects() {
         </div>
       )}
 
-      <ProjectForm open={dialogOpen} setOpen={setDialogOpen} initial={editing} clients={clients} onSaved={load} />
+      <ProjectForm open={dialogOpen} setOpen={setDialogOpen} initial={editing} clients={clientList} onSaved={load} />
 
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent className="border-white/10 bg-zinc-950 text-zinc-100">

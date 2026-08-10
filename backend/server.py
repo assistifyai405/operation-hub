@@ -2174,6 +2174,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Optional host allow-list (set TRUSTED_HOSTS in production behind a known domain)
+try:
+    _th = get_app_settings().trusted_hosts
+    if _th:
+        from starlette.middleware.trustedhost import TrustedHostMiddleware
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=_th)
+except Exception:
+    pass
+
 logging.basicConfig(level=logging.INFO)
 try:
     cfg0 = get_app_settings()

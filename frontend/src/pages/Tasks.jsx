@@ -9,6 +9,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { tasksApi, projectsApi } from "@/lib/api";
+import { asArray } from "@/lib/safe";
 import EmptyState from "@/components/EmptyState";
 
 const priorityStyle = {
@@ -64,7 +65,7 @@ function TaskForm({ open, setOpen, initial, projects, onSaved }) {
               <SelectTrigger data-testid="task-project-trigger" className="border-white/10 bg-zinc-900"><SelectValue placeholder="No project" /></SelectTrigger>
               <SelectContent className="border-white/10 bg-zinc-900 text-zinc-100">
                 <SelectItem value="none">No project</SelectItem>
-                {projects.map((p) => <SelectItem key={p.id} value={p.id} data-testid={`task-project-${p.id}`}>{p.name}</SelectItem>)}
+                {asArray(projects).map((p) => <SelectItem key={p.id} value={p.id} data-testid={`task-project-${p.id}`}>{p.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -108,8 +109,8 @@ export default function Tasks() {
   const load = () => {
     setLoading(true);
     Promise.all([tasksApi.list(), projectsApi.list()])
-      .then(([t, p]) => { setTasks(t); setProjects(p); })
-      .catch((e) => toast.error(e.message)).finally(() => setLoading(false));
+      .then(([t, p]) => { setTasks(asArray(t)); setProjects(asArray(p)); })
+      .catch((e) => { toast.error(e.message); setTasks([]); setProjects([]); }).finally(() => setLoading(false));
   };
   useEffect(load, []);
 
@@ -128,7 +129,9 @@ export default function Tasks() {
     catch (e) { toast.error(e.message); }
   };
 
-  const filtered = tasks.filter((t) => filter === "all" || (filter === "active" ? !t.done : t.done));
+  const taskList = asArray(tasks);
+  const projectList = asArray(projects);
+  const filtered = taskList.filter((t) => filter === "all" || (filter === "active" ? !t.done : t.done));
   const fmtDue = (d) => d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
 
   return (
@@ -147,7 +150,7 @@ export default function Tasks() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
-      ) : tasks.length === 0 ? (
+      ) : taskList.length === 0 ? (
         <EmptyState icon={CheckSquare} title="No tasks yet" description="Add your first task and link it to a project to stay on top of your work." actionLabel="Add Task" onAction={openNew} testid="tasks-empty" />
       ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-dashed border-white/10 py-16 text-center text-sm text-zinc-500" data-testid="tasks-filter-empty">No {filter} tasks.</div>
@@ -172,7 +175,7 @@ export default function Tasks() {
         </div>
       )}
 
-      <TaskForm open={dialogOpen} setOpen={setDialogOpen} initial={editing} projects={projects} onSaved={load} />
+      <TaskForm open={dialogOpen} setOpen={setDialogOpen} initial={editing} projects={projectList} onSaved={load} />
 
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent className="border-white/10 bg-zinc-950 text-zinc-100">

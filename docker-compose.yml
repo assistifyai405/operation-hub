@@ -6,6 +6,7 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -16,6 +17,7 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -29,6 +31,7 @@ services:
       ENVIRONMENT: development
       MONGO_URL: mongodb://mongo:27017
       DB_NAME: assistify
+      # Local-only secret — rejected in ENVIRONMENT=production
       JWT_SECRET: local-dev-secret-change-me-32chars!!
       CORS_ORIGINS: http://localhost:3000
       FRONTEND_URL: http://localhost:3000
@@ -45,6 +48,7 @@ services:
       LOG_LEVEL: INFO
     ports:
       - "8000:8000"
+    restart: unless-stopped
     depends_on:
       mongo:
         condition: service_healthy
@@ -55,6 +59,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   worker:
     build:
@@ -71,9 +76,14 @@ services:
       AI_PROVIDER: openai
       OPENAI_API_KEY: sk-test-not-used
       STORAGE_PROVIDER: local
+      ENABLE_DEMO_SEED: "false"
+      ENABLE_DEMO_LOGIN: "false"
+    restart: unless-stopped
     depends_on:
-      - backend
-      - redis
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   scheduler:
     build:
@@ -91,9 +101,14 @@ services:
       AI_PROVIDER: openai
       OPENAI_API_KEY: sk-test-not-used
       STORAGE_PROVIDER: local
+      ENABLE_DEMO_SEED: "false"
+      ENABLE_DEMO_LOGIN: "false"
+    restart: unless-stopped
     depends_on:
-      - backend
-      - redis
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   frontend:
     build:
@@ -104,8 +119,10 @@ services:
         REACT_APP_ENABLE_DEMO_LOGIN: "false"
     ports:
       - "3000:80"
+    restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   mongo_data:

@@ -50,8 +50,12 @@ def redis_required_for_production() -> bool:
         from config import get_settings
         s = get_settings()
         if not s.is_production:
-            return False
-        return bool(getattr(s, "worker_enabled", False) or getattr(s, "require_redis", False))
+            return bool(getattr(s, "require_redis", False))
+        return bool(
+            getattr(s, "require_redis", False)
+            or getattr(s, "worker_enabled", False)
+            or getattr(s, "scheduler_enabled", False)
+        )
     except Exception:
         return False
 

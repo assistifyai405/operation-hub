@@ -35,13 +35,15 @@ def _clean_env(monkeypatch):
     for k in list(os.environ.keys()):
         if k in {
             "ENVIRONMENT", "ENV", "MONGO_URL", "DB_NAME", "JWT_SECRET",
-            "CORS_ORIGINS", "FRONTEND_URL", "ENABLE_DEMO_SEED",
+            "CORS_ORIGINS", "FRONTEND_URL", "ENABLE_DEMO_SEED", "ENABLE_DEMO_LOGIN",
+            "ALLOW_DEMO_IN_PRODUCTION",
             "AI_PROVIDER", "AI_MODEL", "OPENAI_API_KEY", "EMERGENT_LLM_KEY",
             "STORAGE_PROVIDER", "UPLOAD_DIR", "COOKIE_SECURE", "COOKIE_SAMESITE",
             "DEMO_EMAIL", "DEMO_PASSWORD", "INVITATION_EXPIRY_DAYS",
             "EMAIL_PROVIDER", "EMAIL_SENDING_ENABLED", "EMAIL_DAILY_LIMIT",
             "RESEND_API_KEY", "FROM_EMAIL", "FROM_NAME", "REPLY_TO_EMAIL",
             "RESEND_WEBHOOK_SECRET", "INTEGRATION_ENCRYPTION_KEY",
+            "REDIS_URL", "REQUIRE_REDIS", "WORKER_ENABLED", "SCHEDULER_ENABLED",
             "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI",
             "MICROSOFT_CLIENT_ID", "MICROSOFT_CLIENT_SECRET", "MICROSOFT_TENANT",
             "MICROSOFT_REDIRECT_URI", "SLACK_CLIENT_ID", "SLACK_CLIENT_SECRET",
@@ -102,6 +104,8 @@ class TestConfigValidation:
             JWT_SECRET="a" * 40,
             CORS_ORIGINS="https://app.example.com,https://admin.example.com",
             FRONTEND_URL="https://app.example.com",
+            OPENAI_API_KEY="sk-test-prod",
+            INTEGRATION_ENCRYPTION_KEY="integration-key-for-unit-tests-32",
         )
         assert s.is_production
         assert s.cors_origins == ["https://app.example.com", "https://admin.example.com"]
@@ -134,7 +138,10 @@ class TestConfigValidation:
                 JWT_SECRET="a" * 40,
                 CORS_ORIGINS="https://app.example.com",
                 FRONTEND_URL="https://app.example.com",
+                OPENAI_API_KEY="sk-test-prod",
+                INTEGRATION_ENCRYPTION_KEY="integration-key-for-unit-tests-32",
                 ENABLE_DEMO_SEED="true",
+                ALLOW_DEMO_IN_PRODUCTION="true",
                 DEMO_PASSWORD="change-me-demo-password",
             )
 

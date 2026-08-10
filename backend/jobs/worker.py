@@ -22,15 +22,32 @@ async def main():
     root = Path(__file__).resolve().parents[2]
     load_dotenv(root / ".env")
     load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
-    from config import load_settings
+    from config import load_settings, get_settings
     load_settings()
     import jobs.handlers  # noqa: F401 — register
     from jobs import process_one_from_queue
+    from redis_client import get_redis, redis_required_for_production, ping_redis
 
-    logger.info("Worker started")
+    s = get_settings()
+    if not getattr(s, "worker_enabled", False):
+        logger.error("WORKER_ENABLED is false — refusing to start worker process")
+        sys.exit(1)
+
+    rp = ping_redis()
+    if not rp.get("ok"):
+        if redis_required_for_production() or s.is_production:
+            logger.error("Redis unavailable and required — worker cannot start: %s", rp)
+            sys.exit(1)
+        logger.warning("Redis unavailable (%s) — worker will idle until Redis recovers", rp)
+
+    logger.info("Worker started redis=%s", "ok" if get_redis() else "unavailable")
     idle = 0
     while True:
         try:
+            if not get_redis(force=idle > 20):
+                idle += 1
+                await asyncio.sleep(min(5, 0.5 + idle * 0.2))
+                continue
             result = await process_one_from_queue()
             if result:
                 idle = 0

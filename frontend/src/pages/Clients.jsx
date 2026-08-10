@@ -11,6 +11,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { clientsApi } from "@/lib/api";
+import { asArray } from "@/lib/safe";
 import EmptyState from "@/components/EmptyState";
 
 const statusStyle = {
@@ -126,7 +127,7 @@ export default function Clients() {
 
   const load = () => {
     setLoading(true);
-    clientsApi.list().then(setClients).catch((e) => toast.error(e.message)).finally(() => setLoading(false));
+    clientsApi.list().then((data) => setClients(asArray(data))).catch((e) => { toast.error(e.message); setClients([]); }).finally(() => setLoading(false));
   };
   useEffect(load, []);
 
@@ -141,13 +142,14 @@ export default function Clients() {
     } catch (e) { toast.error(e.message); }
   };
 
-  const filtered = clients.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()) || (c.contact || "").toLowerCase().includes(query.toLowerCase()));
+  const list = asArray(clients);
+  const filtered = list.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()) || (c.contact || "").toLowerCase().includes(query.toLowerCase()));
   const fmt = (v) => `$${Number(v || 0).toLocaleString()}`;
 
   return (
     <div className="space-y-5" data-testid="clients-page">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-zinc-400">{clients.length} client{clients.length !== 1 && "s"} in your workspace.</p>
+        <p className="text-sm text-zinc-400">{list.length} client{list.length !== 1 && "s"} in your workspace.</p>
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
@@ -162,7 +164,7 @@ export default function Clients() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
-      ) : clients.length === 0 ? (
+      ) : list.length === 0 ? (
         <EmptyState icon={Users} title="No clients yet" description="Add your first client to start tracking relationships and revenue." actionLabel="Add Client" onAction={openNew} testid="clients-empty" />
       ) : (
         <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-950">

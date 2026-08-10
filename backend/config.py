@@ -30,6 +30,8 @@ WEAK_JWT_SECRETS = {
     "development",
     "test",
     "testing",
+    "local-dev-secret-change-me-32chars!!",
+    "unit-test-secret-key-with-32plus-chars!!",
 }
 
 
@@ -246,6 +248,16 @@ def load_settings(*, strict: bool = True) -> Settings:
     # Demo tooling: NEVER default-on. Explicit ENABLE_DEMO_SEED / ENABLE_DEMO_LOGIN required.
     enable_demo_seed = _truthy("ENABLE_DEMO_SEED", False)
     enable_demo_login = _truthy("ENABLE_DEMO_LOGIN", False)
+    allow_demo_in_production = _truthy("ALLOW_DEMO_IN_PRODUCTION", False)
+
+    # Production hard-disable: demo features stay off unless explicitly allowed.
+    if environment == "production" and not allow_demo_in_production:
+        if enable_demo_seed or enable_demo_login:
+            logger.warning(
+                "Demo flags requested in production but ALLOW_DEMO_IN_PRODUCTION is false — forcing demo off"
+            )
+        enable_demo_seed = False
+        enable_demo_login = False
 
     demo_email = (_env("DEMO_EMAIL", "jordan@assistify.io") or "jordan@assistify.io").lower()
     demo_password = _env("DEMO_PASSWORD", "change-me-demo-password") or "change-me-demo-password"
@@ -256,6 +268,37 @@ def load_settings(*, strict: bool = True) -> Settings:
         )
     if enable_demo_seed and environment == "production" and not demo_password.strip():
         raise ConfigError("DEMO_PASSWORD is required when ENABLE_DEMO_SEED=true in production")
+
+    # Production URL sanity — refuse localhost frontend/CORS in production.
+    if environment == "production":
+        fe_l = frontend_url.lower()
+        if "localhost" in fe_l or "127.0.0.1" in fe_l:
+            raise ConfigError("FRONTEND_URL must be a public HTTPS origin in production (not localhost)")
+        if not fe_l.startswith("https://"):
+            raise ConfigError("FRONTEND_URL must use https:// in production")
+        for o in cors_origins:
+            ol = o.lower()
+            if "localhost" in ol or "127.0.0.1" in ol:
+                raise ConfigError(f"CORS_ORIGINS must not include localhost in production: {o!r}")
+            if not ol.startswith("https://"):
+                raise ConfigError(f"CORS_ORIGINS entries must use https:// in production: {o!r}")
+
+    # Production encryption key for OAuth tokens at rest
+    integration_encryption_key = _env("INTEGRATION_ENCRYPTION_KEY")
+    if environment == "production" and not integration_encryption_key:
+        raise ConfigError(
+            "INTEGRATION_ENCRYPTION_KEY is required in production "
+            "(generate a Fernet key or a long random secret)"
+        )
+
+    # AI provider keys required in production (smoke/deploy without AI is not first-launch ready)
+    openai_api_key = _env("OPENAI_API_KEY")
+    emergent_llm_key = _env("EMERGENT_LLM_KEY")
+    if environment == "production":
+        if ai_provider == "openai" and not openai_api_key:
+            raise ConfigError("OPENAI_API_KEY is required in production when AI_PROVIDER=openai")
+        if ai_provider == "emergent" and not emergent_llm_key:
+            raise ConfigError("EMERGENT_LLM_KEY is required in production when AI_PROVIDER=emergent")
 
     try:
         invitation_expiry_days = int(_env("INVITATION_EXPIRY_DAYS", "7") or "7")
@@ -282,9 +325,15 @@ def load_settings(*, strict: bool = True) -> Settings:
     redis_url = _env("REDIS_URL")
     worker_enabled = _truthy("WORKER_ENABLED", False)
     scheduler_enabled = _truthy("SCHEDULER_ENABLED", False)
-    require_redis = _truthy("REQUIRE_REDIS", worker_enabled if environment == "production" else False)
-    if environment == "production" and (worker_enabled or require_redis) and not redis_url:
-        raise ConfigError("REDIS_URL is required in production when WORKER_ENABLED or REQUIRE_REDIS is true")
+    # Production with workers/scheduler implies Redis is required.
+    require_redis_default = bool(
+        environment == "production" and (worker_enabled or scheduler_enabled)
+    )
+    require_redis = _truthy("REQUIRE_REDIS", require_redis_default)
+    if environment == "production" and (worker_enabled or scheduler_enabled or require_redis) and not redis_url:
+        raise ConfigError("REDIS_URL is required in production when WORKER_ENABLED, SCHEDULER_ENABLED, or REQUIRE_REDIS is true")
+    if environment == "production" and scheduler_enabled and not worker_enabled:
+        logger.warning("SCHEDULER_ENABLED without WORKER_ENABLED — scheduled jobs will enqueue but may not process")
 
     def _int_env(name: str, default: str, lo: int, hi: int) -> int:
         try:
@@ -311,8 +360,8 @@ def load_settings(*, strict: bool = True) -> Settings:
         demo_password=demo_password,
         ai_provider=ai_provider,
         ai_model=ai_model,
-        openai_api_key=_env("OPENAI_API_KEY"),
-        emergent_llm_key=_env("EMERGENT_LLM_KEY"),
+        openai_api_key=openai_api_key,
+        emergent_llm_key=emergent_llm_key,
         storage_provider=storage_provider,
         upload_dir=upload_dir,
         resend_api_key=_env("RESEND_API_KEY"),
@@ -323,7 +372,7 @@ def load_settings(*, strict: bool = True) -> Settings:
         email_sending_enabled=email_sending_enabled,
         email_daily_limit=email_daily_limit,
         resend_webhook_secret=_env("RESEND_WEBHOOK_SECRET"),
-        integration_encryption_key=_env("INTEGRATION_ENCRYPTION_KEY"),
+        integration_encryption_key=integration_encryption_key,
         google_client_id=_env("GOOGLE_CLIENT_ID"),
         google_client_secret=_env("GOOGLE_CLIENT_SECRET"),
         google_redirect_uri=_env("GOOGLE_REDIRECT_URI"),
