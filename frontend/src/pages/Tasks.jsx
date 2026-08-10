@@ -42,7 +42,11 @@ function TaskForm({ open, setOpen, initial, projects, onSaved }) {
     };
     try {
       if (editing) await tasksApi.update(initial.id, payload);
-      else await tasksApi.create(payload);
+      else {
+        await tasksApi.create(payload);
+        const { events } = await import("@/lib/analytics");
+        events.taskCreated({ source: "tasks_page" });
+      }
       toast.success(editing ? "Task updated" : "Task created");
       setOpen(false); onSaved();
     } catch (e) { toast.error(e.message); } finally { setSaving(false); }
@@ -151,7 +155,15 @@ export default function Tasks() {
       {loading ? (
         <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : taskList.length === 0 ? (
-        <EmptyState icon={CheckSquare} title="No tasks yet" description="Add your first task and link it to a project to stay on top of your work." actionLabel="Add Task" onAction={openNew} testid="tasks-empty" />
+        <EmptyState
+          icon={CheckSquare}
+          title="No tasks yet"
+          description="Tasks are the concrete next steps on your projects — due dates, priorities, and progress."
+          why="Add a task so Assistify can surface overdue work and keep priorities clear."
+          actionLabel="Create your first task"
+          onAction={openNew}
+          testid="tasks-empty"
+        />
       ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-dashed border-white/10 py-16 text-center text-sm text-zinc-500" data-testid="tasks-filter-empty">No {filter} tasks.</div>
       ) : (

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Loader2, Sparkles, Target, CheckCircle2 } from "lucide-react";
 import { opportunitiesApi } from "@/lib/api";
 import { OpportunityCard } from "@/components/opportunities/OpportunityCard";
@@ -11,6 +12,7 @@ const FILTERS = [
 ];
 
 export default function Opportunities() {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +38,9 @@ export default function Opportunities() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet"><Target className="h-5 w-5 text-white" /></span>
             Opportunities
           </h1>
-          <p className="mt-1.5 text-sm text-zinc-400">Assistify continuously scans your workspace and surfaces what's worth doing next — sorted by impact.</p>
+          <p className="mt-1.5 text-sm text-zinc-400">
+            AI-suggested next actions from your real workspace data — not the same as Pipeline deals or CRM contacts.
+          </p>
         </div>
         {data && (
           <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.06] px-4 py-2.5 text-right">
@@ -65,8 +69,8 @@ export default function Opportunities() {
       {loading ? (
         <div className="flex items-center justify-center py-20 text-zinc-600"><Loader2 className="h-7 w-7 animate-spin" /></div>
       ) : items.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-zinc-950 py-16 text-center" data-testid="opportunities-empty">
-          <CheckCircle2 className="mx-auto h-9 w-9 text-emerald-500" />
+        <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950 px-4 py-16 text-center" data-testid="opportunities-empty">
+          <CheckCircle2 className={`mx-auto h-9 w-9 ${health?.has_workspace_data === false ? "text-zinc-600" : "text-emerald-500"}`} aria-hidden="true" />
           <p className="mt-3 text-sm font-semibold text-zinc-200">
             {filter !== "all"
               ? `No ${filter.toLowerCase()}-priority items`
@@ -78,9 +82,14 @@ export default function Opportunities() {
             {filter !== "all"
               ? "Assistify didn't find anything that needs your attention here."
               : health?.has_workspace_data === false
-                ? "Opportunities are generated from real clients, projects, overdue tasks and pipeline deals. Add workspace data to see recommendations."
+                ? "Opportunities come from real clients, projects, overdue tasks, and pipeline deals. Add workspace data to see recommendations — nothing is invented."
                 : "Assistify didn't find anything that needs your attention here. Nice work."}
           </p>
+          {filter === "all" && health?.has_workspace_data === false && (
+            <button type="button" onClick={() => navigate("/clients")} data-testid="opportunities-empty-action" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+              Create your first client
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">

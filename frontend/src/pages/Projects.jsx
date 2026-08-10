@@ -45,7 +45,11 @@ function ProjectForm({ open, setOpen, initial, clients, onSaved }) {
     };
     try {
       if (editing) await projectsApi.update(initial.id, payload);
-      else await projectsApi.create(payload);
+      else {
+        await projectsApi.create(payload);
+        const { events } = await import("@/lib/analytics");
+        events.projectCreated({ source: "projects_page" });
+      }
       toast.success(editing ? "Project updated" : "Project created");
       setOpen(false); onSaved();
     } catch (e) { toast.error(e.message); } finally { setSaving(false); }
@@ -156,7 +160,15 @@ export default function Projects() {
       {loading ? (
         <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : projectList.length === 0 ? (
-        <EmptyState icon={FolderKanban} title="No projects yet" description="Create your first project and link it to a client to start tracking work." actionLabel="New Project" onAction={openNew} testid="projects-empty" />
+        <EmptyState
+          icon={FolderKanban}
+          title="No projects yet"
+          description="Projects organize delivery for a client — plans, tasks, proposals, and documents live here."
+          why="Create one project to start tracking work and unlock AI plans and proposals."
+          actionLabel="Create your first project"
+          onAction={openNew}
+          testid="projects-empty"
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {columns.map((col) => {

@@ -55,7 +55,11 @@ function ClientForm({ open, setOpen, initial, onSaved }) {
     };
     try {
       if (editing) await clientsApi.update(initial.id, payload);
-      else await clientsApi.create(payload);
+      else {
+        await clientsApi.create(payload);
+        const { events } = await import("@/lib/analytics");
+        events.clientCreated({ source: "clients_page" });
+      }
       toast.success(editing ? "Client updated" : "Client created");
       setOpen(false);
       onSaved();
@@ -165,7 +169,15 @@ export default function Clients() {
       {loading ? (
         <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : list.length === 0 ? (
-        <EmptyState icon={Users} title="No clients yet" description="Add your first client to start tracking relationships and revenue." actionLabel="Add Client" onAction={openNew} testid="clients-empty" />
+        <EmptyState
+          icon={Users}
+          title="No clients yet"
+          description="Clients are the companies and people you work with — linked to projects, tasks, and opportunities."
+          why="Add one real client to unlock CRM views, pipeline deals, and AI summaries grounded in your data."
+          actionLabel="Create your first client"
+          onAction={openNew}
+          testid="clients-empty"
+        />
       ) : (
         <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-950">
           <table className="w-full text-left text-sm">

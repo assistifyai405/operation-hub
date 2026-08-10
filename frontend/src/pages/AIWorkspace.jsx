@@ -113,7 +113,10 @@ export default function AIWorkspace() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet"><Sparkles className="h-5 w-5 text-white" /></span>
             AI Workspace
           </h1>
-          <p className="mt-1.5 text-sm text-zinc-400">Your command center for everything Assistify has created — searchable, quantified, and organized.</p>
+          <p className="mt-1.5 text-sm text-zinc-400">
+            A history of AI outputs across your workspace — proposals, plans, invoices, and more.
+            Use Copilot to create new work; use Agents for specialized chats; use this page to find what AI already produced.
+          </p>
         </div>
         <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.06] px-4 py-2.5 text-right">
           <p className="flex items-center justify-end gap-1.5 text-xs text-zinc-500"><Clock className="h-3.5 w-3.5" /> Lifetime time saved</p>
@@ -187,10 +190,15 @@ export default function AIWorkspace() {
           {searching && !results ? (
             <div className="flex items-center justify-center py-16 text-zinc-600" data-testid="ai-workspace-timeline-loading"><Loader2 className="h-6 w-6 animate-spin" /></div>
           ) : !results || results.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-zinc-950 py-14 text-center" data-testid="ai-workspace-timeline-empty">
-              <Sparkles className="mx-auto h-8 w-8 text-zinc-700" />
-              <p className="mt-3 text-sm font-medium text-zinc-300">Nothing found</p>
-              <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">Try clearing your filters, or generate a proposal, contract, invoice or plan to see it here.</p>
+            <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950 px-4 py-14 text-center" data-testid="ai-workspace-timeline-empty">
+              <Sparkles className="mx-auto h-8 w-8 text-zinc-700" aria-hidden="true" />
+              <p className="mt-3 text-sm font-medium text-zinc-300">No AI activity yet</p>
+              <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">
+                When you generate a proposal, plan, contract, or invoice — or use Copilot — results appear here. Nothing is pre-filled with sample data.
+              </p>
+              <button type="button" onClick={() => navigate("/ai-chat")} data-testid="ai-workspace-empty-action" className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+                Ask Copilot <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </button>
             </div>
           ) : (
             groups.map((g) => (

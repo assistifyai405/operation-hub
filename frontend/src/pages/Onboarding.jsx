@@ -2,88 +2,167 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Sparkles, Loader2, LogOut } from "lucide-react";
+import { toast } from "sonner";
 import { onboardingApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { events } from "@/lib/analytics";
 import { ProgressRail } from "@/components/onboarding/onboardingShared";
 import { StepWelcome } from "@/components/onboarding/StepWelcome";
 import { StepCompany } from "@/components/onboarding/StepCompany";
-import { StepDiscovery } from "@/components/onboarding/StepDiscovery";
-import { StepBrain } from "@/components/onboarding/StepBrain";
-import { StepAutomations } from "@/components/onboarding/StepAutomations";
-import { StepDemo } from "@/components/onboarding/StepDemo";
-import { StepFirst } from "@/components/onboarding/StepFirst";
-import { StepSuccess } from "@/components/onboarding/StepSuccess";
+import { StepGoal } from "@/components/onboarding/StepGoal";
+import { StepReady } from "@/components/onboarding/StepReady";
+
+const LAST_STEP = 3;
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { user, setUser, refreshUser } = useAuth();
   const [step, setStep] = useState(0);
-  const [data, setData] = useState({ company: { language: "en" } });
+  const [data, setData] = useState({
+    company: {
+      language: "en",
+      company_name: user?.company || "",
+      contact_name: [user?.firstName, user?.lastName].filter(Boolean).join(" "),
+    },
+  });
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    onboardingApi.getState()
+    // Returning users who already finished should not be trapped here
+    if (user?.onboardingCompleted) {
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+    events.onboardingStarted();
+    onboardingApi
+      .getState()
       .then((s) => {
-        if (s.step) setStep(Math.min(s.step, 7));
-        if (s.data && Object.keys(s.data).length) setData((d) => ({ ...d, ...s.data }));
+        if (s.completed) {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+        // Migrate legacy 8-step progress into the 4-step flow
+        if (typeof s.step === "number") {
+          const mapped = s.step <= 1 ? s.step : s.step <= 5 ? 2 : Math.min(s.step - 4, LAST_STEP);
+          setStep(Math.min(Math.max(mapped, 0), LAST_STEP));
+        }
+        if (s.data && Object.keys(s.data).length) {
+          setData((d) => ({ ...d, ...s.data }));
+        }
       })
       .catch(() => {})
       .finally(() => setLoaded(true));
-  }, []);
+  }, [user?.onboardingCompleted, navigate]);
 
-  const persist = useCallback((nextStep, nextData) => {
-    onboardingApi.saveState({ step: nextStep, data: nextData || data }).catch(() => {});
-  }, [data]);
+  const persist = useCallback(
+    (nextStep, nextData) => {
+      onboardingApi.saveState({ step: nextStep, data: nextData || data }).catch(() => {});
+    },
+    [data],
+  );
 
-  const goto = (s) => { setStep(s); persist(s, data); window.scrollTo({ top: 0 }); };
-  const next = () => goto(Math.min(step + 1, 7));
+  const goto = (s) => {
+    setStep(s);
+    persist(s, data);
+    window.scrollTo({ top: 0 });
+  };
+  const next = () => goto(Math.min(step + 1, LAST_STEP));
   const back = () => goto(Math.max(step - 1, 0));
 
-  const saveExit = async () => {
-    await onboardingApi.saveState({ step, data }).catch(() => {});
+  const markComplete = useCallback(
+    async (reason = "completed") => {
+      try {
+        // Persist company profile when we have a name
+        const company = data.company || {};
+        if ((company.company_name || "").trim()) {
+          await onboardingApi
+            .generateProfile({
+              company_name: company.company_name,
+              industry: company.industry || "",
+              employees: company.employees || company.company_size || "",
+              website: company.website || "",
+              language: company.language || "en",
+            })
+            .catch(() => {});
+          await onboardingApi.flag("profile").catch(() => {});
+        }
+        await onboardingApi.saveState({
+          step: LAST_STEP,
+          data: { ...data, primaryGoal: data.primaryGoal || null },
+          completed: true,
+        });
+        await onboardingApi.complete().catch(() => {});
+        setUser((u) => (u ? { ...u, onboardingCompleted: true } : u));
+        if (refreshUser) await refreshUser().catch(() => {});
+        if (reason === "skipped") events.onboardingSkipped();
+        else events.onboardingCompleted({ goal: data.primaryGoal || "none" });
+      } catch (e) {
+        toast.error(e.message || "Could not finish setup");
+      }
+    },
+    [data, setUser, refreshUser],
+  );
+
+  const skip = async () => {
+    await markComplete("skipped");
     navigate("/dashboard");
   };
 
-  const complete = useCallback(() => {
-    onboardingApi.saveState({ step: 7, data, completed: true }).catch(() => {});
-    onboardingApi.complete().catch(() => {});
-    setUser((u) => (u ? { ...u, onboardingCompleted: true } : u));
-  }, [data, setUser]);
+  const saveExit = async () => {
+    // Must mark complete so Layout does not bounce the user back
+    await markComplete("skipped");
+    navigate("/dashboard");
+  };
 
-  const finish = (path) => { complete(); navigate(path || "/dashboard"); };
+  const finish = async (path) => {
+    await markComplete("completed");
+    navigate(path || "/dashboard");
+  };
 
   const stepProps = { data, setData, next, back };
+
   const steps = [
-    <StepWelcome key="w" {...stepProps} />,
+    <StepWelcome key="w" {...stepProps} onSkip={skip} />,
     <StepCompany key="c" {...stepProps} />,
-    <StepDiscovery key="d" {...stepProps} />,
-    <StepBrain key="b" {...stepProps} />,
-    <StepAutomations key="a" {...stepProps} />,
-    <StepDemo key="dm" {...stepProps} />,
-    <StepFirst key="f" {...stepProps} />,
-    <StepSuccess key="s" data={data} finish={finish} onComplete={complete} />,
+    <StepGoal key="g" {...stepProps} />,
+    <StepReady key="r" data={data} finish={finish} />,
   ];
 
   return (
     <div className="relative min-h-screen bg-black text-zinc-50" data-testid="onboarding-page">
-      <div className="pointer-events-none absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(600px circle at 20% 0%, rgba(139,92,246,0.12), transparent 60%), radial-gradient(500px circle at 90% 20%, rgba(34,211,238,0.08), transparent 55%)" }} />
-      <header className="relative z-10 flex items-center justify-between px-5 py-5 sm:px-10">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            "radial-gradient(600px circle at 20% 0%, rgba(139,92,246,0.12), transparent 60%), radial-gradient(500px circle at 90% 20%, rgba(34,211,238,0.08), transparent 55%)",
+        }}
+      />
+      <header className="relative z-10 flex items-center justify-between gap-3 px-5 py-5 sm:px-10">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600 glow-violet"><Sparkles className="h-4 w-4 text-white" /></span>
-          <span className="text-sm font-bold tracking-tight">Assistify <span className="text-violet-400">OS</span></span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600 glow-violet">
+            <Sparkles className="h-4 w-4 text-white" />
+          </span>
+          <span className="text-sm font-bold tracking-tight">
+            Assistify <span className="text-violet-400">OS</span>
+          </span>
         </div>
         <ProgressRail step={step} />
-        {step < 7 && (
-          <button onClick={saveExit} data-testid="onboarding-save-exit" className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300">
-            <LogOut className="h-3.5 w-3.5" /> Save & exit
+        {step < LAST_STEP ? (
+          <button
+            onClick={saveExit}
+            data-testid="onboarding-save-exit"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300"
+          >
+            <LogOut className="h-3.5 w-3.5" /> Skip for now
           </button>
+        ) : (
+          <span className="w-16" />
         )}
-        {step >= 7 && <span className="w-16" />}
       </header>
 
       <main className="relative z-10 flex min-h-[calc(100vh-88px)] items-center justify-center px-5 py-8 sm:px-10">
         {!loaded ? (
-          <Loader2 className="h-7 w-7 animate-spin text-zinc-700" />
+          <Loader2 className="h-7 w-7 animate-spin text-zinc-700" aria-label="Loading onboarding" />
         ) : (
           <AnimatePresence mode="wait">{steps[step]}</AnimatePresence>
         )}

@@ -210,18 +210,20 @@ def test_checklist_shape_for_new_user():
     j = r.json()
     assert j["total"] == 6 and j["done"] == 0 and j["percent"] == 0
     keys = [i["key"] for i in j["items"]]
-    assert set(keys) == {"profile", "client", "proposal", "invoice", "workspace", "brain"}
+    assert set(keys) == {"profile", "client", "project", "task", "copilot", "agents"}
     for i in j["items"]:
         assert i["done"] is False and "to" in i and "label" in i
+    assert j.get("dismissed") is False
+    assert "Assistify" in (j.get("title") or "")
 
 
 def test_checklist_reflects_flags_and_profile():
     _, tok, _ = _register()
-    requests.post(f"{BASE_URL}/api/onboarding/flag", headers=_h(tok), json={"key": "workspace"})
-    requests.post(f"{BASE_URL}/api/onboarding/flag", headers=_h(tok), json={"key": "brain"})
+    requests.post(f"{BASE_URL}/api/onboarding/flag", headers=_h(tok), json={"key": "copilot"})
+    requests.post(f"{BASE_URL}/api/onboarding/flag", headers=_h(tok), json={"key": "agents"})
     j = requests.get(f"{BASE_URL}/api/onboarding/checklist", headers=_h(tok)).json()
     st = {i["key"]: i["done"] for i in j["items"]}
-    assert st["workspace"] is True and st["brain"] is True
+    assert st["copilot"] is True and st["agents"] is True
     assert j["done"] >= 2
 
 
@@ -238,6 +240,28 @@ def test_checklist_client_counts_only_non_demo():
     j = requests.get(f"{BASE_URL}/api/onboarding/checklist", headers=_h(tok)).json()
     st = {i["key"]: i["done"] for i in j["items"]}
     assert st["client"] is True
+
+
+def test_checklist_dismiss_persists():
+    _, tok, _ = _register()
+    r = requests.post(f"{BASE_URL}/api/onboarding/checklist/dismiss", headers=_h(tok))
+    assert r.status_code == 200
+    j = requests.get(f"{BASE_URL}/api/onboarding/checklist", headers=_h(tok)).json()
+    assert j.get("dismissed") is True
+
+
+def test_onboarding_primary_goal_persists_on_state():
+    _, tok, _ = _register()
+    requests.post(
+        f"{BASE_URL}/api/onboarding/state",
+        headers=_h(tok),
+        json={"step": 2, "data": {"primaryGoal": "save_time_ai", "company": {"company_name": "GoalCo"}}},
+    )
+    # complete so returning users are not forced through wizard
+    requests.post(f"{BASE_URL}/api/onboarding/complete", headers=_h(tok))
+    st = requests.get(f"{BASE_URL}/api/onboarding/state", headers=_h(tok)).json()
+    assert st.get("completed") is True
+    assert (st.get("data") or {}).get("primaryGoal") == "save_time_ai"
 
 
 # ---------- org isolation ----------

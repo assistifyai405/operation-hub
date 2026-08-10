@@ -380,6 +380,7 @@ export const onboardingApi = {
   demoStatus: () => req("/onboarding/demo-status"),
   clearDemo: () => req("/onboarding/demo-data", { method: "DELETE" }),
   checklist: () => req("/onboarding/checklist"),
+  dismissChecklist: () => req("/onboarding/checklist/dismiss", { method: "POST" }),
 };
 
 export const plansApi = {

@@ -3,6 +3,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { AuthShell, inputClass } from "@/components/AuthShell";
+import { events } from "@/lib/analytics";
 import { toast } from "sonner";
 
 export default function Register() {
@@ -31,6 +32,7 @@ export default function Register() {
       const payload = { ...form };
       if (inviteToken) payload.invitationToken = inviteToken;
       const data = await register(payload);
+      events.userRegistered({ via_invite: Boolean(inviteToken) });
       if (data.verificationLink) toast.success("Account created! Verify your email from Settings anytime.");
       sessionStorage.removeItem("pending_invite_token");
       if (data.joinedViaInvitation) {
@@ -49,7 +51,7 @@ export default function Register() {
   return (
     <AuthShell
       title={inviteToken ? "Join your team" : "Create your account"}
-      subtitle={inviteToken ? "Create an account to accept your invitation." : "Start running your business in minutes."}
+      subtitle={inviteToken ? "Create an account to accept your invitation." : "Set up your workspace to manage clients, projects, and AI in one place."}
       footer={
         <p className="mt-6 text-center text-xs text-zinc-500">
           Already have an account?{" "}

@@ -154,7 +154,10 @@ export default function Automations() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet"><Zap className="h-5 w-5 text-white" /></span>
             Automations
           </h1>
-          <p className="mt-1.5 max-w-2xl text-sm text-zinc-400">Assistify works proactively in the background — detecting events, preparing drafts and running safe internal actions. You stay in full control: approve, edit, or pause anything, anytime.</p>
+          <p className="mt-1.5 max-w-2xl text-sm text-zinc-400">
+            Background rules that prepare drafts and reminders from real workspace events. You approve before anything sends.
+            Different from Copilot (chat) and AI Agents (specialist chats).
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button onClick={runNow} disabled={busy} data-testid="run-now-btn" className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm font-medium text-zinc-300 transition-all hover:border-violet-500/40 hover:text-zinc-100 disabled:opacity-50">
@@ -210,9 +213,27 @@ export default function Automations() {
         ) : (
           <>
             <TabsContent value="automations" className="mt-5 space-y-3">
-              {automations.map((a) => (
-                <AutomationCard key={a.id} a={a} onToggle={onToggle} onMode={onMode} onEdit={onEditRule} onDelete={onDelete} />
-              ))}
+              {automations.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950 px-4 py-16 text-center" data-testid="automations-empty">
+                  <Zap className="mx-auto h-9 w-9 text-zinc-600" aria-hidden="true" />
+                  <p className="mt-3 text-sm font-semibold text-zinc-200">No automations yet</p>
+                  <p className="mx-auto mt-1 max-w-md text-xs text-zinc-500">
+                    Automations watch for events like overdue invoices or stalled proposals and prepare the next step for your approval.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setEditing(null); setBuilderOpen(true); }}
+                    data-testid="automations-empty-action"
+                    className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500"
+                  >
+                    <Plus className="h-4 w-4" aria-hidden="true" /> Create your first automation
+                  </button>
+                </div>
+              ) : (
+                automations.map((a) => (
+                  <AutomationCard key={a.id} a={a} onToggle={onToggle} onMode={onMode} onEdit={onEditRule} onDelete={onDelete} />
+                ))
+              )}
             </TabsContent>
 
             <TabsContent value="approvals" className="mt-5 space-y-4">

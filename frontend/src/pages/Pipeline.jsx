@@ -86,9 +86,12 @@ export default function Pipeline() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet"><Target className="h-5 w-5 text-white" /></span>
             Sales Pipeline
           </h1>
-          <p className="mt-1.5 text-sm text-zinc-400">Drag deals between stages. {fmtMoneyFull(totalPipeline)} in open pipeline.</p>
+          <p className="mt-1.5 text-sm text-zinc-400">
+            Track open deals by stage. Different from Opportunities (AI-suggested next actions) and CRM (your contact directory).
+            {data ? ` ${fmtMoneyFull(totalPipeline)} in open pipeline.` : ""}
+          </p>
         </div>
-        <button onClick={newLead} data-testid="pipeline-new-lead" className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-violet-500"><Plus className="h-4 w-4" /> New lead</button>
+        <button type="button" onClick={newLead} data-testid="pipeline-new-lead" className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-violet-500"><Plus className="h-4 w-4" aria-hidden="true" /> New lead</button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -109,6 +112,17 @@ export default function Pipeline() {
 
       {loading && !data ? (
         <div className="flex items-center justify-center py-24 text-zinc-600"><Loader2 className="h-7 w-7 animate-spin" /></div>
+      ) : (data?.columns || []).every((c) => (c.items || []).length === 0) ? (
+        <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950 px-4 py-16 text-center" data-testid="pipeline-empty">
+          <Target className="mx-auto h-9 w-9 text-zinc-600" aria-hidden="true" />
+          <p className="mt-3 text-sm font-semibold text-zinc-200">No deals in your pipeline yet</p>
+          <p className="mx-auto mt-1 max-w-md text-xs text-zinc-500">
+            Pipeline is where you track sales deals from New to Won. Add a lead to see stages fill with real opportunities.
+          </p>
+          <button type="button" onClick={newLead} data-testid="pipeline-empty-action" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+            <Plus className="h-4 w-4" aria-hidden="true" /> Create your first lead
+          </button>
+        </div>
       ) : (
         <div className="flex gap-3 overflow-x-auto pb-4" data-testid="pipeline-board">
           {data?.columns.map((col) => {

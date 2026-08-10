@@ -27,10 +27,11 @@ describe("AIAgents page crash guards", () => {
     expect(pageSrc).toMatch(/Array\.isArray/);
     expect(pageSrc).toMatch(/extractAgentsList/);
     expect(pageSrc).toMatch(/normalizeAgents/);
-    expect(pageSrc).toMatch(/console\.log\(\"\[AIAgents\]/);
     expect(pageSrc).toMatch(/ai-agents-error/);
     expect(pageSrc).toMatch(/ai-agents-empty/);
     expect(pageSrc).toMatch(/ai-agents-loading/);
+    expect(pageSrc).toMatch(/New Agent/);
+    expect(pageSrc).toMatch(/Soon/);
     // Never map agents state directly without an Array.isArray guard
     expect(pageSrc).not.toMatch(/\{agents\.map\(/);
   });

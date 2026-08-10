@@ -98,9 +98,15 @@ export default function Documents() {
       {loading ? (
         <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : data.items.length === 0 ? (
-        <EmptyState icon={FolderOpen} title={q || type !== "All" ? "No matching documents" : "No documents yet"}
-          description={q || type !== "All" ? "Try a different search or filter." : "Upload contracts, briefs and assets to keep everything in one place."}
-          actionLabel={q || type !== "All" ? undefined : "Upload document"} onAction={() => fileRef.current?.click()} testid="documents-empty" />
+        <EmptyState
+          icon={FolderOpen}
+          title={q || type !== "All" ? "No matching documents" : "No documents yet"}
+          description={q || type !== "All" ? "Try a different search or filter." : "Documents store contracts, briefs, and files alongside your clients and projects."}
+          why={q || type !== "All" ? undefined : "Upload a file to keep source material in Assistify for you and AI context."}
+          actionLabel={q || type !== "All" ? undefined : "Upload document"}
+          onAction={q || type !== "All" ? undefined : () => fileRef.current?.click()}
+          testid="documents-empty"
+        />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

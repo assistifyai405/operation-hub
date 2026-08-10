@@ -51,16 +51,16 @@ export default function Login() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle={inviteToken ? "Sign in to accept your team invitation." : "Sign in to your operating system."}
+      subtitle={inviteToken ? "Sign in to accept your team invitation." : "Sign in to your Assistify workspace."}
       footer={
         <p className="mt-6 text-center text-xs text-zinc-500">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             to={inviteToken ? `/register?invite=${encodeURIComponent(inviteToken)}&email=${encodeURIComponent(email)}` : "/register"}
             className="text-violet-400 hover:text-violet-300"
             data-testid="go-register-link"
           >
-            Start free trial
+            Create an account
           </Link>
         </p>
       }

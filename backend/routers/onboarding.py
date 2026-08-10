@@ -55,6 +55,10 @@ async def save_state(body: StateBody, user: dict = Depends(current_user)):
     upd = {"onboarding_state": {"step": body.step, "data": body.data, "savedAt": now_iso()}, "updatedAt": now_iso()}
     if body.completed is not None:
         upd["onboardingCompleted"] = body.completed
+    # Persist primary goal at user level when present in wizard data
+    goal = (body.data or {}).get("primaryGoal") or (body.data or {}).get("primary_goal")
+    if goal:
+        upd["primaryGoal"] = str(goal)[:80]
     await db.users.update_one({"id": user["id"]}, {"$set": upd})
     return {"ok": True}
 
@@ -285,15 +289,15 @@ async def clear_demo_data(user: dict = Depends(current_user)):
 
 
 # ---------------------------------------------------------------------------
-# Persistent checklist
+# Persistent checklist (derived from real workspace activity)
 # ---------------------------------------------------------------------------
 CHECKLIST = [
-    {"key": "profile", "label": "Complete your company profile", "to": "/onboarding"},
+    {"key": "profile", "label": "Complete company profile", "to": "/settings"},
     {"key": "client", "label": "Create your first client", "to": "/clients"},
-    {"key": "proposal", "label": "Create your first proposal", "to": "/projects"},
-    {"key": "invoice", "label": "Generate your first invoice", "to": "/projects"},
-    {"key": "workspace", "label": "Explore the AI Workspace", "to": "/ai-workspace"},
-    {"key": "brain", "label": "Open your Knowledge Brain", "to": "/knowledge-brain"},
+    {"key": "project", "label": "Create your first project", "to": "/projects"},
+    {"key": "task", "label": "Create your first task", "to": "/tasks"},
+    {"key": "copilot", "label": "Ask Copilot", "to": "/ai-chat"},
+    {"key": "agents", "label": "Explore AI Agents", "to": "/ai-agents"},
 ]
 
 
@@ -302,15 +306,38 @@ async def checklist(user: dict = Depends(current_user)):
     org = user["organizationId"]
     flags = user.get("onboarding_flags", {})
     profile = await db.business_profiles.find_one({"organizationId": org}, {"_id": 0, "sections": 1})
+    org_doc = await db.organizations.find_one({"id": org}, {"_id": 0, "name": 1, "industry": 1})
+    has_profile = (
+        bool((profile or {}).get("sections"))
+        or bool(flags.get("profile"))
+        or bool((org_doc or {}).get("name") and (org_doc or {}).get("industry"))
+    )
     state = {
-        "profile": bool((profile or {}).get("sections")) or bool(flags.get("profile")),
+        "profile": has_profile,
         "client": (await db.clients.count_documents({"organizationId": org, "is_demo": {"$ne": True}})) > 0,
-        "proposal": (await db.ai_proposals.count_documents({"organizationId": org, "is_demo": {"$ne": True}})) > 0,
-        "invoice": (await db.ai_invoices.count_documents({"organizationId": org, "is_demo": {"$ne": True}})) > 0,
-        "workspace": bool(flags.get("workspace")),
-        "brain": bool(flags.get("brain")),
+        "project": (await db.projects.count_documents({"organizationId": org, "is_demo": {"$ne": True}})) > 0,
+        "task": (await db.tasks.count_documents({"organizationId": org, "is_demo": {"$ne": True}})) > 0,
+        "copilot": bool(flags.get("copilot")),
+        "agents": bool(flags.get("agents")),
     }
     items = [{**c, "done": state.get(c["key"], False)} for c in CHECKLIST]
     done = sum(1 for i in items if i["done"])
-    return {"items": items, "done": done, "total": len(items),
-            "percent": round(done / len(items) * 100), "completed": user.get("onboardingCompleted", False)}
+    return {
+        "items": items,
+        "done": done,
+        "total": len(items),
+        "percent": round(done / len(items) * 100) if items else 0,
+        "completed": user.get("onboardingCompleted", False),
+        "dismissed": bool(user.get("checklist_dismissed")),
+        "title": "Get Assistify working for you",
+        "subtitle": "Complete these steps using your real workspace — progress is never faked.",
+    }
+
+
+@router.post("/checklist/dismiss")
+async def dismiss_checklist(user: dict = Depends(current_user)):
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"checklist_dismissed": True, "updatedAt": now_iso()}},
+    )
+    return {"ok": True, "dismissed": True}

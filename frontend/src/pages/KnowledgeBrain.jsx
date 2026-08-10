@@ -132,7 +132,9 @@ export default function KnowledgeBrain() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet"><Brain className="h-5 w-5 text-white" /></span>
             Knowledge Brain
           </h1>
-          <p className="mt-1.5 text-sm text-zinc-400">Everything Assistify has learned about your business — and how it gets smarter every time you work.</p>
+          <p className="mt-1.5 text-sm text-zinc-400">
+            Business knowledge and context used by Copilot and Agents — preferences, services, tone, and facts you teach Assistify.
+          </p>
         </div>
         <div className="flex gap-2">
           <button onClick={analyze} disabled={analyzing} data-testid="analyze-learning" className="relative inline-flex items-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/[0.06] px-3.5 py-2 text-sm font-semibold text-violet-200 hover:bg-violet-500/15 disabled:opacity-60">
@@ -188,7 +190,18 @@ export default function KnowledgeBrain() {
             </div>
           )}
           {loading ? <div className="flex justify-center py-16 text-zinc-600"><Loader2 className="h-6 w-6 animate-spin" /></div>
-            : mems.length === 0 ? <div className="rounded-2xl border border-white/10 bg-zinc-950 py-14 text-center text-sm text-zinc-400" data-testid="memory-empty">No memories yet. Assistify learns as you edit AI output — or add one manually.</div>
+            : mems.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950 px-4 py-14 text-center" data-testid="memory-empty">
+                <Brain className="mx-auto h-9 w-9 text-zinc-600" aria-hidden="true" />
+                <p className="mt-3 text-sm font-semibold text-zinc-200">No memories yet</p>
+                <p className="mx-auto mt-1 max-w-md text-xs text-zinc-500">
+                  Memories are facts and preferences Assistify uses for better AI answers. Add one manually, or complete company setup during onboarding.
+                </p>
+                <button type="button" onClick={() => setEditing({})} data-testid="memory-empty-action" className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+                  <Plus className="h-4 w-4" aria-hidden="true" /> Add your first memory
+                </button>
+              </div>
+            )
             : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{mems.map((m) => <MemoryCard key={m.id} m={m} onChange={onCardChange} selectMode={selectMode} selected={selected.includes(m.id)} onSelect={() => setSelected((s) => s.includes(m.id) ? s.filter((x) => x !== m.id) : [...s, m.id])} />)}</div>}
         </div>
 

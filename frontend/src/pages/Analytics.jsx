@@ -33,8 +33,18 @@ export default function Analytics() {
     { label: "Invoices", value: k.invoices }, { label: "Documents", value: k.documents },
   ];
 
+  const emptyWorkspace = (k.total_clients || 0) === 0 && (k.total_projects || 0) === 0;
+
   return (
     <div className="space-y-6" data-testid="analytics-page">
+      {emptyWorkspace && (
+        <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950 px-4 py-8 text-center" data-testid="analytics-empty">
+          <p className="text-sm font-semibold text-zinc-200">No analytics yet</p>
+          <p className="mx-auto mt-1 max-w-md text-xs text-zinc-500">
+            Charts and KPIs reflect real invoices, clients, and projects only — zeros mean you haven&apos;t added data yet, not a broken dashboard.
+          </p>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kp) => (
           <Card key={kp.label}>

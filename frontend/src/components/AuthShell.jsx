@@ -12,19 +12,21 @@ export function AuthShell({ title, subtitle, children, footer }) {
           <p className="text-lg font-bold tracking-tight">Assistify <span className="text-violet-400">OS</span></p>
         </div>
         <div className="relative z-10 max-w-md">
-          <h2 className="text-4xl font-bold leading-tight tracking-tight text-zinc-50">
-            Run your entire business from one intelligent workspace.
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">Assistify OS</p>
+          <h2 className="mt-3 text-4xl font-bold leading-tight tracking-tight text-zinc-50">
+            Your AI-powered business operating system.
           </h2>
           <p className="mt-4 text-base leading-relaxed text-zinc-400">
-            Clients, projects, proposals, documents and a fleet of AI agents — unified in a single premium operating system.
+            Built for small businesses, freelancers, and teams who want to manage work and use AI from one workspace —
+            clients, projects, tasks, documents, opportunities, and automations together.
           </p>
           <div className="mt-8 flex flex-col gap-2 text-sm font-medium text-zinc-300">
-            <div>Clients, projects, and tasks in one workspace</div>
-            <div>AI Agents and Copilot for daily operations</div>
-            <div>Team settings, integrations, and document workflows</div>
+            <div>Clients, projects, tasks, and pipeline in one place</div>
+            <div>Copilot for drafts and answers · Agents for specialized work</div>
+            <div>Opportunities, documents, and automations without tool-hopping</div>
           </div>
         </div>
-        <p className="relative z-10 text-xs text-zinc-600">© 2026 Assistify OS. Crafted for entrepreneurs.</p>
+        <p className="relative z-10 text-xs text-zinc-600">© 2026 Assistify OS</p>
       </div>
 
       <div className="flex items-center justify-center p-6 sm:p-12">

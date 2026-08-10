@@ -28,7 +28,10 @@ export default function CRM() {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet"><Users className="h-5 w-5 text-white" /></span>
           CRM
         </h1>
-        <p className="mt-1.5 text-sm text-zinc-400">Every company, contact and relationship — enriched with AI insight and linked to your deals and work.</p>
+        <p className="mt-1.5 text-sm text-zinc-400">
+          Your company and contact directory — the same clients you manage under Clients, enriched with deals and activity.
+          Use Pipeline to move open deals through stages.
+        </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -48,7 +51,27 @@ export default function CRM() {
       {loading ? (
         <div className="flex items-center justify-center py-24 text-zinc-600"><Loader2 className="h-7 w-7 animate-spin" /></div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-zinc-950 py-16 text-center text-sm text-zinc-400" data-testid="crm-empty">No contacts match your search.</div>
+        <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950 px-4 py-16 text-center" data-testid="crm-empty">
+          <Users className="mx-auto h-9 w-9 text-zinc-600" aria-hidden="true" />
+          <p className="mt-3 text-sm font-semibold text-zinc-200">
+            {contacts.length === 0 ? "No contacts yet" : "No contacts match your search"}
+          </p>
+          <p className="mx-auto mt-1 max-w-md text-xs text-zinc-500">
+            {contacts.length === 0
+              ? "CRM shows companies and people from your Clients. Add a client to start building your directory."
+              : "Try a different search or clear the tag filter."}
+          </p>
+          {contacts.length === 0 && (
+            <button
+              type="button"
+              onClick={() => navigate("/clients")}
+              data-testid="crm-empty-action"
+              className="mt-5 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500"
+            >
+              Create your first client <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((c) => (
