@@ -7,6 +7,19 @@ export function HealthWidget({ data, loading }) {
   if (loading || !data) {
     return <div className="flex h-64 items-center justify-center rounded-2xl border border-white/10 bg-zinc-950 text-zinc-600" data-testid="health-loading">…</div>;
   }
+
+  if (data.has_workspace_data === false || data.score == null) {
+    return (
+      <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950 p-8 text-center" data-testid="workspace-health-empty">
+        <Activity className="mx-auto h-8 w-8 text-zinc-600" />
+        <p className="mt-3 text-sm font-semibold text-zinc-200">No health score yet</p>
+        <p className="mx-auto mt-1 max-w-md text-xs text-zinc-500">
+          {(data.top_reasons && data.top_reasons[0]) || "Add clients, projects or deals to start measuring workspace health."}
+        </p>
+      </div>
+    );
+  }
+
   const { score, grade, categories, top_reasons } = data;
   const r = 52, circ = 2 * Math.PI * r;
   return (
@@ -25,7 +38,7 @@ export function HealthWidget({ data, loading }) {
           </div>
         </div>
         <div className="w-full flex-1 space-y-2">
-          {categories.map((c) => (
+          {(categories || []).map((c) => (
             <div key={c.name} data-testid={`health-cat-${c.name.replace(/\s/g, "-").toLowerCase()}`}>
               <div className="mb-0.5 flex items-center justify-between text-xs">
                 <span className="text-zinc-400">{c.name}</span>

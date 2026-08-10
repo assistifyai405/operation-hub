@@ -39,6 +39,8 @@ def _age_days(iso):
 CFG = {
     "invoice_overdue":     dict(base=84, t=6, conf=95, icon="receipt",       label="Payment reminder recommended",   action=("Send payment reminder", "assistant", "invoice", "email")),
     "contract_unsigned":   dict(base=66, t=8, conf=90, icon="scroll-text",   label="Contract awaiting signature",     action=("Review contract", "navigate", "contract", None)),
+    "deal_stale":          dict(base=62, t=8, conf=88, icon="trending-up",   label="Stale pipeline deal",             action=("Open pipeline", "navigate_pipeline", None, None)),
+    "task_overdue":        dict(base=60, t=5, conf=94, icon="check-square",  label="Overdue task",                    action=("View tasks", "navigate_tasks", None, None)),
     "proposal_unsent":     dict(base=58, t=9, conf=88, icon="file-text",     label="Proposal ready to send",          action=("Review & send proposal", "navigate", "proposal", None)),
     "follow_up":           dict(base=55, t=9, conf=85, icon="mail",          label="Follow-up recommended",           action=("Generate follow-up email", "assistant", "proposal", "email")),
     "project_inactive":    dict(base=52, t=6, conf=84, icon="folder-kanban", label="Project is inactive",             action=("Review or archive project", "archive", "overview", None)),
@@ -89,6 +91,10 @@ async def _scan(org: str):
             link = f"/projects/{project}"
         elif kind == "navigate_client":
             link = "/clients"
+        elif kind == "navigate_tasks":
+            link = "/tasks"
+        elif kind == "navigate_pipeline":
+            link = "/pipeline"
         items.append({
             "id": str(uuid.uuid4()), "key": key, "type": atype, "title": title,
             "explanation": explanation, "why": why, "time_saved": cfg["t"],
@@ -194,6 +200,38 @@ async def _scan(org: str):
                 "Stalled projects tie up focus. A quick review — or archiving — frees you up.",
                 extra_score=min(16, inactive_days - 14), project=pid, client=p.get("client_id"))
 
+    # ---- Overdue tasks ----
+    open_tasks = await db.tasks.find({**base, "done": False, "due": {"$nin": [None, ""]}}, {"_id": 0}).to_list(500)
+    for t in open_tasks:
+        due = str(t.get("due") or "")[:10]
+        if due and due < today:
+            od = _age_days(due)
+            pid = t.get("project_id")
+            add("task_overdue", t.get("id"),
+                f"Overdue: {t.get('title') or 'Task'}",
+                f"This task was due {od} day{'s' if od != 1 else ''} ago"
+                + (f" on {pmap.get(pid, {}).get('name')}" if pid and pmap.get(pid) else "") + ".",
+                "Clearing overdue work protects delivery dates and client trust.",
+                extra_score=min(18, od), project=pid, client=pmap.get(pid, {}).get("client_id") if pid else None)
+
+    # ---- Stale pipeline deals ----
+    OPEN_STAGES = ("New", "Qualified", "Meeting Scheduled", "Proposal Sent", "Negotiating")
+    leads = await db.leads.find(base, {"_id": 0}).to_list(500)
+    for lead in leads:
+        if lead.get("stage") not in OPEN_STAGES:
+            continue
+        idle = _age_days(lead.get("stage_changed_at") or lead.get("updated_at") or lead.get("created_at"))
+        if idle < 14:
+            continue
+        title = lead.get("title") or cmap.get(lead.get("client_id"), {}).get("name") or "Untitled deal"
+        value = lead.get("value") or 0
+        add("deal_stale", lead.get("id"),
+            f"Stale deal: {title}",
+            f"No stage movement in {idle} days"
+            + (f" · ${int(value):,} in pipeline" if value else "") + ".",
+            "Quiet deals cool quickly — a short check-in often restarts momentum.",
+            extra_score=min(16, idle - 14), project=lead.get("project_id"), client=lead.get("client_id"))
+
     # ---- Clients ----
     for c in clients:
         cid = c["id"]
@@ -256,8 +294,22 @@ async def daily_brief(org: str = Depends(current_org)):
     inact = by_type.get("project_inactive", 0)
     if inact:
         lines.append({"icon": "folder-kanban", "text": pl(inact, "project looks", "projects look") + " inactive"})
+    overdue_tasks = by_type.get("task_overdue", 0)
+    if overdue_tasks:
+        lines.append({"icon": "check-square", "text": pl(overdue_tasks, "task is", "tasks are") + " overdue"})
+    stale = by_type.get("deal_stale", 0)
+    if stale:
+        lines.append({"icon": "trending-up", "text": pl(stale, "pipeline deal is", "pipeline deals are") + " going cold"})
     if not lines:
-        lines.append({"icon": "sparkles", "text": "Your workspace is in great shape — nothing needs urgent attention."})
+        # Distinguish empty workspace from genuinely healthy workspace
+        n_cli = await db.clients.count_documents({"organizationId": org})
+        n_proj = await db.projects.count_documents({"organizationId": org})
+        n_tasks = await db.tasks.count_documents({"organizationId": org})
+        n_leads = await db.leads.count_documents({"organizationId": org})
+        if any([n_cli, n_proj, n_tasks, n_leads]):
+            lines.append({"icon": "sparkles", "text": "Your workspace is in great shape — nothing needs urgent attention."})
+        else:
+            lines.append({"icon": "sparkles", "text": "Add a client or project to start seeing live workspace insights."})
     return {"greeting": greeting, "lines": lines[:5],
             "total_time_saved": sum(i["time_saved"] for i in items),
             "total": len(items), "top": items[:3]}
@@ -279,7 +331,19 @@ async def workspace_health(org: str = Depends(current_org)):
     n_con = await db.ai_contracts.count_documents(base)
     n_proj = await db.projects.count_documents(base)
     n_cli = await db.clients.count_documents(base)
+    n_tasks = await db.tasks.count_documents(base)
+    n_leads = await db.leads.count_documents(base)
     recent_activity = await db.activities.count_documents({**base, "created_at": {"$gt": _days_ago_iso(7)}})
+    has_workspace_data = any([n_inv, n_con, n_proj, n_cli, n_tasks, n_leads, recent_activity])
+
+    if not has_workspace_data:
+        return {
+            "score": None,
+            "grade": "No data yet",
+            "has_workspace_data": False,
+            "categories": [],
+            "top_reasons": ["Add clients, projects or deals to start measuring workspace health."],
+        }
 
     cats = {}
     over = by_type.get("invoice_overdue", 0)
@@ -295,6 +359,12 @@ async def workspace_health(org: str = Depends(current_org)):
     cli_issues = by_type.get("client_missing_info", 0) + by_type.get("client_not_contacted", 0)
     cats["Clients"] = cat(100 - (cli_issues * 10), _reasons([
         (by_type.get("client_not_contacted", 0), "flagged for a check-in"), (by_type.get("client_missing_info", 0), "with missing details")], "client") or ["Client records look good"])
+    task_over = by_type.get("task_overdue", 0)
+    cats["Tasks"] = cat(100 - (task_over * 14) if n_tasks else 100,
+                        [f"{task_over} overdue task(s)"] if task_over else ["No overdue tasks"])
+    stale = by_type.get("deal_stale", 0)
+    cats["Pipeline"] = cat(100 - (stale * 12) if n_leads else 100,
+                           [f"{stale} stale deal(s)"] if stale else ["Pipeline looks active"])
     cats["Activity"] = cat(min(100, 40 + recent_activity * 12),
                            [f"{recent_activity} action(s) in the last 7 days"] if recent_activity else ["No activity in the last 7 days"])
     outstanding = len(items)
@@ -304,7 +374,7 @@ async def workspace_health(org: str = Depends(current_org)):
     overall = round(sum(c["score"] for c in cats.values()) / len(cats))
     grade = "Excellent" if overall >= 90 else ("Good" if overall >= 75 else ("Fair" if overall >= 55 else "Needs attention"))
     low = sorted([(k, v) for k, v in cats.items()], key=lambda x: x[1]["score"])[:3]
-    return {"score": overall, "grade": grade,
+    return {"score": overall, "grade": grade, "has_workspace_data": True,
             "categories": [{"name": k, **v} for k, v in cats.items()],
             "top_reasons": [r for k, v in low if v["score"] < 100 for r in v["reasons"]][:4]}
 

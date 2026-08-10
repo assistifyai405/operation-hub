@@ -46,12 +46,12 @@ export function MorningBrief({ open, onOpenChange }) {
   const go = (link) => { if (link) { onOpenChange(false); navigate(link); } };
 
   const NUMBERS = data ? [
-    { label: "Revenue", value: money(data.numbers.revenue), tone: "text-emerald-400" },
-    { label: "Pipeline", value: money(data.numbers.pipeline), tone: "text-violet-400" },
-    { label: "Hours Saved", value: `${data.numbers.hours_saved}h`, tone: "text-cyan-400" },
-    { label: "Business Health", value: `${data.numbers.business_health}`, tone: "text-emerald-400" },
-    { label: "Active Clients", value: `${data.numbers.clients_active}`, tone: "text-zinc-100" },
-    { label: "Deals Closing", value: `${data.numbers.deals_closing}`, tone: "text-amber-400" },
+    { label: "Revenue", value: data.numbers.revenue == null ? "—" : money(data.numbers.revenue), tone: "text-emerald-400" },
+    { label: "Pipeline", value: data.numbers.pipeline == null ? "—" : money(data.numbers.pipeline), tone: "text-violet-400" },
+    { label: "Hours Saved", value: data.numbers.hours_saved == null ? "—" : `${data.numbers.hours_saved}h`, tone: "text-cyan-400" },
+    { label: "Business Health", value: data.numbers.business_health == null ? "—" : `${data.numbers.business_health}`, tone: "text-emerald-400" },
+    { label: "Active Clients", value: `${data.numbers.clients_active ?? 0}`, tone: "text-zinc-100" },
+    { label: "Deals Closing", value: `${data.numbers.deals_closing ?? 0}`, tone: "text-amber-400" },
   ] : [];
 
   return (

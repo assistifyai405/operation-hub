@@ -17,10 +17,15 @@ export const PRIORITY_META = {
   Low: { chip: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", dot: "bg-emerald-500", ring: "text-emerald-400" },
 };
 
-export const healthTone = (score) =>
-  score >= 75 ? { text: "text-emerald-400", bar: "#34d399", chip: "bg-emerald-500/15 text-emerald-300" }
-  : score >= 55 ? { text: "text-amber-400", bar: "#f59e0b", chip: "bg-amber-500/15 text-amber-300" }
-  : { text: "text-red-400", bar: "#f87171", chip: "bg-red-500/15 text-red-300" };
+export const healthTone = (score) => {
+  const s = Number(score);
+  if (!Number.isFinite(s)) {
+    return { text: "text-zinc-400", bar: "#71717a", chip: "bg-zinc-500/15 text-zinc-300" };
+  }
+  return s >= 75 ? { text: "text-emerald-400", bar: "#34d399", chip: "bg-emerald-500/15 text-emerald-300" }
+    : s >= 55 ? { text: "text-amber-400", bar: "#f59e0b", chip: "bg-amber-500/15 text-amber-300" }
+    : { text: "text-red-400", bar: "#f87171", chip: "bg-red-500/15 text-red-300" };
+};
 
 export const DOC_BADGE = {
   proposal: { label: "Proposal", chip: "bg-violet-500/15 text-violet-300", icon: "file-text" },

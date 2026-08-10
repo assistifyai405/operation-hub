@@ -166,7 +166,7 @@ async def executive(org: str = Depends(current_org)):
 
     recent_acts = await db.ai_activities.find(base, {"_id": 0}).sort("created_at", -1).to_list(40)
     confs = [a.get("confidence") for a in recent_acts if a.get("confidence")]
-    ai_confidence = round(sum(confs) / len(confs)) if confs else 92
+    ai_confidence = round(sum(confs) / len(confs)) if confs else None
 
     # Revenue at risk = unpaid invoices + value of open deals gone quiet (>=14d)
     leads = await db.leads.find(base, {"_id": 0, "stage": 1, "value": 1, "stage_changed_at": 1, "updated_at": 1}).to_list(1000)
@@ -210,23 +210,46 @@ async def executive(org: str = Depends(current_org)):
 
     trends = await _build_trends(org)
     s = trends["series"]
+    has_workspace_data = bool(health.get("has_workspace_data", True)) and any(workspace.values())
+    health_value = health.get("score")
     kpi_cards = {
-        "health": {"value": health.get("score", 0), "grade": health.get("grade"),
-                   "categories": health.get("categories", [])},
-        "pipeline": {"value": sales.get("pipeline_value", 0), "spark": s["pipeline"], "change_pct": _pct(s["pipeline"])},
-        "hours_saved": {"value": round(mins_week / 60, 1), "spark": s["hours_saved"], "change_pct": _pct(s["hours_saved"])},
-        "revenue_month": {"value": round(this30), "spark": s["revenue"], "change_pct": growth_pct},
+        "health": {
+            "value": health_value if has_workspace_data else None,
+            "grade": health.get("grade") if has_workspace_data else None,
+            "categories": health.get("categories", []) if has_workspace_data else [],
+            "empty": not has_workspace_data,
+        },
+        "pipeline": {
+            "value": sales.get("pipeline_value", 0) if has_workspace_data else None,
+            "spark": s["pipeline"] if has_workspace_data else [],
+            "change_pct": _pct(s["pipeline"]) if has_workspace_data else None,
+            "empty": not has_workspace_data,
+        },
+        "hours_saved": {
+            "value": round(mins_week / 60, 1) if (mins_week or has_workspace_data) else None,
+            "spark": s["hours_saved"] if has_workspace_data else [],
+            "change_pct": _pct(s["hours_saved"]) if has_workspace_data else None,
+            "empty": not has_workspace_data and mins_week == 0,
+        },
+        "revenue_month": {
+            "value": round(this30) if has_workspace_data else None,
+            "spark": s["revenue"] if has_workspace_data else [],
+            "change_pct": growth_pct if has_workspace_data else None,
+            "empty": not has_workspace_data,
+        },
     }
 
     return {
         "hero": {
             "greeting": brief.get("greeting"),
-            "brief_lines": brief.get("lines", []),
+            "brief_lines": brief.get("lines", []) if has_workspace_data else [
+                {"icon": "sparkles", "text": "Add a client or project to start seeing live workspace insights."},
+            ],
             "top_priority": {
                 "title": top["title"], "why": top["why"], "priority": top["priority"],
                 "action": top["action"], "icon": top["icon"], "confidence": top["confidence"],
             } if top else None,
-            "revenue_at_risk": revenue_at_risk,
+            "revenue_at_risk": revenue_at_risk if has_workspace_data else 0,
             "hours_saved_week": round(mins_week / 60, 1),
             "minutes_saved_week": mins_week,
             "ai_confidence": ai_confidence,
@@ -252,6 +275,7 @@ async def executive(org: str = Depends(current_org)):
             "project_id": (a.get("related") or {}).get("project_id"), "project_name": a.get("project_name"),
         } for a in recent_acts[:8]],
         "workspace": workspace,
+        "workspace_empty": not has_workspace_data,
         "documents": await _recent_docs(org),
         "trends": trends,
         "kpi_cards": kpi_cards,
@@ -290,8 +314,9 @@ async def morning_brief(org: str = Depends(current_org)):
             wins.append({"icon": "trending-up", "title": f"Deal won — {l.get('title') or cname.get(l.get('client_id')) or 'Deal'}", "detail": f"{_m(l.get('value'))} closed"})
     if autos_done:
         wins.append({"icon": "zap", "title": f"{autos_done} automation{'s' if autos_done != 1 else ''} completed", "detail": "Ran successfully for you"})
-    if data["health"]["score"] >= 75:
-        wins.append({"icon": "check-square", "title": "Business health is strong", "detail": f"{data['health']['score']}/100 · {data['health']['grade']}"})
+    health_score = data["health"].get("score")
+    if health_score is not None and health_score >= 75:
+        wins.append({"icon": "check-square", "title": "Business health is strong", "detail": f"{health_score}/100 · {data['health']['grade']}"})
     if (data["revenue"]["growth_pct"] or 0) > 0:
         wins.append({"icon": "trending-up", "title": f"Revenue up {data['revenue']['growth_pct']}%", "detail": "vs the previous 30 days"})
 
@@ -330,7 +355,10 @@ async def morning_brief(org: str = Depends(current_org)):
             summary.append({"icon": "users", "text": it.get("title")})
             break
     if not summary:
-        summary.append({"icon": "check-square", "text": "Everything's calm — no urgent items while you were away."})
+        if data.get("workspace_empty"):
+            summary.append({"icon": "sparkles", "text": "Your workspace is empty — add a client or project to get started."})
+        else:
+            summary.append({"icon": "check-square", "text": "Everything's calm — no urgent items while you were away."})
 
     active_clients = sum(1 for c in clients if c.get("status") == "Active")
     deals_closing = sum(1 for l in leads if l.get("stage") in ("Proposal Sent", "Negotiating"))
@@ -349,5 +377,6 @@ async def morning_brief(org: str = Depends(current_org)):
             "clients_active": active_clients,
             "deals_closing": deals_closing,
         },
+        "workspace_empty": data.get("workspace_empty", False),
         "what_ai_did": data["ai_activity"],
     }

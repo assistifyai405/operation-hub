@@ -67,8 +67,20 @@ export default function Opportunities() {
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-zinc-950 py-16 text-center" data-testid="opportunities-empty">
           <CheckCircle2 className="mx-auto h-9 w-9 text-emerald-500" />
-          <p className="mt-3 text-sm font-semibold text-zinc-200">{filter === "all" ? "You're all caught up" : `No ${filter.toLowerCase()}-priority items`}</p>
-          <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">Assistify didn't find anything that needs your attention here. Nice work.</p>
+          <p className="mt-3 text-sm font-semibold text-zinc-200">
+            {filter !== "all"
+              ? `No ${filter.toLowerCase()}-priority items`
+              : health?.has_workspace_data === false
+                ? "No opportunities yet"
+                : "You're all caught up"}
+          </p>
+          <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">
+            {filter !== "all"
+              ? "Assistify didn't find anything that needs your attention here."
+              : health?.has_workspace_data === false
+                ? "Opportunities are generated from real clients, projects, overdue tasks and pipeline deals. Add workspace data to see recommendations."
+                : "Assistify didn't find anything that needs your attention here. Nice work."}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">

@@ -14,11 +14,12 @@ const METRICS = [
   { k: "ai_activity", label: "AI Activity", color: "#60a5fa", fmt: (v) => `${v}` },
 ];
 
-export function BusinessPerformanceChart({ trends }) {
+export function BusinessPerformanceChart({ trends, workspaceEmpty }) {
   const [active, setActive] = useState("revenue");
   const m = METRICS.find((x) => x.k === active);
-  const data = (trends.labels || []).map((label, i) => ({ label, value: (trends.series[active] || [])[i] || 0 }));
+  const data = (trends?.labels || []).map((label, i) => ({ label, value: (trends?.series?.[active] || [])[i] || 0 }));
   const total = data.reduce((s, d) => s + d.value, 0);
+  const empty = Boolean(workspaceEmpty) || data.every((d) => !d.value);
 
   return (
     <div className="rounded-2xl border border-white/10 bg-zinc-950/80 p-5 backdrop-blur-xl" data-testid="performance-chart">
@@ -37,29 +38,39 @@ export function BusinessPerformanceChart({ trends }) {
         ))}
       </div>
 
-      <div className="mt-4 flex items-baseline gap-2">
-        <p className="text-2xl font-bold text-zinc-50">{m.fmt(total)}</p>
-        <span className="text-xs text-zinc-500">total · {m.label.toLowerCase()}</span>
-      </div>
+      {empty ? (
+        <div className="mt-8 flex flex-col items-center justify-center py-16 text-center" data-testid="performance-empty">
+          <BarChart3 className="h-8 w-8 text-zinc-600" />
+          <p className="mt-3 text-sm font-medium text-zinc-300">No performance data yet</p>
+          <p className="mt-1 max-w-sm text-xs text-zinc-500">Once you add clients, deals, invoices or AI activity, trends will appear here.</p>
+        </div>
+      ) : (
+        <>
+          <div className="mt-4 flex items-baseline gap-2">
+            <p className="text-2xl font-bold text-zinc-50">{m.fmt(total)}</p>
+            <span className="text-xs text-zinc-500">total · {m.label.toLowerCase()}</span>
+          </div>
 
-      <div className="mt-2 h-56" data-testid={`chart-canvas-${active}`}>
-        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
-          <AreaChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-            <defs>
-              <linearGradient id="pcg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={m.color} stopOpacity={0.4} />
-                <stop offset="100%" stopColor={m.color} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-            <XAxis dataKey="label" tick={{ fill: "#71717a", fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "#71717a", fontSize: 11 }} axisLine={false} tickLine={false} width={48} />
-            <Tooltip contentStyle={{ background: "#18181b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 12 }}
-              labelStyle={{ color: "#a1a1aa" }} formatter={(v) => [m.fmt(v), m.label]} />
-            <Area type="monotone" dataKey="value" stroke={m.color} strokeWidth={2.5} fill="url(#pcg)" isAnimationActive animationDuration={600} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+          <div className="mt-2 h-56" data-testid={`chart-canvas-${active}`}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+              <AreaChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="pcg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={m.color} stopOpacity={0.4} />
+                    <stop offset="100%" stopColor={m.color} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="label" tick={{ fill: "#71717a", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#71717a", fontSize: 11 }} axisLine={false} tickLine={false} width={48} />
+                <Tooltip contentStyle={{ background: "#18181b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 12 }}
+                  labelStyle={{ color: "#a1a1aa" }} formatter={(v) => [m.fmt(v), m.label]} />
+                <Area type="monotone" dataKey="value" stroke={m.color} strokeWidth={2.5} fill="url(#pcg)" isAnimationActive animationDuration={600} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </>
+      )}
     </div>
   );
 }

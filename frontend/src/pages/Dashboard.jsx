@@ -89,16 +89,17 @@ export default function Dashboard() {
 
   const firstName = (user?.firstName || (user?.email || "").split("@")[0] || "").trim();
   const { hero } = data;
+  const workspaceEmpty = Boolean(data.workspace_empty);
 
   return (
     <div className="space-y-6" data-testid="dashboard-page">
       <OnboardingChecklist />
       <DemoDataBanner />
 
-      {/* Hero */}
+      {/* Hero — greeting always from authenticated user profile */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="text-2xl font-bold tracking-tight text-zinc-50 sm:text-3xl">
+          <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="text-2xl font-bold tracking-tight text-zinc-50 sm:text-3xl" data-testid="dashboard-greeting">
             {hero.greeting}{firstName ? `, ${firstName}` : ""}
           </motion.h1>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1" data-testid="hero-brief">
@@ -120,13 +121,25 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {workspaceEmpty && (
+        <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950/60 px-5 py-4" data-testid="dashboard-empty-banner">
+          <p className="text-sm font-semibold text-zinc-100">Your workspace is ready</p>
+          <p className="mt-1 text-xs text-zinc-500">Metrics stay empty until you add real clients, projects, tasks or pipeline deals — no sample numbers are shown.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button onClick={() => navigate("/clients")} className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500">Add client</button>
+            <button onClick={() => navigate("/projects")} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-900">Create project</button>
+            <button onClick={() => navigate("/pipeline")} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-900">Open pipeline</button>
+          </div>
+        </div>
+      )}
+
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard id="health" title="Business Health" kpi={data.kpi_cards.health} format={(v) => `${Math.round(v)}`} color="#34d399" delay={0}
           tooltip="Overall health (0–100) from overdue invoices, unanswered leads, stalled deals, overdue tasks, inactive clients, proposal conversion, automation success and AI activity." />
         <KpiCard id="pipeline" title="Pipeline Value" kpi={data.kpi_cards.pipeline} format={money} color="#8b5cf6" delay={0.08}
           tooltip="Total value of your open deals across the sales pipeline." />
-        <KpiCard id="hours_saved" title="Hours Saved" kpi={data.kpi_cards.hours_saved} format={(v) => `${v.toFixed(1)}h`} color="#22d3ee" delay={0.16}
+        <KpiCard id="hours_saved" title="Hours Saved" kpi={data.kpi_cards.hours_saved} format={(v) => `${Number(v).toFixed(1)}h`} color="#22d3ee" delay={0.16}
           tooltip="Hours Assistify saved you this week across AI documents and executed automations." />
         <KpiCard id="revenue_month" title="Revenue This Month" kpi={data.kpi_cards.revenue_month} format={money} color="#f472b6" delay={0.24}
           tooltip="Revenue from invoices marked paid in the last 30 days." />
@@ -134,8 +147,8 @@ export default function Dashboard() {
 
       {/* Main split */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2"><BusinessPerformanceChart trends={data.trends} /></div>
-        <AIExecutiveBrief insights={data.insights} hero={data.hero} health={data.health} />
+        <div className="lg:col-span-2"><BusinessPerformanceChart trends={data.trends} workspaceEmpty={workspaceEmpty} /></div>
+        <AIExecutiveBrief insights={data.insights} hero={data.hero} health={data.health} workspaceEmpty={workspaceEmpty} />
       </div>
 
       {/* Bottom split */}

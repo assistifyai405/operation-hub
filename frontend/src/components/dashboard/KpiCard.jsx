@@ -28,11 +28,12 @@ function Spark({ data, color }) {
 
 export function KpiCard({ id, title, kpi, format, color, tooltip, delay = 0 }) {
   const Icon = ICONS[id];
-  const animated = useCountUp(kpi.value);
+  const empty = Boolean(kpi?.empty) || kpi?.value === null || kpi?.value === undefined;
+  const animated = useCountUp(empty ? 0 : kpi.value);
   const isHealth = id === "health";
-  const tone = isHealth ? healthTone(kpi.value) : null;
-  const display = format(isHealth ? Math.round(animated) : animated);
-  const change = kpi.change_pct;
+  const tone = isHealth && !empty ? healthTone(kpi.value) : null;
+  const display = empty ? "—" : format(isHealth ? Math.round(animated) : animated);
+  const change = empty ? null : kpi.change_pct;
 
   return (
     <motion.div
@@ -55,9 +56,11 @@ export function KpiCard({ id, title, kpi, format, color, tooltip, delay = 0 }) {
 
       <div className="mt-2 flex items-end justify-between gap-2">
         <div>
-          <p className={`text-2xl font-bold tracking-tight ${isHealth ? tone.text : "text-zinc-50"}`} data-testid={`kpi-${id}-value`}>{display}</p>
+          <p className={`text-2xl font-bold tracking-tight ${empty ? "text-zinc-500" : isHealth ? tone.text : "text-zinc-50"}`} data-testid={`kpi-${id}-value`}>{display}</p>
           <div className="mt-0.5 flex items-center gap-1.5 text-[11px]">
-            {isHealth ? (
+            {empty ? (
+              <span className="text-zinc-600" data-testid={`kpi-${id}-empty`}>No data yet</span>
+            ) : isHealth ? (
               <span className={`rounded-full px-1.5 py-0.5 font-medium ${tone.chip}`}>{kpi.grade}</span>
             ) : change === null || change === undefined ? (
               <span className="text-zinc-600">no prior data</span>
@@ -71,7 +74,9 @@ export function KpiCard({ id, title, kpi, format, color, tooltip, delay = 0 }) {
       </div>
 
       <div className="mt-2 h-10">
-        {isHealth ? (
+        {empty ? (
+          <div className="flex h-10 items-center text-[11px] text-zinc-600">Add workspace activity to populate this metric.</div>
+        ) : isHealth ? (
           <div className="flex h-10 items-end gap-1" data-testid="kpi-health-bars">
             {(kpi.categories || []).map((c) => {
               const t = healthTone(c.score);

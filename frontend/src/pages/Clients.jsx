@@ -73,26 +73,26 @@ function ClientForm({ open, setOpen, initial, onSaved }) {
           <div>
             <label className="mb-1.5 block text-xs font-medium text-zinc-400">Company name *</label>
             <input value={form.name} onChange={(e) => set("name", e.target.value)} data-testid="client-name-input"
-              className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" placeholder="Northwind Labs" />
+              className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" placeholder="Company name" />
             {errors.name && <p className="mt-1 text-xs text-red-400" data-testid="client-name-error">{errors.name}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1.5 block text-xs font-medium text-zinc-400">Contact</label>
               <input value={form.contact} onChange={(e) => set("contact", e.target.value)} data-testid="client-contact-input"
-                className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" placeholder="Ava Mitchell" />
+                className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" placeholder="Contact name" />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-zinc-400">Deal value ($)</label>
               <input value={form.value} onChange={(e) => set("value", e.target.value)} data-testid="client-value-input"
-                className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" placeholder="48000" />
+                className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" placeholder="0" />
               {errors.value && <p className="mt-1 text-xs text-red-400">{errors.value}</p>}
             </div>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-medium text-zinc-400">Email</label>
             <input value={form.email} onChange={(e) => set("email", e.target.value)} data-testid="client-email-input"
-              className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" placeholder="ava@northwind.co" />
+              className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" placeholder="name@company.com" />
             {errors.email && <p className="mt-1 text-xs text-red-400" data-testid="client-email-error">{errors.email}</p>}
           </div>
           <div>
