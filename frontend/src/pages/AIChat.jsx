@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Send, Sparkles, Bot } from "lucide-react";
-import { getAccessToken } from "@/lib/api";
+import { getCsrfToken } from "@/lib/api";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -23,7 +23,7 @@ export default function AIChat() {
   const endRef = useRef(null);
 
   useEffect(() => {
-    fetch(`${API}/agents`, { headers: { Authorization: `Bearer ${getAccessToken()}` }, credentials: "include" })
+    fetch(`${API}/agents`, { credentials: "include" })
       .then(async (r) => {
         const data = await r.json().catch(() => null);
         if (Array.isArray(data)) return data;
@@ -54,9 +54,13 @@ export default function AIChat() {
     setMessages((m) => [...m, { role: "assistant", content: "" }]);
 
     try {
+      const csrf = getCsrfToken();
       const res = await fetch(`${API}/chat/stream`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getAccessToken()}` },
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrf ? { "X-CSRF-Token": csrf } : {}),
+        },
         credentials: "include",
         body: JSON.stringify({ session_id: sessionId, agent_id: agentId, message: content }),
       });

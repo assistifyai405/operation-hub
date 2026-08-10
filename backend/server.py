@@ -130,6 +130,31 @@ def _set_access_cookie(response: Response, access: str):
     )
 
 
+def _set_csrf_cookie(response: Response, token: str | None = None):
+    from csrf import CSRF_COOKIE, csrf_cookie_flags, new_csrf_token
+    value = token or new_csrf_token()
+    # Readable by SPA (not httpOnly); path=/ so JS can always read it
+    response.set_cookie(key=CSRF_COOKIE, value=value, max_age=A.REFRESH_TOKEN_DAYS * 86400, path="/", **csrf_cookie_flags())
+    return value
+
+
+def _clear_auth_cookies(response: Response):
+    flags = _cookie_flags()
+    response.delete_cookie(REFRESH_COOKIE, path=COOKIE_PATH, secure=flags["secure"], samesite=flags["samesite"])
+    response.delete_cookie("access_token", path="/api", secure=flags["secure"], samesite=flags["samesite"])
+    from csrf import CSRF_COOKIE, csrf_cookie_flags
+    cf = csrf_cookie_flags()
+    response.delete_cookie(CSRF_COOKIE, path="/", secure=cf["secure"], samesite=cf["samesite"])
+
+
+def _issue_session_cookies(response: Response, access: str, refresh: str, remember: bool):
+    """Set access + refresh + CSRF cookies. Never expose JWTs to JS."""
+    _set_refresh_cookie(response, refresh, remember)
+    _set_access_cookie(response, access)
+    _set_csrf_cookie(response)
+
+
+
 async def _create_session(user: dict, request: Request, remember: bool):
     jti = A.gen_id()
     now = now_iso()
@@ -228,9 +253,8 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     await email_service.send_verification_email(email, verify_link, brand)
 
     access, refresh = await _create_session(user, request, True)
-    _set_refresh_cookie(response, refresh, True)
-    _set_access_cookie(response, access)
-    out = {"user": public_user(user), "accessToken": access, "joinedViaInvitation": bool(invite)}
+    _issue_session_cookies(response, access, refresh, True)
+    out = {"user": public_user(user), "joinedViaInvitation": bool(invite), "auth": "cookie"}
     if not email_service.is_enabled():
         # Dev-mode only: expose the link so the flow is testable without a mail provider.
         logger.info(f"[EMAIL:VERIFY:DEV] {email} -> {verify_link}")
@@ -389,9 +413,8 @@ async def create_demo(request: Request, response: Response):
     await db.users.insert_one(user)
     await _seed_demo_data(org_id)
     access, refresh = await _create_session(user, request, False)
-    _set_refresh_cookie(response, refresh, False)
-    _set_access_cookie(response, access)
-    return {"user": public_user(user), "accessToken": access, "isDemo": True}
+    _issue_session_cookies(response, access, refresh, False)
+    return {"user": public_user(user), "isDemo": True, "auth": "cookie"}
 
 
 @api_router.get("/config/public")
@@ -434,9 +457,8 @@ async def login(payload: LoginRequest, request: Request, response: Response):
     user["lastLogin"] = now_iso()
 
     access, refresh = await _create_session(user, request, payload.remember)
-    _set_refresh_cookie(response, refresh, payload.remember)
-    _set_access_cookie(response, access)
-    return {"user": public_user(user), "accessToken": access}
+    _issue_session_cookies(response, access, refresh, payload.remember)
+    return {"user": public_user(user), "auth": "cookie"}
 
 
 @api_router.post("/auth/refresh")
@@ -464,9 +486,8 @@ async def refresh_token(request: Request, response: Response):
     await db.sessions.update_one({"jti": payload["jti"]}, {"$set": {"jti": new_jti, "lastUsedAt": now_iso()}})
     access = A.create_access_token(user["id"], user["email"], user["organizationId"])
     new_refresh = A.create_refresh_token(user["id"], new_jti, remember)
-    _set_refresh_cookie(response, new_refresh, remember)
-    _set_access_cookie(response, access)
-    return {"user": public_user(user), "accessToken": access}
+    _issue_session_cookies(response, access, new_refresh, remember)
+    return {"user": public_user(user), "auth": "cookie"}
 
 
 @api_router.post("/auth/logout")
@@ -478,8 +499,7 @@ async def logout(request: Request, response: Response):
             await db.sessions.update_one({"jti": payload.get("jti")}, {"$set": {"revoked": True}})
         except Exception:
             pass
-    response.delete_cookie(REFRESH_COOKIE, path=COOKIE_PATH)
-    response.delete_cookie("access_token", path="/api")
+    _clear_auth_cookies(response)
     return {"ok": True}
 
 
@@ -1434,8 +1454,9 @@ async def serve_branding_image(asset_id: str, request: Request):
 
 
 @api_router.post("/auth/logout-all")
-async def logout_all(user: dict = Depends(current_user)):
+async def logout_all(response: Response, user: dict = Depends(current_user)):
     res = await db.sessions.update_many({"userId": user["id"], "revoked": False}, {"$set": {"revoked": True}})
+    _clear_auth_cookies(response)
     return {"ok": True, "revoked": res.modified_count}
 
 
@@ -2173,6 +2194,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from csrf import CSRFMiddleware
+app.add_middleware(CSRFMiddleware)
 
 # Optional host allow-list (set TRUSTED_HOSTS in production behind a known domain)
 try:

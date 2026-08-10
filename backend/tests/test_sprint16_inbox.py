@@ -21,6 +21,7 @@ from inbox.sanitize import sanitize_html  # noqa: E402
 from integrations.base import PROVIDER_CATALOG  # noqa: E402
 from integrations.crypto import encrypt_credentials  # noqa: E402
 from integrations.providers import GOOGLE_SCOPES  # noqa: E402
+from conftest import auth_json
 
 
 @pytest.fixture
@@ -48,7 +49,7 @@ def _register(client, email=None):
         "password": "Password123!", "company": "Inbox Co",
     })
     assert r.status_code == 200, r.text
-    return r.json(), email
+    return auth_json(client, r), email
 
 
 def _auth(token):

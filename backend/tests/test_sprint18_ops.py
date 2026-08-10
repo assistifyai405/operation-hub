@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from conftest import auth_json
 
 BACKEND = Path(__file__).resolve().parents[1]
 if str(BACKEND) not in sys.path:
@@ -31,7 +32,7 @@ def _register(client):
         "password": "Password123!", "company": "Ops Co",
     })
     assert r.status_code == 200, r.text
-    return r.json()
+    return auth_json(client, r)
 
 
 def _auth(token):

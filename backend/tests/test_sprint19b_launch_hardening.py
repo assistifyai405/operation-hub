@@ -8,6 +8,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+from conftest import auth_json
 
 BACKEND = Path(__file__).resolve().parents[1]
 if str(BACKEND) not in sys.path:
@@ -39,7 +40,7 @@ def _register(client, company="Launch Co"):
         },
     )
     assert r.status_code == 200, r.text
-    return r.json()
+    return auth_json(client, r)
 
 
 def _auth(token):
@@ -85,10 +86,15 @@ def test_production_rejects_weak_demo_password():
         "AI_PROVIDER": "openai",
         "OPENAI_API_KEY": "sk-test",
         "STORAGE_PROVIDER": "local",
+        "INTEGRATION_ENCRYPTION_KEY": "x" * 44,
+        "ALLOW_DEMO_IN_PRODUCTION": "true",
         "ENABLE_DEMO_SEED": "true",
         "DEMO_PASSWORD": "change-me-demo-password",
         "EMAIL_PROVIDER": "console",
         "EMAIL_SENDING_ENABLED": "false",
+        "WORKER_ENABLED": "false",
+        "SCHEDULER_ENABLED": "false",
+        "REQUIRE_REDIS": "false",
     }
     old = {k: os.environ.get(k) for k in env}
     try:
@@ -216,4 +222,4 @@ def test_smoke_core_workspace_flows(client):
         "email": data["user"]["email"], "password": "Password123!", "remember": True,
     })
     assert login.status_code == 200, login.text
-    assert login.json().get("accessToken")
+    assert auth_json(client, login).get("accessToken")

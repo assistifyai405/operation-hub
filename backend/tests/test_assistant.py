@@ -11,6 +11,7 @@ import os
 import time
 import pytest
 import requests
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/") or \
            open("/app/frontend/.env").read().split("REACT_APP_BACKEND_URL=")[1].strip().splitlines()[0]
@@ -22,7 +23,7 @@ def _demo():
     s.headers.update({"Content-Type": "application/json"})
     r = s.post(f"{BASE_URL}/api/auth/demo", timeout=30)
     assert r.status_code == 200, r.text
-    tok = r.json()["accessToken"]
+    tok = auth_json(None, r).get("accessToken")
     s.headers.update({"Authorization": f"Bearer {tok}"})
     return s
 

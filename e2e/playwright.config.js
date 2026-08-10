@@ -1,7 +1,10 @@
 // @ts-check
 const { defineConfig, devices } = require("@playwright/test");
 
-const baseURL = process.env.E2E_BASE_URL || "http://127.0.0.1:3000";
+const baseURL =
+  process.env.STAGING_BASE_URL ||
+  process.env.E2E_BASE_URL ||
+  "http://127.0.0.1:3000";
 
 module.exports = defineConfig({
   testDir: "./tests",

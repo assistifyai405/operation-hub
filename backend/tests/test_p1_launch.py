@@ -11,6 +11,7 @@ import time
 import uuid
 import pytest
 import requests
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://operations-hub-75.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
@@ -24,7 +25,7 @@ SEED_PASSWORD = "Assistify2026!"
 def seed_token():
     r = requests.post(f"{API}/auth/login", json={"email": SEED_EMAIL, "password": SEED_PASSWORD, "remember": True})
     assert r.status_code == 200, f"seed login failed: {r.status_code} {r.text}"
-    return r.json()["accessToken"]
+    return auth_json(None, r).get("accessToken")
 
 
 @pytest.fixture(scope="module")
@@ -40,7 +41,7 @@ def unverified_user():
     if r.status_code == 429:
         pytest.skip("Register rate-limited (10/hr/IP)")
     assert r.status_code in (200, 201), f"register failed: {r.status_code} {r.text}"
-    data = r.json()
+    data = auth_json(None, r)
     token = data.get("accessToken")
     assert token
     user = data.get("user", {})

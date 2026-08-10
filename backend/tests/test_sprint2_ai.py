@@ -5,6 +5,7 @@ import os
 import time
 import pytest
 import requests
+from conftest import auth_json
 
 def _load_env():
     p = "/app/frontend/.env"
@@ -26,7 +27,7 @@ def auth():
     s = requests.Session()
     r = s.post(f"{API}/auth/login", json=CREDS, timeout=30)
     assert r.status_code == 200, f"login failed: {r.status_code} {r.text}"
-    token = r.json()["accessToken"]
+    token = auth_json(None, r).get("accessToken")
     s.headers.update({"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
     return s
 

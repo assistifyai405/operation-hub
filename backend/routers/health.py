@@ -164,3 +164,115 @@ async def health_details(user: dict = Depends(current_user)):
         {"status": "error"}
     )
     return base
+
+
+@router.get("/alerts")
+async def health_alerts():
+    """Lightweight alert hooks for staging/production monitors (no secrets).
+
+    Scrape this endpoint (or `/api/health/ready`) from uptime tooling.
+    Returns HTTP 503 when any critical alert is active (ready failure).
+    """
+    from fastapi.responses import JSONResponse
+    from config import get_settings
+    from redis_client import ping_redis, redis_required_for_production
+    from jobs import failed_job_count
+    from core import db
+
+    s = get_settings()
+    alerts = []
+    critical = False
+    failed_checks = []
+
+    # Mongo
+    try:
+        await db.command("ping")
+        mongo_ok = True
+    except Exception:
+        mongo_ok = False
+        failed_checks.append("mongodb")
+
+    rp = ping_redis()
+    redis_required = redis_required_for_production() or bool(getattr(s, "require_redis", False))
+    if redis_required and not rp.get("ok"):
+        failed_checks.append("redis")
+
+    if failed_checks:
+        critical = True
+        alerts.append({
+            "severity": "critical",
+            "code": "ready_failed",
+            "message": "Readiness dependencies unavailable",
+            "failedChecks": failed_checks,
+        })
+
+    if getattr(s, "worker_enabled", False) and not rp.get("ok"):
+        critical = True
+        alerts.append({
+            "severity": "critical",
+            "code": "worker_unavailable",
+            "message": "Worker enabled but Redis unreachable (jobs cannot drain)",
+        })
+
+    if getattr(s, "scheduler_enabled", False) and not rp.get("ok"):
+        critical = True
+        alerts.append({
+            "severity": "critical",
+            "code": "scheduler_unavailable",
+            "message": "Scheduler enabled but Redis unreachable",
+        })
+
+    failed_depth = 0
+    try:
+        failed_depth = int(await failed_job_count() or 0)
+    except Exception:
+        failed_depth = 0
+    if failed_depth >= 5:
+        alerts.append({
+            "severity": "warning",
+            "code": "failed_job_depth",
+            "message": f"Failed job queue depth is {failed_depth}",
+            "count": failed_depth,
+        })
+
+    email_failures = 0
+    try:
+        from datetime import datetime, timezone, timedelta
+        since = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+        email_failures = await db.outbound_emails.count_documents(
+            {"status": "failed", "failedAt": {"$gte": since}}
+        )
+    except Exception:
+        email_failures = 0
+    if email_failures >= 3:
+        alerts.append({
+            "severity": "warning",
+            "code": "email_send_failures",
+            "message": f"{email_failures} outbound email failures in the last hour",
+            "count": email_failures,
+        })
+
+    unhealthy = 0
+    try:
+        unhealthy = await db.integrations.count_documents({"status": "error"})
+    except Exception:
+        unhealthy = 0
+    if unhealthy >= 1:
+        alerts.append({
+            "severity": "warning",
+            "code": "integration_refresh_failures",
+            "message": f"{unhealthy} integration(s) in error / needs reauth",
+            "count": unhealthy,
+        })
+
+    body = {
+        "ok": not critical,
+        "critical": critical,
+        "alertCount": len(alerts),
+        "alerts": alerts,
+        "release": _release(),
+        "environment": s.environment,
+    }
+    if critical:
+        return JSONResponse(status_code=503, content=body)
+    return body

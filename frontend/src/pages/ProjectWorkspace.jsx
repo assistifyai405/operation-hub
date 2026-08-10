@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { projectsApi, tasksApi, documentsApi, proposalsApi, activitiesApi, getAccessToken } from "@/lib/api";
+import { projectsApi, tasksApi, documentsApi, proposalsApi, activitiesApi, getCsrfToken } from "@/lib/api";
 import EmptyState from "@/components/EmptyState";
 import AIPlanner from "@/components/workspace/AIPlanner";
 import ProposalWriter from "@/components/workspace/ProposalWriter";
@@ -103,7 +103,7 @@ function ProjectChat({ projectId, projectName }) {
   const endRef = useRef(null);
 
   useEffect(() => {
-    fetch(`${API}/chat/history/${sessionId}`, { headers: { Authorization: `Bearer ${getAccessToken()}` }, credentials: "include" }).then((r) => r.json())
+    fetch(`${API}/chat/history/${sessionId}`, { credentials: "include" }).then((r) => r.json())
       .then((h) => setMessages(Array.isArray(h) ? h.map((m) => ({ role: m.role, content: m.content })) : []))
       .catch(() => {}).finally(() => setLoaded(true));
   }, [sessionId]);
@@ -117,8 +117,13 @@ function ProjectChat({ projectId, projectName }) {
     setMessages((m) => [...m, { role: "user", content }, { role: "assistant", content: "" }]);
     setStreaming(true);
     try {
+      const csrf = getCsrfToken();
       const res = await fetch(`${API}/chat/stream`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${getAccessToken()}` },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrf ? { "X-CSRF-Token": csrf } : {}),
+        },
         credentials: "include",
         body: JSON.stringify({ session_id: sessionId, agent_id: "copilot", message: `Project context: "${projectName}". ${content}` }),
       });

@@ -3,6 +3,7 @@ import os
 import time
 import pytest
 import requests
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://operations-hub-75.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
@@ -14,7 +15,7 @@ STAGES = ["New", "Qualified", "Meeting Scheduled", "Proposal Sent", "Negotiating
 def token():
     r = requests.post(f"{API}/auth/demo", timeout=30)
     assert r.status_code == 200, f"demo login failed: {r.status_code} {r.text[:200]}"
-    tok = r.json().get("accessToken")
+    tok = auth_json(client, r).get("accessToken")
     assert tok
     return tok
 
@@ -199,7 +200,7 @@ class TestOrgIsolation:
             "password": "IsoTest2026!"
         }, timeout=30)
         assert r.status_code in (200, 201), r.text
-        tok = r.json().get("accessToken")
+        tok = auth_json(client, r).get("accessToken")
         assert tok
         h = {"Authorization": f"Bearer {tok}"}
         # Fresh org should see 0 leads

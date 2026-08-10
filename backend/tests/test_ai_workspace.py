@@ -3,6 +3,7 @@ import os
 import pytest
 import requests
 from pathlib import Path
+from conftest import auth_json
 
 def _load_url():
     v = os.environ.get("REACT_APP_BACKEND_URL")
@@ -22,7 +23,7 @@ def _demo_session():
     s.headers.update({"Content-Type": "application/json"})
     r = s.post(f"{BASE_URL}/api/auth/demo", timeout=30)
     assert r.status_code == 200, f"demo provisioning failed: {r.status_code} {r.text[:200]}"
-    tok = r.json().get("accessToken")
+    tok = auth_json(client, r).get("accessToken")
     assert tok, f"missing accessToken in demo response: {r.json()}"
     s.headers.update({"Authorization": f"Bearer {tok}"})
     return s

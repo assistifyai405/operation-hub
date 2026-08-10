@@ -11,6 +11,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+from conftest import auth_json
 
 BACKEND = Path(__file__).resolve().parents[1]
 if str(BACKEND) not in sys.path:
@@ -29,8 +30,8 @@ def _register(client, email=None):
         "password": "Password123!", "company": "Test Co",
     })
     assert r.status_code == 200, r.text
-    data = r.json()
-    assert data.get("accessToken")
+    data = auth_json(client, r)
+    assert data.get("auth") == "cookie" or client.cookies.get("access_token")
     return data
 
 

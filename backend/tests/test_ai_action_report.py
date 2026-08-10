@@ -3,6 +3,7 @@ by all 4 generation endpoints (proposal, contract, invoice, plan)."""
 import os
 import pytest
 import requests
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL").rstrip("/")
 EMAIL = "jordan@assistify.io"
@@ -20,7 +21,7 @@ def client():
     s = requests.Session()
     r = s.post(f"{BASE_URL}/api/auth/login", json={"email": EMAIL, "password": PWD, "remember": True})
     assert r.status_code == 200, f"login failed: {r.status_code} {r.text}"
-    token = r.json()["accessToken"]
+    token = auth_json(None, r).get("accessToken")
     s.headers.update({"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
     return s
 

@@ -12,6 +12,7 @@ import pytest
 import requests
 
 import email_service
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
@@ -162,6 +163,6 @@ class TestAuthDevModeFallback:
         lr = requests.post(f"{BASE_URL}/api/auth/login",
                            json={"email": email, "password": "Pass1234!"}, timeout=15)
         assert lr.status_code == 200
-        tok = lr.json()["accessToken"]
+        tok = auth_json(client, lr).get("accessToken")
         me = requests.get(f"{BASE_URL}/api/auth/me", headers={"Authorization": f"Bearer {tok}"}, timeout=15)
         assert me.status_code == 200 and me.json()["email"] == email

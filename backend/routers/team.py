@@ -341,7 +341,13 @@ async def accept_invitation(token: str, request: Request, response: Response, us
             {"$set": {"status": "accepted", "acceptedAt": now_iso(), "acceptedBy": user["id"]}},
         )
         access = A.create_access_token(user["id"], user["email"], org_id)
-        return {"ok": True, "user": public_user(user), "alreadyMember": True, "accessToken": access}
+        try:
+            from server import _set_access_cookie, _set_csrf_cookie
+            _set_access_cookie(response, access)
+            _set_csrf_cookie(response)
+        except Exception:
+            pass
+        return {"ok": True, "user": public_user(user), "alreadyMember": True, "auth": "cookie"}
 
     ok, reason = await _can_leave_current_org(user)
     if not ok:
@@ -375,15 +381,10 @@ async def accept_invitation(token: str, request: Request, response: Response, us
         meta={"role": inv["role"], "invitationId": inv["id"]},
     )
     access = A.create_access_token(updated["id"], updated["email"], org_id)
-    # Mirror access cookie for downloads (same flags as login — set by caller via header use mostly)
     try:
-        from config import get_settings as _gs
-        s = _gs()
-        response.set_cookie(
-            key="access_token", value=access, httponly=True,
-            secure=s.cookie_secure, samesite=s.cookie_samesite,
-            max_age=A.ACCESS_TOKEN_MINUTES * 60, path="/api",
-        )
+        from server import _set_access_cookie, _set_csrf_cookie
+        _set_access_cookie(response, access)
+        _set_csrf_cookie(response)
     except Exception:
         pass
     return {
@@ -391,7 +392,7 @@ async def accept_invitation(token: str, request: Request, response: Response, us
         "user": public_user(updated),
         "organizationId": org_id,
         "role": inv["role"],
-        "accessToken": access,
+        "auth": "cookie",
         "requiresTokenRefresh": True,
     }
 

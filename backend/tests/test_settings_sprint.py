@@ -3,6 +3,7 @@ import os
 import uuid
 import requests
 import pytest
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://operations-hub-75.preview.emergentagent.com").rstrip("/")
 DEMO_EMAIL = "jordan@assistify.io"
@@ -12,7 +13,7 @@ DEMO_PASSWORD = "Assistify2026!"
 def _login(email, password):
     r = requests.post(f"{BASE_URL}/api/auth/login", json={"email": email, "password": password, "remember": False})
     assert r.status_code == 200, r.text
-    return r.json()["accessToken"]
+    return auth_json(None, r).get("accessToken")
 
 
 def _register():
@@ -22,7 +23,7 @@ def _register():
         "password": "TestPass123!", "company": f"SetOrg-{uuid.uuid4().hex[:6]}"
     })
     assert r.status_code in (200, 201), r.text
-    return email, r.json()["accessToken"]
+    return email, auth_json(None, r).get("accessToken")
 
 
 @pytest.fixture(scope="module")

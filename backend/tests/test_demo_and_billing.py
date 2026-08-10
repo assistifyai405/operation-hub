@@ -3,6 +3,7 @@ import os
 import re
 import pytest
 import requests
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://operations-hub-75.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
@@ -14,7 +15,7 @@ def demo1():
     if r.status_code == 429:
         pytest.skip("Rate limited — expected in-memory 10/hr limit")
     assert r.status_code == 200, r.text
-    return r.json()
+    return auth_json(None, r)
 
 
 @pytest.fixture(scope="module")
@@ -23,7 +24,7 @@ def demo2():
     if r.status_code == 429:
         pytest.skip("Rate limited")
     assert r.status_code == 200, r.text
-    return r.json()
+    return auth_json(None, r)
 
 
 def _auth(token):
@@ -101,7 +102,7 @@ class TestDemoSeededWorkspace:
     def test_tasks_seeded(self, demo1):
         r = requests.get(f"{API}/tasks", headers=_auth(demo1["accessToken"]), timeout=30)
         assert r.status_code == 200
-        data = r.json()
+        data = auth_json(None, r)
         if isinstance(data, dict) and "tasks" in data:
             data = data["tasks"]
         assert len(data) == 3, f"expected 3 tasks got {len(data)}"
@@ -123,7 +124,7 @@ class TestAuthRegression:
             "remember": True,
         }, timeout=30)
         assert r.status_code == 200, r.text
-        data = r.json()
+        data = auth_json(None, r)
         assert "accessToken" in data
         token = data["accessToken"]
 

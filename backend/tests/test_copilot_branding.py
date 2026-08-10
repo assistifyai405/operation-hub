@@ -16,6 +16,7 @@ import time
 import zipfile
 import pytest
 import requests
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL").rstrip("/")
 DEMO_EMAIL = "jordan@assistify.io"
@@ -30,7 +31,7 @@ def demo_client():
     r = s.post(f"{BASE_URL}/api/auth/login",
                json={"email": DEMO_EMAIL, "password": DEMO_PASSWORD, "remember": False}, timeout=20)
     assert r.status_code == 200, f"login failed: {r.status_code} {r.text[:200]}"
-    token = r.json().get("accessToken")
+    token = auth_json(client, r).get("accessToken")
     assert token
     s.headers.update({"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
     return s
@@ -44,7 +45,7 @@ def fresh_client():
                json={"firstName": "Iter", "lastName": "Sixteen", "email": email, "password": "Pass1234!",
                      "company": "IsoOrg"}, timeout=20)
     assert r.status_code in (200, 201), r.text
-    token = r.json().get("accessToken")
+    token = auth_json(client, r).get("accessToken")
     s.headers.update({"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
     return s
 

@@ -1,0 +1,137 @@
+# Staging-oriented compose (HTTPS terminated at reverse proxy / load balancer).
+# Prefer managed MongoDB + Redis. Never commit real secrets — inject via env.
+#
+# Typical topology:
+#   browser → https://staging.example.com (frontend)
+#          → https://api.staging.example.com (backend)  with CORS + Secure cookies
+#
+# Prerequisites: fill env from backend/.env.staging.example
+
+services:
+  backend:
+    image: ghcr.io/example/assistify-backend:${RELEASE_VERSION:-staging}
+    environment:
+      ENVIRONMENT: staging
+      MONGO_URL: ${MONGO_URL}
+      DB_NAME: ${DB_NAME:-assistify_staging}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      FRONTEND_URL: ${FRONTEND_URL}
+      APP_URL: ${APP_URL}
+      API_URL: ${API_URL}
+      REDIS_URL: ${REDIS_URL}
+      WORKER_ENABLED: "true"
+      SCHEDULER_ENABLED: "true"
+      REQUIRE_REDIS: "true"
+      ENABLE_DEMO_SEED: "false"
+      ENABLE_DEMO_LOGIN: "false"
+      ALLOW_DEMO_IN_PRODUCTION: "false"
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-resend}
+      EMAIL_SENDING_ENABLED: ${EMAIL_SENDING_ENABLED:-false}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      FROM_EMAIL: ${FROM_EMAIL:-}
+      FROM_NAME: ${FROM_NAME:-Assistify OS Staging}
+      INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+      UPLOAD_DIR: /data/uploads
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-}
+      RELEASE_VERSION: ${RELEASE_VERSION:-staging}
+      JSON_LOGS: "true"
+      LOG_LEVEL: INFO
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
+      MICROSOFT_REDIRECT_URI: ${MICROSOFT_REDIRECT_URI:-}
+      SLACK_CLIENT_ID: ${SLACK_CLIENT_ID:-}
+      SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET:-}
+      SLACK_REDIRECT_URI: ${SLACK_REDIRECT_URI:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    volumes:
+      - staging_uploads:/data/uploads
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/health/ready"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  worker:
+    image: ghcr.io/example/assistify-backend:${RELEASE_VERSION:-staging}
+    command: ["python", "-m", "jobs.worker"]
+    environment:
+      ENVIRONMENT: staging
+      MONGO_URL: ${MONGO_URL}
+      DB_NAME: ${DB_NAME:-assistify_staging}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: ${REDIS_URL}
+      WORKER_ENABLED: "true"
+      REQUIRE_REDIS: "true"
+      ENABLE_DEMO_SEED: "false"
+      ENABLE_DEMO_LOGIN: "false"
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-resend}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+      UPLOAD_DIR: /data/uploads
+      RELEASE_VERSION: ${RELEASE_VERSION:-staging}
+      JSON_LOGS: "true"
+    volumes:
+      - staging_uploads:/data/uploads
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  scheduler:
+    image: ghcr.io/example/assistify-backend:${RELEASE_VERSION:-staging}
+    command: ["python", "-m", "jobs.scheduler"]
+    environment:
+      ENVIRONMENT: staging
+      MONGO_URL: ${MONGO_URL}
+      DB_NAME: ${DB_NAME:-assistify_staging}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: ${REDIS_URL}
+      SCHEDULER_ENABLED: "true"
+      REQUIRE_REDIS: "true"
+      ENABLE_DEMO_SEED: "false"
+      ENABLE_DEMO_LOGIN: "false"
+      INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      RELEASE_VERSION: ${RELEASE_VERSION:-staging}
+      JSON_LOGS: "true"
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Optional local Redis for staging VMs (prefer managed Redis in shared staging)
+  # redis:
+  #   image: redis:7-alpine
+  #   command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+  #   restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/example/assistify-frontend:${RELEASE_VERSION:-staging}
+    # Image must be built with:
+    #   REACT_APP_BACKEND_URL=https://api.staging.example.com
+    #   REACT_APP_BILLING_ENABLED=false
+    #   REACT_APP_ENABLE_DEMO_LOGIN=false
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  staging_uploads:

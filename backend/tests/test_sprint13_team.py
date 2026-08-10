@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from conftest import auth_json
 
 BACKEND = Path(__file__).resolve().parents[1]
 if str(BACKEND) not in sys.path:
@@ -33,7 +34,7 @@ def _register(client, email=None, password="Password123!", **extra):
     }
     r = client.post("/api/auth/register", json=body)
     assert r.status_code == 200, r.text
-    data = r.json()
+    data = auth_json(client, r)
     return data, email
 
 
@@ -203,13 +204,14 @@ class TestInvitationLifecycle:
         # Invitee is sole owner of their org — can leave
         r = client.post(f"/api/team/invitations/{raw}/accept", headers=_auth(invitee["accessToken"]))
         assert r.status_code == 200, r.text
-        data = r.json()
+        data = auth_json(client, r)
         assert data["user"]["organizationId"] == owner["user"]["organizationId"]
         assert data["user"]["role"] == "admin"
-        assert data.get("accessToken")
+        assert data.get("auth") == "cookie" or client.cookies.get("access_token")
 
         # Replay
-        r2 = client.post(f"/api/team/invitations/{raw}/accept", headers=_auth(data["accessToken"]))
+        tok = auth_json(client, r).get("accessToken") or data.get("accessToken")
+        r2 = client.post(f"/api/team/invitations/{raw}/accept", headers=_auth(tok))
         assert r2.status_code in (409, 410)
 
     def test_expired_invitation(self, client):

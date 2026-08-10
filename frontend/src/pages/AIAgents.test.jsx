@@ -16,10 +16,11 @@ describe("/ai-agents route", () => {
 });
 
 describe("AIAgents page crash guards", () => {
-  test("authenticated fetch includes credentials and bearer token", () => {
-    expect(pageSrc).toMatch(/getAccessToken/);
+  test("authenticated fetch uses cookie session (credentials include, no Bearer)", () => {
     expect(pageSrc).toMatch(/credentials:\s*\"include\"/);
-    expect(pageSrc).toMatch(/Authorization:\s*`Bearer \$\{getAccessToken\(\)\}`/);
+    expect(pageSrc).not.toMatch(/getAccessToken/);
+    expect(pageSrc).not.toMatch(/Authorization:\s*`Bearer/);
+    expect(pageSrc).not.toMatch(/assistify_token/);
   });
 
   test("guards non-array API payloads before map", () => {

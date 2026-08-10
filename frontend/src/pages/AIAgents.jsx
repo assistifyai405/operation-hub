@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bot, MessageSquare, Zap, Plus } from "lucide-react";
-import { getAccessToken } from "@/lib/api";
-
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const accentBg = {
@@ -62,7 +60,6 @@ export default function AIAgents() {
       setError(null);
       try {
         const res = await fetch(`${API}/agents`, {
-          headers: { Authorization: `Bearer ${getAccessToken()}` },
           credentials: "include",
         });
         const data = await res.json().catch(() => null);

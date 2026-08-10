@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from conftest import auth_json
 
 BACKEND = Path(__file__).resolve().parents[1]
 if str(BACKEND) not in sys.path:
@@ -29,7 +30,7 @@ def _register(client, email=None):
         "password": "Password123!", "company": "Integrations Co",
     })
     assert r.status_code == 200, r.text
-    return r.json(), email
+    return auth_json(client, r), email
 
 
 def _auth(token):

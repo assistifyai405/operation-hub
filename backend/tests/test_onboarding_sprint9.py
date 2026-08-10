@@ -9,6 +9,7 @@ import os
 import uuid
 import requests
 import pytest
+from conftest import auth_json
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL').rstrip('/')
 DEMO_EMAIL = "jordan@assistify.io"
@@ -22,14 +23,14 @@ def _register():
         "email": email, "password": "NewPass123!", "company": "OnbCo9"
     }, timeout=30)
     assert r.status_code == 200, r.text
-    d = r.json()
+    d = auth_json(None, r)
     return email, d["accessToken"], d.get("user", {})
 
 
 def _demo_session():
     r = requests.post(f"{BASE_URL}/api/auth/demo", timeout=30)
     assert r.status_code == 200, r.text
-    d = r.json()
+    d = auth_json(None, r)
     return d["accessToken"], d["user"]
 
 

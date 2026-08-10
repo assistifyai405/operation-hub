@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, Loader2, ShieldAlert, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { teamApi, setAccessToken } from "@/lib/api";
+import { teamApi } from "@/lib/api";
 import { AuthShell } from "@/components/AuthShell";
 
 export default function InviteAccept() {
@@ -44,7 +44,6 @@ export default function InviteAccept() {
     setAccepting(true);
     try {
       const res = await teamApi.acceptInvitation(token);
-      if (res.accessToken) setAccessToken(res.accessToken, true);
       if (res.user) setUser(res.user);
       sessionStorage.removeItem("pending_invite_token");
       toast.success(`Joined ${preview?.organization?.name || "the team"}`);

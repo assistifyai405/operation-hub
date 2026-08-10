@@ -3,6 +3,7 @@ import os
 import time
 import pytest
 import requests
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://operations-hub-75.preview.emergentagent.com").rstrip("/")
 
@@ -10,7 +11,7 @@ BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://operations-hub-75.pr
 def _new_demo():
     r = requests.post(f"{BASE_URL}/api/auth/demo", timeout=30)
     assert r.status_code == 200, r.text
-    data = r.json()
+    data = auth_json(client, r)
     return {"Authorization": f"Bearer {data['accessToken']}"}, data["user"]["organizationId"]
 
 

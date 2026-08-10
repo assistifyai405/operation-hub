@@ -7,6 +7,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+from conftest import auth_json
 
 BACKEND = Path(__file__).resolve().parents[1]
 if str(BACKEND) not in sys.path:
@@ -38,7 +39,7 @@ def _register(client):
         },
     )
     assert r.status_code == 200, r.text
-    return r.json()
+    return auth_json(client, r)
 
 
 def test_agents_requires_auth(client):

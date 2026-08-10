@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { authApi, setAccessToken, getAccessToken } from "@/lib/api";
+import { authApi, clearLegacyTokenStorage, bootstrapSession } from "@/lib/api";
 
 const AuthContext = createContext(null);
 
@@ -7,49 +7,56 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null); // null = checking, false = unauth, object = authed
 
   const bootstrap = useCallback(async () => {
+    clearLegacyTokenStorage();
     try {
-      if (getAccessToken()) {
-        const me = await authApi.me();
-        setUser(me);
+      const u = await bootstrapSession();
+      if (u) {
+        setUser(u);
         return;
       }
-    } catch (_) { /* fall through to refresh */ }
-    try {
-      const data = await authApi.refresh();
-      setAccessToken(data.accessToken, true);
-      setUser(data.user);
     } catch (_) {
-      setAccessToken(null);
+      /* fall through */
+    }
+    try {
+      const me = await authApi.me();
+      setUser(me);
+    } catch (_) {
       setUser(false);
     }
   }, []);
 
-  useEffect(() => { bootstrap(); }, [bootstrap]);
+  useEffect(() => {
+    bootstrap();
+  }, [bootstrap]);
 
   const login = useCallback(async (email, password, remember = true) => {
+    clearLegacyTokenStorage();
     const data = await authApi.login({ email, password, remember });
-    setAccessToken(data.accessToken, remember);
     setUser(data.user);
     return data;
   }, []);
 
   const register = useCallback(async (payload) => {
+    clearLegacyTokenStorage();
     const data = await authApi.register(payload);
-    setAccessToken(data.accessToken, true);
     setUser(data.user);
     return data;
   }, []);
 
   const demo = useCallback(async () => {
+    clearLegacyTokenStorage();
     const data = await authApi.demo();
-    setAccessToken(data.accessToken, true);
     setUser(data.user);
     return data;
   }, []);
 
   const logout = useCallback(async () => {
-    try { await authApi.logout(); } catch (_) {}
-    setAccessToken(null);
+    try {
+      await authApi.logout();
+    } catch (_) {
+      /* ignore */
+    }
+    clearLegacyTokenStorage();
     setUser(false);
   }, []);
 

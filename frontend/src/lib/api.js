@@ -1,20 +1,30 @@
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-// ---- access token store ----
-let accessToken = localStorage.getItem("assistify_token") || sessionStorage.getItem("assistify_token") || null;
+/** Readable CSRF cookie set by the API (not httpOnly). */
+export function getCsrfToken() {
+  if (typeof document === "undefined") return "";
+  const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
 
-export function setAccessToken(token, remember = true) {
-  accessToken = token;
-  if (token) {
-    (remember ? localStorage : sessionStorage).setItem("assistify_token", token);
-    (remember ? sessionStorage : localStorage).removeItem("assistify_token");
-  } else {
+/** Clear any legacy JWT keys left from older builds. */
+export function clearLegacyTokenStorage() {
+  try {
     localStorage.removeItem("assistify_token");
     sessionStorage.removeItem("assistify_token");
+  } catch {
+    /* ignore */
   }
 }
+
+/** @deprecated Cookie-only auth — always null. Kept so accidental imports do not break. */
 export function getAccessToken() {
-  return accessToken;
+  return null;
+}
+
+/** @deprecated No-op — tokens are httpOnly cookies. */
+export function setAccessToken() {
+  clearLegacyTokenStorage();
 }
 
 export function formatApiErrorDetail(detail) {
@@ -41,38 +51,55 @@ export function formatApiErrorDetail(detail) {
 let refreshing = null;
 async function tryRefresh() {
   if (!refreshing) {
-    refreshing = fetch(`${API}/auth/refresh`, { method: "POST", credentials: "include" })
+    refreshing = fetch(`${API}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    })
       .then(async (r) => {
         if (!r.ok) throw new Error("refresh failed");
-        const data = await r.json();
-        setAccessToken(data.accessToken, true);
-        return data.accessToken;
+        await r.json().catch(() => ({}));
+        return true;
       })
       .finally(() => { refreshing = null; });
   }
   return refreshing;
 }
 
-async function rawReq(path, options, token) {
+function csrfHeaders(method, extra = {}) {
+  const headers = { ...extra };
+  const upper = (method || "GET").toUpperCase();
+  if (!["GET", "HEAD", "OPTIONS"].includes(upper)) {
+    const csrf = getCsrfToken();
+    if (csrf) headers["X-CSRF-Token"] = csrf;
+  }
+  return headers;
+}
+
+async function rawReq(path, options = {}) {
+  const method = options.method || "GET";
+  const headers = csrfHeaders(method, {
+    ...(options.body !== undefined && !(options.body instanceof FormData)
+      ? { "Content-Type": "application/json" }
+      : {}),
+    ...(options.headers || {}),
+  });
   return fetch(`${API}${path}`, {
     credentials: "include",
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers || {}),
-    },
+    headers,
   });
 }
 
 async function req(path, options = {}) {
-  let res = await rawReq(path, options, accessToken);
+  let res = await rawReq(path, options);
   if (res.status === 401 && !path.startsWith("/auth/")) {
     try {
-      const newToken = await tryRefresh();
-      res = await rawReq(path, options, newToken);
+      await tryRefresh();
+      res = await rawReq(path, options);
     } catch {
-      setAccessToken(null);
+      clearLegacyTokenStorage();
       if (typeof window !== "undefined" && window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
@@ -85,6 +112,62 @@ async function req(path, options = {}) {
   }
   if (res.status === 204) return null;
   return res.json();
+}
+
+/** Cookie-session restore (no localStorage). */
+export async function bootstrapSession() {
+  try {
+    const res = await fetch(`${API}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => ({}));
+    return data.user || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Generic JSON helper used by AuthContext and ad-hoc callers. */
+export async function api(path, { method = "GET", body, headers = {}, skipAuth = false } = {}) {
+  const opts = { method, headers: { ...headers } };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  let res = await rawReq(path, opts);
+  if (res.status === 401 && !skipAuth && !path.startsWith("/auth/")) {
+    try {
+      await tryRefresh();
+      res = await rawReq(path, opts);
+    } catch {
+      clearLegacyTokenStorage();
+      throw new Error("Session expired");
+    }
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(formatApiErrorDetail(data.detail || data.error || data) || "Request failed");
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+export async function apiUpload(path, formData) {
+  let res = await rawReq(path, { method: "POST", body: formData, headers: {} });
+  if (res.status === 401) {
+    await tryRefresh();
+    res = await rawReq(path, { method: "POST", body: formData, headers: {} });
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(formatApiErrorDetail(data.detail) || "Upload failed");
+    err.status = res.status;
+    throw err;
+  }
+  return data;
 }
 
 export const authApi = {
@@ -136,13 +219,7 @@ export const documentsApi = {
     const fd = new FormData();
     fd.append("file", file);
     if (projectId) fd.append("project_id", projectId);
-    const res = await fetch(`${API}/documents/upload`, {
-      method: "POST", credentials: "include",
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: fd,
-    });
-    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(formatApiErrorDetail(e.detail) || "Upload failed"); }
-    return res.json();
+    return apiUpload("/documents/upload", fd);
   },
   fileUrl: (id) => `${API}/documents/${id}/file`,
 };
@@ -268,12 +345,7 @@ export const settingsApi = {
   uploadImage: async (file) => {
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch(`${API}/settings/upload-image`, {
-      method: "POST", credentials: "include",
-      headers: { Authorization: `Bearer ${accessToken}` }, body: fd,
-    });
-    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(formatApiErrorDetail(e.detail) || "Upload failed"); }
-    return res.json();
+    return apiUpload("/settings/upload-image", fd);
   },
 };
 

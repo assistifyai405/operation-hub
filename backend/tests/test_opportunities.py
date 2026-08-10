@@ -4,6 +4,7 @@ Covers: list, brief, health, dismiss (7d snooze), archive-project, org-isolation
 import os
 import pytest
 import requests
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://operations-hub-75.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
@@ -14,7 +15,7 @@ def _demo_client():
     s.headers.update({"Content-Type": "application/json"})
     r = s.post(f"{API}/auth/demo", json={})
     assert r.status_code == 200, f"demo login failed: {r.status_code} {r.text[:200]}"
-    tok = r.json()["accessToken"]
+    tok = auth_json(None, r).get("accessToken")
     s.headers.update({"Authorization": f"Bearer {tok}"})
     return s, r.json()
 

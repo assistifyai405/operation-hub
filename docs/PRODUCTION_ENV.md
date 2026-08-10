@@ -38,6 +38,7 @@ Never commit real secrets. Copy templates into private secret stores / `.env` fi
 | `SENTRY_DSN` / `RELEASE_VERSION` / `LOG_LEVEL` / `JSON_LOGS` | Ops |
 | `STORAGE_PROVIDER` / `UPLOAD_DIR` | File storage (`local` or `emergent`) |
 | `COOKIE_SECURE` / `COOKIE_SAMESITE` | Override cookie policy (defaults from URLs) |
+| (see `docs/AUTH_COOKIES.md`) | Browser sessions are cookie-only + CSRF double-submit |
 
 ## DISABLED BY DEFAULT (keep off for first launch)
 

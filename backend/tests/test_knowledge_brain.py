@@ -4,6 +4,7 @@ import time
 import uuid
 import pytest
 import requests
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 assert BASE_URL, "REACT_APP_BACKEND_URL must be set"
@@ -16,7 +17,7 @@ def demo_client():
     s = requests.Session()
     r = s.post(f"{API}/auth/demo", timeout=30)
     assert r.status_code == 200, f"Demo login failed: {r.status_code} {r.text}"
-    token = r.json()["accessToken"]
+    token = auth_json(None, r).get("accessToken")
     s.headers.update({"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
     return s
 
@@ -27,7 +28,9 @@ def demo_client_2():
     s = requests.Session()
     r = s.post(f"{API}/auth/demo", timeout=30)
     assert r.status_code == 200
-    s.headers.update({"Authorization": f"Bearer {r.json()['accessToken']}", "Content-Type": "application/json"})
+    tok = auth_json(s, r).get("accessToken")
+    assert tok, "demo login did not set access_token cookie"
+    s.headers.update({"Authorization": f"Bearer {tok}", "Content-Type": "application/json"})
     return s
 
 

@@ -16,6 +16,7 @@ import os
 import uuid
 import pytest
 import requests
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
@@ -36,7 +37,7 @@ DEMO_PASSWORD = "Assistify2026!"
 def _login(email, password):
     r = requests.post(f"{BASE_URL}/api/auth/login", json={"email": email, "password": password, "remember": True}, timeout=30)
     assert r.status_code == 200, f"login failed: {r.status_code} {r.text}"
-    return r.json()["accessToken"]
+    return auth_json(None, r).get("accessToken")
 
 
 @pytest.fixture(scope="module")
@@ -57,7 +58,7 @@ def fresh_user():
         "firstName": "Lib", "lastName": "Tester", "email": email, "password": pw, "company": "TestCo"
     }, timeout=30)
     assert r.status_code in (200, 201), f"register: {r.status_code} {r.text}"
-    token = r.json()["accessToken"]
+    token = auth_json(None, r).get("accessToken")
     return {"email": email, "token": token, "headers": {"Authorization": f"Bearer {token}"}}
 
 

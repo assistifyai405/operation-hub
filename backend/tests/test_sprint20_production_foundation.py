@@ -8,6 +8,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+from conftest import auth_json
 
 BACKEND = Path(__file__).resolve().parents[1]
 if str(BACKEND) not in sys.path:
@@ -145,7 +146,7 @@ def test_smoke_register_login_agents(client):
         "password": "Password123!", "company": "Prod Co",
     })
     assert reg.status_code == 200, reg.text
-    token = reg.json()["accessToken"]
+    token = auth_json(client, reg).get("accessToken")
     h = {"Authorization": f"Bearer {token}"}
     assert client.get("/api/auth/me", headers=h).status_code == 200
     agents = client.get("/api/agents", headers=h)

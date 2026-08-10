@@ -5,7 +5,7 @@ import {
   ChevronDown, CornerDownLeft, Loader2, CircleSlash,
 } from "lucide-react";
 import { toast } from "sonner";
-import { assistantApi, getAccessToken, memoryApi } from "@/lib/api";
+import { assistantApi, getCsrfToken, memoryApi } from "@/lib/api";
 import { useAssistant } from "@/context/AssistantContext";
 import { Markdown } from "@/components/assistant/Markdown";
 
@@ -118,9 +118,13 @@ export default function FloatingAssistant() {
     setMessages((ms) => [...ms, { id: aid, role: "assistant", content: "", typing: true }]);
     setBusy(true);
     try {
+      const csrf = getCsrfToken();
       const res = await fetch(assistantApi.streamUrl(), {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getAccessToken()}` },
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrf ? { "X-CSRF-Token": csrf } : {}),
+        },
         credentials: "include",
         body: JSON.stringify({ session_id: sessionRef.current, message, context: buildPayload() }),
       });

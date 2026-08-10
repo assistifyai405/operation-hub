@@ -18,10 +18,10 @@ export function AuthShell({ title, subtitle, children, footer }) {
           <p className="mt-4 text-base leading-relaxed text-zinc-400">
             Clients, projects, proposals, documents and a fleet of AI agents — unified in a single premium operating system.
           </p>
-          <div className="mt-8 flex items-center gap-6">
-            {["37 projects", "128 clients", "9.4k AI runs"].map((s) => (
-              <div key={s} className="text-sm font-medium text-zinc-300">{s}</div>
-            ))}
+          <div className="mt-8 flex flex-col gap-2 text-sm font-medium text-zinc-300">
+            <div>Clients, projects, and tasks in one workspace</div>
+            <div>AI Agents and Copilot for daily operations</div>
+            <div>Team settings, integrations, and document workflows</div>
           </div>
         </div>
         <p className="relative z-10 text-xs text-zinc-600">© 2026 Assistify OS. Crafted for entrepreneurs.</p>

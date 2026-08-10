@@ -66,3 +66,34 @@ def api_client():
     with TestClient(app) as client:
         yield client, upload_dir
     deps._rl_store.clear()
+
+
+def auth_json(client, response):
+    """Cookie-only auth: synthesize accessToken from httpOnly cookie for Bearer test headers.
+
+    Works with Starlette TestClient and requests.Session. `client` may be None
+    when the access_token is only on the response cookies.
+    """
+    data = response.json()
+    if not isinstance(data, dict):
+        return data
+    tok = None
+    if client is not None:
+        try:
+            tok = client.cookies.get("access_token")
+        except Exception:
+            tok = None
+    if not tok:
+        try:
+            tok = response.cookies.get("access_token")
+        except Exception:
+            tok = None
+    if tok:
+        data = {**data, "accessToken": tok}
+    return data
+
+
+def bearer_from_client(client) -> dict:
+    tok = client.cookies.get("access_token") if client is not None else None
+    return {"Authorization": f"Bearer {tok}"} if tok else {}
+

@@ -7,6 +7,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+from conftest import auth_json
 
 BACKEND = Path(__file__).resolve().parents[1]
 if str(BACKEND) not in sys.path:
@@ -30,7 +31,7 @@ def _register(client, email=None, password="Password123!", **extra):
     }
     r = client.post("/api/auth/register", json=body)
     assert r.status_code == 200, r.text
-    return r.json(), email
+    return auth_json(client, r), email
 
 
 def _auth(token):
@@ -48,7 +49,7 @@ def _enable_org_sending(client, token, **overrides):
     }
     r = client.patch("/api/settings/email", headers=_auth(token), json={"values": values})
     assert r.status_code == 200, r.text
-    return r.json()
+    return auth_json(client, r)
 
 
 @pytest.fixture

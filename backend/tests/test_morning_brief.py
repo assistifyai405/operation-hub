@@ -2,6 +2,7 @@
 import os
 import requests
 import pytest
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL").rstrip("/")
 
@@ -13,7 +14,9 @@ def demo_client():
     if r.status_code == 429:
         pytest.skip(f"Rate limited on demo: {r.text}")
     assert r.status_code == 200, f"demo failed: {r.status_code} {r.text}"
-    s.headers.update({"Authorization": f"Bearer {r.json()['accessToken']}"})
+    tok = auth_json(s, r).get("accessToken")
+    assert tok, "demo login did not set access_token cookie"
+    s.headers.update({"Authorization": f"Bearer {tok}"})
     return s
 
 
@@ -24,7 +27,9 @@ def demo_client_2():
     if r.status_code == 429:
         pytest.skip(f"Rate limited on demo: {r.text}")
     assert r.status_code == 200
-    s.headers.update({"Authorization": f"Bearer {r.json()['accessToken']}"})
+    tok = auth_json(s, r).get("accessToken")
+    assert tok, "demo login did not set access_token cookie"
+    s.headers.update({"Authorization": f"Bearer {tok}"})
     return s
 
 

@@ -3,6 +3,7 @@ import os
 import uuid
 import requests
 import pytest
+from conftest import auth_json
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL').rstrip('/')
 DEMO_EMAIL = "jordan@assistify.io"
@@ -16,7 +17,7 @@ def _register_new():
         "email": email, "password": "NewPass123!", "company": "OnbCo"
     }, timeout=30)
     assert r.status_code == 200, r.text
-    data = r.json()
+    data = auth_json(None, r)
     return email, data["accessToken"], data.get("user", {})
 
 
@@ -25,7 +26,7 @@ def _login(email, password):
         "email": email, "password": password, "remember": True
     }, timeout=30)
     assert r.status_code == 200, r.text
-    return r.json()["accessToken"], r.json().get("user", {})
+    return auth_json(None, r).get("accessToken"), r.json().get("user", {})
 
 
 def _auth(token):

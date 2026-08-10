@@ -2,6 +2,7 @@
 import os
 import requests
 import pytest
+from conftest import auth_json
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://operations-hub-75.preview.emergentagent.com").rstrip("/")
 
@@ -14,7 +15,7 @@ def demo_client():
     if r.status_code == 429:
         pytest.skip(f"Rate limited on demo: {r.text}")
     assert r.status_code == 200, f"demo failed: {r.status_code} {r.text}"
-    token = r.json().get("accessToken")
+    token = auth_json(client, r).get("accessToken")
     assert token
     s.headers.update({"Authorization": f"Bearer {token}"})
     return s
