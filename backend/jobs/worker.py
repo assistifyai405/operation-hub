@@ -42,8 +42,10 @@ async def main():
 
     logger.info("Worker started redis=%s", "ok" if get_redis() else "unavailable")
     idle = 0
+    from jobs.heartbeats import beat
     while True:
         try:
+            beat("worker", ttl_seconds=90)
             if not get_redis(force=idle > 20):
                 idle += 1
                 await asyncio.sleep(min(5, 0.5 + idle * 0.2))

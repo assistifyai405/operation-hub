@@ -110,8 +110,10 @@ async def main():
         logger.error("Redis unavailable and required — scheduler cannot start: %s", rp)
         raise SystemExit(1)
     logger.info("Scheduler started redis=%s", "ok" if rp.get("ok") else "unavailable")
+    from jobs.heartbeats import beat
     while True:
         try:
+            beat("scheduler", ttl_seconds=120)
             await _tick()
         except Exception:
             logger.exception("Scheduler tick failed")

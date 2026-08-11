@@ -133,3 +133,16 @@ async def handle_ai_summary(job: dict):
         {"$set": {"aiSummary": data, "aiSummaryUpdatedAt": now_iso(), "updatedAt": now_iso()}},
     )
     return {"threadId": thread_id, "ok": True}
+
+
+@register("test_noop")
+async def handle_test_noop(job: dict):
+    """Safe internal test job — no external I/O."""
+    payload = job.get("payload") or {}
+    return {"ok": True, "echo": str(payload.get("echo") or "")[:80]}
+
+
+@register("test_fail")
+async def handle_test_fail(job: dict):
+    """Safe internal test job that always fails (for retry/dead-letter QA)."""
+    raise RuntimeError("intentional test failure")

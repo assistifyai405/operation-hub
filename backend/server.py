@@ -951,7 +951,7 @@ async def create_project(payload: ProjectCreate, org: str = Depends(current_org)
     doc = obj.model_dump()
     doc["organizationId"] = org
     await db.projects.insert_one(doc)
-    await log_activity(obj.id, "project_created", f'Project "{obj.name}" was created')
+    await log_activity(obj.id, "project_created", f'Project "{obj.name}" was created', org=org)
     return obj
 
 
@@ -970,14 +970,15 @@ async def delete_project(project_id: str, org: str = Depends(current_org)):
     res = await db.projects.delete_one({"id": project_id, "organizationId": org})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
-    await db.tasks.update_many({"project_id": project_id}, {"$set": {"project_id": None}})
-    await db.documents.delete_many({"project_id": project_id})
-    await db.proposals.delete_many({"project_id": project_id})
-    await db.plans.delete_many({"project_id": project_id})
-    await db.ai_proposals.delete_many({"project_id": project_id})
-    await db.ai_contracts.delete_many({"project_id": project_id})
-    await db.ai_invoices.delete_many({"project_id": project_id})
-    await db.activities.delete_many({"project_id": project_id})
+    scoped = {"project_id": project_id, "organizationId": org}
+    await db.tasks.update_many(scoped, {"$set": {"project_id": None}})
+    await db.documents.delete_many(scoped)
+    await db.proposals.delete_many(scoped)
+    await db.plans.delete_many(scoped)
+    await db.ai_proposals.delete_many(scoped)
+    await db.ai_contracts.delete_many(scoped)
+    await db.ai_invoices.delete_many(scoped)
+    await db.activities.delete_many(scoped)
     return {"ok": True}
 
 
@@ -1008,13 +1009,15 @@ async def list_tasks(project_id: Optional[str] = None, org: str = Depends(curren
 
 @api_router.post("/tasks", response_model=Task)
 async def create_task(payload: TaskCreate, org: str = Depends(current_org)):
+    if payload.project_id:
+        await require_project(payload.project_id, org)
     obj = Task(**payload.model_dump())
     doc = obj.model_dump()
     doc["organizationId"] = org
     await db.tasks.insert_one(doc)
-    await log_activity(obj.project_id, "task_created", f'Task "{obj.title}" was created')
+    await log_activity(obj.project_id, "task_created", f'Task "{obj.title}" was created', org=org)
     if obj.done:
-        await log_activity(obj.project_id, "task_completed", f'Task "{obj.title}" was completed')
+        await log_activity(obj.project_id, "task_completed", f'Task "{obj.title}" was completed', org=org)
     return obj
 
 
@@ -1023,10 +1026,12 @@ async def update_task(task_id: str, payload: TaskCreate, org: str = Depends(curr
     res = await db.tasks.find_one({"id": task_id, "organizationId": org}, {"_id": 0})
     if not res:
         raise HTTPException(status_code=404, detail="Task not found")
+    if payload.project_id:
+        await require_project(payload.project_id, org)
     updated = {**res, **payload.model_dump()}
     await db.tasks.update_one({"id": task_id, "organizationId": org}, {"$set": payload.model_dump()})
     if payload.done and not res.get("done"):
-        await log_activity(payload.project_id, "task_completed", f'Task "{payload.title}" was completed')
+        await log_activity(payload.project_id, "task_completed", f'Task "{payload.title}" was completed', org=org)
     return Task(**{k: v for k, v in updated.items() if k in Task.model_fields})
 
 
@@ -1049,11 +1054,13 @@ async def list_documents(project_id: Optional[str] = None, org: str = Depends(cu
 
 @api_router.post("/documents", response_model=Document)
 async def create_document(payload: DocumentCreate, org: str = Depends(current_org)):
+    if payload.project_id:
+        await require_project(payload.project_id, org)
     obj = Document(**payload.model_dump())
     doc = obj.model_dump()
     doc["organizationId"] = org
     await db.documents.insert_one(doc)
-    await log_activity(obj.project_id, "document_uploaded", f'Document "{obj.name}" was uploaded')
+    await log_activity(obj.project_id, "document_uploaded", f'Document "{obj.name}" was uploaded', org=org)
     return obj
 
 
@@ -1166,7 +1173,7 @@ async def library_documents(org: str = Depends(current_org), q: str = "", type: 
     items = await db.documents.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(page_size).to_list(page_size)
     for it in items:
         if it.get("project_id"):
-            p = await db.projects.find_one({"id": it["project_id"]}, {"_id": 0, "name": 1})
+            p = await db.projects.find_one({"id": it["project_id"], "organizationId": org}, {"_id": 0, "name": 1})
             it["project_name"] = p["name"] if p else None
     return {"items": items, "total": total, "page": page, "page_size": page_size, "pages": max(1, (total + page_size - 1) // page_size)}
 
@@ -1174,8 +1181,8 @@ async def library_documents(org: str = Depends(current_org), q: str = "", type: 
 async def _enrich_doc_meta(items, org):
     proj_ids = list({i["project_id"] for i in items if i.get("project_id")})
     cli_ids = list({i.get("client_id") for i in items if i.get("client_id")})
-    projs = {p["id"]: p for p in await db.projects.find({"id": {"$in": proj_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)}
-    clis = {c["id"]: c for c in await db.clients.find({"id": {"$in": cli_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)}
+    projs = {p["id"]: p for p in await db.projects.find({"id": {"$in": proj_ids}, "organizationId": org}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)}
+    clis = {c["id"]: c for c in await db.clients.find({"id": {"$in": cli_ids}, "organizationId": org}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)}
     for i in items:
         i["project_name"] = projs.get(i.get("project_id"), {}).get("name")
         i["client_name"] = clis.get(i.get("client_id"), {}).get("name")
@@ -1551,11 +1558,13 @@ async def list_proposals(project_id: Optional[str] = None, org: str = Depends(cu
 
 @api_router.post("/proposals", response_model=Proposal)
 async def create_proposal(payload: ProposalCreate, org: str = Depends(current_org)):
+    if payload.project_id:
+        await require_project(payload.project_id, org)
     obj = Proposal(**payload.model_dump())
     doc = obj.model_dump()
     doc["organizationId"] = org
     await db.proposals.insert_one(doc)
-    await log_activity(obj.project_id, "proposal_generated", f'Proposal "{obj.title}" was generated')
+    await log_activity(obj.project_id, "proposal_generated", f'Proposal "{obj.title}" was generated', org=org)
     return obj
 
 
@@ -1571,7 +1580,7 @@ async def delete_proposal(proposal_id: str, org: str = Depends(current_org)):
 @api_router.get("/activities")
 async def list_activities(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    return await db.activities.find({"project_id": project_id}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return await db.activities.find({"project_id": project_id, "organizationId": org}, {"_id": 0}).sort("created_at", -1).to_list(1000)
 
 
 # ------------------- AI Project Planner -------------------
@@ -1601,9 +1610,13 @@ class Plan(BaseModel):
 
 async def build_project_context(project: dict) -> str:
     pid = project["id"]
-    tasks = await db.tasks.find({"project_id": pid}, {"_id": 0}).to_list(1000)
-    docs = await db.documents.find({"project_id": pid}, {"_id": 0}).to_list(1000)
-    acts = await db.activities.find({"project_id": pid}, {"_id": 0}).sort("created_at", 1).to_list(1000)
+    org = project.get("organizationId")
+    if not org:
+        raise ValueError("project missing organizationId")
+    scoped = {"project_id": pid, "organizationId": org}
+    tasks = await db.tasks.find(scoped, {"_id": 0}).to_list(1000)
+    docs = await db.documents.find(scoped, {"_id": 0}).to_list(1000)
+    acts = await db.activities.find(scoped, {"_id": 0}).sort("created_at", 1).to_list(1000)
     task_lines = "\n".join([f"- [{'x' if t.get('done') else ' '}] {t['title']} (priority: {t.get('priority','Medium')}, due: {t.get('due') or 'none'})" for t in tasks]) or "None"
     doc_lines = "\n".join([f"- {d['name']} ({d.get('type','Doc')})" for d in docs]) or "None"
     act_lines = "\n".join([f"- {a['message']} ({a['created_at'][:10]})" for a in acts]) or "None"
@@ -1681,13 +1694,13 @@ async def generate_plan(project_id: str, org: str = Depends(current_org)):
 @api_router.get("/projects/{project_id}/plans")
 async def list_plans(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    return await db.plans.find({"project_id": project_id}, {"_id": 0}).sort("version", -1).to_list(1000)
+    return await db.plans.find({"project_id": project_id, "organizationId": org}, {"_id": 0}).sort("version", -1).to_list(1000)
 
 
 @api_router.post("/projects/{project_id}/plans", response_model=Plan)
 async def save_plan(project_id: str, payload: PlanSave, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    version = await db.plans.count_documents({"project_id": project_id}) + 1
+    version = await db.plans.count_documents({"project_id": project_id, "organizationId": org}) + 1
     obj = Plan(project_id=project_id, version=version, sections=payload.sections)
     doc = obj.model_dump()
     doc["organizationId"] = org
@@ -1703,8 +1716,8 @@ class ProposalContent(BaseModel):
     content: dict = Field(default_factory=dict)
 
 
-async def _get_ai_proposal(project_id: str):
-    return await db.ai_proposals.find_one({"project_id": project_id}, {"_id": 0})
+async def _get_ai_proposal(project_id: str, org: str):
+    return await db.ai_proposals.find_one({"project_id": project_id, "organizationId": org}, {"_id": 0})
 
 
 @api_router.post("/projects/{project_id}/proposal/generate")
@@ -1713,7 +1726,7 @@ async def generate_proposal(project_id: str, org: str = Depends(current_org)):
     await enrich_project(p, org)
     context = await build_project_context(p)
 
-    latest_plan = await db.plans.find_one({"project_id": project_id}, {"_id": 0}, sort=[("version", -1)])
+    latest_plan = await db.plans.find_one({"project_id": project_id, "organizationId": org}, {"_id": 0}, sort=[("version", -1)])
     if latest_plan:
         secs = latest_plan.get("sections", {})
         context += "\n\nLATEST AI PROJECT PLAN:\n" + json.dumps(secs)[:4000]
@@ -1745,13 +1758,13 @@ async def generate_proposal(project_id: str, org: str = Depends(current_org)):
 @api_router.get("/projects/{project_id}/proposal")
 async def get_proposal(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    return await _get_ai_proposal(project_id)
+    return await _get_ai_proposal(project_id, org)
 
 
 @api_router.get("/projects/{project_id}/proposal/versions")
 async def proposal_versions(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    doc = await _get_ai_proposal(project_id)
+    doc = await _get_ai_proposal(project_id, org)
     return doc.get("history", []) if doc else []
 
 
@@ -1762,7 +1775,7 @@ async def save_proposal(project_id: str, payload: ProposalContent, org: str = De
         raise HTTPException(status_code=422, detail="Invalid status")
     _guard_send(user, payload.status)
 
-    existing = await _get_ai_proposal(project_id)
+    existing = await _get_ai_proposal(project_id, org)
     version = (existing["version"] + 1) if existing else 1
     now = now_iso()
     version_entry = {
@@ -1771,7 +1784,7 @@ async def save_proposal(project_id: str, payload: ProposalContent, org: str = De
     }
     if existing:
         history = existing.get("history", []) + [version_entry]
-        await db.ai_proposals.update_one({"project_id": project_id}, {"$set": {
+        await db.ai_proposals.update_one({"project_id": project_id, "organizationId": org}, {"$set": {
             "title": payload.title, "status": payload.status, "content": payload.content,
             "version": version, "history": history, "updated_at": now,
         }})
@@ -1784,13 +1797,13 @@ async def save_proposal(project_id: str, payload: ProposalContent, org: str = De
         }
         await db.ai_proposals.insert_one(doc)
     await log_activity(project_id, "proposal_saved", f"Proposal v{version} was saved")
-    return await _get_ai_proposal(project_id)
+    return await _get_ai_proposal(project_id, org)
 
 
 @api_router.post("/projects/{project_id}/proposal/restore/{version}")
 async def restore_proposal(project_id: str, version: int, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    existing = await _get_ai_proposal(project_id)
+    existing = await _get_ai_proposal(project_id, org)
     if not existing:
         raise HTTPException(status_code=404, detail="Proposal not found")
     match = next((v for v in existing.get("history", []) if v["version"] == version), None)
@@ -1812,8 +1825,8 @@ class ContractContent(BaseModel):
     content: dict = Field(default_factory=dict)
 
 
-async def _get_ai_contract(project_id: str):
-    return await db.ai_contracts.find_one({"project_id": project_id}, {"_id": 0})
+async def _get_ai_contract(project_id: str, org: str):
+    return await db.ai_contracts.find_one({"project_id": project_id, "organizationId": org}, {"_id": 0})
 
 
 async def _build_contract_context(project_id: str, org: str):
@@ -1832,7 +1845,7 @@ async def _build_contract_context(project_id: str, org: str):
             f"Email: {client.get('email') or 'N/A'}\nAddress: [CLIENT ADDRESS]\n"
         )
 
-    proposal = await _get_ai_proposal(project_id)
+    proposal = await _get_ai_proposal(project_id, org)
     if proposal:
         proposal_id = proposal.get("id")
         c = proposal.get("content", {})
@@ -1845,7 +1858,7 @@ async def _build_contract_context(project_id: str, org: str):
             f"Scope: {json.dumps(c.get('project_scope', []))}\n"
         )
 
-    latest_plan = await db.plans.find_one({"project_id": project_id}, {"_id": 0}, sort=[("version", -1)])
+    latest_plan = await db.plans.find_one({"project_id": project_id, "organizationId": org}, {"_id": 0}, sort=[("version", -1)])
     if latest_plan:
         context += "\n\nLATEST AI PROJECT PLAN:\n" + json.dumps(latest_plan.get("sections", {}))[:3000]
 
@@ -1882,13 +1895,13 @@ async def generate_contract(project_id: str, org: str = Depends(current_org)):
 @api_router.get("/projects/{project_id}/contract")
 async def get_contract(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    return await _get_ai_contract(project_id)
+    return await _get_ai_contract(project_id, org)
 
 
 @api_router.get("/projects/{project_id}/contract/versions")
 async def contract_versions(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    doc = await _get_ai_contract(project_id)
+    doc = await _get_ai_contract(project_id, org)
     return doc.get("history", []) if doc else []
 
 
@@ -1897,18 +1910,18 @@ async def _save_contract(project_id: str, payload: ContractContent, org: str, ac
     if payload.status not in CONTRACT_STATUSES:
         raise HTTPException(status_code=422, detail="Invalid status")
 
-    existing = await _get_ai_contract(project_id)
+    existing = await _get_ai_contract(project_id, org)
     version = (existing["version"] + 1) if existing else 1
     now = now_iso()
     entry = {"version": version, "title": payload.title, "status": payload.status, "content": payload.content, "created_at": now}
     if existing:
         history = existing.get("history", []) + [entry]
-        await db.ai_contracts.update_one({"project_id": project_id}, {"$set": {
+        await db.ai_contracts.update_one({"project_id": project_id, "organizationId": org}, {"$set": {
             "title": payload.title, "status": payload.status, "content": payload.content,
             "version": version, "history": history, "updated_at": now,
         }})
     else:
-        proposal = await _get_ai_proposal(project_id)
+        proposal = await _get_ai_proposal(project_id, org)
         doc = {
             "id": str(uuid.uuid4()), "title": payload.title, "project_id": project_id,
             "organizationId": org, "client_id": p.get("client_id"),
@@ -1918,7 +1931,7 @@ async def _save_contract(project_id: str, payload: ContractContent, org: str, ac
         }
         await db.ai_contracts.insert_one(doc)
     await log_activity(project_id, activity_type, activity_msg_fmt.format(version=version))
-    return await _get_ai_contract(project_id)
+    return await _get_ai_contract(project_id, org)
 
 
 @api_router.post("/projects/{project_id}/contract")
@@ -1930,7 +1943,7 @@ async def save_contract(project_id: str, payload: ContractContent, org: str = De
 @api_router.post("/projects/{project_id}/contract/restore/{version}")
 async def restore_contract(project_id: str, version: int, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    existing = await _get_ai_contract(project_id)
+    existing = await _get_ai_contract(project_id, org)
     if not existing:
         raise HTTPException(status_code=404, detail="Contract not found")
     match = next((v for v in existing.get("history", []) if v["version"] == version), None)
@@ -1957,8 +1970,8 @@ class InvoiceSave(BaseModel):
     line_items: list = Field(default_factory=list)
 
 
-async def _get_ai_invoice(project_id: str):
-    return await db.ai_invoices.find_one({"project_id": project_id}, {"_id": 0})
+async def _get_ai_invoice(project_id: str, org: str):
+    return await db.ai_invoices.find_one({"project_id": project_id, "organizationId": org}, {"_id": 0})
 
 
 def _compute_invoice(line_items: list, vat_rate: float):
@@ -1986,7 +1999,7 @@ async def _next_invoice_number(org: str):
 @api_router.post("/projects/{project_id}/invoice/generate")
 async def generate_invoice(project_id: str, org: str = Depends(current_org)):
     p, context, proposal_id = await _build_contract_context(project_id, org)
-    contract = await _get_ai_contract(project_id)
+    contract = await _get_ai_contract(project_id, org)
     if contract:
         context += "\n\nSIGNED/DRAFT CONTRACT PAYMENT TERMS:\n" + json.dumps(contract.get("content", {}).get("payment_terms", []))
 
@@ -2041,13 +2054,13 @@ async def generate_invoice(project_id: str, org: str = Depends(current_org)):
 @api_router.get("/projects/{project_id}/invoice")
 async def get_invoice(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    return await _get_ai_invoice(project_id)
+    return await _get_ai_invoice(project_id, org)
 
 
 @api_router.get("/projects/{project_id}/invoice/versions")
 async def invoice_versions(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    doc = await _get_ai_invoice(project_id)
+    doc = await _get_ai_invoice(project_id, org)
     return doc.get("history", []) if doc else []
 
 
@@ -2060,7 +2073,7 @@ async def _save_invoice(project_id: str, payload: InvoiceSave, org: str, activit
     items, subtotal, vat_amount, total = _compute_invoice(payload.line_items, vat_rate)
     content = {**payload.content, "vat_rate": vat_rate}
 
-    existing = await _get_ai_invoice(project_id)
+    existing = await _get_ai_invoice(project_id, org)
     version = (existing["version"] + 1) if existing else 1
     now = now_iso()
     inv_number = payload.invoice_number or (existing["invoice_number"] if existing else await _next_invoice_number(org))
@@ -2070,14 +2083,14 @@ async def _save_invoice(project_id: str, payload: InvoiceSave, org: str, activit
     }
     if existing:
         history = existing.get("history", []) + [entry]
-        await db.ai_invoices.update_one({"project_id": project_id}, {"$set": {
+        await db.ai_invoices.update_one({"project_id": project_id, "organizationId": org}, {"$set": {
             "invoice_number": inv_number, "title": payload.title, "status": payload.status, "content": content,
             "line_items": items, "subtotal": subtotal, "vat": vat_amount, "total": total,
             "version": version, "history": history, "updated_at": now,
         }})
     else:
-        proposal = await _get_ai_proposal(project_id)
-        contract = await _get_ai_contract(project_id)
+        proposal = await _get_ai_proposal(project_id, org)
+        contract = await _get_ai_contract(project_id, org)
         doc = {
             "id": str(uuid.uuid4()), "invoice_number": inv_number, "title": payload.title, "project_id": project_id,
             "organizationId": org, "client_id": p.get("client_id"), "proposal_id": proposal.get("id") if proposal else None,
@@ -2087,7 +2100,7 @@ async def _save_invoice(project_id: str, payload: InvoiceSave, org: str, activit
         }
         await db.ai_invoices.insert_one(doc)
     await log_activity(project_id, activity_type, activity_msg.format(version=version, number=inv_number))
-    return await _get_ai_invoice(project_id)
+    return await _get_ai_invoice(project_id, org)
 
 
 @api_router.post("/projects/{project_id}/invoice")
@@ -2099,7 +2112,7 @@ async def save_invoice(project_id: str, payload: InvoiceSave, org: str = Depends
 @api_router.post("/projects/{project_id}/invoice/restore/{version}")
 async def restore_invoice(project_id: str, version: int, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    existing = await _get_ai_invoice(project_id)
+    existing = await _get_ai_invoice(project_id, org)
     if not existing:
         raise HTTPException(status_code=404, detail="Invoice not found")
     match = next((v for v in existing.get("history", []) if v["version"] == version), None)

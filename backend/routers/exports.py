@@ -15,16 +15,16 @@ router = APIRouter(prefix="/api")
 
 
 # ------------------- shared document fetch helpers -------------------
-async def _get_ai_proposal(project_id: str):
-    return await db.ai_proposals.find_one({"project_id": project_id}, {"_id": 0})
+async def _get_ai_proposal(project_id: str, org: str):
+    return await db.ai_proposals.find_one({"project_id": project_id, "organizationId": org}, {"_id": 0})
 
 
-async def _get_ai_contract(project_id: str):
-    return await db.ai_contracts.find_one({"project_id": project_id}, {"_id": 0})
+async def _get_ai_contract(project_id: str, org: str):
+    return await db.ai_contracts.find_one({"project_id": project_id, "organizationId": org}, {"_id": 0})
 
 
-async def _get_ai_invoice(project_id: str):
-    return await db.ai_invoices.find_one({"project_id": project_id}, {"_id": 0})
+async def _get_ai_invoice(project_id: str, org: str):
+    return await db.ai_invoices.find_one({"project_id": project_id, "organizationId": org}, {"_id": 0})
 
 
 def _export_or_404(project_id, proposal):
@@ -68,7 +68,7 @@ async def _brand_context(org_id: str, footer_key: str) -> dict:
 @router.get("/projects/{project_id}/proposal/export/pdf")
 async def export_proposal_pdf(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    proposal = await _get_ai_proposal(project_id)
+    proposal = await _get_ai_proposal(project_id, org)
     _export_or_404(project_id, proposal)
     brand = await _brand_context(org, "proposalFooter")
     data = build_pdf(proposal, brand=brand)
@@ -81,7 +81,7 @@ async def export_proposal_pdf(project_id: str, org: str = Depends(current_org)):
 @router.get("/projects/{project_id}/proposal/export/docx")
 async def export_proposal_docx(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    proposal = await _get_ai_proposal(project_id)
+    proposal = await _get_ai_proposal(project_id, org)
     _export_or_404(project_id, proposal)
     brand = await _brand_context(org, "proposalFooter")
     data = build_docx(proposal, brand=brand)
@@ -96,7 +96,7 @@ async def export_proposal_docx(project_id: str, org: str = Depends(current_org))
 @router.get("/projects/{project_id}/contract/export/pdf")
 async def export_contract_pdf(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    contract = await _get_ai_contract(project_id)
+    contract = await _get_ai_contract(project_id, org)
     if not contract:
         raise HTTPException(status_code=404, detail="Save the contract before exporting")
     brand = await _brand_context(org, "contractFooter")
@@ -110,7 +110,7 @@ async def export_contract_pdf(project_id: str, org: str = Depends(current_org)):
 @router.get("/projects/{project_id}/contract/export/docx")
 async def export_contract_docx(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    contract = await _get_ai_contract(project_id)
+    contract = await _get_ai_contract(project_id, org)
     if not contract:
         raise HTTPException(status_code=404, detail="Save the contract before exporting")
     brand = await _brand_context(org, "contractFooter")
@@ -126,7 +126,7 @@ async def export_contract_docx(project_id: str, org: str = Depends(current_org))
 @router.get("/projects/{project_id}/invoice/export/pdf")
 async def export_invoice_pdf(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    invoice = await _get_ai_invoice(project_id)
+    invoice = await _get_ai_invoice(project_id, org)
     if not invoice:
         raise HTTPException(status_code=404, detail="Save the invoice before exporting")
     brand = await _brand_context(org, "invoiceFooter")
@@ -140,7 +140,7 @@ async def export_invoice_pdf(project_id: str, org: str = Depends(current_org)):
 @router.get("/projects/{project_id}/invoice/export/docx")
 async def export_invoice_docx(project_id: str, org: str = Depends(current_org)):
     await require_project(project_id, org)
-    invoice = await _get_ai_invoice(project_id)
+    invoice = await _get_ai_invoice(project_id, org)
     if not invoice:
         raise HTTPException(status_code=404, detail="Save the invoice before exporting")
     brand = await _brand_context(org, "invoiceFooter")

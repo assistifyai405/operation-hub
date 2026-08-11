@@ -57,8 +57,10 @@ Never commit real secrets. Copy templates into private secret stores / `.env` fi
 | `ENVIRONMENT=development` | Allows localhost CORS/cookies |
 | Weak `JWT_SECRET` for local compose | Rejected in production |
 | `EMAIL_PROVIDER=console` | Logs mail instead of sending |
-| `OPENAI_API_KEY=sk-test-not-used` | Local compose placeholder |
+| `OPENAI_API_KEY=${OPENAI_API_KEY:-}` | Pass host key into Compose; empty disables AI gracefully |
 | Docker Compose hardcoded JWT | Never reuse in production |
+
+See also: [ASYNC_WORKERS.md](./ASYNC_WORKERS.md) for worker/scheduler/Redis health.
 
 ## Frontend build args
 

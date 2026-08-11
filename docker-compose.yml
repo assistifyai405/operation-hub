@@ -36,13 +36,17 @@ services:
       CORS_ORIGINS: http://localhost:3000
       FRONTEND_URL: http://localhost:3000
       REDIS_URL: redis://redis:6379/0
+      # API must enable workers so enqueue uses Redis (not silent sync fallback).
+      # Actual processing still runs in the worker/scheduler containers + heartbeats.
+      WORKER_ENABLED: "true"
+      SCHEDULER_ENABLED: "true"
+      REQUIRE_REDIS: "true"
       EMAIL_PROVIDER: console
       EMAIL_SENDING_ENABLED: "false"
       AI_PROVIDER: openai
-      OPENAI_API_KEY: sk-test-not-used
+      # Pass host key at runtime — never hardcode sk-test in Docker services.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       STORAGE_PROVIDER: local
-      WORKER_ENABLED: "false"
-      SCHEDULER_ENABLED: "false"
       ENABLE_DEMO_SEED: "false"
       ENABLE_DEMO_LOGIN: "false"
       LOG_LEVEL: INFO
@@ -72,9 +76,10 @@ services:
       JWT_SECRET: local-dev-secret-change-me-32chars!!
       REDIS_URL: redis://redis:6379/0
       WORKER_ENABLED: "true"
+      REQUIRE_REDIS: "true"
       EMAIL_PROVIDER: console
       AI_PROVIDER: openai
-      OPENAI_API_KEY: sk-test-not-used
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       STORAGE_PROVIDER: local
       ENABLE_DEMO_SEED: "false"
       ENABLE_DEMO_LOGIN: "false"
@@ -97,9 +102,10 @@ services:
       REDIS_URL: redis://redis:6379/0
       SCHEDULER_ENABLED: "true"
       WORKER_ENABLED: "true"
+      REQUIRE_REDIS: "true"
       EMAIL_PROVIDER: console
       AI_PROVIDER: openai
-      OPENAI_API_KEY: sk-test-not-used
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       STORAGE_PROVIDER: local
       ENABLE_DEMO_SEED: "false"
       ENABLE_DEMO_LOGIN: "false"

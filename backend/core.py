@@ -34,12 +34,18 @@ def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
-async def log_activity(project_id: Optional[str], atype: str, message: str):
+async def log_activity(project_id: Optional[str], atype: str, message: str, *, org: Optional[str] = None):
+    """Append a project activity. Prefer org-scoped project lookup to avoid cross-tenant stamps."""
     if not project_id:
         return
-    proj = await db.projects.find_one({"id": project_id}, {"_id": 0, "organizationId": 1})
+    q = {"id": project_id}
+    if org:
+        q["organizationId"] = org
+    proj = await db.projects.find_one(q, {"_id": 0, "organizationId": 1})
+    if not proj:
+        return
     await db.activities.insert_one({
         "id": str(uuid.uuid4()), "project_id": project_id,
-        "organizationId": (proj or {}).get("organizationId"),
+        "organizationId": proj.get("organizationId"),
         "type": atype, "message": message, "created_at": now_iso(),
     })
