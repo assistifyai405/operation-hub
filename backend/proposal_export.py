@@ -35,7 +35,7 @@ def _hex_to_rgb(h):
 def _default_brand(brand):
     b = brand or {}
     return {
-        "company_name": b.get("company_name", "Assistify OS"),
+        "company_name": b.get("company_name", "Assistify"),
         "logo_bytes": b.get("logo_bytes"),
         "primary": b.get("primary") or ASSISTIFY_GREEN,
         "secondary": b.get("secondary") or "#22D3EE",

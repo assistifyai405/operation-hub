@@ -110,7 +110,9 @@
     "newPassword": "Nieuw wachtwoord",
     "confirmPassword": "Bevestig wachtwoord",
     "confirmPasswordPlaceholder": "Vul je wachtwoord opnieuw in",
-    "updatePassword": "Wachtwoord bijwerken"
+    "updatePassword": "Wachtwoord bijwerken",
+    "or": "of",
+    "createAccountLink": "Account aanmaken"
   },
   "pages": {
     "dashboard": {
@@ -272,12 +274,90 @@
   },
   "onboarding": {
     "welcomeTitle": "Welkom bij Assistify",
-    "welcomeBody": "Je AI-gedreven bedrijfsbesturingssysteem — klanten, projecten, taken en AI in één workspace.",
+    "welcomeHeadline": "Je AI-gedreven bedrijfsbesturingssysteem.",
+    "welcomeBody": "Assistify helpt kleine bedrijven, freelancers en teams om werk en AI vanuit één workspace te beheren — zonder aparte tools voor klanten, projecten en documenten.",
     "skip": "Overslaan",
+    "skipExplore": "Setup overslaan — verken de workspace",
     "getStarted": "Aan de slag",
+    "takesMinutes": "Duurt ongeveer 2 minuten. Je kunt alles later wijzigen in Instellingen.",
     "company": "Je bedrijf",
+    "companyTitle": "Stel je bedrijfsprofiel in",
+    "companyBody": "Alleen het essentiële — zodat Assistify je workspace en AI kan personaliseren.",
+    "website": "Website (optioneel — we kunnen hiervan voorinvullen)",
+    "analyze": "Analyseren",
+    "yourName": "Je naam",
+    "companyName": "Bedrijfsnaam *",
+    "industry": "Branche",
+    "companySize": "Bedrijfsgrootte",
+    "select": "Selecteer",
+    "back": "Terug",
+    "continue": "Doorgaan",
+    "websiteRequired": "Vul eerst een website in",
+    "analyzeSuccess": "We hebben ingevuld wat we vonden — controleer en pas hieronder aan.",
+    "companyRequired": "Bedrijfsnaam is verplicht",
     "goal": "Je doel",
+    "goalTitle": "Waarmee wil je vooral hulp?",
+    "goalBody": "We markeren de meest relevante vervolgstappen. Je kunt dit later wijzigen.",
+    "goalRequired": "Kies waarmee je vooral hulp wilt",
     "ready": "Je bent klaar",
+    "readyTitle": "{{company}} is klaar",
+    "readyBodyGoal": "Je koos “{{goal}}”. Dit zijn de beste vervolgstappen om vandaag waarde te krijgen.",
+    "readyBody": "Dit zijn de beste vervolgstappen om vandaag waarde te krijgen.",
+    "openDashboard": "Open dashboard",
+    "employees": {
+      "justMe": "Alleen ik",
+      "2_10": "2–10",
+      "11_50": "11–50",
+      "51_200": "51–200",
+      "200plus": "200+"
+    },
+    "capabilities": {
+      "clients": "Klanten",
+      "projects": "Projecten",
+      "tasks": "Taken",
+      "opportunities": "Kansen",
+      "documents": "Documenten",
+      "ai": "AI-workflows"
+    },
+    "goals": {
+      "win_clients": {
+        "label": "Meer klanten winnen",
+        "hint": "Pipeline, outreach, offertes"
+      },
+      "manage_clients": {
+        "label": "Klanten beheren",
+        "hint": "Relaties, follow-ups, CRM"
+      },
+      "organize_projects": {
+        "label": "Projecten organiseren",
+        "hint": "Plannen, taken, oplevering"
+      },
+      "save_time_ai": {
+        "label": "Tijd besparen met AI",
+        "hint": "Copilot, agents, samenvattingen"
+      },
+      "create_documents": {
+        "label": "Offertes & documenten maken",
+        "hint": "Offertes, contracten, facturen"
+      },
+      "automate": {
+        "label": "Terugkerend werk automatiseren",
+        "hint": "Regels, herinneringen, overdrachten"
+      }
+    },
+    "actions": {
+      "createClient": "Maak je eerste klant",
+      "createProject": "Maak je eerste project",
+      "addTask": "Voeg een taak toe",
+      "askCopilot": "Vraag Copilot",
+      "askOutreach": "Vraag Copilot om outreach-ideeën",
+      "askPlan": "Vraag Copilot om een plan",
+      "askProposal": "Vraag Copilot om een offerte",
+      "exploreAgents": "Ontdek AI-agents",
+      "openOpportunities": "Open Kansen",
+      "exploreAutomations": "Ontdek Automatiseringen",
+      "projectForDocs": "Maak een project voor documenten"
+    },
     "checklist": {
       "title": "Laat Assistify voor je werken",
       "subtitle": "Voltooi deze stappen met echte gegevens uit je workspace — je voortgang wordt nooit verzonnen.",
@@ -312,7 +392,11 @@
       "proposal_one": "offerte",
       "proposal_other": "offertes",
       "contract_one": "contract",
-      "contract_other": "contracten"
+      "contract_other": "contracten",
+      "invoice_one": "factuur",
+      "invoice_other": "facturen",
+      "document_one": "document",
+      "document_other": "documenten"
     },
     "organizationCount": "{{count}} {{kind}} in je organisatie.",
     "searchPlaceholder": "Zoek in {{kind}}",
@@ -352,7 +436,11 @@
     "empty": "Geen resultaten",
     "newClient": "Nieuwe klant",
     "newProject": "Nieuw project",
-    "newTask": "Nieuwe taak"
+    "newTask": "Nieuwe taak",
+    "aiPlan": "Maak een projectplan",
+    "aiFollowUp": "Schrijf een follow-up e-mail",
+    "aiResearch": "Onderzoek een klant",
+    "aiProposal": "Maak een offerte-outline"
   },
   "legal": {
     "privacy": "Privacy",

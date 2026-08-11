@@ -97,7 +97,7 @@ async def collect_alert_snapshot() -> dict[str, Any]:
 def _slack_text(snapshot: dict) -> str:
     env = snapshot.get("environment") or "unknown"
     release = snapshot.get("release") or "dev"
-    lines = [f"*Assistify OS alert* (`{env}` / `{release}`)"]
+    lines = [f"*Assistify alert* (`{env}` / `{release}`)"]
     for a in (snapshot.get("alerts") or [])[:MAX_ALERTS_PER_PAYLOAD]:
         sev = a.get("severity", "info")
         code = a.get("code", "unknown")

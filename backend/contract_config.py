@@ -26,7 +26,7 @@ CONTRACT_SECTIONS = [
 ]
 
 CONTRACT_SYSTEM = (
-    "You are an experienced contracts attorney and legal writer for a professional services agency using Assistify OS. "
+    "You are an experienced contracts attorney and legal writer for a professional services agency using Assistify. "
     "You draft clear, enforceable, professionally structured service agreements (contracts) from project context. "
     "You ALWAYS respond with a single valid JSON object and nothing else — no markdown fences, no prose outside JSON. "
     "Write in precise legal-professional language. Use bracketed placeholders like [CLIENT ADDRESS], [AMOUNT], [GOVERNING STATE/COUNTRY], [EFFECTIVE DATE] "

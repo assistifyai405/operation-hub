@@ -110,7 +110,9 @@
     "newPassword": "New password",
     "confirmPassword": "Confirm password",
     "confirmPasswordPlaceholder": "Re-enter password",
-    "updatePassword": "Update password"
+    "updatePassword": "Update password",
+    "or": "or",
+    "createAccountLink": "Create an account"
   },
   "pages": {
     "dashboard": {
@@ -272,12 +274,90 @@
   },
   "onboarding": {
     "welcomeTitle": "Welcome to Assistify",
-    "welcomeBody": "Your AI-powered business operating system — clients, projects, tasks and AI in one workspace.",
+    "welcomeHeadline": "Your AI-powered business operating system.",
+    "welcomeBody": "Assistify helps small businesses, freelancers, and teams manage work and use AI from one workspace — without juggling separate tools for clients, projects, and documents.",
     "skip": "Skip",
+    "skipExplore": "Skip setup — explore the workspace",
     "getStarted": "Get started",
+    "takesMinutes": "Takes about 2 minutes. You can change everything later in Settings.",
     "company": "Your company",
+    "companyTitle": "Set up your company profile",
+    "companyBody": "Only the essentials — so Assistify can personalize your workspace and AI.",
+    "website": "Website (optional — we can pre-fill from it)",
+    "analyze": "Analyze",
+    "yourName": "Your name",
+    "companyName": "Company name *",
+    "industry": "Industry",
+    "companySize": "Company size",
+    "select": "Select",
+    "back": "Back",
+    "continue": "Continue",
+    "websiteRequired": "Enter a website first",
+    "analyzeSuccess": "We pre-filled what we found — review and tweak below.",
+    "companyRequired": "Company name is required",
     "goal": "Your goal",
+    "goalTitle": "What do you mainly want help with?",
+    "goalBody": "We'll highlight the most relevant next steps. You can change this later.",
+    "goalRequired": "Pick what you mainly want help with",
     "ready": "You're ready",
+    "readyTitle": "{{company}} is ready",
+    "readyBodyGoal": "You chose “{{goal}}”. Here are the best next steps to get real value today.",
+    "readyBody": "Here are the best next steps to get real value today.",
+    "openDashboard": "Open dashboard",
+    "employees": {
+      "justMe": "Just me",
+      "2_10": "2–10",
+      "11_50": "11–50",
+      "51_200": "51–200",
+      "200plus": "200+"
+    },
+    "capabilities": {
+      "clients": "Clients",
+      "projects": "Projects",
+      "tasks": "Tasks",
+      "opportunities": "Opportunities",
+      "documents": "Documents",
+      "ai": "AI workflows"
+    },
+    "goals": {
+      "win_clients": {
+        "label": "Win more clients",
+        "hint": "Pipeline, outreach, proposals"
+      },
+      "manage_clients": {
+        "label": "Manage clients",
+        "hint": "Relationships, follow-ups, CRM"
+      },
+      "organize_projects": {
+        "label": "Organize projects",
+        "hint": "Plans, tasks, delivery"
+      },
+      "save_time_ai": {
+        "label": "Save time with AI",
+        "hint": "Copilot, agents, summaries"
+      },
+      "create_documents": {
+        "label": "Create proposals & documents",
+        "hint": "Proposals, contracts, invoices"
+      },
+      "automate": {
+        "label": "Automate repetitive work",
+        "hint": "Rules, reminders, hand-offs"
+      }
+    },
+    "actions": {
+      "createClient": "Create your first client",
+      "createProject": "Create your first project",
+      "addTask": "Add a task",
+      "askCopilot": "Ask Copilot",
+      "askOutreach": "Ask Copilot for outreach ideas",
+      "askPlan": "Ask Copilot to draft a plan",
+      "askProposal": "Ask Copilot to draft a proposal",
+      "exploreAgents": "Explore AI Agents",
+      "openOpportunities": "Open Opportunities",
+      "exploreAutomations": "Explore Automations",
+      "projectForDocs": "Create a project for documents"
+    },
     "checklist": {
       "title": "Get Assistify working for you",
       "subtitle": "Complete these steps using your real workspace — progress is never faked.",
@@ -312,7 +392,11 @@
       "proposal_one": "proposal",
       "proposal_other": "proposals",
       "contract_one": "contract",
-      "contract_other": "contracts"
+      "contract_other": "contracts",
+      "invoice_one": "invoice",
+      "invoice_other": "invoices",
+      "document_one": "document",
+      "document_other": "documents"
     },
     "organizationCount": "{{count}} {{kind}} in your organization.",
     "searchPlaceholder": "Search {{kind}}",
@@ -352,7 +436,11 @@
     "empty": "No results",
     "newClient": "New client",
     "newProject": "New project",
-    "newTask": "New task"
+    "newTask": "New task",
+    "aiPlan": "Create project plan",
+    "aiFollowUp": "Write follow-up email",
+    "aiResearch": "Research a client",
+    "aiProposal": "Draft a proposal outline"
   },
   "legal": {
     "privacy": "Privacy",

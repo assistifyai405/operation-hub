@@ -229,7 +229,7 @@ async def create_invitation(payload: InviteRequest, request: Request, actor: dic
     org_doc = await _org(org)
     invite_link = f"{settings.frontend_url}/invite/{raw}"
     brand = {
-        "company_name": org_doc.get("name") or "Assistify OS",
+        "company_name": org_doc.get("name") or "Assistify",
         "primary": "#16A34A",
         "logo_url": "",
     }

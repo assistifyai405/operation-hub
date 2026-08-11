@@ -73,10 +73,10 @@ export default function CommandPalette({ open, setOpen }) {
 
   const aiActions = useMemo(() => [
     { label: t("firstRun.copilot"), icon: MessageSquare, prompt: "", to: "/ai-chat" },
-    { label: "Create project plan", icon: ClipboardList, prompt: "Create a detailed project plan with milestones.", to: "/ai-chat" },
-    { label: "Write follow-up email", icon: Mail, prompt: "Write a polite follow-up email to a client.", to: "/ai-chat" },
-    { label: "Research a client", icon: SearchIcon, prompt: "Research and summarize a client company.", to: "/ai-chat" },
-    { label: "Draft a proposal outline", icon: FileText, prompt: "Outline a professional business proposal.", to: "/ai-chat" },
+    { label: t("command.aiPlan"), icon: ClipboardList, prompt: "Create a detailed project plan with milestones.", to: "/ai-chat" },
+    { label: t("command.aiFollowUp"), icon: Mail, prompt: "Write a polite follow-up email to a client.", to: "/ai-chat" },
+    { label: t("command.aiResearch"), icon: SearchIcon, prompt: "Research and summarize a client company.", to: "/ai-chat" },
+    { label: t("command.aiProposal"), icon: FileText, prompt: "Outline a professional business proposal.", to: "/ai-chat" },
   ], [t]);
 
   useEffect(() => {

@@ -188,7 +188,7 @@ async def _email_brand(org_id: str) -> dict:
     s = _merged_settings(org_doc)
     b, o = s["branding"], s["organization"]
     return {
-        "company_name": o.get("name") or "Assistify OS",
+        "company_name": o.get("name") or "Assistify",
         "primary": b.get("primaryColor") or "#16A34A",
         "logo_url": b.get("logo") or o.get("logo") or "",
     }
@@ -730,21 +730,21 @@ AGENTS = {
         "description": "Crafts outreach, pricing strategy and closes deals.",
         "avatar": "https://images.unsplash.com/photo-1689443111130-6e9c7dfd8f9e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHRlY2glMjBzdGFydHVwJTIwbG9nb3xlbnwwfHx8fDE3ODMyMzk4NzF8MA&ixlib=rb-4.1.0&q=85",
         "accent": "emerald",
-        "system_message": "You are the Sales Strategist for Assistify OS. You specialize in outbound outreach, cold email copy, pricing strategy, objection handling and deal closing. Be persuasive, concise and results-driven.",
+        "system_message": "You are the Sales Strategist for Assistify. You specialize in outbound outreach, cold email copy, pricing strategy, objection handling and deal closing. Be persuasive, concise and results-driven.",
     },
     "writer": {
         "id": "writer", "name": "Proposal Writer", "role": "Docs & Proposals",
         "description": "Writes crisp proposals, SOWs and client documents.",
         "avatar": "https://images.unsplash.com/photo-1689443111384-1cf214df988a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHRlY2glMjBzdGFydHVwJTIwbG9nb3xlbnwwfHx8fDE3ODMyMzk4NzF8MA&ixlib=rb-4.1.0&q=85",
         "accent": "blue",
-        "system_message": "You are the Proposal Writer for Assistify OS. You write polished, well-structured business proposals, scopes of work and client-facing documents. Use clear headings and professional tone.",
+        "system_message": "You are the Proposal Writer for Assistify. You write polished, well-structured business proposals, scopes of work and client-facing documents. Use clear headings and professional tone.",
     },
     "analyst": {
         "id": "analyst", "name": "Data Analyst", "role": "Insights & Metrics",
         "description": "Turns numbers into clear business insights.",
         "avatar": "https://images.unsplash.com/photo-1689443111070-2c1a1110fe82?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHRlY2glMjBzdGFydHVwJTIwbG9nb3xlbnwwfHx8fDE3ODMyMzk4NzF8MA&ixlib=rb-4.1.0&q=85",
         "accent": "amber",
-        "system_message": "You are the Data Analyst for Assistify OS. You interpret business metrics, revenue trends and KPIs, and give clear, quantified insights and recommendations.",
+        "system_message": "You are the Data Analyst for Assistify. You interpret business metrics, revenue trends and KPIs, and give clear, quantified insights and recommendations.",
     },
 }
 
@@ -847,7 +847,7 @@ class Proposal(ProposalCreate):
 # ------------------- Base Routes -------------------
 @api_router.get("/")
 async def root():
-    return {"message": "Assistify OS API"}
+    return {"message": "Assistify API"}
 
 
 @api_router.get("/agents")
@@ -1614,7 +1614,7 @@ PLAN_SECTIONS = [
 ]
 
 PLANNER_SYSTEM = (
-    "You are an elite AI project planner for Assistify OS. Given full project context, you produce "
+    "You are an elite AI project planner for Assistify. Given full project context, you produce "
     "a rigorous, actionable project plan. You ALWAYS respond with a single valid JSON object and nothing else "
     "(no markdown fences, no prose outside JSON)."
 )
@@ -2323,7 +2323,7 @@ SCOPED_COLLECTIONS = [
 async def startup():
     cfg = get_app_settings()
     logger.info(
-        "Starting Assistify OS (%s) storage=%s ai=%s cookie_secure=%s samesite=%s",
+        "Starting Assistify (%s) storage=%s ai=%s cookie_secure=%s samesite=%s",
         cfg.environment, cfg.storage_provider, cfg.ai_provider, cfg.cookie_secure, cfg.cookie_samesite,
     )
     try:

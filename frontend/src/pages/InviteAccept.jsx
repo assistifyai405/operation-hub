@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, Loader2, ShieldAlert, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -7,6 +8,7 @@ import { teamApi } from "@/lib/api";
 import { AuthShell } from "@/components/AuthShell";
 
 export default function InviteAccept() {
+  const { t } = useTranslation();
   const { token } = useParams();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
@@ -177,8 +179,8 @@ export default function InviteAccept() {
 
   return (
     <AuthShell
-      title="Team invitation"
-      subtitle="Join your teammates on Assistify OS."
+      title={t("auth.joinTeam")}
+      subtitle={t("auth.joinTeamSubtitle")}
       footer={null}
     >
       {body}

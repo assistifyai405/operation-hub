@@ -36,7 +36,7 @@ _TEST_ENV = {
     "EMAIL_SENDING_ENABLED": "false",
     "EMAIL_DAILY_LIMIT": "100",
     "FROM_EMAIL": "onboarding@resend.dev",
-    "FROM_NAME": "Assistify OS",
+    "FROM_NAME": "Assistify",
 }
 
 for _k, _v in _TEST_ENV.items():

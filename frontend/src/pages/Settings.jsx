@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   User, Building2, Palette, Sparkles, FileText, Bell, Shield, KeyRound, CreditCard, Plug, Loader2, Users, Mail, Activity, MessageSquare, Languages,
 } from "lucide-react";
@@ -38,12 +39,26 @@ const TAB_DEFS = [
 export default function Settings() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const [params, setParams] = useSearchParams();
   const isAdmin = user?.role === "owner" || user?.role === "admin";
-  const [tab, setTab] = useState("general");
+  const initialTab = params.get("tab") || "general";
+  const [tab, setTabState] = useState(initialTab);
   const [data, setData] = useState(null);
+
+  const setTab = (id) => {
+    setTabState(id);
+    const next = new URLSearchParams(params);
+    if (id === "general") next.delete("tab");
+    else next.set("tab", id);
+    setParams(next, { replace: true });
+  };
 
   const load = () => settingsApi.get().then(setData).catch((e) => toast.error(e.message));
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const fromUrl = params.get("tab");
+    if (fromUrl && fromUrl !== tab) setTabState(fromUrl);
+  }, [params]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const tabs = TAB_DEFS.filter((x) => !x.adminOnly || isAdmin);
   const needsData = ["organization", "branding", "ai", "documents", "notifications", "email"].includes(tab);

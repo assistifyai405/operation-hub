@@ -89,7 +89,7 @@ function exportPdf(projectName, version, sections) {
       .brand{color:#7c3aed;font-weight:700;}
     </style></head><body>
     <h1>${projectName}</h1>
-    <div class="sub"><span class="brand">Assistify OS</span> — AI Project Plan${version ? ` · Version ${version}` : " (Draft)"} · ${new Date().toLocaleDateString()}</div>
+    <div class="sub"><span class="brand">Assistify</span> — AI Project Plan${version ? ` · Version ${version}` : " (Draft)"} · ${new Date().toLocaleDateString()}</div>
     ${SECTIONS.map(block).join("")}
     </body></html>`);
   win.document.close();
