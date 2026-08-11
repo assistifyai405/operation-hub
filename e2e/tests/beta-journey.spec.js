@@ -199,4 +199,64 @@ test.describe("Sprint 28 beta journey", () => {
     await expect(page.getByText(clientName).first()).toBeVisible({ timeout: 20_000 });
     await assertNoStoredJwt(page);
   });
+
+  test("emails disabled UX + inbox integrations CTA + analytics empty", async ({ page, context }) => {
+    test.setTimeout(120_000);
+    const runId = `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const email = `beta28ux_${runId}@example.com`;
+    const password = "Password123!";
+
+    await page.goto("/register", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("register-form")).toBeVisible({ timeout: 20_000 });
+    await page.getByTestId("register-firstname").fill("Beta");
+    await page.getByTestId("register-lastname").fill("UX");
+    await page.getByTestId("register-email").fill(email);
+    await page.getByTestId("register-password").fill(password);
+    const company = page.getByTestId("register-company");
+    if (await company.count()) await company.fill("Beta UX Co");
+    await page.getByTestId("register-submit").click();
+    await expect(page).toHaveURL(/dashboard|onboarding/, { timeout: 45_000 });
+    if (page.url().includes("onboarding")) {
+      await page.request
+        .post(`${API}/api/onboarding/complete`, { headers: await csrfHeaders(context) })
+        .catch(() => {});
+      await page.goto("/dashboard");
+    }
+    await dismissTourIfPresent(page);
+
+    // Clients empty state Dutch
+    await page.goto("/clients");
+    await expect(page.getByTestId("clients-empty")).toContainText(/Nog geen klanten/i);
+
+    // Emails — Dutch tabs + blocked banner when sending disabled
+    await page.goto("/emails");
+    await expect(page.getByTestId("email-center-page")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("email-tab-drafts")).toContainText(/Concepten/i);
+    await expect(page.getByTestId("email-compose-btn")).toBeVisible();
+    const blocked = page.getByTestId("email-blocked-banner");
+    if (await blocked.count()) {
+      await expect(blocked).toContainText(/geblokkeerd|verzending/i);
+      await expect(blocked).not.toContainText(/EMAIL_SENDING_ENABLED/);
+    }
+
+    // Inbox — guide to Integrations when no mailbox
+    await page.goto("/inbox");
+    await expect(page.getByTestId("inbox-page")).toBeVisible({ timeout: 15_000 });
+    const goIntegrations = page.getByTestId("inbox-go-integrations");
+    if (await goIntegrations.count()) {
+      await expect(goIntegrations).toBeVisible();
+      await goIntegrations.click();
+      await expect(page).toHaveURL(/integrations/, { timeout: 15_000 });
+    } else {
+      await page.goto("/integrations");
+    }
+    await expect(page.getByTestId("integrations-page")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("integrations-grid")).toBeVisible();
+
+    // Analytics zero-data
+    await page.goto("/analytics");
+    await expect(page.getByTestId("analytics-page")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("analytics-empty")).toBeVisible();
+    await expect(page.getByTestId("analytics-empty")).toContainText(/Nog geen analytics|nullen|echte/i);
+  });
 });

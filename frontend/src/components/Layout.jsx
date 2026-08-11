@@ -20,39 +20,42 @@ import { BILLING_ENABLED, BETA_MODE_BUILD } from "@/lib/config";
 import { AssistantProvider } from "@/context/AssistantContext";
 import FloatingAssistant from "@/components/assistant/FloatingAssistant";
 import BetaFeedbackButton from "@/components/BetaFeedbackButton";
+import { navNl } from "@/lib/nlCopy";
 
 const relativeTime = (iso) => {
   if (!iso) return "";
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  if (diff < 60) return "zojuist";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m geleden`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}u geleden`;
+  return `${Math.floor(diff / 86400)}d geleden`;
 };
 
-const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/opportunities", label: "Opportunities", icon: Target },
-  { to: "/automations", label: "Automations", icon: Zap },
-  { to: "/crm", label: "CRM", icon: Users },
-  { to: "/pipeline", label: "Pipeline", icon: TrendingUp },
-  { to: "/clients", label: "Clients", icon: Users },
-  { to: "/projects", label: "Projects", icon: FolderKanban },
-  { to: "/tasks", label: "Tasks", icon: CheckSquare },
-  { to: "/ai-chat", label: "Copilot", icon: Sparkles },
-  { to: "/ai-workspace", label: "AI Workspace", icon: LayoutGrid },
-  { to: "/knowledge-brain", label: "Knowledge Brain", icon: Brain },
-  { to: "/ai-agents", label: "AI Agents", icon: Bot },
-  { to: "/proposals", label: "Proposals", icon: FileText },
-  { to: "/contracts", label: "Contracts", icon: ScrollText },
-  { to: "/invoices", label: "Invoices", icon: Receipt },
-  { to: "/documents", label: "Documents", icon: FolderOpen },
-  { to: "/emails", label: "Emails", icon: Mail },
-  { to: "/inbox", label: "Inbox", icon: Inbox },
-  { to: "/integrations", label: "Integrations", icon: Plug },
-  { to: "/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
-];
+const ICONS = {
+  "/dashboard": LayoutDashboard,
+  "/opportunities": Target,
+  "/automations": Zap,
+  "/crm": Users,
+  "/pipeline": TrendingUp,
+  "/clients": Users,
+  "/projects": FolderKanban,
+  "/tasks": CheckSquare,
+  "/ai-chat": Sparkles,
+  "/ai-workspace": LayoutGrid,
+  "/knowledge-brain": Brain,
+  "/ai-agents": Bot,
+  "/proposals": FileText,
+  "/contracts": ScrollText,
+  "/invoices": Receipt,
+  "/documents": FolderOpen,
+  "/emails": Mail,
+  "/inbox": Inbox,
+  "/integrations": Plug,
+  "/analytics": BarChart3,
+  "/settings": SettingsIcon,
+};
+
+const nav = navNl.map((item) => ({ ...item, icon: ICONS[item.to] || LayoutDashboard }));
 
 const Sidebar = ({ onNavigate, betaMode }) => (
   <div className="flex h-full min-h-0 flex-col">
@@ -75,7 +78,7 @@ const Sidebar = ({ onNavigate, betaMode }) => (
           key={to}
           to={to}
           onClick={onNavigate}
-          data-testid={`nav-${label.toLowerCase().replace(/\s/g, "-")}`}
+          data-testid={`nav-${to.replace(/^\//, "").replace(/\//g, "-") || "home"}`}
           className={({ isActive }) =>
             `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
               isActive
@@ -103,7 +106,7 @@ const Sidebar = ({ onNavigate, betaMode }) => (
       </div>
     ) : (
       <div className="m-3 shrink-0 rounded-xl border border-dashed border-white/10 bg-zinc-950/60 p-4" data-testid="sidebar-billing-pending">
-        <p className="text-sm font-semibold text-zinc-300">Billing is not available during beta.</p>
+        <p className="text-sm font-semibold text-zinc-300">Facturatie is niet beschikbaar tijdens de beta.</p>
         <p className="mt-1 text-xs text-zinc-500">No active plan, trial countdown, or payment CTA. Stripe comes later.</p>
       </div>
     )}
