@@ -1,10 +1,11 @@
-# Async workers, Redis & health (Sprint 26)
+# Async workers, Redis & health (Sprint 26–27)
 
 ## Local full-stack (Docker)
 
 ```bash
 export OPENAI_API_KEY=sk-...   # optional; AI features need a real key
-docker compose up --build --force-recreate
+docker compose build
+docker compose up --force-recreate
 ```
 
 Services: `frontend`, `backend`, `mongo`, `redis`, `worker`, `scheduler`.
@@ -16,6 +17,15 @@ Local compose sets on the **API**:
 - `REQUIRE_REDIS=true` — READY degrades without Redis / live workers
 
 Worker/scheduler containers run `python -m jobs.worker` and `python -m jobs.scheduler`.
+Compose healthchecks assert Redis heartbeats via `jobs.heartbeats.read_status`.
+
+Release gate:
+
+```bash
+python scripts/check_local_release.py
+```
+
+Full closed-beta steps: [`CLOSED_BETA_RUNBOOK.md`](./CLOSED_BETA_RUNBOOK.md).
 
 ## Plain local (no Docker)
 
@@ -52,6 +62,17 @@ python -m jobs.scheduler
 
 A worker is **not** healthy just because `WORKER_ENABLED=true`. READY requires a fresh Redis heartbeat when Redis is required.
 
+## Inspect logs
+
+```bash
+docker compose logs backend --tail=200
+docker compose logs worker --tail=200
+docker compose logs scheduler --tail=200
+docker compose logs redis --tail=100
+```
+
+Flag obvious: restart loops, repeated exceptions, missing Redis, stale heartbeat, auth storms, secret leakage (`sk-`, JWT, Resend keys). Never paste secret values into tickets.
+
 ## Inspect queues
 
 ```bash
@@ -61,12 +82,34 @@ redis-cli HGETALL assistify:heartbeat:worker
 redis-cli HGETALL assistify:heartbeat:scheduler
 ```
 
+Safe compose QA jobs (no email/OAuth):
+
+```bash
+python scripts/enqueue_safe_test_job.py --mode noop
+python scripts/enqueue_safe_test_job.py --mode fail
+```
+
+## Async failure / recovery drill
+
+```bash
+docker compose stop worker
+# Wait until heartbeat goes stale/unavailable (~75–90s) → READY 503
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/api/health/ready
+
+docker compose start worker
+# Heartbeat resumes → READY 200
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/api/health/ready
+```
+
+Repeat with `scheduler` if needed. This proves **stale heartbeat detection**, not only config flags.
+
 ## Optional live AI smoke
 
 ```bash
 export RUN_LIVE_AI_TESTS=true
 export OPENAI_API_KEY=sk-...
-cd backend && .venv/bin/pytest tests/test_sprint26_async_security.py::test_live_ai_smoke_optional -q
+cd backend && .venv/bin/pytest tests/test_sprint27_beta_runtime.py -k live -q
 ```
 
 Never commit API keys. Docker compose uses `${OPENAI_API_KEY:-}` (no `sk-test` runtime fallback).
+If live AI is unavailable, mark **PENDING** — do not fake success.

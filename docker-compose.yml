@@ -1,4 +1,17 @@
-# Local full-stack development (Mongo + Redis included)
+# Canonical local full-stack (closed beta / release gate)
+#
+#   docker compose build
+#   docker compose up --force-recreate
+#   # or: docker compose up --build --force-recreate
+#
+# Services: frontend, backend, mongo, redis, worker, scheduler
+# Verify: python scripts/check_local_release.py
+# See: docs/CLOSED_BETA_RUNBOOK.md
+#
+# Pass a real key at runtime (never commit secrets):
+#   export OPENAI_API_KEY=sk-...
+# Do not weaken production config — this file is local/dev only.
+
 services:
   mongo:
     image: mongo:7
@@ -35,6 +48,7 @@ services:
       JWT_SECRET: local-dev-secret-change-me-32chars!!
       CORS_ORIGINS: http://localhost:3000
       FRONTEND_URL: http://localhost:3000
+      API_URL: http://localhost:8000
       REDIS_URL: redis://redis:6379/0
       # API must enable workers so enqueue uses Redis (not silent sync fallback).
       # Actual processing still runs in the worker/scheduler containers + heartbeats.
@@ -89,6 +103,18 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from jobs.heartbeats import read_status; import sys; sys.exit(0 if read_status('worker').get('status')=='running' else 1)",
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   scheduler:
     build:
@@ -115,6 +141,18 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from jobs.heartbeats import read_status; import sys; sys.exit(0 if read_status('scheduler').get('status')=='running' else 1)",
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   frontend:
     build:
@@ -129,6 +167,12 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   mongo_data:

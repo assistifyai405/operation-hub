@@ -331,14 +331,16 @@ Assistify is deployable outside Emergent. There is **no one-click cloud deploy**
 
 ```bash
 export OPENAI_API_KEY=sk-...   # optional; needed for live AI
-docker compose config
-docker compose up --build --force-recreate
+docker compose build
+docker compose up --force-recreate
 # API http://localhost:8000  ·  UI http://localhost:3000
 # Services: mongo, redis, backend, worker, scheduler, frontend
+python scripts/check_local_release.py
 ```
 
 Health: `GET /api/health/live`, `/api/health/ready`, `/api/health/alerts`.
-Full async ops notes: [`docs/ASYNC_WORKERS.md`](docs/ASYNC_WORKERS.md).
+Async ops: [`docs/ASYNC_WORKERS.md`](docs/ASYNC_WORKERS.md).  
+Closed beta: [`docs/CLOSED_BETA_RUNBOOK.md`](docs/CLOSED_BETA_RUNBOOK.md) · [`docs/CLOSED_BETA_CHECKLIST.md`](docs/CLOSED_BETA_CHECKLIST.md).
 
 ### Recommended production layout
 
