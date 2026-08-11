@@ -1,8 +1,12 @@
 import { Sparkles } from "lucide-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 export function AuthShell({ title, subtitle, children, footer }) {
   const { t } = useTranslation();
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", "dark");
+  }, []);
   return (
     <div className="grid min-h-screen grid-cols-1 bg-black lg:grid-cols-2">
       <div className="relative hidden overflow-hidden border-r border-white/10 lg:flex lg:flex-col lg:justify-between grid-bg p-12">

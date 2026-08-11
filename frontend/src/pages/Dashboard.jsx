@@ -127,7 +127,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6" data-testid="dashboard-page">
-      <PageIntro title={t("pages.dashboard.title")} description={t("pages.dashboard.description")} help={t("help.morningBrief")} />
+      <PageIntro title={t("pages.dashboard.title")} description={t("pages.dashboard.description")} helpModule="dashboard" />
 
       <OnboardingChecklist />
       <DemoDataBanner />

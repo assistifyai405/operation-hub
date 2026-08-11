@@ -14,6 +14,8 @@ import en from "./locales/en.json";
 import nl from "./locales/nl.json";
 import marketingEn from "./locales/marketing-en.json";
 import marketingNl from "./locales/marketing-nl.json";
+import helpEn from "./locales/help-en.json";
+import helpNl from "./locales/help-nl.json";
 
 export const SUPPORTED_LOCALES = ["nl", "en"];
 export const DEFAULT_LOCALE = "en";
@@ -89,8 +91,8 @@ if (!i18n.isInitialized) {
     .use(initReactI18next)
     .init({
       resources: {
-        en: { translation: deepMerge(en, marketingEn) },
-        nl: { translation: deepMerge(nl, marketingNl) },
+        en: { translation: deepMerge(deepMerge(en, marketingEn), helpEn) },
+        nl: { translation: deepMerge(deepMerge(nl, marketingNl), helpNl) },
       },
       supportedLngs: SUPPORTED_LOCALES,
       fallbackLng: DEFAULT_LOCALE,

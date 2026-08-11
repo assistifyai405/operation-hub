@@ -109,3 +109,13 @@ python scripts/audit_hardcoded_strings.py --json --limit 500
 
 The scanner is intentionally imperfect. Classify hits as technical/internal,
 test-only, proper nouns, or follow-up — do not treat every hit as a defect.
+
+
+## Help system strings (Sprint 31)
+
+Module help copy lives in:
+
+- `frontend/src/i18n/locales/help-en.json`
+- `frontend/src/i18n/locales/help-nl.json`
+
+Merged in `frontend/src/i18n/index.js` alongside marketing locales. Help UI must ship NL + EN together — never English-only panels.

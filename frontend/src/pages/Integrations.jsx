@@ -161,7 +161,7 @@ export default function Integrations() {
 
   return (
     <div className="space-y-5" data-testid="integrations-page">
-      <PageIntro title={t("pages.integrations.title")} description={t("pages.integrations.description")} />
+      <PageIntro title={t("pages.integrations.title")} description={t("pages.integrations.description")} helpModule="integrations" />
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>

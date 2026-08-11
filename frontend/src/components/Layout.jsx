@@ -21,6 +21,9 @@ import { BILLING_ENABLED, BETA_MODE_BUILD } from "@/lib/config";
 import { AssistantProvider } from "@/context/AssistantContext";
 import FloatingAssistant from "@/components/assistant/FloatingAssistant";
 import BetaFeedbackButton from "@/components/BetaFeedbackButton";
+import HelpPanel from "@/help/HelpPanel";
+import MiniWalkthrough from "@/help/MiniWalkthrough";
+import GuidedTour from "@/help/GuidedTour";
 
 const relativeTime = (iso) => {
   if (!iso) return "";
@@ -116,6 +119,10 @@ const Sidebar = ({ onNavigate, betaMode, t }) => (
 
 export default function Layout() {
   const { t } = useTranslation();
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", "dark");
+  }, []);
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -303,6 +310,9 @@ export default function Layout() {
         <ProductTour onOpenCommandPalette={() => setPaletteOpen(true)} />
       )}
       <FloatingAssistant />
+      <HelpPanel />
+      <MiniWalkthrough />
+      <GuidedTour />
     </div>
     </AssistantProvider>
   );

@@ -71,10 +71,23 @@ module.exports = {
           '3': 'hsl(var(--chart-3))',
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))'
-        }
+        },
+        theme: {
+          bg: 'var(--theme-background)',
+          surface: 'var(--theme-surface)',
+          muted: 'var(--theme-surface-muted)',
+          border: 'var(--theme-border)',
+          text: 'var(--theme-text-primary)',
+          secondary: 'var(--theme-text-secondary)',
+          brand: 'var(--theme-brand)',
+          'brand-hover': 'var(--theme-brand-hover)',
+          'brand-soft': 'var(--theme-brand-soft)',
+        },
       },
       boxShadow: {
         brand: '0 0 25px rgba(34, 197, 94, 0.22)',
+        soft: 'var(--theme-shadow)',
+        'brand-soft': 'var(--theme-shadow-brand)',
       },
       keyframes: {
         'accordion-down': {

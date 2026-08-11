@@ -103,7 +103,7 @@ export default function AIAgents() {
 
   return (
     <div className="space-y-5" data-testid="ai-agents-page">
-      <PageIntro title={t("pages.aiAgents.title")} description={t("pages.aiAgents.description")} help={t("help.aiAgents")} />
+      <PageIntro title={t("pages.aiAgents.title")} description={t("pages.aiAgents.description")} helpModule="agents" />
 
       <div className="max-w-2xl">
         <p className="text-sm text-zinc-400">

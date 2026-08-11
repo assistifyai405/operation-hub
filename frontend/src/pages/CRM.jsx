@@ -28,7 +28,7 @@ export default function CRM() {
 
   return (
     <div className="space-y-5" data-testid="crm-page">
-      <PageIntro title={t("pages.crm.title")} description={t("pages.crm.description")} />
+      <PageIntro title={t("pages.crm.title")} description={t("pages.crm.description")} helpModule="crm" />
 
       <div>
         <h1 className="flex items-center gap-2.5 text-3xl font-bold tracking-tight text-zinc-50">

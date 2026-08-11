@@ -162,7 +162,7 @@ export default function Projects() {
 
   return (
     <div className="space-y-5" data-testid="projects-page">
-      <PageIntro title={t("pages.projects.title")} description={t("pages.projects.description")} />
+      <PageIntro title={t("pages.projects.title")} description={t("pages.projects.description")} helpModule="projects" />
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-zinc-400">{t("projects.count", { count: projectList.length })}</p>

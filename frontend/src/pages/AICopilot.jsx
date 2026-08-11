@@ -126,7 +126,7 @@ export default function AICopilot() {
 
   return (
     <div className="mx-auto flex h-[calc(100vh-9rem)] max-w-3xl flex-col" data-testid="copilot-page">
-      <PageIntro title={t("pages.copilot.title")} description={t("pages.copilot.description")} />
+      <PageIntro title={t("pages.copilot.title")} description={t("pages.copilot.description")} helpModule="copilot" />
 
       {empty ? (
         <div className="flex flex-1 flex-col items-center justify-center px-2 text-center" data-testid="copilot-empty">

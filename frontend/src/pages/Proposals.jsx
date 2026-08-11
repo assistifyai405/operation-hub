@@ -10,7 +10,7 @@ export default function Proposals() {
   const { t } = useTranslation();
   return (
     <div data-testid="proposals-page-wrap">
-      <PageIntro title={t("pages.proposals.title")} description={t("pages.proposals.description")} />
+      <PageIntro title={t("pages.proposals.title")} description={t("pages.proposals.description")} helpModule="proposals" />
       <LibraryDocsPage
         icon={FileText}
         kind="proposal"

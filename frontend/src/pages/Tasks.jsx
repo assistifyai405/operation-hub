@@ -152,7 +152,7 @@ export default function Tasks() {
 
   return (
     <div className="space-y-5" data-testid="tasks-page">
-      <PageIntro title={t("pages.tasks.title")} description={t("pages.tasks.description")} />
+      <PageIntro title={t("pages.tasks.title")} description={t("pages.tasks.description")} helpModule="tasks" />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-1 rounded-lg border border-white/10 bg-zinc-950 p-1">

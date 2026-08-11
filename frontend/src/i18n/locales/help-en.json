@@ -1,0 +1,294 @@
+{
+  "help": {
+    "entry": "Help",
+    "entryAria": "Open help for {{module}}",
+    "panelEyebrow": "How this works",
+    "close": "Close",
+    "youLearn": "You will learn",
+    "quickTips": "What you can do here",
+    "watchTutorial": "Watch walkthrough",
+    "tryYourself": "Try it yourself",
+    "moreHelp": "More module tutorials will be added over time.",
+    "skip": "Skip",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "restart": "Restart",
+    "tourDone": "Tour complete",
+    "tutorialProgress": "Step {{current}} of {{total}}",
+    "tourProgress": "Guided tour · {{current}}/{{total}}",
+    "tourClickHint": "Click the highlighted control to continue. Assistify will not act for you.",
+    "betaDefault": "Some controls in this module are still limited during beta.",
+    "modules": {
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "See workspace priorities, recent activity and useful next steps based on your real data.",
+        "quickTips": [
+          "Scan what needs attention today",
+          "Jump into clients, projects or Copilot",
+          "Use the morning brief when available"
+        ],
+        "learn": [
+          "Read your workspace overview",
+          "Open a priority item",
+          "Start work from a quick action"
+        ]
+      },
+      "clients": {
+        "title": "Clients",
+        "description": "Store the people and companies you work with so projects, documents and AI stay connected.",
+        "quickTips": [
+          "Add a client with clear contact details",
+          "Open a client to review linked work",
+          "Keep notes that help future follow-ups"
+        ],
+        "learn": [
+          "Create a client",
+          "Find a client quickly",
+          "Open linked projects"
+        ]
+      },
+      "crm": {
+        "title": "CRM",
+        "description": "Manage leads, clients and sales opportunities from one place.",
+        "quickTips": [
+          "Review contacts and open deals",
+          "Move to Pipeline to add and follow leads",
+          "Keep notes so follow-ups stay clear"
+        ],
+        "learn": [
+          "Add a lead",
+          "Update the status",
+          "Add a note",
+          "Follow up on a lead"
+        ],
+        "tutorial": {
+          "title": "How to use CRM",
+          "duration": "About 45 sec",
+          "steps": [
+            {
+              "title": "Open CRM / Pipeline",
+              "body": "Pipeline is where sales leads live. CRM contacts keep relationship context next to those opportunities.",
+              "stage": 0,
+              "visual": "Open CRM navigation"
+            },
+            {
+              "title": "Click New lead",
+              "body": "Start a lead when someone shows interest. You stay in control of every save.",
+              "stage": 1,
+              "visual": "Highlight New lead"
+            },
+            {
+              "title": "Enter example details",
+              "body": "Add a clear title and basic details so the opportunity is easy to recognize later.",
+              "stage": 2,
+              "visual": "Fill lead form"
+            },
+            {
+              "title": "Save the lead",
+              "body": "Saving stores the lead in your workspace. Nothing is created until you choose Save.",
+              "stage": 3,
+              "visual": "Save lead"
+            },
+            {
+              "title": "Change the status",
+              "body": "Move the lead through stages such as New, Contacted or Qualified as the conversation progresses.",
+              "stage": 4,
+              "visual": "Change stage"
+            },
+            {
+              "title": "Add a note or follow-up",
+              "body": "Capture the next step so you do not rely on memory alone.",
+              "stage": 5,
+              "visual": "Add note"
+            },
+            {
+              "title": "See the lead on the board",
+              "body": "The lead appears in its stage column so you can follow up and keep momentum.",
+              "stage": 6,
+              "visual": "Lead on board"
+            }
+          ]
+        },
+        "tour": {
+          "steps": {
+            "new-lead": {
+              "title": "Add a new lead here",
+              "body": "Click New lead to open the form. Assistify will not create anything until you save."
+            },
+            "fill-form": {
+              "title": "Fill in the key details",
+              "body": "Give the lead a clear title and update fields that matter for follow-up."
+            },
+            "save": {
+              "title": "Save the lead",
+              "body": "Click Save when you are ready. This tour never saves for you."
+            },
+            "follow-up": {
+              "title": "Follow up from here",
+              "body": "Great. From here you can change the stage, add notes and keep the opportunity moving."
+            }
+          }
+        }
+      },
+      "pipeline": {
+        "title": "Pipeline",
+        "description": "Track potential revenue from first opportunity to won deal.",
+        "quickTips": [
+          "Create leads with New lead",
+          "Drag cards between stages",
+          "Open a lead to edit value, stage and notes"
+        ],
+        "learn": [
+          "Add a lead",
+          "Move a stage",
+          "Open lead details",
+          "Track pipeline value"
+        ]
+      },
+      "projects": {
+        "title": "Projects",
+        "description": "Organize client delivery with deadlines, tasks and shared context.",
+        "quickTips": [
+          "Create a project for active client work",
+          "Link the right client",
+          "Use the workspace for notes and documents"
+        ],
+        "learn": [
+          "Create a project",
+          "Open a project workspace",
+          "Track delivery status"
+        ]
+      },
+      "tasks": {
+        "title": "Tasks",
+        "description": "Track what needs to be done, who owns it and when it is due.",
+        "quickTips": [
+          "Add tasks with clear owners",
+          "Filter by status or project",
+          "Close work when it is done"
+        ],
+        "learn": [
+          "Create a task",
+          "Update status",
+          "Focus on due work"
+        ]
+      },
+      "copilot": {
+        "title": "Copilot",
+        "description": "Copilot is your AI assistant inside Assistify. It can use workspace context you provide to help plan, write and summarize — always review the output.",
+        "quickTips": [
+          "Summarize a client",
+          "Draft a follow-up email",
+          "Create a project plan",
+          "Prepare a proposal outline",
+          "Ask what needs attention today"
+        ],
+        "learn": [
+          "Ask a clear question",
+          "Review AI output before sending",
+          "Use client or project context when available"
+        ]
+      },
+      "agents": {
+        "title": "AI Agents",
+        "description": "Focused assistants for repeatable parts of your workflow. You stay responsible for final decisions.",
+        "quickTips": [
+          "Open an agent for a specific job",
+          "Provide enough context",
+          "Review drafts before using them"
+        ],
+        "learn": [
+          "Choose an agent",
+          "Start a focused conversation",
+          "Reuse useful outputs carefully"
+        ]
+      },
+      "proposals": {
+        "title": "Proposals",
+        "description": "Create proposal drafts using client and project information already in your workspace.",
+        "quickTips": [
+          "Start from a real client",
+          "Review pricing and scope",
+          "Export when the draft is ready"
+        ],
+        "learn": [
+          "Create a proposal",
+          "Edit generated sections",
+          "Keep documents with the project"
+        ]
+      },
+      "documents": {
+        "title": "Documents",
+        "description": "Keep important business documents connected to the work they belong to.",
+        "quickTips": [
+          "Store files with projects",
+          "Reuse context in drafts",
+          "Avoid scattering source files"
+        ],
+        "learn": [
+          "Browse workspace documents",
+          "Open a related file",
+          "Keep naming consistent"
+        ]
+      },
+      "automations": {
+        "title": "Automations",
+        "description": "Configure repeatable rules from currently supported triggers and actions. Automations stay reviewable and can be paused.",
+        "betaNote": "Automations are available in a limited beta form. Help only describes controls that exist today — do not expect every workflow pattern to run yet.",
+        "quickTips": [
+          "Review existing rules before enabling more",
+          "Prefer approval modes for consequential actions",
+          "Check history after a rule runs"
+        ],
+        "learn": [
+          "Open an automation rule",
+          "Understand trigger and action",
+          "Pause or disable when unsure"
+        ]
+      },
+      "knowledge": {
+        "title": "Knowledge Brain",
+        "description": "Store business facts Assistify can use for better answers. You control what is remembered.",
+        "quickTips": [
+          "Add clear, factual memories",
+          "Update outdated information",
+          "Keep sensitive secrets out of free-form notes when possible"
+        ],
+        "learn": [
+          "Add a knowledge item",
+          "Review stored facts",
+          "Improve AI context over time"
+        ]
+      },
+      "opportunities": {
+        "title": "Opportunities",
+        "description": "See suggested follow-ups and signals that may need attention. Treat suggestions as guidance, not automatic decisions.",
+        "quickTips": [
+          "Review suggestions with context",
+          "Act only on items that matter",
+          "Dismiss noise when needed"
+        ],
+        "learn": [
+          "Open an opportunity",
+          "Decide the next step",
+          "Keep ownership with your team"
+        ]
+      },
+      "integrations": {
+        "title": "Integrations",
+        "description": "Connect supported tools so Assistify can work with mailboxes and other services you enable.",
+        "quickTips": [
+          "Connect only what you need",
+          "Owners and admins manage connections",
+          "Tokens stay encrypted at rest"
+        ],
+        "learn": [
+          "Review available integrations",
+          "Connect a provider when ready",
+          "Disconnect if access should end"
+        ]
+      }
+    }
+  }
+}

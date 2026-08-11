@@ -1,0 +1,135 @@
+/**
+ * Assistify theme tokens (Sprint 31)
+ * Central semantic surfaces — prefer these over hardcoded hex in JSX.
+ *
+ * Marketing uses data-theme="light" (light-first).
+ * Authenticated app remains dark by default; light tokens are ready for gradual adoption.
+ */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --theme-background: #000000;
+  --theme-surface: #0a0a0b;
+  --theme-surface-muted: #18181b;
+  --theme-border: rgba(255, 255, 255, 0.1);
+  --theme-border-strong: rgba(255, 255, 255, 0.16);
+  --theme-text-primary: #fafafa;
+  --theme-text-secondary: #a1a1aa;
+  --theme-text-muted: #71717a;
+  --theme-brand: var(--brand-500);
+  --theme-brand-hover: var(--brand-600);
+  --theme-brand-soft: var(--brand-soft);
+  --theme-brand-border: var(--brand-border);
+  --theme-focus: rgba(34, 197, 94, 0.85);
+  --theme-shadow: 0 18px 50px -28px rgba(0, 0, 0, 0.65);
+  --theme-shadow-brand: 0 24px 60px -32px rgba(34, 197, 94, 0.35);
+
+  /* Semantic (unchanged meaning across themes) */
+  --theme-danger: #ef4444;
+  --theme-warning: #f59e0b;
+  --theme-success: #22c55e;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --theme-background: #f7f8f7;
+  --theme-surface: #ffffff;
+  --theme-surface-muted: #eef2ef;
+  --theme-border: rgba(17, 24, 39, 0.08);
+  --theme-border-strong: rgba(17, 24, 39, 0.14);
+  --theme-text-primary: #111827;
+  --theme-text-secondary: #6b7280;
+  --theme-text-muted: #9ca3af;
+  --theme-brand: #16a34a;
+  --theme-brand-hover: #15803d;
+  --theme-brand-soft: rgba(22, 163, 74, 0.08);
+  --theme-brand-border: rgba(22, 163, 74, 0.22);
+  --theme-focus: rgba(22, 163, 74, 0.9);
+  --theme-shadow: 0 18px 40px -28px rgba(17, 24, 39, 0.28);
+  --theme-shadow-brand: 0 24px 50px -30px rgba(22, 163, 74, 0.28);
+
+  --theme-danger: #dc2626;
+  --theme-warning: #d97706;
+  --theme-success: #16a34a;
+
+  /* Align shadcn HSL vars for light surfaces when theme is light */
+  --background: 150 7% 97%;
+  --foreground: 220 39% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 39% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 39% 11%;
+  --primary: 142 72% 37%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 150 10% 94%;
+  --secondary-foreground: 220 39% 11%;
+  --muted: 150 10% 94%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 142 72% 37%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 13% 90%;
+  --input: 220 13% 90%;
+  --ring: 142 72% 37%;
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme="system"] {
+    color-scheme: light;
+    --theme-background: #f7f8f7;
+    --theme-surface: #ffffff;
+    --theme-surface-muted: #eef2ef;
+    --theme-border: rgba(17, 24, 39, 0.08);
+    --theme-border-strong: rgba(17, 24, 39, 0.14);
+    --theme-text-primary: #111827;
+    --theme-text-secondary: #6b7280;
+    --theme-text-muted: #9ca3af;
+    --theme-brand: #16a34a;
+    --theme-brand-hover: #15803d;
+    --theme-brand-soft: rgba(22, 163, 74, 0.08);
+    --theme-brand-border: rgba(22, 163, 74, 0.22);
+    --theme-focus: rgba(22, 163, 74, 0.9);
+    --theme-shadow: 0 18px 40px -28px rgba(17, 24, 39, 0.28);
+    --theme-shadow-brand: 0 24px 50px -30px rgba(22, 163, 74, 0.28);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    color-scheme: dark;
+  }
+}
+
+.theme-bg { background-color: var(--theme-background); }
+.theme-surface { background-color: var(--theme-surface); }
+.theme-surface-muted { background-color: var(--theme-surface-muted); }
+.theme-border { border-color: var(--theme-border); }
+.theme-text { color: var(--theme-text-primary); }
+.theme-text-secondary { color: var(--theme-text-secondary); }
+.theme-shadow { box-shadow: var(--theme-shadow); }
+
+/* Marketing light atmospheric grid (subtle, not neon) */
+.marketing-grid-bg {
+  background-image: radial-gradient(circle at 1px 1px, rgba(17, 24, 39, 0.045) 1px, transparent 0);
+  background-size: 28px 28px;
+}
+
+.marketing-soft-green {
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(22, 163, 74, 0.1), transparent 55%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-slide-in-right,
+  .animate-pulse-glow,
+  .animate-ping-slow,
+  .ai-pop,
+  .ai-progress {
+    animation: none !important;
+  }
+}

@@ -598,6 +598,50 @@
         {
           "question": "Kan ik Assistify in het Nederlands en Engels gebruiken?",
           "answer": "Ja. De applicatie en deze productpagina's ondersteunen Nederlands en Engels. Records die gebruikers zelf invoeren blijven in de taal waarin ze zijn geschreven."
+        },
+        {
+          "question": "Heb ik technische kennis nodig?",
+          "answer": "Nee. Assistify is gemaakt voor freelancers, agencies en kleine bedrijven. Je werkt via duidelijke schermen voor klanten, projecten, taken en documenten. AI-functies vragen je belangrijke output te controleren."
+        },
+        {
+          "question": "Kan ik Assistify in het Nederlands gebruiken?",
+          "answer": "Ja. Assistify ondersteunt Nederlands en Engels in de marketing-site en in het product. Je kunt altijd van taal wisselen."
+        },
+        {
+          "question": "Kan AI fouten maken?",
+          "answer": "Ja. AI-concepten en suggesties kunnen onvolledig of onjuist zijn. Controleer Copilot- en agentoutput altijd vóór je e-mails verstuurt, documenten deelt of beslissingen neemt."
+        },
+        {
+          "question": "Kan ik bestaande klanten toevoegen?",
+          "answer": "Ja. Je kunt klanten in Assistify aanmaken en hun gegevens, projecten en gerelateerd werk in je workspace verbonden houden."
+        },
+        {
+          "question": "Kan ik projecten en taken beheren?",
+          "answer": "Ja. Projecten en taken zijn kernmodules. Je organiseert levering, eigenaren en deadlines naast de bijbehorende klant."
+        },
+        {
+          "question": "Wat kan Copilot?",
+          "answer": "Copilot kan helpen klanten samen te vatten, opvolgmails te schrijven, projectplannen te maken, offerte-opzetten voor te bereiden en vragen te beantwoorden met workspace-context. Jij blijft verantwoordelijk voor de review."
+        },
+        {
+          "question": "Kan Assistify offertes maken?",
+          "answer": "Ja. Assistify kan helpen offertes te schrijven met klant- en projectinformatie. Jij controleert en verfijnt het concept vóór delen."
+        },
+        {
+          "question": "Wat doet Knowledge Brain?",
+          "answer": "Knowledge Brain bewaart bedrijfsfeiten die jij kiest, zodat Assistify relevantere antwoorden kan geven. Jij bepaalt wat wordt opgeslagen."
+        },
+        {
+          "question": "Is Assistify al volledig gelanceerd?",
+          "answer": "Nee. Assistify zit in closed beta. Functies kunnen veranderen en sommige modules zijn nog beperkt."
+        },
+        {
+          "question": "Kan ik later mijn team toevoegen?",
+          "answer": "Ja. Assistify ondersteunt samenwerking in een workspace. Teamfunctionaliteit groeit verder tijdens de beta."
+        },
+        {
+          "question": "Hoe worden mijn gegevens gescheiden van andere workspaces?",
+          "answer": "Geauthenticeerde verzoeken zijn beperkt tot je actieve workspace of organisatie. Assistify is zo ontworpen dat één workspace niet de gegevens van een andere kan lezen."
         }
       ],
       "more": {
@@ -700,8 +744,8 @@
       }
     },
     "seo": {
-      "homeTitle": "AI-bedrijfssoftware voor zelfstandige teams",
-      "homeDescription": "Breng klanten, projecten, documenten en je dagelijkse werk samen in één werkplek met AI."
+      "homeTitle": "Assistify — Één slimme werkplek voor je bedrijf",
+      "homeDescription": "Assistify is één slimme werkplek voor klanten, projecten, taken, offertes, documenten en AI-ondersteund dagelijks werk. Doe mee aan de closed beta."
     },
     "nav": {
       "product": "Product",
@@ -742,14 +786,15 @@
       "login": "Inloggen",
       "getStarted": "Aan de slag",
       "openAssistify": "Open Assistify",
-      "learnMore": "Ontdek het product"
+      "learnMore": "Meer informatie"
     },
     "hero": {
-      "eyebrow": "Jouw bedrijf, één slimme werkplek",
-      "headline": "Beheer je bedrijf slimmer met AI.",
-      "body": "Assistify brengt je klanten, projecten, offertes en financiën samen en helpt je om werk vooruit te brengen. Minder wisselen, minder administratie en meer tijd voor wat echt telt.",
+      "eyebrow": "Closed beta · Één slimme werkplek",
+      "headline": "Je bedrijf. Eén werkplek. AI die met je meedenkt.",
+      "body": "Assistify helpt kleine teams om klanten, projecten, taken, offertes, documenten en verkoopkansen vanuit één plek te beheren — met AI die de context van je workspace gebruikt om te plannen, schrijven en werk voor te bereiden.",
       "primary": "Aan de slag",
-      "secondary": "Bekijk hoe het werkt"
+      "secondary": "Bekijk hoe het werkt",
+      "trust": "Geen betaling vereist tijdens de closed beta. Gebouwd voor freelancers, agencies en kleine bedrijven."
     },
     "betaBanner": "Beta",
     "pillars": {
@@ -902,6 +947,274 @@
       "tasksHint": "Helder en controleerbaar",
       "copilot": "AI Copilot",
       "copilotLine": "Maak een korte projectupdate op basis van de laatste activiteit in je werkplek."
+    },
+    "whatIs": {
+      "eyebrow": "Duidelijk antwoord",
+      "title": "Wat is Assistify?",
+      "lead": "Assistify is één slimme werkplek voor het beheren van je bedrijf.",
+      "p1": "Beheer klanten, projecten, taken, offertes, documenten, verkoopkansen en dagelijkse werkzaamheden vanuit één omgeving.",
+      "p2": "De ingebouwde AI gebruikt de context van je workspace om je te helpen met plannen, schrijven, samenvatten en voorbereiden — zodat je minder tussen losse tools hoeft te wisselen.",
+      "p3": "Jij blijft in controle: bekijk belangrijke output voordat het een e-mail, document of volgende stap wordt."
+    },
+    "withoutWith": {
+      "eyebrow": "Minder schakelen",
+      "title": "Losse tools versus één verbonden werkplek",
+      "body": "Assistify vermindert tool-switching door dagelijkse bedrijfsworkflows samen te brengen. We beweren niet elk gespecialiseerd systeem te vervangen.",
+      "withoutTitle": "Zonder Assistify",
+      "withTitle": "Met Assistify",
+      "withoutNote": "Context, opvolging en concepten leven op verschillende plekken.",
+      "withModules": "Klanten · Projecten · Taken · CRM · Documenten",
+      "aiContext": "AI-CONTEXT",
+      "message": "Één verbonden werkplek in plaats van losse tools.",
+      "tools": {
+        "email": "E-mail",
+        "spreadsheets": "Spreadsheets",
+        "ai": "Losse AI-tools",
+        "tasks": "Taak-apps",
+        "docs": "Documenten",
+        "crm": "CRM",
+        "notes": "Notities"
+      }
+    },
+    "showcase": {
+      "eyebrow": "Producttour",
+      "title": "Bekijk wat je in Assistify kunt doen",
+      "body": "Ontdek de modules die kleine bedrijven het meest gebruiken — met concrete acties, geen holle termen.",
+      "items": {
+        "crm": {
+          "label": "CRM",
+          "headline": "Houd elke klantrelatie in context.",
+          "summary": "Bewaar klantinformatie, koppel projecten, volg kansen en geef AI bruikbare klantcontext.",
+          "actions": [
+            "Klantinformatie opslaan",
+            "Projecten koppelen",
+            "Kansen volgen",
+            "AI nuttige klantcontext geven"
+          ],
+          "path": "/product/crm",
+          "visualTitle": "CRM-werkplek",
+          "visualLines": [
+            "Klantprofiel met contactgegevens",
+            "Open kansen ernaast",
+            "Notities klaar voor opvolging"
+          ]
+        },
+        "projects": {
+          "label": "Projecten",
+          "headline": "Organiseer levering zonder de draad te verliezen.",
+          "summary": "Plan projecten, volg taken en houd documenten bij het klantwerk waar ze bij horen.",
+          "actions": [
+            "Klantprojecten maken",
+            "Taken en deadlines volgen",
+            "Notities in één workspace",
+            "Gekoppelde documenten openen"
+          ],
+          "path": "/product/projects",
+          "visualTitle": "Projectworkspace",
+          "visualLines": [
+            "Projectplanning en eigenaren",
+            "Takenlijst gekoppeld aan de klant",
+            "Bestanden en notities in context"
+          ]
+        },
+        "copilot": {
+          "label": "AI Copilot",
+          "headline": "Vraag om nuttig werk, niet om lege chat.",
+          "summary": "Copilot kan workspace-context gebruiken om samen te vatten, te schrijven en voor te bereiden — jij controleert vóór iets definitief is.",
+          "actions": [
+            "Vat een klant samen",
+            "Schrijf een opvolgmail",
+            "Maak een projectplan",
+            "Vraag wat aandacht nodig heeft"
+          ],
+          "path": "/product/copilot",
+          "visualTitle": "Copilot",
+          "visualLines": [
+            "Prompt met workspace-context",
+            "Concept klaar voor review",
+            "Jij bevestigt de volgende stap"
+          ]
+        },
+        "proposals": {
+          "label": "Offertes",
+          "headline": "Maak sneller offertes met echte context.",
+          "summary": "Start vanuit klant- en projectinformatie die al in Assistify staat, en verfijn het concept zelf.",
+          "actions": [
+            "Start vanuit een klant",
+            "Schrijf offertesecties",
+            "Controleer prijs en scope",
+            "Exporteer wanneer klaar"
+          ],
+          "path": "/product/documents",
+          "visualTitle": "Offerteconcept",
+          "visualLines": [
+            "Klantnaam en scope",
+            "Bewerkbare secties",
+            "Export wanneer jij akkoord gaat"
+          ]
+        },
+        "automations": {
+          "label": "Automatiseringen",
+          "headline": "Verminder herhaalwerk zorgvuldig.",
+          "summary": "Stel ondersteunde regels in met duidelijke triggers en acties. Pauzeer, bewerk en bekijk geschiedenis — zonder overdrijving tijdens de beta.",
+          "actions": [
+            "Bekijk ondersteunde triggers",
+            "Kies controleerbare acties",
+            "Pauzeer regels wanneer nodig",
+            "Controleer geschiedenis"
+          ],
+          "path": "/product/automations",
+          "visualTitle": "Automatiseringsregels",
+          "visualLines": [
+            "Trigger → actie",
+            "Goedkeuringsvriendelijke modi",
+            "Geschiedenis die je kunt bekijken"
+          ]
+        },
+        "opportunities": {
+          "label": "Kansen",
+          "headline": "Zie opvolging die aandacht vraagt.",
+          "summary": "Kansen tonen signalen en voorgestelde stappen. Jij bepaalt wat ertoe doet.",
+          "actions": [
+            "Bekijk voorgestelde opvolging",
+            "Open gerelateerde klantcontext",
+            "Kies de volgende actie",
+            "Negeer ruis wanneer nodig"
+          ],
+          "path": "/product/opportunities",
+          "visualTitle": "Kansen",
+          "visualLines": [
+            "Voorgestelde opvolging",
+            "Gekoppelde klant of deal",
+            "Jij neemt de beslissing"
+          ]
+        }
+      }
+    },
+    "aiContext": {
+      "eyebrow": "AI die helpt",
+      "title": "AI die de context van je werk begrijpt.",
+      "body": "Generieke AI begint met een lege chat. Assistify kan relevante workspace-informatie gebruiken die je hier al bijhoudt.",
+      "genericTitle": "Generieke AI",
+      "genericBody": "Begint leeg. Je legt de klant, het project en de geschiedenis elke keer opnieuw uit.",
+      "assistifyTitle": "Assistify Copilot",
+      "caveat": "Assistify claimt geen perfect geheugen en neemt geen autonome bedrijfsbeslissingen. Controleer belangrijke output vóór je verzendt of publiceert.",
+      "sources": {
+        "clients": "Klantcontext",
+        "projects": "Projectcontext",
+        "tasks": "Taken",
+        "knowledge": "Workspace-kennis",
+        "business": "Bestaande bedrijfsinformatie"
+      }
+    },
+    "aiExamples": {
+      "title": "Voorbeeldprompts die je kunt proberen",
+      "items": {
+        "summarize": "Vat deze klant samen",
+        "plan": "Maak een projectplan",
+        "email": "Schrijf een opvolgmail",
+        "proposal": "Bereid een offerte voor",
+        "attention": "Wat heeft vandaag mijn aandacht nodig?",
+        "tasks": "Maak van deze notities taken"
+      }
+    },
+    "capabilities": {
+      "eyebrow": "Resultaten",
+      "title": "Wat kan Assistify?",
+      "body": "Praktische uitkomsten voor dagelijks bedrijfswerk — gekoppeld aan echte productmodules.",
+      "items": {
+        "clients": {
+          "title": "Beheer je klanten",
+          "body": "Houd relaties en contactgegevens op één plek.",
+          "path": "/product/crm"
+        },
+        "work": {
+          "title": "Organiseer je werk",
+          "body": "Projecten en taken blijven verbonden met de klant.",
+          "path": "/product/projects"
+        },
+        "proposals": {
+          "title": "Maak sneller offertes",
+          "body": "Schrijf offertes met bestaande bedrijfscontext.",
+          "path": "/product/documents"
+        },
+        "plan": {
+          "title": "Plan projecten met AI",
+          "body": "Vraag Copilot om levering te structureren.",
+          "path": "/product/copilot"
+        },
+        "knowledge": {
+          "title": "Houd bedrijfskennis bij elkaar",
+          "body": "Bewaar feiten die AI en je team kunnen hergebruiken.",
+          "path": "/product/knowledge"
+        },
+        "followups": {
+          "title": "Zie opvolgkansen",
+          "body": "Bekijk voorgestelde stappen die een menselijke beslissing vragen.",
+          "path": "/product/opportunities"
+        },
+        "repetitive": {
+          "title": "Verminder herhaalwerk",
+          "body": "Gebruik beperkte, controleerbare automatiseringen waar ondersteund.",
+          "path": "/product/automations"
+        },
+        "drafts": {
+          "title": "Zet context om in nuttige concepten",
+          "body": "Bereid e-mails, plannen en documenten voor ter review.",
+          "path": "/product/copilot"
+        }
+      }
+    },
+    "workflows": {
+      "eyebrow": "Use cases",
+      "title": "Workflows die verbonden blijven",
+      "body": "Alleen ondersteunde Assistify-stromen — als praktische reeksen, geen featurelijsten.",
+      "freelancer": {
+        "title": "Freelancers",
+        "body": "Van eerste interesse tot geleverd werk zonder context opnieuw op te bouwen.",
+        "steps": [
+          "Nieuwe lead",
+          "Klant",
+          "Offerte",
+          "Project",
+          "Taken"
+        ]
+      },
+      "agency": {
+        "title": "Agencies",
+        "body": "Houd klantlevering gecoördineerd over projecten en teamleden.",
+        "steps": [
+          "Klant",
+          "Meerdere projecten",
+          "Teamtaken",
+          "AI-hulp",
+          "Offertes / documenten"
+        ]
+      },
+      "smallBusiness": {
+        "title": "Kleine bedrijven",
+        "body": "Beheer relaties, pipeline en dagelijkse operatie vanuit één workspace.",
+        "steps": [
+          "CRM",
+          "Pipeline",
+          "Operatie",
+          "Kansen",
+          "AI Copilot"
+        ]
+      }
+    },
+    "trust": {
+      "eyebrow": "Vertrouwen zonder nep-reviews",
+      "title": "Gebouwd op productfeiten, niet op verzonnen social proof",
+      "body": "We verzinnen geen testimonials of klantaantallen. Dit is wat Assistify vandaag daadwerkelijk biedt.",
+      "points": {
+        "workspace": "Workspace-scheiding houdt organisatiegegevens gescheiden.",
+        "auth": "Veilige authenticatie met httpOnly-cookies en CSRF-bescherming.",
+        "ai": "AI onder jouw controle — bekijk belangrijke output vóór actie.",
+        "beta": "Transparante closed-beta status met duidelijke beperkingen.",
+        "locale": "Nederlands en Engels in marketing én product.",
+        "billing": "Geen betaling vereist tijdens de beta zolang checkout uitstaat."
+      }
     }
   }
 }

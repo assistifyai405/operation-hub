@@ -137,7 +137,7 @@ export default function KnowledgeBrain() {
 
   return (
     <div className="space-y-6" data-testid="knowledge-brain-page">
-      <PageIntro title={t("pages.knowledgeBrain.title")} description={t("pages.knowledgeBrain.description")} help={t("help.knowledgeBrain")} />
+      <PageIntro title={t("pages.knowledgeBrain.title")} description={t("pages.knowledgeBrain.description")} helpModule="knowledge" />
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

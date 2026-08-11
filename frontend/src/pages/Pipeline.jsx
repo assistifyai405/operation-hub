@@ -86,7 +86,7 @@ export default function Pipeline() {
 
   return (
     <div className="space-y-5" data-testid="pipeline-page">
-      <PageIntro title={t("pages.pipeline.title")} description={t("pages.pipeline.description")} />
+      <PageIntro title={t("pages.pipeline.title")} description={t("pages.pipeline.description")} helpModule="pipeline" />
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

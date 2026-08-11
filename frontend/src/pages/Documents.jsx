@@ -73,7 +73,7 @@ export default function Documents() {
 
   return (
     <div className="space-y-5" data-testid="documents-page">
-      <PageIntro title={t("pages.documents.title")} description={t("pages.documents.description")} />
+      <PageIntro title={t("pages.documents.title")} description={t("pages.documents.description")} helpModule="documents" />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="flex items-center gap-2 text-sm text-zinc-400">
