@@ -45,7 +45,9 @@ class AIService:
         # Lazy import config to avoid circular imports at module load in tests
         self.provider = (provider or os.environ.get("AI_PROVIDER") or "openai").lower()
         self.model = model or os.environ.get("AI_MODEL") or "gpt-4o-mini"
-        if api_key:
+        # Explicit api_key (including "") means "use this value" — empty defers failure to first call.
+        # None means resolve from environment/settings.
+        if api_key is not None:
             self.api_key = api_key
         else:
             self.api_key = self._resolve_key(self.provider)
