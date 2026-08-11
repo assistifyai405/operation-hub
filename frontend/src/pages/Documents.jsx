@@ -100,10 +100,10 @@ export default function Documents() {
       ) : data.items.length === 0 ? (
         <EmptyState
           icon={FolderOpen}
-          title={q || type !== "All" ? "No matching documents" : "No documents yet"}
-          description={q || type !== "All" ? "Try a different search or filter." : "Documents store contracts, briefs, and files alongside your clients and projects."}
-          why={q || type !== "All" ? undefined : "Upload a file to keep source material in Assistify for you and AI context."}
-          actionLabel={q || type !== "All" ? undefined : "Upload document"}
+          title={q || type !== "All" ? "Geen bijpassende documenten" : "Nog geen documenten"}
+          description={q || type !== "All" ? "Probeer een andere zoekopdracht of filter." : "Documenten bewaren contracten, briefs en bestanden bij je klanten en projecten."}
+          why={q || type !== "All" ? undefined : "Upload een bestand zodat bronmateriaal in Assistify blijft — ook voor AI-context."}
+          actionLabel={q || type !== "All" ? undefined : "Document uploaden"}
           onAction={q || type !== "All" ? undefined : () => fileRef.current?.click()}
           testid="documents-empty"
         />

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { emailsApi } from "@/lib/api";
+import { emailsNl, fmtNlDate } from "@/lib/nlCopy";
 import EmptyState from "@/components/EmptyState";
 import HelpTip from "@/components/HelpTip";
 import {
@@ -17,11 +18,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const TABS = [
-  { id: "drafts", label: "Drafts" },
-  { id: "awaiting_approval", label: "Awaiting approval" },
-  { id: "scheduled", label: "Scheduled" },
-  { id: "sent", label: "Sent" },
-  { id: "failed", label: "Failed" },
+  { id: "drafts", label: emailsNl.tabs.drafts },
+  { id: "awaiting_approval", label: emailsNl.tabs.awaiting_approval },
+  { id: "scheduled", label: emailsNl.tabs.scheduled },
+  { id: "sent", label: emailsNl.tabs.sent },
+  { id: "failed", label: emailsNl.tabs.failed },
 ];
 
 const statusStyle = {
@@ -38,18 +39,26 @@ const statusStyle = {
   rejected: "bg-rose-500/15 text-rose-300",
 };
 
-const fmtDate = (d) => {
-  if (!d) return "—";
-  try {
-    return new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return "—";
-  }
-};
-
 const emptyForm = () => ({
   to: "", cc: "", subject: "", textBody: "",
 });
+
+const formatCopyValue = (copyMap, value, fallback = "—") => {
+  if (!value) return fallback;
+  return copyMap[value] || String(value).replace(/_/g, " ");
+};
+
+const formatTemplate = (template, values) => Object.entries(values).reduce(
+  (text, [key, value]) => text.replace(`{${key}}`, value),
+  template,
+);
+
+const formatTransportLabel = (label) => {
+  if (!label) return null;
+  if (/gmail/i.test(label)) return emailsNl.sendGmail;
+  if (/outlook|microsoft/i.test(label)) return emailsNl.sendOutlook;
+  return label;
+};
 
 export default function EmailCenter() {
   const { user } = useAuth();
@@ -77,8 +86,8 @@ export default function EmailCenter() {
       ]);
       setData(list);
       setStatusInfo(st);
-    } catch (e) {
-      setError(e.message || "Failed to load emails");
+    } catch {
+      setError(emailsNl.loadFailed);
     } finally {
       setLoading(false);
     }
@@ -109,8 +118,8 @@ export default function EmailCenter() {
   }, []);
 
   const createDraft = async ({ generateAi = false } = {}) => {
-    if (!form.to.trim()) { toast.error("Recipient is required"); return; }
-    if (!form.subject.trim() && !generateAi) { toast.error("Subject is required"); return; }
+    if (!form.to.trim()) { toast.error(emailsNl.recipientRequired); return; }
+    if (!form.subject.trim() && !generateAi) { toast.error(emailsNl.subjectRequired); return; }
     setSaving(true);
     try {
       const body = {
@@ -121,7 +130,7 @@ export default function EmailCenter() {
         generateAi,
       };
       const doc = await emailsApi.create(body);
-      toast.success(generateAi ? "AI draft created" : "Draft created");
+      toast.success(generateAi ? emailsNl.toasts.aiDraftCreated : emailsNl.toasts.draftCreated);
       setComposeOpen(false);
       setForm(emptyForm());
       setTab("drafts");
@@ -145,7 +154,7 @@ export default function EmailCenter() {
         textBody: detail.textBody,
       });
       setDetail(updated);
-      toast.success("Draft saved");
+      toast.success(emailsNl.toasts.draftSaved);
       load();
     } catch (e) {
       toast.error(e.message);
@@ -154,7 +163,40 @@ export default function EmailCenter() {
     }
   };
 
+  const blocked = Boolean(statusInfo && !statusInfo.canSend);
+  const actionSuccess = {
+    submit: emailsNl.toasts.submitted,
+    approve: emailsNl.toasts.approved,
+    reject: emailsNl.toasts.rejected,
+    send: emailsNl.toasts.sendCompleted,
+    cancel: emailsNl.toasts.cancelled,
+    retry: emailsNl.toasts.retryCompleted,
+    improve: emailsNl.toasts.aiRewriteApplied,
+  };
+  const actionLabels = {
+    submit: emailsNl.submit,
+    approve: emailsNl.approve,
+    reject: emailsNl.reject,
+    send: emailsNl.send,
+    cancel: emailsNl.cancel,
+    retry: emailsNl.retry,
+    improve: emailsNl.improve,
+  };
+
+  const requestConfirm = (action, id) => {
+    if ((action === "send" || action === "retry") && blocked) {
+      toast.error(emailsNl.sendBlockedToast);
+      return;
+    }
+    setConfirm({ action, id });
+  };
+
   const runAction = async (action, id) => {
+    if ((action === "send" || action === "retry") && blocked) {
+      toast.error(emailsNl.sendBlockedToast);
+      setConfirm(null);
+      return;
+    }
     setBusyId(id);
     try {
       let res;
@@ -165,15 +207,7 @@ export default function EmailCenter() {
       else if (action === "cancel") res = await emailsApi.cancel(id);
       else if (action === "retry") res = await emailsApi.retry(id);
       else if (action === "improve") res = await emailsApi.improve(id, { command: "improve" });
-      toast.success({
-        submit: "Submitted for approval",
-        approve: "Approved",
-        reject: "Rejected",
-        send: "Send completed",
-        cancel: "Cancelled",
-        retry: "Retry completed",
-        improve: "AI rewrite applied",
-      }[action] || "Done");
+      toast.success(actionSuccess[action] || emailsNl.toasts.done);
       if (detail?.id === id) setDetail(res);
       await load();
     } catch (e) {
@@ -185,7 +219,6 @@ export default function EmailCenter() {
   };
 
   const counts = data.counts || {};
-  const blocked = statusInfo && !statusInfo.canSend;
 
   const detailEditable = useMemo(
     () => detail && ["draft", "pending_approval", "approved", "rejected", "failed", "needs_review", "delivery_unknown"].includes(detail.status),
@@ -193,10 +226,13 @@ export default function EmailCenter() {
   );
 
   const transport = detail?.transport;
-  const sendLabel = transport?.label
-    || (detail?.replyProvider === "google" ? "Send via Gmail"
-      : detail?.replyProvider === "microsoft" ? "Send via Outlook"
-        : "Send");
+  const transportLabel = formatTransportLabel(transport?.label);
+  const providerReplyLabel = detail?.replyProvider === "google" ? emailsNl.sendGmail
+    : detail?.replyProvider === "microsoft" ? emailsNl.sendOutlook
+      : (transportLabel || emailsNl.providerReply);
+  const sendLabel = detail?.replyProvider === "google" ? emailsNl.sendGmail
+    : detail?.replyProvider === "microsoft" ? emailsNl.sendOutlook
+      : (transportLabel || emailsNl.send);
   const transportBlocked = Boolean(transport?.reconnectRequired || (transport?.isThreadedReply && transport?.connected === false));
 
   return (
@@ -204,16 +240,16 @@ export default function EmailCenter() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="flex items-center gap-2 text-sm text-zinc-400">
-            Review drafts, approve outbound mail, and send safely.
-            <HelpTip testid="emails-help" text="Sending is disabled until EMAIL_SENDING_ENABLED and organization email settings are turned on. Approval may be required before send." />
+            {emailsNl.intro}
+            <HelpTip testid="emails-help" text={emailsNl.help} />
           </p>
           {statusInfo && (
             <p className="mt-1 text-xs text-zinc-500" data-testid="email-sending-status">
-              Provider: {statusInfo.provider}
+              {emailsNl.provider}: {statusInfo.provider}
               {" · "}
-              {statusInfo.canSend ? "Sending ready" : (statusInfo.blockedReason || "Sending disabled")}
+              {statusInfo.canSend ? emailsNl.sendingReady : emailsNl.sendingDisabled}
               {" · "}
-              Today: {statusInfo.sentToday}/{statusInfo.dailyLimit}
+              {emailsNl.today}: {statusInfo.sentToday}/{statusInfo.dailyLimit}
             </p>
           )}
         </div>
@@ -223,7 +259,7 @@ export default function EmailCenter() {
           onClick={() => { setForm(emptyForm()); setComposeOpen(true); }}
           className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500"
         >
-          <Plus className="h-4 w-4" /> Compose draft
+          <Plus className="h-4 w-4" /> {emailsNl.compose}
         </button>
       </div>
 
@@ -249,11 +285,11 @@ export default function EmailCenter() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
           <input
-            aria-label="Search emails"
+            aria-label={emailsNl.searchAria}
             data-testid="email-search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search subject or recipient…"
+            placeholder={emailsNl.search}
             className="w-full rounded-lg border border-white/10 bg-zinc-950 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 sm:w-64"
           />
         </div>
@@ -261,7 +297,7 @@ export default function EmailCenter() {
 
       {blocked && (
         <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-200" data-testid="email-blocked-banner">
-          Outbound sending is currently blocked. Configure Settings → Email and enable sending when ready.
+          {emailsNl.blockedBanner}
         </div>
       )}
 
@@ -272,9 +308,9 @@ export default function EmailCenter() {
       ) : !(data.items || []).length ? (
         <EmptyState
           icon={Mail}
-          title="No emails here"
-          description="Compose a draft or let automations prepare follow-ups for review."
-          actionLabel="Compose draft"
+          title={emailsNl.emptyTitle}
+          description={emailsNl.emptyBody}
+          actionLabel={emailsNl.compose}
           onAction={() => setComposeOpen(true)}
         />
       ) : (
@@ -282,12 +318,12 @@ export default function EmailCenter() {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-zinc-500">
               <tr>
-                <th className="px-4 py-3 font-medium">Recipient</th>
-                <th className="px-4 py-3 font-medium">Subject</th>
-                <th className="px-4 py-3 font-medium">Source</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Creator</th>
-                <th className="px-4 py-3 font-medium">Date</th>
+                <th className="px-4 py-3 font-medium">{emailsNl.headers.recipient}</th>
+                <th className="px-4 py-3 font-medium">{emailsNl.headers.subject}</th>
+                <th className="px-4 py-3 font-medium">{emailsNl.headers.source}</th>
+                <th className="px-4 py-3 font-medium">{emailsNl.headers.status}</th>
+                <th className="px-4 py-3 font-medium">{emailsNl.headers.creator}</th>
+                <th className="px-4 py-3 font-medium">{emailsNl.headers.date}</th>
               </tr>
             </thead>
             <tbody>
@@ -300,14 +336,14 @@ export default function EmailCenter() {
                 >
                   <td className="px-4 py-3 text-zinc-200">{(row.to || []).join(", ")}</td>
                   <td className="px-4 py-3 text-zinc-100">{row.subject}</td>
-                  <td className="px-4 py-3 capitalize text-zinc-400">{row.source || "manual"}</td>
+                  <td className="px-4 py-3 text-zinc-400">{formatCopyValue(emailsNl.sources, row.source, emailsNl.sources.manual)}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-md px-2 py-0.5 text-xs ${statusStyle[row.status] || statusStyle.draft}`}>
-                      {row.status?.replace(/_/g, " ")}
+                      {formatCopyValue(emailsNl.statuses, row.status)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-zinc-400">{row.createdByName || row.createdByEmail || "—"}</td>
-                  <td className="px-4 py-3 text-zinc-500">{fmtDate(row.updatedAt || row.createdAt)}</td>
+                  <td className="px-4 py-3 text-zinc-500">{fmtNlDate(row.updatedAt || row.createdAt)}</td>
                 </tr>
               ))}
             </tbody>
@@ -319,28 +355,28 @@ export default function EmailCenter() {
       <Dialog open={composeOpen} onOpenChange={setComposeOpen}>
         <DialogContent className="max-w-lg border-white/10 bg-zinc-950 text-zinc-100" data-testid="email-compose-dialog">
           <DialogHeader>
-            <DialogTitle>Compose draft</DialogTitle>
+            <DialogTitle>{emailsNl.compose}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <label className="block text-xs text-zinc-400">To
-              <input aria-label="To" data-testid="compose-to" className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={form.to} onChange={(e) => setForm((s) => ({ ...s, to: e.target.value }))} placeholder="client@example.com" />
+            <label className="block text-xs text-zinc-400">{emailsNl.to}
+              <input aria-label={emailsNl.to} data-testid="compose-to" className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={form.to} onChange={(e) => setForm((s) => ({ ...s, to: e.target.value }))} placeholder="client@example.com" />
             </label>
-            <label className="block text-xs text-zinc-400">Cc
-              <input aria-label="Cc" data-testid="compose-cc" className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={form.cc} onChange={(e) => setForm((s) => ({ ...s, cc: e.target.value }))} />
+            <label className="block text-xs text-zinc-400">{emailsNl.cc}
+              <input aria-label={emailsNl.cc} data-testid="compose-cc" className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={form.cc} onChange={(e) => setForm((s) => ({ ...s, cc: e.target.value }))} />
             </label>
-            <label className="block text-xs text-zinc-400">Subject
-              <input aria-label="Subject" data-testid="compose-subject" className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={form.subject} onChange={(e) => setForm((s) => ({ ...s, subject: e.target.value }))} />
+            <label className="block text-xs text-zinc-400">{emailsNl.subject}
+              <input aria-label={emailsNl.subject} data-testid="compose-subject" className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={form.subject} onChange={(e) => setForm((s) => ({ ...s, subject: e.target.value }))} />
             </label>
-            <label className="block text-xs text-zinc-400">Body
-              <textarea aria-label="Body" data-testid="compose-body" rows={8} className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={form.textBody} onChange={(e) => setForm((s) => ({ ...s, textBody: e.target.value }))} />
+            <label className="block text-xs text-zinc-400">{emailsNl.body}
+              <textarea aria-label={emailsNl.body} data-testid="compose-body" rows={8} className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={form.textBody} onChange={(e) => setForm((s) => ({ ...s, textBody: e.target.value }))} />
             </label>
           </div>
           <DialogFooter className="gap-2 sm:gap-2">
             <button type="button" disabled={saving} onClick={() => createDraft({ generateAi: true })} className="inline-flex items-center gap-1.5 rounded-lg border border-violet-500/30 px-3 py-2 text-sm text-violet-300 hover:bg-violet-600/10" data-testid="compose-ai">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} AI draft
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} {emailsNl.aiDraft}
             </button>
             <button type="button" disabled={saving} onClick={() => createDraft()} className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500" data-testid="compose-save">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pencil className="h-4 w-4" />} Save draft
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pencil className="h-4 w-4" />} {emailsNl.saveDraft}
             </button>
           </DialogFooter>
         </DialogContent>
@@ -352,36 +388,36 @@ export default function EmailCenter() {
           {detail && (
             <>
               <DialogHeader>
-                <DialogTitle className="pr-6">{detail.subject || "Email"}</DialogTitle>
+                <DialogTitle className="pr-6">{detail.subject || emailsNl.email}</DialogTitle>
               </DialogHeader>
               <div className="space-y-3 text-sm">
                 <div className="flex flex-wrap gap-2 text-xs text-zinc-400">
-                  <span className={`rounded-md px-2 py-0.5 ${statusStyle[detail.status] || statusStyle.draft}`}>{detail.status?.replace(/_/g, " ")}</span>
-                  <span>Source: {detail.source}</span>
-                  {detail.providerMessageId && <span>Provider ID: {detail.providerMessageId}</span>}
-                  {detail.deliveryStatus && <span>Delivery: {detail.deliveryStatus}</span>}
+                  <span className={`rounded-md px-2 py-0.5 ${statusStyle[detail.status] || statusStyle.draft}`}>{formatCopyValue(emailsNl.statuses, detail.status)}</span>
+                  <span>{emailsNl.source}: {formatCopyValue(emailsNl.sources, detail.source)}</span>
+                  {detail.providerMessageId && <span>{emailsNl.providerId}: {detail.providerMessageId}</span>}
+                  {detail.deliveryStatus && <span>{emailsNl.delivery}: {formatCopyValue(emailsNl.deliveryStatuses, detail.deliveryStatus)}</span>}
                 </div>
                 {detailEditable ? (
                   <>
-                    <label className="block text-xs text-zinc-400">To
-                      <input aria-label="Detail to" className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={(detail.to || []).join(", ")} onChange={(e) => setDetail((d) => ({ ...d, to: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) }))} />
+                    <label className="block text-xs text-zinc-400">{emailsNl.to}
+                      <input aria-label={emailsNl.to} className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={(detail.to || []).join(", ")} onChange={(e) => setDetail((d) => ({ ...d, to: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) }))} />
                     </label>
-                    <label className="block text-xs text-zinc-400">Subject
-                      <input aria-label="Detail subject" className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={detail.subject || ""} onChange={(e) => setDetail((d) => ({ ...d, subject: e.target.value }))} />
+                    <label className="block text-xs text-zinc-400">{emailsNl.subject}
+                      <input aria-label={emailsNl.subject} className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={detail.subject || ""} onChange={(e) => setDetail((d) => ({ ...d, subject: e.target.value }))} />
                     </label>
-                    <label className="block text-xs text-zinc-400">Body
-                      <textarea aria-label="Detail body" rows={10} className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={detail.textBody || ""} onChange={(e) => setDetail((d) => ({ ...d, textBody: e.target.value }))} />
+                    <label className="block text-xs text-zinc-400">{emailsNl.body}
+                      <textarea aria-label={emailsNl.body} rows={10} className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm" value={detail.textBody || ""} onChange={(e) => setDetail((d) => ({ ...d, textBody: e.target.value }))} />
                     </label>
                   </>
                 ) : (
                   <>
-                    <p className="text-zinc-400">To: {(detail.to || []).join(", ")}</p>
-                    <div className="rounded-lg border border-white/10 bg-zinc-900/60 p-3 whitespace-pre-wrap text-zinc-200">{detail.textBody || "(no text body)"}</div>
+                    <p className="text-zinc-400">{emailsNl.to}: {(detail.to || []).join(", ")}</p>
+                    <div className="rounded-lg border border-white/10 bg-zinc-900/60 p-3 whitespace-pre-wrap text-zinc-200">{detail.textBody || emailsNl.noTextBody}</div>
                   </>
                 )}
                 {detail.failureReason && (
                   <p className="text-xs text-rose-300" data-testid="email-failure-reason">
-                    Failure: {detail.failureReason}
+                    {emailsNl.failure}: {detail.failureReason}
                     {detail.failureActionable ? ` — ${detail.failureActionable}` : ""}
                   </p>
                 )}
@@ -390,53 +426,56 @@ export default function EmailCenter() {
                 )}
                 {(detail.inboxThreadId || transport?.isThreadedReply) && (
                   <div className="rounded-lg border border-violet-500/20 bg-violet-600/10 p-3 text-xs text-zinc-300" data-testid="email-inbox-link">
-                    <p className="font-medium text-violet-300">Linked inbox conversation</p>
+                    <p className="font-medium text-violet-300">{emailsNl.linkedInbox}</p>
                     <p className="mt-1">
-                      {transport?.label || (detail.replyProvider === "google" ? "Send via Gmail" : detail.replyProvider === "microsoft" ? "Send via Outlook" : "Provider reply")}
+                      {providerReplyLabel}
                       {" · "}
-                      Mailbox: {transport?.mailboxEmail || detail.mailboxId || "—"}
+                      {emailsNl.mailbox}: {transport?.mailboxEmail || detail.mailboxId || "—"}
                       {" · "}
                       <span className={transportBlocked ? "text-amber-300" : "text-emerald-300"}>
-                        {transportBlocked ? "Disconnected — reconnect required" : "Connected"}
+                        {transportBlocked ? emailsNl.disconnected : emailsNl.connected}
                       </span>
                     </p>
                     {transport?.providerThreadId && (
-                      <p className="mt-1 text-zinc-500">Thread: {transport.providerThreadId}</p>
+                      <p className="mt-1 text-zinc-500">{emailsNl.thread}: {transport.providerThreadId}</p>
                     )}
                     {transportBlocked && (
                       <p className="mt-2 text-amber-200" data-testid="email-reconnect-warning">
-                        {transport?.warning || "Reconnect Google Workspace or Microsoft 365 under Integrations. Resend is not used for inbox replies."}
+                        {emailsNl.reconnectWarning}
                       </p>
                     )}
                     {(detail.clientId || detail.leadId) && (
-                      <p className="mt-1">CRM: {detail.clientId ? `client ${detail.clientId}` : ""}{detail.leadId ? ` lead ${detail.leadId}` : ""}</p>
+                      <p className="mt-1">
+                        {emailsNl.crm}: {detail.clientId ? `${emailsNl.client} ${detail.clientId}` : ""}
+                        {detail.leadId ? ` ${emailsNl.lead} ${detail.leadId}` : ""}
+                      </p>
                     )}
-                    <a href={`/inbox?thread=${detail.inboxThreadId}`} className="mt-2 inline-block text-violet-400 hover:underline" data-testid="email-view-conversation">View conversation</a>
+                    <a href={`/inbox?thread=${detail.inboxThreadId}`} className="mt-2 inline-block text-violet-400 hover:underline" data-testid="email-view-conversation">{emailsNl.viewConversation}</a>
                   </div>
                 )}
                 {(detail.sentVia || detail.providerMessageId) && (
                   <details className="text-xs text-zinc-500" data-testid="email-provider-debug">
-                    <summary className="cursor-pointer text-zinc-400">Provider details</summary>
+                    <summary className="cursor-pointer text-zinc-400">{emailsNl.providerDetails}</summary>
                     <ul className="mt-2 space-y-1">
-                      <li>Sent via: {detail.sentVia || detail.transportProvider || detail.provider || "—"}</li>
-                      <li>Provider message ID: {detail.providerMessageId || "—"}</li>
-                      <li>Internet Message-ID: {detail.internetMessageId || "—"}</li>
-                      <li>Thread: {detail.providerThreadId || detail.providerConversationId || "—"}</li>
+                      <li>{emailsNl.sentVia}: {detail.sentVia || detail.transportProvider || detail.provider || "—"}</li>
+                      <li>{emailsNl.providerMessageId}: {detail.providerMessageId || "—"}</li>
+                      <li>{emailsNl.internetMessageId}: {detail.internetMessageId || "—"}</li>
+                      <li>{emailsNl.thread}: {detail.providerThreadId || detail.providerConversationId || "—"}</li>
                     </ul>
                   </details>
                 )}
                 {detail.originalAiSuggestion && (
                   <details className="text-xs text-zinc-500">
-                    <summary className="cursor-pointer text-zinc-400">Original AI suggestion</summary>
+                    <summary className="cursor-pointer text-zinc-400">{emailsNl.originalAiSuggestion}</summary>
                     <pre className="mt-2 whitespace-pre-wrap">{detail.originalAiSuggestion.textBody || detail.originalAiSuggestion.subject}</pre>
                   </details>
                 )}
                 {(detail.versions || []).length > 0 && (
                   <details className="text-xs text-zinc-500">
-                    <summary className="cursor-pointer text-zinc-400">History ({detail.versions.length})</summary>
+                    <summary className="cursor-pointer text-zinc-400">{emailsNl.history} ({detail.versions.length})</summary>
                     <ul className="mt-2 space-y-1">
                       {detail.versions.slice().reverse().map((v) => (
-                        <li key={v.id}>{fmtDate(v.at)} · {v.kind} · {v.byEmail || v.by}</li>
+                        <li key={v.id}>{fmtNlDate(v.at)} · {formatCopyValue(emailsNl.historyKinds, v.kind, v.kind)} · {v.byEmail || v.by}</li>
                       ))}
                     </ul>
                   </details>
@@ -444,25 +483,25 @@ export default function EmailCenter() {
               </div>
               <DialogFooter className="flex flex-wrap gap-2 sm:justify-start">
                 {detailEditable && (
-                  <button type="button" disabled={busyId === detail.id} onClick={saveDetail} className="rounded-lg border border-white/10 px-3 py-2 text-sm hover:bg-zinc-900" data-testid="detail-save">Save</button>
+                  <button type="button" disabled={busyId === detail.id} onClick={saveDetail} className="rounded-lg border border-white/10 px-3 py-2 text-sm hover:bg-zinc-900" data-testid="detail-save">{emailsNl.save}</button>
                 )}
                 {detailEditable && (
-                  <button type="button" disabled={busyId === detail.id} onClick={() => runAction("improve", detail.id)} className="inline-flex items-center gap-1 rounded-lg border border-violet-500/30 px-3 py-2 text-sm text-violet-300" data-testid="detail-improve"><Sparkles className="h-3.5 w-3.5" /> AI improve</button>
+                  <button type="button" disabled={busyId === detail.id} onClick={() => runAction("improve", detail.id)} className="inline-flex items-center gap-1 rounded-lg border border-violet-500/30 px-3 py-2 text-sm text-violet-300" data-testid="detail-improve"><Sparkles className="h-3.5 w-3.5" /> {emailsNl.improve}</button>
                 )}
                 {["draft", "rejected", "failed"].includes(detail.status) && (
-                  <button type="button" disabled={busyId === detail.id} onClick={() => runAction("submit", detail.id)} className="rounded-lg border border-amber-500/30 px-3 py-2 text-sm text-amber-200" data-testid="detail-submit">Submit for approval</button>
+                  <button type="button" disabled={busyId === detail.id} onClick={() => runAction("submit", detail.id)} className="rounded-lg border border-amber-500/30 px-3 py-2 text-sm text-amber-200" data-testid="detail-submit">{emailsNl.submit}</button>
                 )}
                 {canApprove && detail.status === "pending_approval" && (
                   <>
-                    <button type="button" disabled={busyId === detail.id} onClick={() => runAction("approve", detail.id)} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600/80 px-3 py-2 text-sm text-white" data-testid="detail-approve"><Check className="h-3.5 w-3.5" /> Approve</button>
-                    <button type="button" disabled={busyId === detail.id} onClick={() => setConfirm({ action: "reject", id: detail.id })} className="inline-flex items-center gap-1 rounded-lg border border-rose-500/30 px-3 py-2 text-sm text-rose-300" data-testid="detail-reject"><X className="h-3.5 w-3.5" /> Reject</button>
+                    <button type="button" disabled={busyId === detail.id} onClick={() => runAction("approve", detail.id)} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600/80 px-3 py-2 text-sm text-white" data-testid="detail-approve"><Check className="h-3.5 w-3.5" /> {emailsNl.approve}</button>
+                    <button type="button" disabled={busyId === detail.id} onClick={() => setConfirm({ action: "reject", id: detail.id })} className="inline-flex items-center gap-1 rounded-lg border border-rose-500/30 px-3 py-2 text-sm text-rose-300" data-testid="detail-reject"><X className="h-3.5 w-3.5" /> {emailsNl.reject}</button>
                   </>
                 )}
                 {["approved", "draft", "failed", "needs_review", "delivery_unknown"].includes(detail.status) && (canApprove || !statusInfo?.approvalRequired) && (
                   <button
                     type="button"
-                    disabled={busyId === detail.id || transportBlocked}
-                    onClick={() => setConfirm({ action: "send", id: detail.id })}
+                    disabled={busyId === detail.id || transportBlocked || blocked}
+                    onClick={() => requestConfirm("send", detail.id)}
                     className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
                     data-testid="detail-send"
                   >
@@ -470,10 +509,10 @@ export default function EmailCenter() {
                   </button>
                 )}
                 {["failed", "needs_review", "delivery_unknown"].includes(detail.status) && (
-                  <button type="button" disabled={busyId === detail.id || transportBlocked} onClick={() => setConfirm({ action: "retry", id: detail.id })} className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-3 py-2 text-sm" data-testid="detail-retry"><RotateCcw className="h-3.5 w-3.5" /> Retry</button>
+                  <button type="button" disabled={busyId === detail.id || transportBlocked || blocked} onClick={() => requestConfirm("retry", detail.id)} className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-3 py-2 text-sm" data-testid="detail-retry"><RotateCcw className="h-3.5 w-3.5" /> {emailsNl.retry}</button>
                 )}
                 {!["sent", "sending", "cancelled"].includes(detail.status) && (
-                  <button type="button" disabled={busyId === detail.id} onClick={() => setConfirm({ action: "cancel", id: detail.id })} className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-400" data-testid="detail-cancel"><Ban className="h-3.5 w-3.5" /> Cancel</button>
+                  <button type="button" disabled={busyId === detail.id} onClick={() => setConfirm({ action: "cancel", id: detail.id })} className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-400" data-testid="detail-cancel"><Ban className="h-3.5 w-3.5" /> {emailsNl.cancel}</button>
                 )}
               </DialogFooter>
             </>
@@ -484,23 +523,28 @@ export default function EmailCenter() {
       <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
         <AlertDialogContent className="border-white/10 bg-zinc-950 text-zinc-100">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm {confirm?.action}</AlertDialogTitle>
+            <AlertDialogTitle>{emailsNl.confirmTitle}: {actionLabels[confirm?.action] || ""}</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
               {confirm?.action === "send" && transport?.isThreadedReply
-                ? `This reply will send via ${transport?.label || "the connected mailbox"} (${transport?.mailboxEmail || "mailbox"}). Resend is not used for inbox replies.`
+                ? formatTemplate(emailsNl.confirmSendThreaded, {
+                  provider: providerReplyLabel || emailsNl.connectedMailbox,
+                  mailbox: transport?.mailboxEmail || emailsNl.mailbox,
+                })
                 : confirm?.action === "send"
-                  ? `This message will send via ${statusInfo?.provider || "the configured provider"}.`
-                  : "This action cannot be undone for send/cancel. Continue?"}
+                  ? formatTemplate(emailsNl.confirmSend, {
+                    provider: statusInfo?.provider || emailsNl.configuredProvider,
+                  })
+                  : emailsNl.confirmGeneric}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/10 bg-transparent">Back</AlertDialogCancel>
+            <AlertDialogCancel className="border-white/10 bg-transparent">{emailsNl.confirmBack}</AlertDialogCancel>
             <AlertDialogAction
               data-testid="email-confirm-action"
               onClick={() => confirm && runAction(confirm.action, confirm.id)}
               className="bg-violet-600 hover:bg-violet-500"
             >
-              Confirm
+              {emailsNl.confirmOk}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
