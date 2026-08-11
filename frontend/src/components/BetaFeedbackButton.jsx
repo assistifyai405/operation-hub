@@ -64,7 +64,7 @@ export default function BetaFeedbackButton() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/60 p-4 sm:items-center" data-testid="beta-feedback-modal">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-4 sm:items-center" data-testid="beta-feedback-modal">
           <button type="button" className="absolute inset-0 cursor-default" aria-label="Close feedback" onClick={() => setOpen(false)} />
           <form
             onSubmit={submit}

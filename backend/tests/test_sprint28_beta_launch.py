@@ -96,7 +96,8 @@ def test_submit_and_list_beta_feedback(client):
 
 def test_feedback_requires_auth(client):
     r = client.post("/api/feedback", json={"category": "Bug", "message": "broken button somewhere"})
-    assert r.status_code == 401
+    # Unauthenticated write may be 401 (auth) or 403 (CSRF before auth) — both deny access.
+    assert r.status_code in (401, 403)
 
 
 def test_feedback_isolation_across_orgs(client):

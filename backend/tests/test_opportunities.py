@@ -135,11 +135,15 @@ class TestHealth:
         r = client.get("/api/opportunities/health", headers=workspace["headers"])
         assert r.status_code == 200
         h = r.json()
+        assert h.get("has_workspace_data") is True
         assert 0 <= h["score"] <= 100
         assert h["grade"] in ("Excellent", "Good", "Fair", "Needs attention")
         cat_names = {c["name"] for c in h["categories"]}
-        expected = {"Invoices", "Contracts", "Projects", "Clients", "Activity", "Outstanding work"}
+        # Only categories with workspace records are scored (empty invoices/contracts omitted).
+        expected = {"Projects", "Clients", "Activity", "Outstanding work"}
         assert expected.issubset(cat_names), f"missing categories: {expected - cat_names}"
+        assert "Invoices" not in cat_names
+        assert "Contracts" not in cat_names
         for c in h["categories"]:
             assert 0 <= c["score"] <= 100
             assert isinstance(c["reasons"], list) and len(c["reasons"]) >= 1
