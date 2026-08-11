@@ -1,4 +1,6 @@
+import PageIntro from "@/components/PageIntro";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Search, Plus, GripVertical, Loader2, Filter, Target } from "lucide-react";
@@ -15,7 +17,7 @@ function LeadCard({ lead, onDragStart, onOpen }) {
   return (
     <div draggable onDragStart={(e) => onDragStart(e, lead)} onClick={() => onOpen(lead.id)}
       data-testid="pipeline-lead-card" data-lead-id={lead.id}
-      className="group cursor-pointer rounded-xl border border-white/10 bg-zinc-950 p-3 transition-all hover:border-violet-500/40 active:cursor-grabbing">
+      className="group cursor-pointer rounded-xl border border-white/10 bg-zinc-950 p-3 transition-all hover:border-brand-500/40 active:cursor-grabbing">
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold text-zinc-100">{lead.title}</p>
         <GripVertical className="h-4 w-4 shrink-0 text-zinc-700 opacity-0 transition-opacity group-hover:opacity-100" />
@@ -38,6 +40,7 @@ function LeadCard({ lead, onDragStart, onOpen }) {
 }
 
 export default function Pipeline() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -80,10 +83,12 @@ export default function Pipeline() {
 
   return (
     <div className="space-y-5" data-testid="pipeline-page">
+      <PageIntro title={t("pages.pipeline.title")} description={t("pages.pipeline.description")} />
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="flex items-center gap-2.5 text-3xl font-bold tracking-tight text-zinc-50">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet"><Target className="h-5 w-5 text-white" /></span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 glow-brand"><Target className="h-5 w-5 text-white" /></span>
             Sales Pipeline
           </h1>
           <p className="mt-1.5 text-sm text-zinc-400">
@@ -91,14 +96,14 @@ export default function Pipeline() {
             {data ? ` ${fmtMoneyFull(totalPipeline)} in open pipeline.` : ""}
           </p>
         </div>
-        <button type="button" onClick={newLead} data-testid="pipeline-new-lead" className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-violet-500"><Plus className="h-4 w-4" aria-hidden="true" /> New lead</button>
+        <button type="button" onClick={newLead} data-testid="pipeline-new-lead" className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-500"><Plus className="h-4 w-4" aria-hidden="true" /> New lead</button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[220px]">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
           <input value={q} onChange={(e) => setQ(e.target.value)} data-testid="pipeline-search" placeholder="Search deals, companies, contacts…"
-            className="w-full rounded-lg border border-white/10 bg-zinc-900 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-violet-500/50 focus:outline-none" />
+            className="w-full rounded-lg border border-white/10 bg-zinc-900 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-brand-500/50 focus:outline-none" />
         </div>
         <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2">
           <Filter className="h-3.5 w-3.5 text-zinc-500" />
@@ -119,7 +124,7 @@ export default function Pipeline() {
           <p className="mx-auto mt-1 max-w-md text-xs text-zinc-500">
             Pipeline is where you track sales deals from New to Won. Add a lead to see stages fill with real opportunities.
           </p>
-          <button type="button" onClick={newLead} data-testid="pipeline-empty-action" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+          <button type="button" onClick={newLead} data-testid="pipeline-empty-action" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500">
             <Plus className="h-4 w-4" aria-hidden="true" /> Create your first lead
           </button>
         </div>
@@ -130,7 +135,7 @@ export default function Pipeline() {
             return (
               <div key={col.stage} data-testid={`pipeline-col-${col.stage.replace(/\s/g, "-").toLowerCase()}`}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(col.stage); }} onDragLeave={() => setDragOver(null)} onDrop={(e) => onDrop(e, col.stage)}
-                className={`flex w-72 shrink-0 flex-col rounded-2xl border-t-2 ${meta.bar} border border-white/10 bg-zinc-900/40 transition-colors ${dragOver === col.stage ? "bg-violet-500/[0.06] ring-1 ring-violet-500/40" : ""}`}>
+                className={`flex w-72 shrink-0 flex-col rounded-2xl border-t-2 ${meta.bar} border border-white/10 bg-zinc-900/40 transition-colors ${dragOver === col.stage ? "bg-brand-500/[0.06] ring-1 ring-brand-500/40" : ""}`}>
                 <div className="flex items-center justify-between px-3 py-2.5">
                   <div className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${meta.dot}`} /><span className="text-sm font-semibold text-zinc-200">{col.stage}</span><span className="rounded-full bg-white/5 px-1.5 text-[10px] text-zinc-400">{col.count}</span></div>
                   <span className="text-xs font-medium text-zinc-500">{fmtMoney(col.value)}</span>

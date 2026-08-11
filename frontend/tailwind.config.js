@@ -49,6 +49,22 @@ module.exports = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        // Assistify brand green scale (Sprint 29)
+        brand: {
+          50:  'var(--brand-50)',
+          100: 'var(--brand-100)',
+          200: 'var(--brand-200)',
+          300: 'var(--brand-300)',
+          400: 'var(--brand-400)',
+          500: 'var(--brand-500)',
+          600: 'var(--brand-600)',
+          700: 'var(--brand-700)',
+          800: 'var(--brand-800)',
+          900: 'var(--brand-900)',
+          DEFAULT: 'var(--brand-500)',
+          soft: 'var(--brand-soft)',
+          border: 'var(--brand-border)',
+        },
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
@@ -56,6 +72,9 @@ module.exports = {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))'
         }
+      },
+      boxShadow: {
+        brand: '0 0 25px rgba(34, 197, 94, 0.22)',
       },
       keyframes: {
         'accordion-down': {

@@ -23,11 +23,11 @@ export default function VerifyEmail() {
   return (
     <AuthShell
       title="Email verification"
-      footer={<p className="mt-6 text-center text-xs text-zinc-500"><Link to="/dashboard" className="text-violet-400 hover:text-violet-300">Go to dashboard</Link></p>}
+      footer={<p className="mt-6 text-center text-xs text-zinc-500"><Link to="/dashboard" className="text-brand-400 hover:text-brand-300">Go to dashboard</Link></p>}
     >
       <div className="mt-8" data-testid="verify-email-status">
         {status === "verifying" && (
-          <div className="flex items-center gap-3 text-sm text-zinc-300"><Loader2 className="h-5 w-5 animate-spin text-violet-400" /> Verifying your email…</div>
+          <div className="flex items-center gap-3 text-sm text-zinc-300"><Loader2 className="h-5 w-5 animate-spin text-brand-400" /> Verifying your email…</div>
         )}
         {status === "ok" && (
           <div className="flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300"><CheckCircle2 className="h-5 w-5" /> {message}</div>

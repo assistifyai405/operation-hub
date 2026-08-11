@@ -2,6 +2,7 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/AuthContext";
+import { LocaleProvider } from "@/context/LocaleContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Layout from "@/components/Layout";
 import Login from "@/pages/Login";
@@ -42,6 +43,7 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <AuthProvider>
+          <LocaleProvider>
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/login" element={<Login />} />
@@ -82,6 +84,7 @@ function App() {
               <Route path="/ai-history" element={<Navigate to="/ai-workspace" replace />} />
             </Route>
           </Routes>
+          </LocaleProvider>
         </AuthProvider>
       </BrowserRouter>
       <Toaster position="bottom-right" theme="dark" />

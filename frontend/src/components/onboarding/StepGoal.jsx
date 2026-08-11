@@ -43,13 +43,13 @@ export function StepGoal({ data, setData, next, back }) {
                 data-testid={`onb-goal-${g.id}`}
                 className={`flex items-start gap-3 rounded-xl border px-4 py-3.5 text-left transition-all ${
                   on
-                    ? "border-violet-500/50 bg-violet-600/15 ring-1 ring-violet-500/30"
-                    : "border-white/10 bg-zinc-950 hover:border-violet-500/30"
+                    ? "border-brand-500/50 bg-brand-600/15 ring-1 ring-brand-500/30"
+                    : "border-white/10 bg-zinc-950 hover:border-brand-500/30"
                 }`}
               >
                 <span
                   className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                    on ? "border-violet-400 bg-violet-500 text-white" : "border-zinc-600"
+                    on ? "border-brand-400 bg-brand-500 text-white" : "border-zinc-600"
                   }`}
                 >
                   {on && <Check className="h-3 w-3" />}

@@ -33,8 +33,8 @@ export default function DashboardOpportunities() {
       {top.length > 0 && (
         <div>
           <div className="mb-2.5 flex items-center justify-between">
-            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Target className="h-3.5 w-3.5 text-violet-400" /> Top opportunities</p>
-            <button onClick={() => navigate("/opportunities")} data-testid="dash-view-opportunities" className="inline-flex items-center gap-1 text-xs font-medium text-violet-300 hover:text-violet-200">View all <ArrowRight className="h-3.5 w-3.5" /></button>
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Target className="h-3.5 w-3.5 text-brand-400" /> Top opportunities</p>
+            <button onClick={() => navigate("/opportunities")} data-testid="dash-view-opportunities" className="inline-flex items-center gap-1 text-xs font-medium text-brand-300 hover:text-brand-200">View all <ArrowRight className="h-3.5 w-3.5" /></button>
           </div>
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
             {top.map((it) => <OpportunityCard key={it.id} item={it} onRun={run} onDismiss={dismiss} compact />)}

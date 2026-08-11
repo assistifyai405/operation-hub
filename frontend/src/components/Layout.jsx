@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare, MessageSquare,
@@ -10,6 +10,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/AuthContext";
 import { authApi, notificationsApi, aiApi, onboardingApi, publicConfigApi } from "@/lib/api";
 import { toast } from "sonner";
@@ -30,87 +31,91 @@ const relativeTime = (iso) => {
   return `${Math.floor(diff / 86400)}d ago`;
 };
 
-const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/opportunities", label: "Opportunities", icon: Target },
-  { to: "/automations", label: "Automations", icon: Zap },
-  { to: "/crm", label: "CRM", icon: Users },
-  { to: "/pipeline", label: "Pipeline", icon: TrendingUp },
-  { to: "/clients", label: "Clients", icon: Users },
-  { to: "/projects", label: "Projects", icon: FolderKanban },
-  { to: "/tasks", label: "Tasks", icon: CheckSquare },
-  { to: "/ai-chat", label: "Copilot", icon: Sparkles },
-  { to: "/ai-workspace", label: "AI Workspace", icon: LayoutGrid },
-  { to: "/knowledge-brain", label: "Knowledge Brain", icon: Brain },
-  { to: "/ai-agents", label: "AI Agents", icon: Bot },
-  { to: "/proposals", label: "Proposals", icon: FileText },
-  { to: "/contracts", label: "Contracts", icon: ScrollText },
-  { to: "/invoices", label: "Invoices", icon: Receipt },
-  { to: "/documents", label: "Documents", icon: FolderOpen },
-  { to: "/emails", label: "Emails", icon: Mail },
-  { to: "/inbox", label: "Inbox", icon: Inbox },
-  { to: "/integrations", label: "Integrations", icon: Plug },
-  { to: "/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
+const NAV_ITEMS = [
+  { to: "/dashboard", key: "dashboard", icon: LayoutDashboard },
+  { to: "/opportunities", key: "opportunities", icon: Target },
+  { to: "/automations", key: "automations", icon: Zap },
+  { to: "/crm", key: "crm", icon: Users },
+  { to: "/pipeline", key: "pipeline", icon: TrendingUp },
+  { to: "/clients", key: "clients", icon: Users },
+  { to: "/projects", key: "projects", icon: FolderKanban },
+  { to: "/tasks", key: "tasks", icon: CheckSquare },
+  { to: "/ai-chat", key: "copilot", icon: Sparkles },
+  { to: "/ai-workspace", key: "aiWorkspace", icon: LayoutGrid },
+  { to: "/knowledge-brain", key: "knowledgeBrain", icon: Brain },
+  { to: "/ai-agents", key: "aiAgents", icon: Bot },
+  { to: "/proposals", key: "proposals", icon: FileText },
+  { to: "/contracts", key: "contracts", icon: ScrollText },
+  { to: "/invoices", key: "invoices", icon: Receipt },
+  { to: "/documents", key: "documents", icon: FolderOpen },
+  { to: "/emails", key: "emails", icon: Mail },
+  { to: "/inbox", key: "inbox", icon: Inbox },
+  { to: "/integrations", key: "integrations", icon: Plug },
+  { to: "/analytics", key: "analytics", icon: BarChart3 },
+  { to: "/settings", key: "settings", icon: SettingsIcon },
 ];
 
-const Sidebar = ({ onNavigate, betaMode }) => (
+const Sidebar = ({ onNavigate, betaMode, t }) => (
   <div className="flex h-full min-h-0 flex-col">
     <div className="flex shrink-0 items-center gap-2.5 px-6 py-6">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 glow-brand">
         <Sparkles className="h-5 w-5 text-white" />
       </div>
       <div className="leading-tight">
-        <p className="text-[15px] font-bold tracking-tight text-zinc-50">Assistify</p>
+        <p className="text-[15px] font-bold tracking-tight text-zinc-50">{t("app.name")}</p>
         {betaMode ? (
-          <p className="text-[10px] font-medium tracking-wide text-zinc-500" data-testid="assistify-beta-badge">Assistify Beta</p>
+          <p className="text-[10px] font-medium tracking-wide text-zinc-500" data-testid="assistify-beta-badge">{t("app.beta")}</p>
         ) : (
-          <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-violet-400">OS</p>
+          <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-brand-400">OS</p>
         )}
       </div>
     </div>
     <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-2" data-testid="sidebar-nav">
-      {nav.map(({ to, label, icon: Icon }) => (
-        <NavLink
-          key={to}
-          to={to}
-          onClick={onNavigate}
-          data-testid={`nav-${label.toLowerCase().replace(/\s/g, "-")}`}
-          className={({ isActive }) =>
-            `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-              isActive
-                ? "bg-violet-600/15 text-violet-300 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]"
-                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
-            }`
-          }
-        >
-          {({ isActive }) => (
-            <>
-              <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${isActive ? "text-violet-400" : "text-zinc-500 group-hover:text-zinc-300"}`} />
-              <span className="truncate">{label}</span>
-            </>
-          )}
-        </NavLink>
-      ))}
+      {NAV_ITEMS.map(({ to, key, icon: Icon }) => {
+        const label = t(`nav.${key}`);
+        return (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={onNavigate}
+            data-testid={`nav-${key}`}
+            className={({ isActive }) =>
+              `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? "bg-brand-600/15 text-brand-300 shadow-[inset_0_0_0_1px_rgba(34,197,94,0.25)]"
+                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${isActive ? "text-brand-400" : "text-zinc-500 group-hover:text-zinc-300"}`} />
+                <span className="truncate">{label}</span>
+              </>
+            )}
+          </NavLink>
+        );
+      })}
     </nav>
     {BILLING_ENABLED ? (
-      <div className="m-3 shrink-0 rounded-xl border border-white/10 bg-gradient-to-br from-violet-600/20 to-transparent p-4" data-testid="sidebar-billing">
+      <div className="m-3 shrink-0 rounded-xl border border-white/10 bg-gradient-to-br from-brand-600/20 to-transparent p-4" data-testid="sidebar-billing">
         <p className="text-sm font-semibold text-zinc-100">Upgrade to Pro</p>
         <p className="mt-1 text-xs text-zinc-400">Unlock unlimited AI agents & automations.</p>
-        <button type="button" data-testid="upgrade-btn" className="mt-3 w-full rounded-lg bg-violet-600 py-2 text-xs font-semibold text-white transition-all hover:bg-violet-500">
+        <button type="button" data-testid="upgrade-btn" className="mt-3 w-full rounded-lg bg-brand-600 py-2 text-xs font-semibold text-white transition-all hover:bg-brand-500">
           Upgrade
         </button>
       </div>
     ) : (
       <div className="m-3 shrink-0 rounded-xl border border-dashed border-white/10 bg-zinc-950/60 p-4" data-testid="sidebar-billing-pending">
-        <p className="text-sm font-semibold text-zinc-300">Billing is not available during beta.</p>
-        <p className="mt-1 text-xs text-zinc-500">No active plan, trial countdown, or payment CTA. Stripe comes later.</p>
+        <p className="text-sm font-semibold text-zinc-300">{t("billing.notAvailable")}</p>
+        <p className="mt-1 text-xs text-zinc-500">{t("settings.billingBetaHint")}</p>
       </div>
     )}
   </div>
 );
 
 export default function Layout() {
+  const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -119,7 +124,10 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
-  const pageTitle = [...nav].reverse().find((n) => location.pathname === n.to || location.pathname.startsWith(n.to + "/"))?.label || "Dashboard";
+  const pageTitle = useMemo(() => {
+    const item = [...NAV_ITEMS].reverse().find((n) => location.pathname === n.to || location.pathname.startsWith(n.to + "/"));
+    return item ? t(`nav.${item.key}`) : t("nav.dashboard");
+  }, [location.pathname, t]);
 
   useEffect(() => {
     publicConfigApi.get().then((c) => {
@@ -162,7 +170,7 @@ export default function Layout() {
     <div className="min-h-screen bg-black text-zinc-50">
       {/* Desktop sidebar */}
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r border-white/10 bg-black lg:block">
-        <Sidebar betaMode={betaMode} />
+        <Sidebar betaMode={betaMode} t={t} />
       </aside>
 
       {/* Mobile sidebar */}
@@ -170,10 +178,10 @@ export default function Layout() {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-64 border-r border-white/10 bg-black animate-fade-up">
-            <button className="absolute right-3 top-5 text-zinc-400 focus-visible:ring-2 focus-visible:ring-violet-500 rounded-md" onClick={() => setMobileOpen(false)} data-testid="mobile-close" aria-label="Close navigation menu">
+            <button className="absolute right-3 top-5 text-zinc-400 focus-visible:ring-2 focus-visible:ring-brand-500 rounded-md" onClick={() => setMobileOpen(false)} data-testid="mobile-close" aria-label="Close navigation menu">
               <X className="h-5 w-5" />
             </button>
-            <Sidebar onNavigate={() => setMobileOpen(false)} betaMode={betaMode} />
+            <Sidebar onNavigate={() => setMobileOpen(false)} betaMode={betaMode} t={t} />
           </aside>
         </div>
       )}
@@ -194,10 +202,10 @@ export default function Layout() {
             <button
               onClick={() => setPaletteOpen(true)}
               data-testid="open-command-palette"
-              className="flex w-full items-center gap-2 rounded-lg border border-white/10 bg-zinc-950 py-2 pl-3 pr-2 text-sm text-zinc-500 transition-all hover:border-violet-500/40 hover:text-zinc-300"
+              className="flex w-full items-center gap-2 rounded-lg border border-white/10 bg-zinc-950 py-2 pl-3 pr-2 text-sm text-zinc-500 transition-all hover:border-brand-500/40 hover:text-zinc-300"
             >
               <Search className="h-4 w-4" />
-              <span>Search or run command…</span>
+              <span>{t("command.placeholder")}</span>
               <kbd className="ml-auto rounded border border-white/10 bg-zinc-900 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400">⌘K</kbd>
             </button>
           </div>
@@ -214,11 +222,11 @@ export default function Layout() {
             <DropdownMenuTrigger asChild>
               <button className="relative rounded-lg border border-white/10 bg-zinc-950 p-2 text-zinc-400 transition-all hover:text-zinc-100" data-testid="notifications-btn" aria-label={notifications.length ? `Notifications, ${notifications.length} recent` : "Notifications"}>
                 <Bell className="h-[18px] w-[18px]" />
-                {notifications.length > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-violet-500 animate-pulse-glow" />}
+                {notifications.length > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand-500 animate-pulse-glow" />}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-96 max-w-[92vw] border-white/10 bg-zinc-950 text-zinc-200">
-              <DropdownMenuLabel className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-violet-400" /> Assistify notifications</DropdownMenuLabel>
+              <DropdownMenuLabel className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-brand-400" /> Assistify notifications</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-white/10" />
               {notifications.length === 0 ? (
                 <div className="px-2 py-6 text-center text-xs text-zinc-500" data-testid="notifications-empty">Nothing needs your attention right now.</div>
@@ -241,7 +249,7 @@ export default function Layout() {
               <button className="flex items-center gap-2" data-testid="user-menu" aria-label="Account menu">
                 <Avatar className="h-8 w-8 border border-white/10">
                   <AvatarImage src={user?.avatar} alt={fullName ? `${fullName} avatar` : "User avatar"} />
-                  <AvatarFallback className="bg-violet-600/20 text-violet-300 text-xs">{initials}</AvatarFallback>
+                  <AvatarFallback className="bg-brand-600/20 text-brand-300 text-xs">{initials}</AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
@@ -266,10 +274,10 @@ export default function Layout() {
                 <Rocket className="mr-2 h-4 w-4" /> Restart onboarding
               </DropdownMenuItem>
               <DropdownMenuItem className="focus:bg-zinc-900" onClick={() => navigate("/settings")}>
-                <SettingsIcon className="mr-2 h-4 w-4" /> Settings
+                <SettingsIcon className="mr-2 h-4 w-4" /> {t("common.settings")}
               </DropdownMenuItem>
               <DropdownMenuItem className="focus:bg-zinc-900" onClick={handleLogout} data-testid="logout-btn">
-                <LogOut className="mr-2 h-4 w-4" /> Log out
+                <LogOut className="mr-2 h-4 w-4" /> {t("common.logout")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

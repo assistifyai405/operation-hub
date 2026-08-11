@@ -23,8 +23,8 @@ export function WorkspaceSnapshot({ workspace }) {
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         {items.map((it, i) => (
           <motion.button key={it.k} onClick={() => navigate(it.to)} initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.03 }}
-            className="rounded-2xl border border-white/10 bg-zinc-950 p-4 text-left transition-all hover:border-violet-500/40" data-testid={`workspace-${it.k}`}>
-            <it.icon className="h-4 w-4 text-violet-400" />
+            className="rounded-2xl border border-white/10 bg-zinc-950 p-4 text-left transition-all hover:border-brand-500/40" data-testid={`workspace-${it.k}`}>
+            <it.icon className="h-4 w-4 text-brand-400" />
             <p className="mt-2 text-xl font-bold tracking-tight text-zinc-50">{workspace[it.k] ?? 0}</p>
             <p className="text-[11px] text-zinc-500">{it.label}</p>
           </motion.button>

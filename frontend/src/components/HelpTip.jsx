@@ -6,7 +6,7 @@ export default function HelpTip({ text, testid }) {
     <TooltipProvider delayDuration={150}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <button type="button" className="text-zinc-500 transition-colors hover:text-violet-400" data-testid={testid} aria-label="Help">
+          <button type="button" className="text-zinc-500 transition-colors hover:text-brand-400" data-testid={testid} aria-label="Help">
             <HelpCircle className="h-4 w-4" />
           </button>
         </TooltipTrigger>

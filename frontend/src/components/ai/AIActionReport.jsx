@@ -39,12 +39,12 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
   if (!ready) return <Skeleton />;
 
   const conf = report.confidence || 95;
-  const confColor = conf >= 95 ? "#34d399" : conf >= 90 ? "#a78bfa" : "#fbbf24";
+  const confColor = conf >= 95 ? "#34d399" : conf >= 90 ? "#86EFAC" : "#fbbf24";
 
   const btn = (key, Icon, label, primary) =>
     actions[key] ? (
       <button key={key} onClick={actions[key]} data-testid={`report-${key}`}
-        className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${primary ? "bg-violet-600 text-white hover:bg-violet-500 glow-violet" : "border border-white/10 bg-zinc-900 text-zinc-200 hover:text-white"}`}>
+        className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${primary ? "bg-brand-600 text-white hover:bg-brand-500 glow-brand" : "border border-white/10 bg-zinc-900 text-zinc-200 hover:text-white"}`}>
         <Icon className="h-4 w-4" /> {label}
       </button>
     ) : null;
@@ -60,7 +60,7 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
           <div className="min-w-0">
             <h2 className="text-lg font-bold text-zinc-50" data-testid="report-success-title">Your {report.type_label} has been generated successfully.</h2>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-400">
-              <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-violet-400" /> {report.type_label}</span>
+              <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-brand-400" /> {report.type_label}</span>
               <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> Generated in {fmtSecs(durationMs)}</span>
               <span>{ts.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
             </div>
@@ -71,7 +71,7 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
       <div className="grid gap-4 md:grid-cols-2">
         {/* 2. What the AI did */}
         <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5" data-testid="report-checklist">
-          <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><Sparkles className="h-4 w-4 text-violet-400" /> What Assistify did</p>
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><Sparkles className="h-4 w-4 text-brand-400" /> What Assistify did</p>
           <div className="space-y-2">
             {report.steps.map((s, i) => (
               <div key={i} className="flex items-center gap-2.5 text-sm animate-fade-up" style={{ animationDelay: `${i * 70}ms` }}>
@@ -84,10 +84,10 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
 
         {/* 3 + 4. Time saved & Confidence */}
         <div className="space-y-4">
-          <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-600/10 to-zinc-950 p-5" data-testid="report-time-saved">
+          <div className="rounded-2xl border border-brand-500/20 bg-gradient-to-br from-brand-600/10 to-zinc-950 p-5" data-testid="report-time-saved">
             <p className="flex items-center gap-1.5 text-xs text-zinc-500"><Clock className="h-3.5 w-3.5" /> Time saved</p>
             <p className="mt-1 text-sm text-zinc-300">You saved approximately</p>
-            <p className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-cyan-300">{report.time_saved} minutes</p>
+            <p className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-brand-300 to-cyan-300">{report.time_saved} minutes</p>
             {lifetime != null && <p className="mt-2 text-xs text-zinc-500">Lifetime time saved · <b className="text-zinc-300" data-testid="report-lifetime">{fmtDuration(lifetime)}</b></p>}
           </div>
 
@@ -111,7 +111,7 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
         <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><Lightbulb className="h-4 w-4 text-amber-400" /> Why Assistify made these decisions</p>
         <ul className="space-y-2">
           {report.why.map((w, i) => (
-            <li key={i} className="flex gap-2.5 text-sm leading-snug text-zinc-300"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />{w}</li>
+            <li key={i} className="flex gap-2.5 text-sm leading-snug text-zinc-300"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />{w}</li>
           ))}
         </ul>
       </div>

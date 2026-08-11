@@ -22,7 +22,7 @@ import { useAssistant } from "@/context/AssistantContext";
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const statusStyle = {
-  "In Progress": "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "In Progress": "bg-brand-500/10 text-brand-400 border-brand-500/20",
   Review: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
   Completed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   Blocked: "bg-red-500/10 text-red-400 border-red-500/20",
@@ -52,7 +52,7 @@ function Overview({ project, tasks, documents, goTab }) {
         <div className="mb-2 flex items-center justify-between text-sm">
           <span className="font-medium text-zinc-300">Overall progress</span><span className="text-zinc-400">{project.progress}%</span>
         </div>
-        <Progress value={project.progress} className="h-2 bg-zinc-800 [&>div]:bg-violet-500" />
+        <Progress value={project.progress} className="h-2 bg-zinc-800 [&>div]:bg-brand-500" />
       </div>
       <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
         <h3 className="mb-2 text-sm font-semibold text-zinc-100">Description</h3>
@@ -61,8 +61,8 @@ function Overview({ project, tasks, documents, goTab }) {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><CheckSquare className="h-4 w-4 text-violet-400" /> Linked Tasks</h3>
-            <button onClick={() => goTab("tasks")} className="text-xs font-medium text-violet-400 hover:text-violet-300">Manage</button>
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><CheckSquare className="h-4 w-4 text-brand-400" /> Linked Tasks</h3>
+            <button onClick={() => goTab("tasks")} className="text-xs font-medium text-brand-400 hover:text-brand-300">Manage</button>
           </div>
           {tasks.length === 0 ? <p className="py-4 text-center text-sm text-zinc-600">No tasks linked yet</p> : (
             <div className="space-y-2">
@@ -77,8 +77,8 @@ function Overview({ project, tasks, documents, goTab }) {
         </div>
         <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><FolderOpen className="h-4 w-4 text-violet-400" /> Linked Documents</h3>
-            <button onClick={() => goTab("documents")} className="text-xs font-medium text-violet-400 hover:text-violet-300">Manage</button>
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><FolderOpen className="h-4 w-4 text-brand-400" /> Linked Documents</h3>
+            <button onClick={() => goTab("documents")} className="text-xs font-medium text-brand-400 hover:text-brand-300">Manage</button>
           </div>
           {documents.length === 0 ? <p className="py-4 text-center text-sm text-zinc-600">No documents linked yet</p> : (
             <div className="space-y-2">
@@ -149,22 +149,22 @@ function ProjectChat({ projectId, projectName }) {
 
   return (
     <div className="flex h-[calc(100vh-16rem)] flex-col" data-testid="tab-chat">
-      <div className="mb-3 flex items-center gap-2 rounded-lg border border-violet-500/20 bg-violet-600/10 px-3 py-2 text-xs text-violet-300">
+      <div className="mb-3 flex items-center gap-2 rounded-lg border border-brand-500/20 bg-brand-600/10 px-3 py-2 text-xs text-brand-300">
         <Sparkles className="h-4 w-4" /> This AI chat is dedicated to <b className="font-semibold">{projectName}</b> and remembers your conversation history.
       </div>
       <div className="flex-1 overflow-y-auto rounded-xl border border-white/10 bg-zinc-950/50 p-4">
         {loaded && messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-600 glow-violet"><Bot className="h-6 w-6 text-white" /></div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 glow-brand"><Bot className="h-6 w-6 text-white" /></div>
             <p className="mt-3 text-sm text-zinc-400">Ask anything about this project — planning, drafts, next steps.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {messages.map((m, i) => (
               <div key={i} className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`} data-testid={`chat-msg-${m.role}`}>
-                {m.role === "assistant" && <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-600/20 text-violet-400"><Bot className="h-4 w-4" /></div>}
-                <div className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${m.role === "user" ? "bg-violet-600 text-white" : "border border-white/10 bg-zinc-900 text-zinc-200"}`}>
-                  {m.content || (streaming && i === messages.length - 1 ? <Loader2 className="h-4 w-4 animate-spin text-violet-400" /> : m.content)}
+                {m.role === "assistant" && <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600/20 text-brand-400"><Bot className="h-4 w-4" /></div>}
+                <div className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${m.role === "user" ? "bg-brand-600 text-white" : "border border-white/10 bg-zinc-900 text-zinc-200"}`}>
+                  {m.content || (streaming && i === messages.length - 1 ? <Loader2 className="h-4 w-4 animate-spin text-brand-400" /> : m.content)}
                 </div>
               </div>
             ))}
@@ -174,8 +174,8 @@ function ProjectChat({ projectId, projectName }) {
       </div>
       <form onSubmit={(e) => { e.preventDefault(); send(); }} className="mt-3 mb-6 flex items-center gap-3">
         <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Message project copilot…" data-testid="chat-input"
-          className="flex-1 rounded-xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
-        <button type="submit" disabled={streaming || !input.trim()} data-testid="chat-send" className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-white transition-all hover:bg-violet-500 disabled:opacity-40 glow-violet"><Send className="h-4 w-4" /></button>
+          className="flex-1 rounded-xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
+        <button type="submit" disabled={streaming || !input.trim()} data-testid="chat-send" className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white transition-all hover:bg-brand-500 disabled:opacity-40 glow-brand"><Send className="h-4 w-4" /></button>
       </form>
     </div>
   );
@@ -202,13 +202,13 @@ function TasksTab({ projectId, tasks, reload }) {
   return (
     <div className="space-y-4" data-testid="tab-tasks">
       <div className="flex justify-end">
-        <button onClick={() => setOpen(true)} data-testid="ws-add-task-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet"><Plus className="h-4 w-4" /> Add Task</button>
+        <button onClick={() => setOpen(true)} data-testid="ws-add-task-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 glow-brand"><Plus className="h-4 w-4" /> Add Task</button>
       </div>
       {tasks.length === 0 ? <EmptyState icon={CheckSquare} title="No tasks yet" description="Add tasks to break this project into actionable steps." actionLabel="Add Task" onAction={() => setOpen(true)} testid="ws-tasks-empty" /> : (
         <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-950">
           {tasks.map((t) => (
             <div key={t.id} className="group flex items-center gap-4 border-b border-white/5 px-5 py-3.5 transition-colors last:border-0 hover:bg-zinc-900/40" data-testid={`ws-task-${t.id}`}>
-              <Checkbox checked={t.done} onCheckedChange={() => toggle(t)} data-testid={`ws-task-check-${t.id}`} className="border-white/20 data-[state=checked]:border-violet-500 data-[state=checked]:bg-violet-600" />
+              <Checkbox checked={t.done} onCheckedChange={() => toggle(t)} data-testid={`ws-task-check-${t.id}`} className="border-white/20 data-[state=checked]:border-brand-500 data-[state=checked]:bg-brand-600" />
               <div className="min-w-0 flex-1"><p className={`text-sm ${t.done ? "text-zinc-500 line-through" : "text-zinc-100"}`}>{t.title}</p>{t.due && <p className="text-xs text-zinc-500">{fmtDate(t.due)}</p>}</div>
               <span className={`h-2 w-2 rounded-full ${priorityDot[t.priority]}`} />
               <button onClick={() => del(t)} data-testid={`ws-delete-task-${t.id}`} className="rounded-md p-1.5 text-zinc-500 opacity-0 transition-all hover:bg-zinc-800 hover:text-red-400 group-hover:opacity-100"><Trash2 className="h-4 w-4" /></button>
@@ -220,18 +220,18 @@ function TasksTab({ projectId, tasks, reload }) {
         <DialogContent className="border-white/10 bg-zinc-950 text-zinc-100 sm:max-w-md" data-testid="ws-task-dialog">
           <DialogHeader><DialogTitle>New Task</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <input value={title} onChange={(e) => setTitle(e.target.value)} data-testid="ws-task-title-input" placeholder="Task title" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
+            <input value={title} onChange={(e) => setTitle(e.target.value)} data-testid="ws-task-title-input" placeholder="Task title" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
             <div className="grid grid-cols-2 gap-3">
               <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger data-testid="ws-task-priority-trigger" className="border-white/10 bg-zinc-900"><SelectValue /></SelectTrigger>
                 <SelectContent className="border-white/10 bg-zinc-900 text-zinc-100">{["High", "Medium", "Low"].map((s) => <SelectItem key={s} value={s} data-testid={`ws-task-priority-${s}`}>{s}</SelectItem>)}</SelectContent>
               </Select>
-              <input type="date" value={due} onChange={(e) => setDue(e.target.value)} data-testid="ws-task-due-input" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
+              <input type="date" value={due} onChange={(e) => setDue(e.target.value)} data-testid="ws-task-due-input" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
             </div>
           </div>
           <DialogFooter>
             <button onClick={() => setOpen(false)} className="rounded-lg border border-white/10 bg-zinc-900 px-4 py-2 text-sm text-zinc-300 hover:text-white">Cancel</button>
-            <button onClick={add} disabled={saving} data-testid="ws-task-save-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Create</button>
+            <button onClick={add} disabled={saving} data-testid="ws-task-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Create</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -258,13 +258,13 @@ function DocumentsTab({ projectId, documents, reload }) {
   return (
     <div className="space-y-4" data-testid="tab-documents">
       <div className="flex justify-end">
-        <button onClick={() => setOpen(true)} data-testid="ws-add-doc-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet"><FileUp className="h-4 w-4" /> Add Document</button>
+        <button onClick={() => setOpen(true)} data-testid="ws-add-doc-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 glow-brand"><FileUp className="h-4 w-4" /> Add Document</button>
       </div>
       {documents.length === 0 ? <EmptyState icon={FolderOpen} title="No documents yet" description="Attach documents and files relevant to this project." actionLabel="Add Document" onAction={() => setOpen(true)} testid="ws-docs-empty" /> : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {documents.map((d) => (
-            <div key={d.id} className="group relative rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-violet-500/40" data-testid={`ws-doc-${d.id}`}>
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-violet-600/15 text-violet-400"><FileText className="h-6 w-6" /></div>
+            <div key={d.id} className="group relative rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-brand-500/40" data-testid={`ws-doc-${d.id}`}>
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand-600/15 text-brand-400"><FileText className="h-6 w-6" /></div>
               <p className="mt-3 truncate text-sm font-medium text-zinc-100" title={d.name}>{d.name}</p>
               <p className="mt-0.5 text-xs text-zinc-500">{d.type}</p>
               <button onClick={() => del(d)} data-testid={`ws-delete-doc-${d.id}`} className="absolute right-2 top-2 rounded-md p-1.5 text-zinc-500 opacity-0 transition-all hover:bg-zinc-800 hover:text-red-400 group-hover:opacity-100"><Trash2 className="h-4 w-4" /></button>
@@ -276,7 +276,7 @@ function DocumentsTab({ projectId, documents, reload }) {
         <DialogContent className="border-white/10 bg-zinc-950 text-zinc-100 sm:max-w-md" data-testid="ws-doc-dialog">
           <DialogHeader><DialogTitle>Add Document</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <input value={name} onChange={(e) => setName(e.target.value)} data-testid="ws-doc-name-input" placeholder="e.g. Statement of Work.pdf" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
+            <input value={name} onChange={(e) => setName(e.target.value)} data-testid="ws-doc-name-input" placeholder="e.g. Statement of Work.pdf" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
             <Select value={type} onValueChange={setType}>
               <SelectTrigger data-testid="ws-doc-type-trigger" className="border-white/10 bg-zinc-900"><SelectValue /></SelectTrigger>
               <SelectContent className="border-white/10 bg-zinc-900 text-zinc-100">{["Doc", "PDF", "Sheet", "Image", "Archive"].map((s) => <SelectItem key={s} value={s} data-testid={`ws-doc-type-${s}`}>{s}</SelectItem>)}</SelectContent>
@@ -284,7 +284,7 @@ function DocumentsTab({ projectId, documents, reload }) {
           </div>
           <DialogFooter>
             <button onClick={() => setOpen(false)} className="rounded-lg border border-white/10 bg-zinc-900 px-4 py-2 text-sm text-zinc-300 hover:text-white">Cancel</button>
-            <button onClick={add} disabled={saving} data-testid="ws-doc-save-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Upload</button>
+            <button onClick={add} disabled={saving} data-testid="ws-doc-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Upload</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -307,18 +307,18 @@ function ProposalsTab({ projectId, proposals, reload }) {
   };
   const del = async (p) => { try { await proposalsApi.remove(p.id); toast.success("Proposal deleted"); reload(); } catch (e) { toast.error(e.message); } };
 
-  const st = { Draft: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20", Sent: "bg-violet-500/10 text-violet-400 border-violet-500/20", Accepted: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", Rejected: "bg-red-500/10 text-red-400 border-red-500/20" };
+  const st = { Draft: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20", Sent: "bg-brand-500/10 text-brand-400 border-brand-500/20", Accepted: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", Rejected: "bg-red-500/10 text-red-400 border-red-500/20" };
 
   return (
     <div className="space-y-4" data-testid="tab-proposals">
       <div className="flex justify-end">
-        <button onClick={() => setOpen(true)} data-testid="ws-add-proposal-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet"><FilePlus2 className="h-4 w-4" /> New Proposal</button>
+        <button onClick={() => setOpen(true)} data-testid="ws-add-proposal-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 glow-brand"><FilePlus2 className="h-4 w-4" /> New Proposal</button>
       </div>
       {proposals.length === 0 ? <EmptyState icon={FileText} title="No proposals yet" description="Generate a proposal to send to your client for this project." actionLabel="New Proposal" onAction={() => setOpen(true)} testid="ws-proposals-empty" /> : (
         <div className="space-y-3">
           {proposals.map((p) => (
-            <div key={p.id} className="group flex items-center gap-4 rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-violet-500/40" data-testid={`ws-proposal-${p.id}`}>
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-violet-600/15 text-violet-400"><FileText className="h-5 w-5" /></div>
+            <div key={p.id} className="group flex items-center gap-4 rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-brand-500/40" data-testid={`ws-proposal-${p.id}`}>
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-600/15 text-brand-400"><FileText className="h-5 w-5" /></div>
               <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-zinc-100">{p.title}</p>{p.content && <p className="truncate text-xs text-zinc-500">{p.content}</p>}</div>
               {p.amount && <span className="hidden text-sm font-semibold text-zinc-200 sm:block">{p.amount}</span>}
               <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${st[p.status]}`}>{p.status}</span>
@@ -331,19 +331,19 @@ function ProposalsTab({ projectId, proposals, reload }) {
         <DialogContent className="border-white/10 bg-zinc-950 text-zinc-100 sm:max-w-md" data-testid="ws-proposal-dialog">
           <DialogHeader><DialogTitle>New Proposal</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <input value={form.title} onChange={(e) => set("title", e.target.value)} data-testid="ws-proposal-title-input" placeholder="Proposal title" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
+            <input value={form.title} onChange={(e) => set("title", e.target.value)} data-testid="ws-proposal-title-input" placeholder="Proposal title" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
             <div className="grid grid-cols-2 gap-3">
-              <input value={form.amount} onChange={(e) => set("amount", e.target.value)} data-testid="ws-proposal-amount-input" placeholder="$24,000" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
+              <input value={form.amount} onChange={(e) => set("amount", e.target.value)} data-testid="ws-proposal-amount-input" placeholder="$24,000" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
               <Select value={form.status} onValueChange={(v) => set("status", v)}>
                 <SelectTrigger data-testid="ws-proposal-status-trigger" className="border-white/10 bg-zinc-900"><SelectValue /></SelectTrigger>
                 <SelectContent className="border-white/10 bg-zinc-900 text-zinc-100">{["Draft", "Sent", "Accepted", "Rejected"].map((s) => <SelectItem key={s} value={s} data-testid={`ws-proposal-status-${s}`}>{s}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <textarea value={form.content} onChange={(e) => set("content", e.target.value)} data-testid="ws-proposal-content-input" placeholder="Summary / scope (optional)" rows={3} className="w-full resize-none rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
+            <textarea value={form.content} onChange={(e) => set("content", e.target.value)} data-testid="ws-proposal-content-input" placeholder="Summary / scope (optional)" rows={3} className="w-full resize-none rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
           </div>
           <DialogFooter>
             <button onClick={() => setOpen(false)} className="rounded-lg border border-white/10 bg-zinc-900 px-4 py-2 text-sm text-zinc-300 hover:text-white">Cancel</button>
-            <button onClick={add} disabled={saving} data-testid="ws-proposal-save-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Generate</button>
+            <button onClick={add} disabled={saving} data-testid="ws-proposal-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Generate</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -368,9 +368,9 @@ function NotesTab({ project, reload }) {
   };
   return (
     <div className="space-y-4" data-testid="tab-notes">
-      <textarea value={notes} onChange={(e) => setNotes(e.target.value)} data-testid="ws-notes-input" rows={14} placeholder="Jot down meeting notes, ideas, decisions…" className="w-full resize-none rounded-xl border border-white/10 bg-zinc-950 p-5 text-sm leading-relaxed text-zinc-200 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
+      <textarea value={notes} onChange={(e) => setNotes(e.target.value)} data-testid="ws-notes-input" rows={14} placeholder="Jot down meeting notes, ideas, decisions…" className="w-full resize-none rounded-xl border border-white/10 bg-zinc-950 p-5 text-sm leading-relaxed text-zinc-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
       <div className="flex justify-end">
-        <button onClick={save} disabled={saving} data-testid="ws-notes-save-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Save Notes</button>
+        <button onClick={save} disabled={saving} data-testid="ws-notes-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Save Notes</button>
       </div>
     </div>
   );
@@ -378,20 +378,20 @@ function NotesTab({ project, reload }) {
 
 /* ---------------- Activity ---------------- */
 const activityMeta = {
-  project_created: { icon: Rocket, color: "bg-violet-600/20 text-violet-400" },
+  project_created: { icon: Rocket, color: "bg-brand-600/20 text-brand-400" },
   task_created: { icon: Plus, color: "bg-blue-600/20 text-blue-400" },
   task_completed: { icon: CheckCircle2, color: "bg-emerald-600/20 text-emerald-400" },
   proposal_generated: { icon: FileText, color: "bg-amber-600/20 text-amber-400" },
   document_uploaded: { icon: FileUp, color: "bg-cyan-600/20 text-cyan-400" },
-  plan_generated: { icon: Sparkles, color: "bg-violet-600/20 text-violet-400" },
-  proposal_saved: { icon: FilePlus2, color: "bg-violet-600/20 text-violet-400" },
+  plan_generated: { icon: Sparkles, color: "bg-brand-600/20 text-brand-400" },
+  proposal_saved: { icon: FilePlus2, color: "bg-brand-600/20 text-brand-400" },
   proposal_exported: { icon: FileUp, color: "bg-blue-600/20 text-blue-400" },
-  contract_generated: { icon: ScrollText, color: "bg-violet-600/20 text-violet-400" },
-  contract_saved: { icon: FilePlus2, color: "bg-violet-600/20 text-violet-400" },
+  contract_generated: { icon: ScrollText, color: "bg-brand-600/20 text-brand-400" },
+  contract_saved: { icon: FilePlus2, color: "bg-brand-600/20 text-brand-400" },
   contract_exported: { icon: FileUp, color: "bg-blue-600/20 text-blue-400" },
   contract_restored: { icon: RotateCcw, color: "bg-emerald-600/20 text-emerald-400" },
-  invoice_generated: { icon: Receipt, color: "bg-violet-600/20 text-violet-400" },
-  invoice_saved: { icon: FilePlus2, color: "bg-violet-600/20 text-violet-400" },
+  invoice_generated: { icon: Receipt, color: "bg-brand-600/20 text-brand-400" },
+  invoice_saved: { icon: FilePlus2, color: "bg-brand-600/20 text-brand-400" },
   invoice_exported: { icon: FileUp, color: "bg-blue-600/20 text-blue-400" },
   invoice_restored: { icon: RotateCcw, color: "bg-emerald-600/20 text-emerald-400" },
 };
@@ -499,7 +499,7 @@ export default function ProjectWorkspace() {
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 border border-white/10 bg-zinc-950 p-1" data-testid="workspace-tabs">
           {tabs.map((t) => (
             <TabsTrigger key={t.id} value={t.id} data-testid={`tab-trigger-${t.id}`}
-              className="rounded-md px-3 py-1.5 text-sm text-zinc-400 data-[state=active]:bg-violet-600 data-[state=active]:text-white">{t.label}</TabsTrigger>
+              className="rounded-md px-3 py-1.5 text-sm text-zinc-400 data-[state=active]:bg-brand-600 data-[state=active]:text-white">{t.label}</TabsTrigger>
           ))}
         </TabsList>
 

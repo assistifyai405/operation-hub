@@ -189,7 +189,7 @@ async def _email_brand(org_id: str) -> dict:
     b, o = s["branding"], s["organization"]
     return {
         "company_name": o.get("name") or "Assistify OS",
-        "primary": b.get("primaryColor") or "#7C3AED",
+        "primary": b.get("primaryColor") or "#16A34A",
         "logo_url": b.get("logo") or o.get("logo") or "",
     }
 
@@ -636,10 +636,15 @@ async def resend_verification(user: dict = Depends(current_user)):
 
 @api_router.patch("/auth/profile")
 async def update_profile(payload: ProfileUpdate, user: dict = Depends(current_user)):
+    from locale_util import is_allowed_locale, normalize_locale
     updates = {}
     for f in ["firstName", "lastName", "avatar", "timezone", "language"]:
         v = getattr(payload, f)
         if v is not None:
+            if f == "language":
+                if not is_allowed_locale(v):
+                    raise HTTPException(status_code=400, detail="language must be 'nl' or 'en'")
+                v = normalize_locale(v)
             updates[f] = v
     if updates:
         updates["updatedAt"] = now_iso()
@@ -1322,7 +1327,7 @@ DEFAULT_ORG_SETTINGS = {
         "vatNumber": "", "kvkNumber": "", "defaultCurrency": "USD", "defaultVat": 0, "logo": "",
     },
     "branding": {
-        "primaryColor": "#8b5cf6", "secondaryColor": "#22d3ee", "logo": "", "pdfLogo": "",
+        "primaryColor": "#16a34a", "secondaryColor": "#22d3ee", "logo": "", "pdfLogo": "",
         "proposalFooter": "", "contractFooter": "", "invoiceFooter": "",
     },
     "ai": {
@@ -1331,7 +1336,7 @@ DEFAULT_ORG_SETTINGS = {
     },
     "documents": {
         "proposalPrefix": "PROP", "contractPrefix": "CTR", "invoicePrefix": "INV",
-        "numberingStart": 1, "pdfPageSize": "A4", "pdfAccentColor": "#8b5cf6",
+        "numberingStart": 1, "pdfPageSize": "A4", "pdfAccentColor": "#16a34a",
     },
     "email": {
         "senderName": "", "senderEmail": "", "replyToEmail": "", "companySignature": "",

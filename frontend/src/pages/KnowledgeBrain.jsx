@@ -1,4 +1,6 @@
+import PageIntro from "@/components/PageIntro";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   Brain, Search, Sparkles, Loader2, Pin, PinOff, Pencil, Trash2, Power, PowerOff,
@@ -7,20 +9,20 @@ import {
 import { memoryApi } from "@/lib/api";
 import { AiIcon, relTime } from "@/components/ai/aiHelpers";
 
-const confColor = (c) => (c >= 85 ? "bg-emerald-500" : c >= 65 ? "bg-violet-500" : c >= 45 ? "bg-yellow-500" : "bg-orange-500");
-const inputCls = "w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-violet-500/50 focus:outline-none";
+const confColor = (c) => (c >= 85 ? "bg-emerald-500" : c >= 65 ? "bg-brand-500" : c >= 45 ? "bg-yellow-500" : "bg-orange-500");
+const inputCls = "w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-brand-500/50 focus:outline-none";
 const CATEGORIES = ["Business", "Writing Style", "Pricing", "Customers", "Projects", "Processes", "Frequently Used Terms", "Products", "Services", "Brand Voice", "Policies", "Preferences", "Relationships"];
 
 function MemoryCard({ m, onChange, selectMode, selected, onSelect }) {
   const act = async (fn, ok) => { try { await fn(); onChange(); if (ok) toast.success(ok); } catch (e) { toast.error(e.message); } };
   return (
-    <div data-testid="memory-card" className={`group rounded-2xl border bg-zinc-950 p-4 transition-all animate-fade-up ${selected ? "border-violet-500" : "border-white/10 hover:border-violet-500/30"} ${m.learning_enabled === false ? "opacity-60" : ""}`}>
+    <div data-testid="memory-card" className={`group rounded-2xl border bg-zinc-950 p-4 transition-all animate-fade-up ${selected ? "border-brand-500" : "border-white/10 hover:border-brand-500/30"} ${m.learning_enabled === false ? "opacity-60" : ""}`}>
       <div className="flex items-start gap-3">
-        {selectMode && <input type="checkbox" checked={selected} onChange={onSelect} data-testid="memory-select" className="mt-1 h-4 w-4 accent-violet-500" />}
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-600/15 text-violet-300"><AiIcon name={m.icon} className="h-4 w-4" /></span>
+        {selectMode && <input type="checkbox" checked={selected} onChange={onSelect} data-testid="memory-select" className="mt-1 h-4 w-4 accent-brand-500" />}
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600/15 text-brand-300"><AiIcon name={m.icon} className="h-4 w-4" /></span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            {m.pinned && <Pin className="h-3.5 w-3.5 text-violet-400" />}
+            {m.pinned && <Pin className="h-3.5 w-3.5 text-brand-400" />}
             <p className="text-sm font-semibold text-zinc-100">{m.title}</p>
           </div>
           <p className="mt-0.5 text-xs text-zinc-500">{m.category}</p>
@@ -65,9 +67,9 @@ function EditModal({ mem, onClose, onSaved }) {
           <input value={f.title} onChange={(e) => set("title", e.target.value)} placeholder="Title" data-testid="memory-title-input" className={inputCls} />
           <select value={f.category} onChange={(e) => set("category", e.target.value)} data-testid="memory-category-select" className={inputCls}>{CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>
           <textarea value={f.content} onChange={(e) => set("content", e.target.value)} rows={3} placeholder="What Assistify should remember…" className={inputCls} />
-          <div><div className="mb-1 flex justify-between text-xs text-zinc-500"><span>Confidence</span><span>{f.confidence}%</span></div><input type="range" min="0" max="100" value={f.confidence} onChange={(e) => set("confidence", e.target.value)} className="w-full accent-violet-500" /></div>
+          <div><div className="mb-1 flex justify-between text-xs text-zinc-500"><span>Confidence</span><span>{f.confidence}%</span></div><input type="range" min="0" max="100" value={f.confidence} onChange={(e) => set("confidence", e.target.value)} className="w-full accent-brand-500" /></div>
           <input value={f.keywords} onChange={(e) => set("keywords", e.target.value)} placeholder="keywords, comma separated" className={inputCls} />
-          <button onClick={save} data-testid="memory-save" className="w-full rounded-lg bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-500">Save memory</button>
+          <button onClick={save} data-testid="memory-save" className="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white hover:bg-brand-500">Save memory</button>
         </div>
       </div>
     </div>
@@ -75,6 +77,7 @@ function EditModal({ mem, onClose, onSaved }) {
 }
 
 export default function KnowledgeBrain() {
+  const { t } = useTranslation();
   const [mems, setMems] = useState([]);
   const [stats, setStats] = useState(null);
   const [insights, setInsights] = useState([]);
@@ -129,10 +132,12 @@ export default function KnowledgeBrain() {
 
   return (
     <div className="space-y-6" data-testid="knowledge-brain-page">
+      <PageIntro title={t("pages.knowledgeBrain.title")} description={t("pages.knowledgeBrain.description")} help={t("help.knowledgeBrain")} />
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="flex items-center gap-2.5 text-3xl font-bold tracking-tight text-zinc-50">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet"><Brain className="h-5 w-5 text-white" /></span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 glow-brand"><Brain className="h-5 w-5 text-white" /></span>
             Knowledge Brain
           </h1>
           <p className="mt-1.5 text-sm text-zinc-400">
@@ -140,21 +145,21 @@ export default function KnowledgeBrain() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button onClick={analyze} disabled={analyzing} data-testid="analyze-learning" className="relative inline-flex items-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/[0.06] px-3.5 py-2 text-sm font-semibold text-violet-200 hover:bg-violet-500/15 disabled:opacity-60">
+          <button onClick={analyze} disabled={analyzing} data-testid="analyze-learning" className="relative inline-flex items-center gap-1.5 rounded-lg border border-brand-500/30 bg-brand-500/[0.06] px-3.5 py-2 text-sm font-semibold text-brand-200 hover:bg-brand-500/15 disabled:opacity-60">
             {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Analyze new learning
-            {stats?.pending_learning > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-500 px-1 text-[10px] font-bold text-white">{stats.pending_learning}</span>}
+            {stats?.pending_learning > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-bold text-white">{stats.pending_learning}</span>}
           </button>
-          <button onClick={() => setEditing({})} data-testid="new-memory" className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-violet-500"><Plus className="h-4 w-4" /> Memory</button>
+          <button onClick={() => setEditing({})} data-testid="new-memory" className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-500"><Plus className="h-4 w-4" /> Memory</button>
         </div>
       </div>
 
       {/* Ask your Brain */}
-      <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.05] p-4" data-testid="ask-brain">
+      <div className="rounded-2xl border border-brand-500/20 bg-brand-500/[0.05] p-4" data-testid="ask-brain">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-violet-300" />
+          <Sparkles className="h-4 w-4 text-brand-300" />
           <input value={ask} onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doAsk()} data-testid="ask-input"
             placeholder="Ask your Brain anything — e.g. 'What's my usual pricing and tone?'" className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none" />
-          <button onClick={doAsk} disabled={asking} data-testid="ask-send" className="rounded-lg bg-violet-600 p-2 text-white hover:bg-violet-500 disabled:opacity-50">{asking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</button>
+          <button onClick={doAsk} disabled={asking} data-testid="ask-send" className="rounded-lg bg-brand-600 p-2 text-white hover:bg-brand-500 disabled:opacity-50">{asking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</button>
         </div>
         {answer && <p className="mt-3 border-t border-white/10 pt-3 text-sm text-zinc-200" data-testid="ask-answer">{answer}</p>}
       </div>
@@ -175,21 +180,21 @@ export default function KnowledgeBrain() {
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} data-testid="memory-search" placeholder="Search memories…" className="w-full rounded-lg border border-white/10 bg-zinc-900 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-violet-500/50 focus:outline-none" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} data-testid="memory-search" placeholder="Search memories…" className="w-full rounded-lg border border-white/10 bg-zinc-900 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-brand-500/50 focus:outline-none" />
             </div>
             <select value={sort} onChange={(e) => setSort(e.target.value)} data-testid="memory-sort" className="rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 focus:outline-none">
               <option value="recent">Recently updated</option><option value="used">Most used</option><option value="confidence">Highest confidence</option><option value="created">Newest</option>
             </select>
-            <button onClick={() => { setSelectMode(!selectMode); setSelected([]); }} data-testid="merge-mode" className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm ${selectMode ? "border-violet-500 bg-violet-600/15 text-violet-200" : "border-white/10 bg-zinc-900 text-zinc-400"}`}><GitMerge className="h-4 w-4" /> Merge</button>
+            <button onClick={() => { setSelectMode(!selectMode); setSelected([]); }} data-testid="merge-mode" className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm ${selectMode ? "border-brand-500 bg-brand-600/15 text-brand-200" : "border-white/10 bg-zinc-900 text-zinc-400"}`}><GitMerge className="h-4 w-4" /> Merge</button>
           </div>
           <div className="flex flex-wrap gap-1.5">
             <Chip active={!cat} onClick={() => setCat("")}>All</Chip>
             {(stats?.by_category || []).map((c) => <Chip key={c.category} active={cat === c.category} onClick={() => setCat(c.category)}>{c.category} <span className="opacity-60">{c.count}</span></Chip>)}
           </div>
           {selectMode && selected.length > 0 && (
-            <div className="flex items-center justify-between rounded-lg border border-violet-500/30 bg-violet-500/[0.06] px-3 py-2 text-sm text-violet-200">
+            <div className="flex items-center justify-between rounded-lg border border-brand-500/30 bg-brand-500/[0.06] px-3 py-2 text-sm text-brand-200">
               <span>{selected.length} selected</span>
-              <button onClick={doMerge} data-testid="merge-confirm" className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500">Merge into one</button>
+              <button onClick={doMerge} data-testid="merge-confirm" className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500">Merge into one</button>
             </div>
           )}
           {loading ? <div className="flex justify-center py-16 text-zinc-600"><Loader2 className="h-6 w-6 animate-spin" /></div>
@@ -200,7 +205,7 @@ export default function KnowledgeBrain() {
                 <p className="mx-auto mt-1 max-w-md text-xs text-zinc-500">
                   Memories are facts and preferences Assistify uses for better AI answers. Add one manually, or complete company setup during onboarding.
                 </p>
-                <button type="button" onClick={() => setEditing({})} data-testid="memory-empty-action" className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+                <button type="button" onClick={() => setEditing({})} data-testid="memory-empty-action" className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500">
                   <Plus className="h-4 w-4" aria-hidden="true" /> Add your first memory
                 </button>
               </div>
@@ -211,18 +216,18 @@ export default function KnowledgeBrain() {
         {/* Right: insights + profile */}
         <div className="space-y-6">
           <div>
-            <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Zap className="h-3.5 w-3.5 text-violet-400" /> AI Insights</p>
+            <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Zap className="h-3.5 w-3.5 text-brand-400" /> AI Insights</p>
             {insights.length === 0 ? <div className="rounded-2xl border border-white/10 bg-zinc-950 p-4 text-center text-xs text-zinc-500">Insights sharpen as you do more work.</div>
               : <div className="space-y-2" data-testid="brain-insights">{insights.map((it, i) => (
                   <div key={i} className="rounded-xl border border-white/10 bg-zinc-950 p-3.5" data-testid="brain-insight">
-                    <div className="flex items-start gap-2.5"><span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-600/15 text-violet-300"><AiIcon name={it.icon} className="h-3.5 w-3.5" /></span>
+                    <div className="flex items-start gap-2.5"><span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-600/15 text-brand-300"><AiIcon name={it.icon} className="h-3.5 w-3.5" /></span>
                       <div><p className="text-sm font-medium text-zinc-200">{it.insight}</p><p className="mt-0.5 text-xs text-zinc-500">{it.explanation}</p></div></div>
                   </div>))}</div>}
           </div>
           <div>
             <div className="mb-2.5 flex items-center justify-between">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Brain className="h-3.5 w-3.5 text-violet-400" /> Business Profile</p>
-              <button onClick={generateProfile} disabled={genProfile} data-testid="generate-profile" className="inline-flex items-center gap-1 text-xs text-violet-300 hover:text-violet-200">{genProfile ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />} {profile ? "Refresh" : "Generate"}</button>
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Brain className="h-3.5 w-3.5 text-brand-400" /> Business Profile</p>
+              <button onClick={generateProfile} disabled={genProfile} data-testid="generate-profile" className="inline-flex items-center gap-1 text-xs text-brand-300 hover:text-brand-200">{genProfile ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />} {profile ? "Refresh" : "Generate"}</button>
             </div>
             {!profile?.sections ? <div className="rounded-2xl border border-white/10 bg-zinc-950 p-4 text-center text-xs text-zinc-500" data-testid="profile-empty">Generate an evolving profile of your business from everything Assistify knows.</div>
               : <div className="space-y-2 rounded-2xl border border-white/10 bg-zinc-950 p-4" data-testid="business-profile">
@@ -240,4 +245,4 @@ export default function KnowledgeBrain() {
 }
 
 const Stat = ({ label, value }) => (<div className="rounded-2xl border border-white/10 bg-zinc-950 p-4" data-testid="brain-stat"><p className="text-2xl font-extrabold text-zinc-50">{value}</p><p className="text-xs text-zinc-500">{label}</p></div>);
-const Chip = ({ active, onClick, children }) => (<button onClick={onClick} className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${active ? "border-violet-500 bg-violet-600/15 text-violet-200" : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"}`}>{children}</button>);
+const Chip = ({ active, onClick, children }) => (<button onClick={onClick} className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${active ? "border-brand-500 bg-brand-600/15 text-brand-200" : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"}`}>{children}</button>);

@@ -1,4 +1,6 @@
+import PageIntro from "@/components/PageIntro";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Loader2, Mail, Plus, Send, Check, X, RotateCcw, Sparkles, Pencil, Ban, Search,
 } from "lucide-react";
@@ -29,7 +31,7 @@ const statusStyle = {
   pending_approval: "bg-amber-500/15 text-amber-300",
   approved: "bg-emerald-500/15 text-emerald-300",
   scheduled: "bg-sky-500/15 text-sky-300",
-  sending: "bg-violet-500/15 text-violet-300",
+  sending: "bg-brand-500/15 text-brand-300",
   sent: "bg-emerald-500/15 text-emerald-300",
   failed: "bg-rose-500/15 text-rose-300",
   needs_review: "bg-amber-500/15 text-amber-200",
@@ -52,6 +54,7 @@ const emptyForm = () => ({
 });
 
 export default function EmailCenter() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const canApprove = user?.role === "owner" || user?.role === "admin";
@@ -201,6 +204,8 @@ export default function EmailCenter() {
 
   return (
     <div className="space-y-5" data-testid="email-center-page">
+      <PageIntro title={t("pages.emails.title")} description={t("pages.emails.description")} />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="flex items-center gap-2 text-sm text-zinc-400">
@@ -221,7 +226,7 @@ export default function EmailCenter() {
           type="button"
           data-testid="email-compose-btn"
           onClick={() => { setForm(emptyForm()); setComposeOpen(true); }}
-          className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-500"
         >
           <Plus className="h-4 w-4" /> Compose draft
         </button>
@@ -236,7 +241,7 @@ export default function EmailCenter() {
               data-testid={`email-tab-${t.id}`}
               onClick={() => setTab(t.id)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                tab === t.id ? "bg-violet-600/15 text-violet-300" : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+                tab === t.id ? "bg-brand-600/15 text-brand-300" : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
               }`}
             >
               {t.label}
@@ -336,10 +341,10 @@ export default function EmailCenter() {
             </label>
           </div>
           <DialogFooter className="gap-2 sm:gap-2">
-            <button type="button" disabled={saving} onClick={() => createDraft({ generateAi: true })} className="inline-flex items-center gap-1.5 rounded-lg border border-violet-500/30 px-3 py-2 text-sm text-violet-300 hover:bg-violet-600/10" data-testid="compose-ai">
+            <button type="button" disabled={saving} onClick={() => createDraft({ generateAi: true })} className="inline-flex items-center gap-1.5 rounded-lg border border-brand-500/30 px-3 py-2 text-sm text-brand-300 hover:bg-brand-600/10" data-testid="compose-ai">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} AI draft
             </button>
-            <button type="button" disabled={saving} onClick={() => createDraft()} className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500" data-testid="compose-save">
+            <button type="button" disabled={saving} onClick={() => createDraft()} className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-500" data-testid="compose-save">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pencil className="h-4 w-4" />} Save draft
             </button>
           </DialogFooter>
@@ -389,8 +394,8 @@ export default function EmailCenter() {
                   <pre className="overflow-x-auto rounded-lg border border-white/10 bg-zinc-900/60 p-3 text-[11px] text-zinc-400" data-testid="email-console-preview">{JSON.stringify(detail.consolePreview, null, 2)}</pre>
                 )}
                 {(detail.inboxThreadId || transport?.isThreadedReply) && (
-                  <div className="rounded-lg border border-violet-500/20 bg-violet-600/10 p-3 text-xs text-zinc-300" data-testid="email-inbox-link">
-                    <p className="font-medium text-violet-300">Linked inbox conversation</p>
+                  <div className="rounded-lg border border-brand-500/20 bg-brand-600/10 p-3 text-xs text-zinc-300" data-testid="email-inbox-link">
+                    <p className="font-medium text-brand-300">Linked inbox conversation</p>
                     <p className="mt-1">
                       {transport?.label || (detail.replyProvider === "google" ? "Send via Gmail" : detail.replyProvider === "microsoft" ? "Send via Outlook" : "Provider reply")}
                       {" · "}
@@ -411,7 +416,7 @@ export default function EmailCenter() {
                     {(detail.clientId || detail.leadId) && (
                       <p className="mt-1">CRM: {detail.clientId ? `client ${detail.clientId}` : ""}{detail.leadId ? ` lead ${detail.leadId}` : ""}</p>
                     )}
-                    <a href={`/inbox?thread=${detail.inboxThreadId}`} className="mt-2 inline-block text-violet-400 hover:underline" data-testid="email-view-conversation">View conversation</a>
+                    <a href={`/inbox?thread=${detail.inboxThreadId}`} className="mt-2 inline-block text-brand-400 hover:underline" data-testid="email-view-conversation">View conversation</a>
                   </div>
                 )}
                 {(detail.sentVia || detail.providerMessageId) && (
@@ -447,7 +452,7 @@ export default function EmailCenter() {
                   <button type="button" disabled={busyId === detail.id} onClick={saveDetail} className="rounded-lg border border-white/10 px-3 py-2 text-sm hover:bg-zinc-900" data-testid="detail-save">Save</button>
                 )}
                 {detailEditable && (
-                  <button type="button" disabled={busyId === detail.id} onClick={() => runAction("improve", detail.id)} className="inline-flex items-center gap-1 rounded-lg border border-violet-500/30 px-3 py-2 text-sm text-violet-300" data-testid="detail-improve"><Sparkles className="h-3.5 w-3.5" /> AI improve</button>
+                  <button type="button" disabled={busyId === detail.id} onClick={() => runAction("improve", detail.id)} className="inline-flex items-center gap-1 rounded-lg border border-brand-500/30 px-3 py-2 text-sm text-brand-300" data-testid="detail-improve"><Sparkles className="h-3.5 w-3.5" /> AI improve</button>
                 )}
                 {["draft", "rejected", "failed"].includes(detail.status) && (
                   <button type="button" disabled={busyId === detail.id} onClick={() => runAction("submit", detail.id)} className="rounded-lg border border-amber-500/30 px-3 py-2 text-sm text-amber-200" data-testid="detail-submit">Submit for approval</button>
@@ -463,7 +468,7 @@ export default function EmailCenter() {
                     type="button"
                     disabled={busyId === detail.id || transportBlocked}
                     onClick={() => setConfirm({ action: "send", id: detail.id })}
-                    className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                    className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
                     data-testid="detail-send"
                   >
                     <Send className="h-3.5 w-3.5" /> {sendLabel}
@@ -498,7 +503,7 @@ export default function EmailCenter() {
             <AlertDialogAction
               data-testid="email-confirm-action"
               onClick={() => confirm && runAction(confirm.action, confirm.id)}
-              className="bg-violet-600 hover:bg-violet-500"
+              className="bg-brand-600 hover:bg-brand-500"
             >
               Confirm
             </AlertDialogAction>

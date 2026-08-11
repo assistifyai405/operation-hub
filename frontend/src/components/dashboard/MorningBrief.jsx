@@ -11,7 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { AiIcon, fmtDuration } from "@/components/ai/aiHelpers";
 import { money, relTime, PRIORITY_META } from "./execShared";
 
-function Collapsible({ icon: Icon, title, count, tone = "text-violet-400", defaultOpen = true, children, testid }) {
+function Collapsible({ icon: Icon, title, count, tone = "text-brand-400", defaultOpen = true, children, testid }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-2xl border border-white/10 bg-zinc-950/70" data-testid={testid}>
@@ -47,7 +47,7 @@ export function MorningBrief({ open, onOpenChange }) {
 
   const NUMBERS = data ? [
     { label: "Revenue", value: data.numbers.revenue == null ? "—" : money(data.numbers.revenue), tone: "text-emerald-400" },
-    { label: "Pipeline", value: data.numbers.pipeline == null ? "—" : money(data.numbers.pipeline), tone: "text-violet-400" },
+    { label: "Pipeline", value: data.numbers.pipeline == null ? "—" : money(data.numbers.pipeline), tone: "text-brand-400" },
     { label: "Hours Saved", value: data.numbers.hours_saved == null ? "—" : `${data.numbers.hours_saved}h`, tone: "text-cyan-400" },
     { label: "Business Health", value: data.numbers.business_health == null ? "—" : `${data.numbers.business_health}`, tone: "text-emerald-400" },
     { label: "Active Clients", value: `${data.numbers.clients_active ?? 0}`, tone: "text-zinc-100" },
@@ -60,8 +60,8 @@ export function MorningBrief({ open, onOpenChange }) {
         <DialogTitle className="sr-only">AI Morning Brief</DialogTitle>
         {/* Hero */}
         <div className="relative overflow-hidden rounded-t-lg border-b border-white/10 p-6">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-violet-600/20 blur-3xl" />
-          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-violet-300"><Sun className="h-4 w-4" /> AI Morning Brief</div>
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand-600/20 blur-3xl" />
+          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-brand-300"><Sun className="h-4 w-4" /> AI Morning Brief</div>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-zinc-50">
             {data?.greeting || "Good morning"}{firstName ? `, ${firstName}` : ""}
           </h2>
@@ -91,7 +91,7 @@ export function MorningBrief({ open, onOpenChange }) {
               <div className="space-y-1.5">
                 {data.summary.map((s, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-zinc-300" data-testid="brief-summary-item">
-                    <AiIcon name={s.icon} className="h-3.5 w-3.5 shrink-0 text-violet-400" /> {s.text}
+                    <AiIcon name={s.icon} className="h-3.5 w-3.5 shrink-0 text-brand-400" /> {s.text}
                   </div>
                 ))}
               </div>
@@ -137,7 +137,7 @@ export function MorningBrief({ open, onOpenChange }) {
                     const pm = PRIORITY_META[it.priority] || PRIORITY_META.Medium;
                     return (
                       <div key={it.id} className="flex items-center gap-2.5 rounded-lg border border-white/10 bg-zinc-900/50 px-3 py-2" data-testid="brief-rec-item">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-600/15 text-violet-300"><AiIcon name={it.icon} className="h-4 w-4" /></span>
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600/15 text-brand-300"><AiIcon name={it.icon} className="h-4 w-4" /></span>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-zinc-100">{it.title}</p>
                           <div className="flex items-center gap-2 text-[10px] text-zinc-500">
@@ -146,7 +146,7 @@ export function MorningBrief({ open, onOpenChange }) {
                             <span>{it.confidence}%</span>
                           </div>
                         </div>
-                        {it.action?.link && <button onClick={() => go(it.action.link)} data-testid="brief-rec-action" className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-violet-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-violet-500">{it.action.label} <ArrowRight className="h-3 w-3" /></button>}
+                        {it.action?.link && <button onClick={() => go(it.action.link)} data-testid="brief-rec-action" className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-brand-500">{it.action.label} <ArrowRight className="h-3 w-3" /></button>}
                       </div>
                     );
                   })}
@@ -160,7 +160,7 @@ export function MorningBrief({ open, onOpenChange }) {
                 <div className="space-y-1">
                   {data.what_ai_did.map((a) => (
                     <div key={a.id} className="flex items-start gap-2.5 rounded-lg px-1 py-1.5" data-testid="brief-ai-item">
-                      <AiIcon name={a.icon} className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-400" />
+                      <AiIcon name={a.icon} className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-400" />
                       <div className="min-w-0 flex-1"><p className="truncate text-sm text-zinc-200">{a.title}</p>
                         <p className="text-[10px] text-zinc-600">{relTime(a.created_at)}{a.time_saved ? ` · saved ~${fmtDuration(a.time_saved)}` : ""}{a.confidence ? ` · ${a.confidence}%` : ""}</p>
                       </div>

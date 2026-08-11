@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, Sparkles, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { isProductTourEligible, markProductTourDone } from "@/lib/productTour";
@@ -7,32 +8,32 @@ import { isProductTourEligible, markProductTourDone } from "@/lib/productTour";
 const STEPS = [
   {
     id: "dashboard",
-    title: "Your dashboard",
-    body: "See priorities, quick actions, and workspace health once you add real clients and projects.",
+    titleKey: "tour.steps.dashboard.title",
+    bodyKey: "tour.steps.dashboard.body",
     to: "/dashboard",
   },
   {
     id: "clients",
-    title: "Clients",
-    body: "Start with the people and companies you work with — everything else links back here.",
+    titleKey: "tour.steps.clients.title",
+    bodyKey: "tour.steps.clients.body",
     to: "/clients",
   },
   {
     id: "copilot",
-    title: "Copilot",
-    body: "Ask for summaries, drafts, project plans, or proposals grounded in your workspace.",
+    titleKey: "tour.steps.copilot.title",
+    bodyKey: "tour.steps.copilot.body",
     to: "/ai-chat",
   },
   {
     id: "agents",
-    title: "AI Agents",
-    body: "Chat with specialists for sales, writing, and ops when you want focused help.",
+    titleKey: "tour.steps.agents.title",
+    bodyKey: "tour.steps.agents.body",
     to: "/ai-agents",
   },
   {
     id: "search",
-    title: "Search & command palette",
-    body: "Press ⌘K (or Ctrl+K) anytime to jump to a page or start a useful AI action.",
+    titleKey: "tour.steps.search.title",
+    bodyKey: "tour.steps.search.body",
     to: null,
   },
 ];
@@ -41,6 +42,7 @@ const STEPS = [
  * Lightweight optional first-dashboard tour. Never blocks the app.
  */
 export default function ProductTour({ forceOpen = false, onOpenCommandPalette }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -94,47 +96,47 @@ export default function ProductTour({ forceOpen = false, onOpenCommandPalette })
         role="dialog"
         aria-modal="false"
         aria-labelledby="product-tour-title"
-        className="pointer-events-auto w-full max-w-sm rounded-2xl border border-violet-500/30 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur sm:p-5"
+        className="pointer-events-auto w-full max-w-sm rounded-2xl border border-brand-500/30 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur sm:p-5"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600/20 text-violet-400" aria-hidden="true">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600/20 text-brand-400" aria-hidden="true">
               <Sparkles className="h-4 w-4" />
             </span>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-400">
-                Quick tour · {step + 1}/{STEPS.length}
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-400">
+                {t("tour.progress", { current: step + 1, total: STEPS.length })}
               </p>
-              <h2 id="product-tour-title" className="text-sm font-semibold text-zinc-50">{current.title}</h2>
+              <h2 id="product-tour-title" className="text-sm font-semibold text-zinc-50">{t(current.titleKey)}</h2>
             </div>
           </div>
           <button
             type="button"
             onClick={skip}
-            aria-label="Dismiss product tour"
+            aria-label={t("tour.dismiss")}
             data-testid="product-tour-dismiss"
-            className="rounded-lg p-1 text-zinc-500 hover:bg-white/5 hover:text-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+            className="rounded-lg p-1 text-zinc-500 hover:bg-white/5 hover:text-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <p className="mt-3 text-sm leading-relaxed text-zinc-400">{current.body}</p>
+        <p className="mt-3 text-sm leading-relaxed text-zinc-400">{t(current.bodyKey)}</p>
         <div className="mt-4 flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={skip}
             data-testid="product-tour-skip"
-            className="text-xs font-medium text-zinc-500 hover:text-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 rounded"
+            className="text-xs font-medium text-zinc-500 hover:text-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 rounded"
           >
-            Skip tour
+            {t("tour.skip")}
           </button>
           <button
             type="button"
             onClick={primary}
             data-testid="product-tour-next"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           >
-            {last ? "Got it" : "Next"} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            {last ? t("tour.done") : t("tour.next")} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
       </div>

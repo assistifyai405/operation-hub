@@ -1,4 +1,6 @@
+import PageIntro from "@/components/PageIntro";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Loader2, Mail, RefreshCw, Link2, Unlink, Sparkles, User, Search, Inbox as InboxIcon,
 } from "lucide-react";
@@ -27,6 +29,7 @@ const VIEWS = [
 ];
 
 export default function Inbox() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -218,6 +221,8 @@ export default function Inbox() {
 
   return (
     <div className="space-y-4" data-testid="inbox-page">
+      <PageIntro title={t("pages.inbox.title")} description={t("pages.inbox.description")} />
+
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-lg font-semibold text-zinc-100">Inbox</h1>
@@ -246,7 +251,7 @@ export default function Inbox() {
             <div className="space-y-1">
               {VIEWS.map((v) => (
                 <button key={v.id} type="button" onClick={() => { setView(v.id); setThreads((t) => ({ ...t, page: 1 })); }}
-                  className={`flex w-full rounded-lg px-3 py-2 text-left text-sm ${view === v.id ? "bg-violet-600/15 text-violet-300" : "text-zinc-400 hover:bg-zinc-900"}`}
+                  className={`flex w-full rounded-lg px-3 py-2 text-left text-sm ${view === v.id ? "bg-brand-600/15 text-brand-300" : "text-zinc-400 hover:bg-zinc-900"}`}
                   data-testid={`inbox-view-${v.id}`}
                 >{v.label}</button>
               ))}
@@ -268,14 +273,14 @@ export default function Inbox() {
               <ul className="space-y-2">
                 {mailboxes.map((m) => (
                   <li key={m.id} className="rounded-lg border border-white/5 p-2 text-xs text-zinc-400">
-                    <button type="button" className={`w-full text-left ${mailboxId === m.id ? "text-violet-300" : ""}`} onClick={() => setMailboxId(mailboxId === m.id ? "" : m.id)}>
+                    <button type="button" className={`w-full text-left ${mailboxId === m.id ? "text-brand-300" : ""}`} onClick={() => setMailboxId(mailboxId === m.id ? "" : m.id)}>
                       <span className="font-medium text-zinc-200">{m.emailAddress}</span>
                       <span className="mt-0.5 block capitalize">{m.provider} · {m.syncStatus || "idle"}</span>
                       <span className="block text-zinc-500">Last sync: {fmtTime(m.lastSuccessfulSyncAt || m.lastSyncAt)}</span>
                       {m.lastError && <span className="block text-rose-400">{m.lastError}</span>}
                     </button>
                     {canSync && (
-                      <button type="button" className="mt-1 text-violet-400 hover:underline" onClick={() => syncOne(m.id)} disabled={!!syncing}>
+                      <button type="button" className="mt-1 text-brand-400 hover:underline" onClick={() => syncOne(m.id)} disabled={!!syncing}>
                         Sync now
                       </button>
                     )}
@@ -305,7 +310,7 @@ export default function Inbox() {
               {threads.items.map((t) => (
                 <li key={t.id}>
                   <button type="button" data-testid={`inbox-thread-${t.id}`} onClick={() => openThread(t.id)}
-                    className={`flex w-full flex-col gap-1 px-4 py-3 text-left hover:bg-zinc-900/70 ${selected === t.id ? "bg-violet-600/10" : ""}`}
+                    className={`flex w-full flex-col gap-1 px-4 py-3 text-left hover:bg-zinc-900/70 ${selected === t.id ? "bg-brand-600/10" : ""}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className={`truncate text-sm ${(t.unreadCount || 0) > 0 ? "font-semibold text-zinc-50" : "text-zinc-300"}`}>
@@ -314,7 +319,7 @@ export default function Inbox() {
                       <span className="shrink-0 text-[11px] text-zinc-500">{fmtTime(t.latestMessageAt)}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {(t.unreadCount || 0) > 0 && <span className="h-2 w-2 rounded-full bg-violet-400" />}
+                      {(t.unreadCount || 0) > 0 && <span className="h-2 w-2 rounded-full bg-brand-400" />}
                       <span className="truncate text-sm text-zinc-200">{t.subject}</span>
                     </div>
                     <p className="truncate text-xs text-zinc-500">{t.snippet}</p>
@@ -355,8 +360,8 @@ export default function Inbox() {
               </div>
 
               {thread?.aiSummary && (
-                <div className="rounded-lg border border-violet-500/20 bg-violet-600/10 p-3 text-xs text-zinc-300" data-testid="inbox-ai-summary">
-                  <p className="font-medium text-violet-300">AI summary</p>
+                <div className="rounded-lg border border-brand-500/20 bg-brand-600/10 p-3 text-xs text-zinc-300" data-testid="inbox-ai-summary">
+                  <p className="font-medium text-brand-300">AI summary</p>
                   <p className="mt-1">{thread.aiSummary.summary}</p>
                   <p className="mt-2 text-zinc-400">Intent: {thread.aiSummary.intent} · Urgency: {thread.aiSummary.urgency} · Sentiment: {thread.aiSummary.sentiment}</p>
                   <p className="mt-1">Next: {thread.aiSummary.suggestedNextStep}</p>
@@ -364,10 +369,10 @@ export default function Inbox() {
               )}
 
               <div className="flex flex-wrap gap-2">
-                <button type="button" disabled={busy} onClick={runSummarize} className="inline-flex items-center gap-1 rounded-lg border border-violet-500/30 px-2.5 py-1.5 text-xs text-violet-300" data-testid="inbox-summarize">
+                <button type="button" disabled={busy} onClick={runSummarize} className="inline-flex items-center gap-1 rounded-lg border border-brand-500/30 px-2.5 py-1.5 text-xs text-brand-300" data-testid="inbox-summarize">
                   <Sparkles className="h-3.5 w-3.5" /> Summarize
                 </button>
-                <button type="button" disabled={busy} onClick={runDraftReply} className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-2.5 py-1.5 text-xs font-semibold text-white" data-testid="inbox-draft-reply">
+                <button type="button" disabled={busy} onClick={runDraftReply} className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-semibold text-white" data-testid="inbox-draft-reply">
                   <Mail className="h-3.5 w-3.5" /> Draft reply
                 </button>
                 <button type="button" disabled={busy} onClick={() => inboxApi.patchThread(selected, { assignedUserId: user.id }).then(() => { toast.success("Assigned to you"); openThread(selected); loadThreads(); })} className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-zinc-300">
@@ -402,13 +407,13 @@ export default function Inbox() {
                       <span className="flex items-center gap-2">
                         {m.deliveryWarning && <span className="text-amber-300">Delivery unconfirmed</span>}
                         {m.kind === "outbound" && (
-                          <a href={`/emails?draft=${m.id}`} className="text-violet-400 hover:underline">Open in Email Center</a>
+                          <a href={`/emails?draft=${m.id}`} className="text-brand-400 hover:underline">Open in Email Center</a>
                         )}
                         <span>{fmtTime(m.receivedAt || m.sentAt)}</span>
                       </span>
                     </div>
                     {m.kind === "inbound" && m.sanitizedHtmlBody ? (
-                      <div className="prose-invert max-w-none text-sm text-zinc-300 [&_a]:text-violet-400" dangerouslySetInnerHTML={{ __html: m.sanitizedHtmlBody }} />
+                      <div className="prose-invert max-w-none text-sm text-zinc-300 [&_a]:text-brand-400" dangerouslySetInnerHTML={{ __html: m.sanitizedHtmlBody }} />
                     ) : (
                       <pre className="whitespace-pre-wrap font-sans text-sm text-zinc-300">{m.textBody || m.snippet || ""}</pre>
                     )}

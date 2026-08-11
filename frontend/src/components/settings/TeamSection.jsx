@@ -18,7 +18,7 @@ const ROLE_OPTIONS = [
 
 const roleIcon = (role) => {
   if (role === "owner") return <Crown className="h-3.5 w-3.5 text-amber-400" />;
-  if (role === "admin") return <Shield className="h-3.5 w-3.5 text-violet-400" />;
+  if (role === "admin") return <Shield className="h-3.5 w-3.5 text-brand-400" />;
   return <User className="h-3.5 w-3.5 text-zinc-500" />;
 };
 
@@ -139,7 +139,7 @@ export function TeamSection() {
       <SectionCard title="Team" description="People in your organization." testid="settings-team">
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300" data-testid="team-error">
           {error}
-          <button type="button" onClick={() => { setLoading(true); load(); }} className="ml-3 text-violet-300 underline">Retry</button>
+          <button type="button" onClick={() => { setLoading(true); load(); }} className="ml-3 text-brand-300 underline">Retry</button>
         </div>
       </SectionCard>
     );
@@ -187,7 +187,7 @@ export function TeamSection() {
                       <div className="flex flex-col">
                         <span className="font-medium text-zinc-100">
                           {[m.firstName, m.lastName].filter(Boolean).join(" ") || m.email}
-                          {m.isCurrentUser && <span className="ml-2 rounded bg-violet-600/20 px-1.5 py-0.5 text-[10px] text-violet-300">You</span>}
+                          {m.isCurrentUser && <span className="ml-2 rounded bg-brand-600/20 px-1.5 py-0.5 text-[10px] text-brand-300">You</span>}
                         </span>
                         <span className="text-xs text-zinc-500">{m.email}</span>
                       </div>
@@ -272,7 +272,7 @@ export function TeamSection() {
                 disabled={inviting}
                 onClick={sendInvite}
                 data-testid="team-invite-submit"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-60"
               >
                 {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4" /> Invite</>}
               </button>
@@ -334,7 +334,7 @@ export function TeamSection() {
             <AlertDialogAction
               data-testid="team-confirm-action"
               onClick={(e) => { e.preventDefault(); runConfirm(); }}
-              className="bg-violet-600 text-white hover:bg-violet-500"
+              className="bg-brand-600 text-white hover:bg-brand-500"
             >
               Confirm
             </AlertDialogAction>

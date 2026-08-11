@@ -25,7 +25,7 @@ export function LoadError({
           type="button"
           onClick={onRetry}
           data-testid={`${testid}-retry`}
-          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" /> Try again
         </button>

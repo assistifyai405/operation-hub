@@ -71,8 +71,8 @@ export function AutomationBuilder({ open, onOpenChange, options, initial, onSave
           </div>
 
           {/* WHEN */}
-          <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.04] p-4">
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-violet-300">When</p>
+          <div className="rounded-xl border border-brand-500/20 bg-brand-500/[0.04] p-4">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-brand-300">When</p>
             <div className="flex flex-wrap items-center gap-2">
               <Select value={triggerType} onValueChange={(v) => { setTriggerType(v); const t = options?.triggers?.find((x) => x.type === v); setDays(t?.days ?? 0); }}>
                 <SelectTrigger data-testid="builder-trigger" className="h-9 flex-1 border-white/10 bg-zinc-900 text-sm"><SelectValue placeholder="Choose a trigger" /></SelectTrigger>
@@ -96,7 +96,7 @@ export function AutomationBuilder({ open, onOpenChange, options, initial, onSave
           <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-4">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">If <span className="font-normal normal-case text-zinc-600">(optional)</span></p>
-              <button onClick={() => setConditions((c) => [...c, emptyCond()])} data-testid="add-condition" className="inline-flex items-center gap-1 text-xs font-medium text-violet-300 hover:text-violet-200"><Plus className="h-3.5 w-3.5" /> Add condition</button>
+              <button onClick={() => setConditions((c) => [...c, emptyCond()])} data-testid="add-condition" className="inline-flex items-center gap-1 text-xs font-medium text-brand-300 hover:text-brand-200"><Plus className="h-3.5 w-3.5" /> Add condition</button>
             </div>
             {conditions.length === 0 ? (
               <p className="text-xs text-zinc-600">No conditions — the automation runs for every match.</p>
@@ -132,7 +132,7 @@ export function AutomationBuilder({ open, onOpenChange, options, initial, onSave
                 const on = actions.includes(act.type);
                 return (
                   <button key={act.type} onClick={() => toggleAction(act.type)} data-testid={`builder-action-${act.type}`}
-                    className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-xs transition-all ${on ? "border-violet-500 bg-violet-600/15 text-violet-100" : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"}`}>
+                    className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-xs transition-all ${on ? "border-brand-500 bg-brand-600/15 text-brand-100" : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"}`}>
                     <AiIcon name={act.icon} className="h-3.5 w-3.5 shrink-0" />
                     <span className="min-w-0 truncate">{act.label}</span>
                   </button>
@@ -156,7 +156,7 @@ export function AutomationBuilder({ open, onOpenChange, options, initial, onSave
 
         <DialogFooter>
           <button onClick={() => onOpenChange(false)} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-200">Cancel</button>
-          <button onClick={submit} disabled={!triggerType || actions.length === 0} data-testid="builder-save" className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-50">
+          <button onClick={submit} disabled={!triggerType || actions.length === 0} data-testid="builder-save" className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-50">
             {initial ? "Save" : "Create automation"} <ArrowRight className="h-4 w-4" />
           </button>
         </DialogFooter>

@@ -6,7 +6,7 @@ export const STAGES = ["New", "Qualified", "Meeting Scheduled", "Proposal Sent",
 export const STAGE_META = {
   "New": { dot: "bg-cyan-400", text: "text-cyan-300", bar: "border-t-cyan-500/50" },
   "Qualified": { dot: "bg-blue-400", text: "text-blue-300", bar: "border-t-blue-500/50" },
-  "Meeting Scheduled": { dot: "bg-violet-400", text: "text-violet-300", bar: "border-t-violet-500/50" },
+  "Meeting Scheduled": { dot: "bg-brand-400", text: "text-brand-300", bar: "border-t-brand-500/50" },
   "Proposal Sent": { dot: "bg-amber-400", text: "text-amber-300", bar: "border-t-amber-500/50" },
   "Negotiating": { dot: "bg-orange-400", text: "text-orange-300", bar: "border-t-orange-500/50" },
   "Won": { dot: "bg-emerald-400", text: "text-emerald-300", bar: "border-t-emerald-500/50" },

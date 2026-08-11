@@ -15,7 +15,7 @@ const fmtTime = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short",
 const money = (v) => `$${Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const statusStyle = {
   Draft: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-  Generated: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  Generated: "bg-brand-500/10 text-brand-400 border-brand-500/20",
   Sent: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   Paid: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   Overdue: "bg-red-500/10 text-red-400 border-red-500/20",
@@ -48,7 +48,7 @@ function InvoiceView({ inv, testidPrefix = "invoice-view" }) {
       </div>
       <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-950">
         <table className="w-full text-sm">
-          <thead className="bg-violet-600/15 text-zinc-300"><tr><th className="px-4 py-2 text-left font-medium">Description</th><th className="px-4 py-2 text-right font-medium">Qty</th><th className="px-4 py-2 text-right font-medium">Unit Price</th><th className="px-4 py-2 text-right font-medium">Amount</th></tr></thead>
+          <thead className="bg-brand-600/15 text-zinc-300"><tr><th className="px-4 py-2 text-left font-medium">Description</th><th className="px-4 py-2 text-right font-medium">Qty</th><th className="px-4 py-2 text-right font-medium">Unit Price</th><th className="px-4 py-2 text-right font-medium">Amount</th></tr></thead>
           <tbody>
             {totals.items.map((li, i) => (
               <tr key={i} className="border-t border-white/5"><td className="px-4 py-2 text-zinc-200">{li.description}</td><td className="px-4 py-2 text-right text-zinc-300">{li.quantity}</td><td className="px-4 py-2 text-right text-zinc-300">{money(li.unit_price)}</td><td className="px-4 py-2 text-right text-zinc-100">{money(li.amount)}</td></tr>
@@ -59,10 +59,10 @@ function InvoiceView({ inv, testidPrefix = "invoice-view" }) {
       <div className="ml-auto w-full max-w-xs space-y-1 text-sm">
         <div className="flex justify-between text-zinc-400"><span>Subtotal</span><span>{money(totals.subtotal)}</span></div>
         <div className="flex justify-between text-zinc-400"><span>VAT ({c.vat_rate || 0}%)</span><span>{money(totals.vat)}</span></div>
-        <div className="flex justify-between border-t border-violet-500/40 pt-1 text-base font-semibold text-zinc-50"><span>Total</span><span data-testid={`${testidPrefix}-total`}>{money(totals.total)}</span></div>
+        <div className="flex justify-between border-t border-brand-500/40 pt-1 text-base font-semibold text-zinc-50"><span>Total</span><span data-testid={`${testidPrefix}-total`}>{money(totals.total)}</span></div>
       </div>
       {["payment_terms", "bank_details", "notes"].filter((k) => c[k]).map((k) => (
-        <div key={k} className="rounded-xl border border-white/10 bg-zinc-950 p-4"><p className="text-xs uppercase tracking-wide text-violet-400">{k.replace(/_/g, " ")}</p><p className="mt-1 whitespace-pre-wrap text-sm text-zinc-300">{c[k]}</p></div>
+        <div key={k} className="rounded-xl border border-white/10 bg-zinc-950 p-4"><p className="text-xs uppercase tracking-wide text-brand-400">{k.replace(/_/g, " ")}</p><p className="mt-1 whitespace-pre-wrap text-sm text-zinc-300">{c[k]}</p></div>
       ))}
     </div>
   );
@@ -174,10 +174,10 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
     }
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-zinc-950/40 py-20 text-center" data-testid="invoice-empty">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-600 glow-violet animate-pulse-glow"><Receipt className="h-8 w-8 text-white" /></div>
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 glow-brand animate-pulse-glow"><Receipt className="h-8 w-8 text-white" /></div>
         <h3 className="mt-5 text-lg font-semibold text-zinc-100">AI Invoice Generator</h3>
         <p className="mt-1 max-w-md text-sm text-zinc-500">Generate a professional invoice from your client, project, proposal, contract and payment terms — with auto-calculated line items and VAT.</p>
-        <button onClick={generate} disabled={generating} data-testid="generate-invoice-btn" className="mt-6 flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 glow-violet">
+        <button onClick={generate} disabled={generating} data-testid="generate-invoice-btn" className="mt-6 flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-60 glow-brand">
           {generating ? <><Loader2 className="h-4 w-4 animate-spin" /> Preparing invoice…</> : <><Sparkles className="h-4 w-4" /> Generate Invoice</>}
         </button>
       </div>
@@ -193,7 +193,7 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="rounded-md bg-violet-600/15 px-2 py-0.5 text-xs font-semibold text-violet-300" data-testid="invoice-number">{number}</span>
+              <span className="rounded-md bg-brand-600/15 px-2 py-0.5 text-xs font-semibold text-brand-300" data-testid="invoice-number">{number}</span>
               <span className="text-xs text-zinc-500">Version <b className="text-zinc-300" data-testid="invoice-version">{dirtyVersion === null ? "draft" : dirtyVersion}</b></span>
             </div>
             <input value={title} onChange={(e) => setTitle(e.target.value)} data-testid="invoice-title-input" placeholder="Invoice name"
@@ -201,9 +201,9 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex flex-col"><label className="text-[10px] uppercase text-zinc-500">Issue</label>
-              <input type="date" value={content.issue_date || ""} onChange={(e) => setField("issue_date", e.target.value)} data-testid="invoice-issue-date" className="rounded-lg border border-white/10 bg-zinc-900 px-2 py-1 text-sm text-zinc-200 outline-none focus:border-violet-500" /></div>
+              <input type="date" value={content.issue_date || ""} onChange={(e) => setField("issue_date", e.target.value)} data-testid="invoice-issue-date" className="rounded-lg border border-white/10 bg-zinc-900 px-2 py-1 text-sm text-zinc-200 outline-none focus:border-brand-500" /></div>
             <div className="flex flex-col"><label className="text-[10px] uppercase text-zinc-500">Due</label>
-              <input type="date" value={content.due_date || ""} onChange={(e) => setField("due_date", e.target.value)} data-testid="invoice-due-date" className="rounded-lg border border-white/10 bg-zinc-900 px-2 py-1 text-sm text-zinc-200 outline-none focus:border-violet-500" /></div>
+              <input type="date" value={content.due_date || ""} onChange={(e) => setField("due_date", e.target.value)} data-testid="invoice-due-date" className="rounded-lg border border-white/10 bg-zinc-900 px-2 py-1 text-sm text-zinc-200 outline-none focus:border-brand-500" /></div>
             <div className="flex flex-col"><label className="text-[10px] uppercase text-zinc-500">Status</label>
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger data-testid="invoice-status-trigger" className="w-32 border-white/10 bg-zinc-900"><SelectValue /></SelectTrigger>
@@ -218,26 +218,26 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <span className={`mr-auto inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${statusStyle[status]}`}>{status}</span>
-        <button onClick={() => setEditing((e) => !e)} data-testid="edit-invoice-btn" className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${editing ? "border-violet-500 bg-violet-600/15 text-violet-300" : "border-white/10 bg-zinc-900 text-zinc-300 hover:text-white"}`}>{editing ? <><X className="h-4 w-4" /> Done</> : <><Pencil className="h-4 w-4" /> Edit</>}</button>
+        <button onClick={() => setEditing((e) => !e)} data-testid="edit-invoice-btn" className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${editing ? "border-brand-500 bg-brand-600/15 text-brand-300" : "border-white/10 bg-zinc-900 text-zinc-300 hover:text-white"}`}>{editing ? <><X className="h-4 w-4" /> Done</> : <><Pencil className="h-4 w-4" /> Edit</>}</button>
         <button onClick={generate} disabled={generating} data-testid="regenerate-invoice-btn" className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:text-white disabled:opacity-60">{generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Regenerate</button>
-        <button onClick={() => setShowHistory((s) => !s)} data-testid="invoice-version-history-btn" className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${showHistory ? "border-violet-500 bg-violet-600/15 text-violet-300" : "border-white/10 bg-zinc-900 text-zinc-300 hover:text-white"}`}><History className="h-4 w-4" /> Versions {history.length > 0 && <span className="rounded bg-zinc-800 px-1.5 text-xs">{history.length}</span>}</button>
+        <button onClick={() => setShowHistory((s) => !s)} data-testid="invoice-version-history-btn" className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${showHistory ? "border-brand-500 bg-brand-600/15 text-brand-300" : "border-white/10 bg-zinc-900 text-zinc-300 hover:text-white"}`}><History className="h-4 w-4" /> Versions {history.length > 0 && <span className="rounded bg-zinc-800 px-1.5 text-xs">{history.length}</span>}</button>
         <button onClick={() => exportFile("pdf")} data-testid="export-invoice-pdf-btn" className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:text-white"><Download className="h-4 w-4" /> PDF</button>
         <button onClick={() => exportFile("docx")} data-testid="export-invoice-docx-btn" className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:text-white"><FileText className="h-4 w-4" /> DOCX</button>
-        <button onClick={save} disabled={saving} data-testid="save-invoice-btn" className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 glow-violet">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save</button>
+        <button onClick={save} disabled={saving} data-testid="save-invoice-btn" className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-60 glow-brand">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save</button>
       </div>
 
       {/* History */}
       {showHistory && (
         <div className="rounded-xl border border-white/10 bg-zinc-950 p-4" data-testid="invoice-version-list">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><History className="h-4 w-4 text-violet-400" /> Version History</h3>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><History className="h-4 w-4 text-brand-400" /> Version History</h3>
           {history.length === 0 ? <p className="text-xs text-zinc-500" data-testid="invoice-no-versions">No versions yet. Save to create v1.</p> : (
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {[...history].reverse().map((v) => (
-                <div key={v.version} className={`rounded-lg border p-3 ${dirtyVersion === v.version && !compareWith ? "border-violet-500/50 bg-violet-600/10" : "border-white/10 bg-zinc-900"}`} data-testid={`invoice-version-${v.version}`}>
+                <div key={v.version} className={`rounded-lg border p-3 ${dirtyVersion === v.version && !compareWith ? "border-brand-500/50 bg-brand-600/10" : "border-white/10 bg-zinc-900"}`} data-testid={`invoice-version-${v.version}`}>
                   <div className="flex items-center justify-between">
-                    <button onClick={() => viewVersion(v)} data-testid={`view-invoice-version-${v.version}`} className="text-sm font-medium text-zinc-200 hover:text-violet-300">v{v.version} · {money(v.total)}</button>
+                    <button onClick={() => viewVersion(v)} data-testid={`view-invoice-version-${v.version}`} className="text-sm font-medium text-zinc-200 hover:text-brand-300">v{v.version} · {money(v.total)}</button>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => setCompareWith(v)} data-testid={`compare-invoice-version-${v.version}`} title="Compare" className="rounded p-1 text-zinc-500 hover:text-violet-400"><GitCompare className="h-3.5 w-3.5" /></button>
+                      <button onClick={() => setCompareWith(v)} data-testid={`compare-invoice-version-${v.version}`} title="Compare" className="rounded p-1 text-zinc-500 hover:text-brand-400"><GitCompare className="h-3.5 w-3.5" /></button>
                       <button onClick={() => restore(v.version)} data-testid={`restore-invoice-version-${v.version}`} title="Restore" className="rounded p-1 text-zinc-500 hover:text-emerald-400"><RotateCcw className="h-3.5 w-3.5" /></button>
                     </div>
                   </div>
@@ -253,7 +253,7 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
       {compareWith ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2" data-testid="invoice-compare">
           <div><div className="mb-3 flex items-center justify-between rounded-lg bg-zinc-900 px-3 py-2"><span className="text-sm font-semibold text-zinc-300">v{compareWith.version} · {money(compareWith.total)}</span><button onClick={() => setCompareWith(null)} data-testid="exit-compare-invoice-btn" className="text-xs text-zinc-500 hover:text-white">Exit</button></div><InvoiceView inv={compareWith} testidPrefix="invoice-compare-a" /></div>
-          <div><div className="mb-3 rounded-lg bg-violet-600/20 px-3 py-2 text-sm font-semibold text-violet-200">{dirtyVersion === null ? "Current draft" : `v${dirtyVersion}`}</div><InvoiceView inv={{ content, line_items: lineItems }} testidPrefix="invoice-compare-b" /></div>
+          <div><div className="mb-3 rounded-lg bg-brand-600/20 px-3 py-2 text-sm font-semibold text-brand-200">{dirtyVersion === null ? "Current draft" : `v${dirtyVersion}`}</div><InvoiceView inv={{ content, line_items: lineItems }} testidPrefix="invoice-compare-b" /></div>
         </div>
       ) : editing ? (
         <div className="space-y-4">
@@ -264,32 +264,32 @@ export default function InvoiceWriter({ projectId, projectName, onSaved }) {
               <tbody>
                 {lineItems.map((li, i) => (
                   <tr key={i} className="border-t border-white/5" data-testid={`invoice-item-${i}`}>
-                    <td className="px-3 py-1.5"><input value={li.description} onChange={(e) => setItem(i, "description", e.target.value)} data-testid={`invoice-item-desc-${i}`} className="w-full rounded border border-white/10 bg-zinc-900 px-2 py-1 text-sm text-zinc-200 outline-none focus:border-violet-500" /></td>
-                    <td className="px-3 py-1.5"><input type="number" value={li.quantity} onChange={(e) => setItem(i, "quantity", e.target.value)} data-testid={`invoice-item-qty-${i}`} className="w-16 rounded border border-white/10 bg-zinc-900 px-2 py-1 text-right text-sm text-zinc-200 outline-none focus:border-violet-500" /></td>
-                    <td className="px-3 py-1.5"><input type="number" value={li.unit_price} onChange={(e) => setItem(i, "unit_price", e.target.value)} data-testid={`invoice-item-price-${i}`} className="w-24 rounded border border-white/10 bg-zinc-900 px-2 py-1 text-right text-sm text-zinc-200 outline-none focus:border-violet-500" /></td>
+                    <td className="px-3 py-1.5"><input value={li.description} onChange={(e) => setItem(i, "description", e.target.value)} data-testid={`invoice-item-desc-${i}`} className="w-full rounded border border-white/10 bg-zinc-900 px-2 py-1 text-sm text-zinc-200 outline-none focus:border-brand-500" /></td>
+                    <td className="px-3 py-1.5"><input type="number" value={li.quantity} onChange={(e) => setItem(i, "quantity", e.target.value)} data-testid={`invoice-item-qty-${i}`} className="w-16 rounded border border-white/10 bg-zinc-900 px-2 py-1 text-right text-sm text-zinc-200 outline-none focus:border-brand-500" /></td>
+                    <td className="px-3 py-1.5"><input type="number" value={li.unit_price} onChange={(e) => setItem(i, "unit_price", e.target.value)} data-testid={`invoice-item-price-${i}`} className="w-24 rounded border border-white/10 bg-zinc-900 px-2 py-1 text-right text-sm text-zinc-200 outline-none focus:border-brand-500" /></td>
                     <td className="px-3 py-1.5 text-right text-zinc-100" data-testid={`invoice-item-amount-${i}`}>{money((Number(li.quantity) || 0) * (Number(li.unit_price) || 0))}</td>
                     <td className="px-2"><button onClick={() => removeItem(i)} data-testid={`invoice-item-remove-${i}`} className="text-zinc-500 hover:text-red-400"><Trash2 className="h-4 w-4" /></button></td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <button onClick={addItem} data-testid="invoice-add-item-btn" className="flex w-full items-center justify-center gap-1.5 border-t border-white/5 py-2 text-sm font-medium text-violet-400 hover:bg-zinc-900"><Plus className="h-4 w-4" /> Add line item</button>
+            <button onClick={addItem} data-testid="invoice-add-item-btn" className="flex w-full items-center justify-center gap-1.5 border-t border-white/5 py-2 text-sm font-medium text-brand-400 hover:bg-zinc-900"><Plus className="h-4 w-4" /> Add line item</button>
           </div>
           {/* Totals + VAT */}
           <div className="ml-auto w-full max-w-xs space-y-2 rounded-xl border border-white/10 bg-zinc-950 p-4 text-sm">
             <div className="flex items-center justify-between text-zinc-400"><span>Subtotal</span><span data-testid="invoice-subtotal">{money(totals.subtotal)}</span></div>
-            <div className="flex items-center justify-between text-zinc-400"><span>VAT %</span><input type="number" value={content.vat_rate || 0} onChange={(e) => setField("vat_rate", Number(e.target.value))} data-testid="invoice-vat-input" className="w-20 rounded border border-white/10 bg-zinc-900 px-2 py-1 text-right text-zinc-200 outline-none focus:border-violet-500" /></div>
+            <div className="flex items-center justify-between text-zinc-400"><span>VAT %</span><input type="number" value={content.vat_rate || 0} onChange={(e) => setField("vat_rate", Number(e.target.value))} data-testid="invoice-vat-input" className="w-20 rounded border border-white/10 bg-zinc-900 px-2 py-1 text-right text-zinc-200 outline-none focus:border-brand-500" /></div>
             <div className="flex justify-between text-zinc-400"><span>VAT amount</span><span data-testid="invoice-vat-amount">{money(totals.vat)}</span></div>
-            <div className="flex justify-between border-t border-violet-500/40 pt-2 text-base font-semibold text-zinc-50"><span>Total</span><span data-testid="invoice-total">{money(totals.total)}</span></div>
+            <div className="flex justify-between border-t border-brand-500/40 pt-2 text-base font-semibold text-zinc-50"><span>Total</span><span data-testid="invoice-total">{money(totals.total)}</span></div>
           </div>
           {/* Editable text fields */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {BODY_FIELDS.map((f) => (
               <div key={f.key} className="rounded-xl border border-white/10 bg-zinc-950 p-4">
-                <label className="mb-1.5 block text-xs uppercase tracking-wide text-violet-400">{f.label}</label>
+                <label className="mb-1.5 block text-xs uppercase tracking-wide text-brand-400">{f.label}</label>
                 {f.area
-                  ? <textarea value={content[f.key] || ""} onChange={(e) => setField(f.key, e.target.value)} data-testid={`invoice-field-${f.key}`} rows={3} className="w-full resize-none rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
-                  : <input value={content[f.key] || ""} onChange={(e) => setField(f.key, e.target.value)} data-testid={`invoice-field-${f.key}`} className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />}
+                  ? <textarea value={content[f.key] || ""} onChange={(e) => setField(f.key, e.target.value)} data-testid={`invoice-field-${f.key}`} rows={3} className="w-full resize-none rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
+                  : <input value={content[f.key] || ""} onChange={(e) => setField(f.key, e.target.value)} data-testid={`invoice-field-${f.key}`} className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />}
               </div>
             ))}
           </div>

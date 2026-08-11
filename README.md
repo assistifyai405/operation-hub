@@ -6,6 +6,13 @@ in one workspace.
 
 This repository is the **source of truth**. Do not regenerate the product from scratch.
 
+## Brand and localization
+
+Assistify uses a green product identity and supports Dutch (`nl`) and English (`en`)
+interface localization. See [`docs/BRANDING.md`](./docs/BRANDING.md) for palette and
+usage rules, and [`docs/LOCALIZATION.md`](./docs/LOCALIZATION.md) for locale detection,
+translations, formatting, and AI language behavior.
+
 ## Closed beta (Sprint 28)
 
 See:

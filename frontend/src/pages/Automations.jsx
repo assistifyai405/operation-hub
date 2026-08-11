@@ -1,4 +1,6 @@
+import PageIntro from "@/components/PageIntro";
 import { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   Zap, Loader2, Plus, Play, Pause, ChevronDown, CheckCircle2, Inbox, History as HistoryIcon,
@@ -24,6 +26,7 @@ const APPROVAL_TABS = [
 ];
 
 export default function Automations() {
+  const { t } = useTranslation();
   const [summary, setSummary] = useState(null);
   const [tab, setTab] = useState("automations");
   const [automations, setAutomations] = useState([]);
@@ -147,11 +150,13 @@ export default function Automations() {
 
   return (
     <div className="space-y-6" data-testid="automations-page">
+      <PageIntro title={t("pages.automations.title")} description={t("pages.automations.description")} />
+
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="flex items-center gap-2.5 text-3xl font-bold tracking-tight text-zinc-50">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet"><Zap className="h-5 w-5 text-white" /></span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 glow-brand"><Zap className="h-5 w-5 text-white" /></span>
             Automations
           </h1>
           <p className="mt-1.5 max-w-2xl text-sm text-zinc-400">
@@ -160,7 +165,7 @@ export default function Automations() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={runNow} disabled={busy} data-testid="run-now-btn" className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm font-medium text-zinc-300 transition-all hover:border-violet-500/40 hover:text-zinc-100 disabled:opacity-50">
+          <button onClick={runNow} disabled={busy} data-testid="run-now-btn" className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm font-medium text-zinc-300 transition-all hover:border-brand-500/40 hover:text-zinc-100 disabled:opacity-50">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />} Run now
           </button>
           {paused ? (
@@ -181,7 +186,7 @@ export default function Automations() {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-          <button onClick={() => { setEditing(null); setBuilderOpen(true); }} data-testid="new-automation-btn" className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500">
+          <button onClick={() => { setEditing(null); setBuilderOpen(true); }} data-testid="new-automation-btn" className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500">
             <Plus className="h-4 w-4" /> New automation
           </button>
         </div>
@@ -195,7 +200,7 @@ export default function Automations() {
             {paused ? `Paused until ${relTime(summary.paused_until)}` : summary.enabled ? "Active · Prepare for approval" : "All automations off"}
           </span>
           <span className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1 text-xs text-zinc-400">{summary.active_automations}/{summary.total_automations} enabled</span>
-          <span className="rounded-full border border-violet-500/20 bg-violet-500/[0.08] px-3 py-1 text-xs text-violet-200" data-testid="summary-pending">{summary.pending} awaiting approval</span>
+          <span className="rounded-full border border-brand-500/20 bg-brand-500/[0.08] px-3 py-1 text-xs text-brand-200" data-testid="summary-pending">{summary.pending} awaiting approval</span>
           <span className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1 text-xs text-zinc-400">{summary.executed_count} completed · {summary.time_saved_total} min saved</span>
         </div>
       )}
@@ -224,7 +229,7 @@ export default function Automations() {
                     type="button"
                     onClick={() => { setEditing(null); setBuilderOpen(true); }}
                     data-testid="automations-empty-action"
-                    className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500"
+                    className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500"
                   >
                     <Plus className="h-4 w-4" aria-hidden="true" /> Create your first automation
                   </button>
@@ -240,7 +245,7 @@ export default function Automations() {
               <div className="flex flex-wrap items-center gap-2">
                 {APPROVAL_TABS.map((t) => (
                   <button key={t.v} onClick={() => switchApprovalStatus(t.v)} data-testid={`approval-tab-${t.v}`}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${approvalStatus === t.v ? "border-violet-500 bg-violet-600/15 text-violet-200" : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"}`}>
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${approvalStatus === t.v ? "border-brand-500 bg-brand-600/15 text-brand-200" : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"}`}>
                     {t.label} <span className="rounded-full bg-white/10 px-1.5 text-[10px]">{approvals.counts?.[t.v] || 0}</span>
                   </button>
                 ))}
@@ -292,7 +297,7 @@ export default function Automations() {
 function eventChip(event) {
   if (["executed", "approved", "enabled"].includes(event)) return "bg-emerald-500/15 text-emerald-300";
   if (["rejected", "failed", "disabled"].includes(event)) return "bg-red-500/15 text-red-300";
-  if (["action_prepared", "trigger_detected", "conditions_evaluated"].includes(event)) return "bg-violet-500/15 text-violet-300";
+  if (["action_prepared", "trigger_detected", "conditions_evaluated"].includes(event)) return "bg-brand-500/15 text-brand-300";
   if (event === "paused") return "bg-amber-500/15 text-amber-300";
   return "bg-zinc-700/40 text-zinc-300";
 }

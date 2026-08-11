@@ -14,10 +14,10 @@ export function StepWelcome({ next, onSkip }) {
   return (
     <StepShell>
       <div data-testid="onb-step-welcome" className="text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600 glow-violet">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 glow-brand">
           <Sparkles className="h-7 w-7 text-white" />
         </div>
-        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">Assistify OS</p>
+        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-brand-400">Assistify OS</p>
         <h2 className="mt-2 text-3xl font-bold tracking-tight text-zinc-50 sm:text-4xl">
           Your AI-powered business operating system.
         </h2>
@@ -32,7 +32,7 @@ export function StepWelcome({ next, onSkip }) {
               key={label}
               className="flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-2.5 text-left text-sm text-zinc-300"
             >
-              <Icon className="h-4 w-4 shrink-0 text-violet-400" />
+              <Icon className="h-4 w-4 shrink-0 text-brand-400" />
               {label}
             </div>
           ))}

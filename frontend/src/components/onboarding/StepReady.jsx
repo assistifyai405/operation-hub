@@ -73,11 +73,11 @@ export function StepReady({ data, finish }) {
                 data-testid={`onb-ready-${a.to.replace(/\//g, "") || "home"}`}
                 className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 transition-all ${
                   a.primary
-                    ? "border-violet-500/40 bg-violet-600/15 hover:bg-violet-600/25"
-                    : "border-white/10 bg-zinc-950 hover:border-violet-500/30"
+                    ? "border-brand-500/40 bg-brand-600/15 hover:bg-brand-600/25"
+                    : "border-white/10 bg-zinc-950 hover:border-brand-500/30"
                 }`}
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-900 text-violet-400">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-900 text-brand-400">
                   <Icon className="h-4 w-4" />
                 </span>
                 <span className="flex-1 text-sm font-semibold text-zinc-100">{a.label}</span>

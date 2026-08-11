@@ -1,0 +1,424 @@
+{
+  "app": {
+    "name": "Assistify",
+    "tagline": "AI-powered business operating system",
+    "beta": "Assistify Beta"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "opportunities": "Opportunities",
+    "automations": "Automations",
+    "crm": "CRM",
+    "pipeline": "Pipeline",
+    "clients": "Clients",
+    "projects": "Projects",
+    "tasks": "Tasks",
+    "copilot": "Copilot",
+    "aiWorkspace": "AI Workspace",
+    "knowledgeBrain": "Knowledge Brain",
+    "aiAgents": "AI Agents",
+    "proposals": "Proposals",
+    "contracts": "Contracts",
+    "invoices": "Invoices",
+    "documents": "Documents",
+    "emails": "Emails",
+    "inbox": "Inbox",
+    "integrations": "Integrations",
+    "analytics": "Analytics",
+    "settings": "Settings"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "retry": "Retry",
+    "loading": "Loading…",
+    "search": "Search",
+    "close": "Close",
+    "back": "Back",
+    "continue": "Continue",
+    "submit": "Submit",
+    "logout": "Log out",
+    "settings": "Settings",
+    "actions": "Actions",
+    "empty": "Nothing here yet",
+    "error": "Something went wrong. Please try again.",
+    "success": "Saved",
+    "optional": "optional",
+    "you": "You",
+    "help": "Help",
+    "learnMore": "Learn more",
+    "open": "Open",
+    "refresh": "Refresh",
+    "language": "Language",
+    "sendFeedback": "Send feedback",
+    "or": "or",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{pages}}"
+  },
+  "auth": {
+    "loginTitle": "Welcome back",
+    "loginSubtitle": "Sign in to your Assistify workspace.",
+    "registerTitle": "Create your account",
+    "registerSubtitle": "Set up your workspace to manage clients, projects, and AI in one place.",
+    "email": "Work email",
+    "password": "Password",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "company": "Company",
+    "createAccount": "Create account",
+    "signIn": "Sign in",
+    "alreadyHaveAccount": "Already have an account?",
+    "noAccount": "New to Assistify?",
+    "forgotPassword": "Forgot password?",
+    "heroTitle": "Your AI-powered business operating system.",
+    "heroBody": "Built for small businesses, freelancers, and teams who want to manage work and use AI from one workspace — clients, projects, tasks, documents, opportunities, and automations together.",
+    "heroPoints": {
+      "one": "Clients, projects, tasks, and pipeline in one place",
+      "two": "Copilot for drafts and answers · Agents for specialized work",
+      "three": "Opportunities, documents, and automations without tool-hopping"
+    },
+    "joinTeam": "Join your team",
+    "joinTeamSubtitle": "Create an account to accept your invitation.",
+    "inviteLoginSubtitle": "Sign in to accept your team invitation.",
+    "emailPlaceholder": "you@company.com",
+    "companyPlaceholder": "Acme Studio",
+    "rememberMe": "Remember me for 7 days",
+    "exploreDemo": "Explore demo workspace",
+    "demoHint": "No signup needed — opens a private sample workspace just for you.",
+    "passwordMin": "Password must be at least 8 characters",
+    "passwordMinPlaceholder": "At least 8 characters",
+    "passwordMismatch": "Passwords do not match",
+    "accountCreatedVerify": "Account created! You can verify your email from Settings anytime.",
+    "welcomeTeam": "Welcome to the team",
+    "joinOrganization": "Join organization",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "We'll send you a link to reset it.",
+    "backToSignIn": "Back to sign in",
+    "resetSent": "If an account exists, a reset link has been sent.",
+    "devResetLink": "Dev mode — reset link:",
+    "sendResetLink": "Send reset link",
+    "invalidResetTitle": "Invalid link",
+    "invalidResetSubtitle": "This reset link is missing or malformed.",
+    "requestNewLink": "Request a new link",
+    "resetTitle": "Set a new password",
+    "resetSubtitle": "Choose a strong password you'll remember.",
+    "passwordUpdated": "Password updated. Redirecting to sign in…",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "confirmPasswordPlaceholder": "Re-enter password",
+    "updatePassword": "Update password"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "See what is happening across your business and what needs your attention."
+    },
+    "clients": {
+      "title": "Clients",
+      "description": "Manage your clients and keep important customer information in one place."
+    },
+    "projects": {
+      "title": "Projects",
+      "description": "Organize client work, deadlines, tasks and AI assistance by project."
+    },
+    "tasks": {
+      "title": "Tasks",
+      "description": "Track what needs to be done, who owns it and when it is due."
+    },
+    "copilot": {
+      "title": "Copilot",
+      "description": "Your AI assistant for daily work, ideas and content creation."
+    },
+    "aiAgents": {
+      "title": "AI Agents",
+      "description": "Specialized AI assistants designed to help with different types of work."
+    },
+    "aiWorkspace": {
+      "title": "AI Workspace",
+      "description": "Review and manage work created with Assistify AI."
+    },
+    "knowledgeBrain": {
+      "title": "Knowledge Brain",
+      "description": "Give Assistify business knowledge and context so AI can provide better answers."
+    },
+    "crm": {
+      "title": "CRM",
+      "description": "Manage relationships, interactions and important customer information."
+    },
+    "pipeline": {
+      "title": "Pipeline",
+      "description": "Track potential revenue from first opportunity to won deal."
+    },
+    "opportunities": {
+      "title": "Opportunities",
+      "description": "Assistify surfaces opportunities and actions that may need your attention."
+    },
+    "automations": {
+      "title": "Automations",
+      "description": "Automate repetitive work and let Assistify handle recurring processes."
+    },
+    "proposals": {
+      "title": "Proposals",
+      "description": "Create professional proposals using your existing client and project information."
+    },
+    "contracts": {
+      "title": "Contracts",
+      "description": "Create contract drafts from your client, project and proposal information."
+    },
+    "invoices": {
+      "title": "Invoices",
+      "description": "Create invoices using your client and project information."
+    },
+    "documents": {
+      "title": "Documents",
+      "description": "Store and manage important documents related to your work."
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "Understand performance and trends using real data from your workspace."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Manage your workspace, team, integrations, security and preferences."
+    },
+    "emails": {
+      "title": "Emails",
+      "description": "Draft and track outbound business emails from your workspace."
+    },
+    "inbox": {
+      "title": "Inbox",
+      "description": "Review connected mailbox threads and AI-assisted replies."
+    },
+    "integrations": {
+      "title": "Integrations",
+      "description": "Connect the tools Assistify uses to sync mail and calendars."
+    }
+  },
+  "help": {
+    "businessHealth": "A score based on real workspace activity — invoices, contracts, projects, tasks and pipeline. Empty categories are not counted.",
+    "morningBrief": "A daily overview built from your real clients, projects, deals and AI activity — never invented sample data.",
+    "aiConfidence": "An estimated confidence score for an AI suggestion. It is not a guarantee of accuracy.",
+    "knowledgeBrain": "Memories and facts about your business that Assistify uses to improve AI answers.",
+    "opportunities": "Recommended next actions Assistify found by scanning your workspace.",
+    "aiAgents": "Built-in specialists for common work. Custom agent creation is not available in this release.",
+    "hoursSaved": "Estimated time saved based on typical task duration — not measured telemetry."
+  },
+  "settings": {
+    "tabs": {
+      "general": "General",
+      "organization": "Organization",
+      "team": "Team",
+      "email": "Email",
+      "branding": "Branding",
+      "ai": "AI Settings",
+      "documents": "Documents",
+      "notifications": "Notifications",
+      "security": "Security",
+      "apikeys": "API Keys",
+      "billing": "Billing",
+      "integrations": "Integrations",
+      "operations": "Operations",
+      "feedback": "Beta feedback",
+      "language": "Language"
+    },
+    "language": {
+      "title": "Language",
+      "description": "Choose how Assistify appears. This also guides AI responses by default.",
+      "label": "Interface language",
+      "nl": "Nederlands",
+      "en": "English",
+      "hint": "Your choice is saved to your account and kept after reload.",
+      "saved": "Language updated"
+    },
+    "billingBeta": "Billing is not available during beta.",
+    "billingBetaHint": "No active plan, trial countdown, or payment CTA. Stripe comes later.",
+    "operationsTitle": "Operations",
+    "operationsDescription": "Backend readiness, AI usage, workers, and recovery actions for owners and admins.",
+    "feedbackTitle": "Beta feedback",
+    "feedbackDescription": "Feedback submitted by users in this workspace."
+  },
+  "beta": {
+    "sendFeedback": "Send feedback",
+    "feedbackTitle": "Send feedback",
+    "feedbackHint": "Bugs, ideas, or anything confusing — we read every note.",
+    "category": "Category",
+    "closeFeedback": "Close feedback",
+    "categories": {
+      "Bug": "Bug",
+      "Idea": "Idea",
+      "Confusing": "Confusing",
+      "Other": "Other"
+    },
+    "message": "Message",
+    "messagePlaceholder": "What happened, or what would help?",
+    "currentPage": "Current page: {{page}}",
+    "thanks": "Thanks — your feedback was sent.",
+    "messageRequired": "Please write a short message.",
+    "sendError": "Could not send feedback. Please try again.",
+    "aiRequestsToday": "AI requests today",
+    "aiDailyLimit": "AI daily limit",
+    "betaFeedback": "Beta feedback",
+    "worker": "Worker",
+    "scheduler": "Scheduler",
+    "failedJobs": "Failed jobs"
+  },
+  "billing": {
+    "notAvailable": "Billing is not available during beta.",
+    "pendingHint": "Stripe is not configured. No active subscription, trial countdown, or payment method is implied."
+  },
+  "onboarding": {
+    "welcomeTitle": "Welcome to Assistify",
+    "welcomeBody": "Your AI-powered business operating system — clients, projects, tasks and AI in one workspace.",
+    "skip": "Skip",
+    "getStarted": "Get started",
+    "company": "Your company",
+    "goal": "Your goal",
+    "ready": "You're ready",
+    "checklist": {
+      "title": "Get Assistify working for you",
+      "subtitle": "Complete these steps using your real workspace — progress is never faked.",
+      "dismiss": "Dismiss setup checklist",
+      "progress": "{{done}} of {{total}} complete",
+      "progressLabel": "Workspace setup progress",
+      "items": {
+        "profile": "Complete company profile",
+        "client": "Create your first client",
+        "project": "Create your first project",
+        "task": "Create your first task",
+        "copilot": "Ask Copilot",
+        "agents": "Explore AI Agents"
+      }
+    }
+  },
+  "firstRun": {
+    "eyebrow": "Welcome",
+    "title": "Let's get your workspace working for you.",
+    "body": "Your dashboard stays empty until you add real clients, projects, and tasks — no sample charts or fake scores. Pick a starting point below.",
+    "client": "Create your first client",
+    "clientHint": "Start tracking relationships and work",
+    "project": "Create your first project",
+    "projectHint": "Organize delivery around a client",
+    "copilot": "Ask Copilot",
+    "copilotHint": "Summaries, drafts, plans, and more",
+    "agents": "Explore AI Agents",
+    "agentsHint": "Specialists for sales, ops, and writing"
+  },
+  "library": {
+    "kinds": {
+      "proposal_one": "proposal",
+      "proposal_other": "proposals",
+      "contract_one": "contract",
+      "contract_other": "contracts"
+    },
+    "organizationCount": "{{count}} {{kind}} in your organization.",
+    "searchPlaceholder": "Search {{kind}}",
+    "sort": {
+      "recent": "Most recent",
+      "title": "Title (A–Z)"
+    },
+    "statuses": {
+      "All": "All",
+      "Draft": "Draft",
+      "Generated": "Generated",
+      "Sent": "Sent",
+      "Signed": "Signed",
+      "Accepted": "Accepted",
+      "Rejected": "Rejected",
+      "Paid": "Paid",
+      "Overdue": "Overdue",
+      "Cancelled": "Cancelled",
+      "Archived": "Archived"
+    },
+    "empty": {
+      "matchingTitle": "No matching {{kind}}",
+      "noneTitle": "No {{kind}} yet",
+      "filtered": "Try a different search or filter.",
+      "create": "Open a project and use the {{kind}} generator to create your first one."
+    },
+    "goToProjects": "Go to Projects",
+    "noClient": "No client",
+    "noProject": "No project",
+    "project": "Project"
+  },
+  "command": {
+    "placeholder": "Search or run a command…",
+    "pages": "Pages",
+    "create": "Create",
+    "ai": "AI",
+    "empty": "No results",
+    "newClient": "New client",
+    "newProject": "New project",
+    "newTask": "New task"
+  },
+  "legal": {
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "betaNotice": "Beta notice",
+    "placeholderNotice": "Placeholder document — not legal advice. Company details below are configuration placeholders until filled after KVK registration.",
+    "companyBlock": "Company information (not yet configured)",
+    "companyBlockConfigured": "Company information",
+    "toBeFilled": "[To be filled after KVK registration]",
+    "termsTitle": "Terms of use",
+    "privacyBody": "Assistify is an AI-powered business operating system. During closed beta we process account, workspace, and usage data needed to operate the product for invited users.",
+    "privacyPlaceholderBody": "This page is a <strong>placeholder</strong>. It does not invent a legal entity, KVK number, VAT number, or registered address. Replace placeholders after company registration.",
+    "privacyContact": "For privacy questions, contact the privacy email above when configured, or your beta operator.",
+    "termsPlaceholderBody": "These terms are a <strong>placeholder</strong> for closed beta access. They are not finalized legal terms and are not legal advice.",
+    "termsBody": "Assistify helps businesses manage clients, projects, tasks, AI-assisted work, proposals, contracts, invoices, and day-to-day workflow. Beta access may change without notice.",
+    "termsBilling": "Billing and paid subscriptions are not available during beta. Do not rely on this page as a commercial contract until replaced with counsel-reviewed terms.",
+    "betaBody": "Assistify is in <strong>closed beta</strong>. Features may be incomplete, change, or break. Data may be reset if operators announce a migration.",
+    "betaItems": {
+      "sla": "Not a production SLA — use for evaluation and early workflows.",
+      "ai": "AI features use the operator's configured provider; outputs can be wrong.",
+      "billing": "Billing and Stripe are intentionally disabled.",
+      "email": "Email delivery and OAuth may be disabled depending on configuration.",
+      "feedback": "Please use <em>Send feedback</em> in the product to report bugs or confusion."
+    },
+    "fields": {
+      "companyName": "Legal / business name",
+      "tradeName": "Trade name",
+      "kvkNumber": "KVK number",
+      "vatNumber": "VAT number",
+      "contactEmail": "Business contact email",
+      "privacyEmail": "Privacy contact",
+      "address": "Business address"
+    }
+  },
+  "tour": {
+    "skip": "Skip tour",
+    "next": "Next",
+    "done": "Got it",
+    "progress": "Quick tour · {{current}}/{{total}}",
+    "dismiss": "Dismiss product tour",
+    "steps": {
+      "dashboard": {
+        "title": "Your dashboard",
+        "body": "See priorities, quick actions, and workspace health once you add real clients and projects."
+      },
+      "clients": {
+        "title": "Clients",
+        "body": "Start with the people and companies you work with — everything else links back here."
+      },
+      "copilot": {
+        "title": "Copilot",
+        "body": "Ask for summaries, drafts, project plans, or proposals grounded in your workspace."
+      },
+      "agents": {
+        "title": "AI Agents",
+        "body": "Chat with specialists for sales, writing, and operations when you want focused help."
+      },
+      "search": {
+        "title": "Search and command palette",
+        "body": "Press ⌘K (or Ctrl+K) anytime to jump to a page or start a useful AI action."
+      }
+    }
+  },
+  "empty": {
+    "clients": "Add your first client to start tracking work.",
+    "projects": "Create a project to organize delivery.",
+    "tasks": "No tasks yet — add one to stay on track."
+  }
+}

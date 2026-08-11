@@ -22,7 +22,7 @@ export function AIExecutiveBrief({ insights, hero, health, workspaceEmpty }) {
 
   return (
     <div className="flex h-full flex-col rounded-2xl border border-white/10 bg-zinc-950/80 p-5 backdrop-blur-xl" data-testid="ai-executive-brief">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><Sparkles className="h-4 w-4 text-violet-400" /> AI Executive Brief</h2>
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><Sparkles className="h-4 w-4 text-brand-400" /> AI Executive Brief</h2>
       <div className="mt-3 flex-1 space-y-2.5">
         {lines.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center" data-testid="brief-empty">
@@ -47,7 +47,7 @@ export function AIExecutiveBrief({ insights, hero, health, workspaceEmpty }) {
                   {l.confidence ? <span className="text-[10px] text-zinc-600">{l.confidence}% confidence</span> : null}
                   {l.action?.link && (
                     <button onClick={() => navigate(l.action.link)} data-testid={`brief-action-${l.id}`}
-                      className="ml-auto inline-flex items-center gap-1 rounded-lg bg-violet-600/90 px-2.5 py-1 text-[11px] font-semibold text-white transition-all hover:bg-violet-500">
+                      className="ml-auto inline-flex items-center gap-1 rounded-lg bg-brand-600/90 px-2.5 py-1 text-[11px] font-semibold text-white transition-all hover:bg-brand-500">
                       {l.action.label} <ArrowRight className="h-3 w-3" />
                     </button>
                   )}

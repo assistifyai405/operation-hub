@@ -56,7 +56,7 @@ async def _send(to_email: str, subject: str, html_content: str) -> dict:
 
 def _shell(brand: dict, heading: str, body_html: str, cta_label: str, cta_url: str, footer_note: str) -> str:
     company = html.escape((brand or {}).get("company_name") or "Assistify OS")
-    primary = (brand or {}).get("primary") or "#7C3AED"
+    primary = (brand or {}).get("primary") or "#16A34A"
     logo_url = (brand or {}).get("logo_url") or ""
     show_logo = logo_url.startswith("http") and "/api/settings/image/" not in logo_url
     header_inner = (

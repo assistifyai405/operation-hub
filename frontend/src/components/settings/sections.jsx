@@ -13,7 +13,7 @@ import {
 } from "@/components/settings/fields";
 
 const TIMEZONES = ["UTC", "America/New_York", "America/Los_Angeles", "Europe/London", "Europe/Amsterdam", "Europe/Berlin", "Asia/Kolkata", "Asia/Singapore", "Australia/Sydney"];
-const LANGUAGES = [{ value: "en", label: "English" }, { value: "es", label: "Español" }, { value: "fr", label: "Français" }, { value: "de", label: "Deutsch" }, { value: "pt", label: "Português" }, { value: "hi", label: "हिन्दी" }, { value: "nl", label: "Nederlands" }];
+const LANGUAGES = [{ value: "en", label: "English" }, { value: "nl", label: "Nederlands" }];
 const CURRENCIES = ["USD", "EUR", "GBP", "INR", "AUD", "CAD", "SGD"];
 const TONES = ["Professional", "Formal", "Friendly", "Persuasive", "Concise"];
 const fmtDate = (d) => d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
@@ -33,15 +33,17 @@ export function GeneralSection() {
   return (
     <SectionCard title="General" description="Your personal profile and preferences." testid="settings-general">
       <div className="flex items-center gap-4">
-        <Avatar className="h-16 w-16 border border-white/10"><AvatarImage src={f.avatar} /><AvatarFallback className="bg-violet-600/20 text-violet-300">{initials}</AvatarFallback></Avatar>
+        <Avatar className="h-16 w-16 border border-white/10"><AvatarImage src={f.avatar} /><AvatarFallback className="bg-brand-600/20 text-brand-300">{initials}</AvatarFallback></Avatar>
         <div className="flex-1"><TextField label="Avatar URL" value={f.avatar} onChange={set("avatar")} placeholder="https://…" testid="general-avatar" /></div>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TextField label="First name" value={f.firstName} onChange={set("firstName")} testid="general-firstname" />
         <TextField label="Last name" value={f.lastName} onChange={set("lastName")} testid="general-lastname" />
         <TextField label="Email" value={user.email} onChange={() => {}} disabled testid="general-email" />
-        <SelectField label="Language" value={f.language} onChange={set("language")} options={LANGUAGES} testid="general-language" />
         <SelectField label="Timezone" value={f.timezone} onChange={set("timezone")} options={TIMEZONES} testid="general-timezone" />
+        <p className="text-xs text-zinc-500" data-testid="general-language-hint">
+          Interface language is managed under Settings → Language.
+        </p>
       </div>
       <SaveButton onClick={save} saving={saving} testid="general-save" />
     </SectionCard>
@@ -123,7 +125,7 @@ export function AISection({ data }) {
         <SelectField label="Contract tone" value={f.contractTone} onChange={set("contractTone")} options={TONES} testid="ai-contract-tone" />
         <div>
           <label className="mb-1.5 block text-xs font-medium text-zinc-400">Temperature ({Number(f.temperature).toFixed(1)})</label>
-          <input type="range" min="0" max="1" step="0.1" value={f.temperature} onChange={(e) => set("temperature")(e.target.value)} data-testid="ai-temperature" className="w-full accent-violet-600" />
+          <input type="range" min="0" max="1" step="0.1" value={f.temperature} onChange={(e) => set("temperature")(e.target.value)} data-testid="ai-temperature" className="w-full accent-brand-600" />
         </div>
       </div>
       <TextArea label="Default invoice notes" value={f.invoiceNotes} onChange={set("invoiceNotes")} placeholder="e.g. Payment due within 14 days." testid="ai-invoice-notes" />
@@ -230,7 +232,7 @@ export function SecuritySection() {
         <div className="space-y-2" data-testid="active-sessions-list">
           {sessions.length === 0 ? <p className="text-sm text-zinc-500">No active sessions.</p> : sessions.map((s) => (
             <div key={s.id} className="flex items-center gap-3 rounded-lg border border-white/5 bg-zinc-900/50 p-3">
-              <Monitor className="h-4 w-4 text-violet-400" />
+              <Monitor className="h-4 w-4 text-brand-400" />
               <div className="min-w-0 flex-1"><p className="truncate text-sm text-zinc-200">{s.userAgent || "Unknown device"}</p><p className="text-xs text-zinc-500">{s.ip} · last active {fmtDate(s.lastUsedAt)}</p></div>
             </div>
           ))}
@@ -257,7 +259,7 @@ export function ApiKeysSection() {
   return (
     <SectionCard title="API Keys" description="Programmatic access to your Assistify workspace." testid="settings-apikeys">
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-zinc-900/40 py-14 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-600/15 text-violet-400"><KeyRound className="h-6 w-6" /></div>
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600/15 text-brand-400"><KeyRound className="h-6 w-6" /></div>
         <p className="mt-4 text-sm font-semibold text-zinc-200">API access is coming soon</p>
         <p className="mt-1 max-w-sm text-sm text-zinc-500">Generate scoped API keys to integrate Assistify with your own tools and workflows.</p>
         <button disabled className="mt-5 cursor-not-allowed rounded-lg border border-white/10 bg-zinc-900 px-4 py-2 text-sm text-zinc-500" data-testid="apikeys-create-btn">Create API key</button>
@@ -276,7 +278,7 @@ export function IntegrationsSection() {
         type="button"
         data-testid="settings-open-integrations"
         onClick={() => navigate("/integrations")}
-        className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500"
+        className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-500"
       >
         <Plug className="h-4 w-4" /> Open Integrations
       </button>
@@ -299,14 +301,14 @@ export function BillingSection() {
   return (
     <SectionCard title="Billing" description="Plans and usage." testid="settings-billing">
       {BILLING_ENABLED && (b.status === "active" || b.subscriptionStatus === "active") ? (
-        <div className="rounded-xl border border-violet-500/25 bg-gradient-to-br from-violet-600/15 to-transparent p-5">
+        <div className="rounded-xl border border-brand-500/25 bg-gradient-to-br from-brand-600/15 to-transparent p-5">
           <div className="flex items-start justify-between">
             <div>
-              <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-violet-400" /><p className="text-sm font-semibold text-violet-300">{b.plan} Plan</p><span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">Active</span></div>
+              <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-brand-400" /><p className="text-sm font-semibold text-brand-300">{b.plan} Plan</p><span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">Active</span></div>
               <p className="mt-2 text-3xl font-bold text-zinc-50">${b.price}<span className="text-sm font-normal text-zinc-500">/{b.interval}</span></p>
               <p className="mt-1 text-xs text-zinc-400">Renews on {b.renews_on} · {b.seats.used}/{b.seats.included} seats used</p>
             </div>
-            <button data-testid="upgrade-btn" onClick={() => toast.info("Manage your plan.")} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet">Manage plan</button>
+            <button data-testid="upgrade-btn" onClick={() => toast.info("Manage your plan.")} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 glow-brand">Manage plan</button>
           </div>
         </div>
       ) : (
@@ -327,7 +329,7 @@ export function BillingSection() {
           {usageRows.map(([label, used, limit]) => (
             <div key={label}>
               <div className="mb-1 flex items-center justify-between text-xs"><span className="text-zinc-400">{label}</span><span className="text-zinc-300">{used}{limit && BILLING_ENABLED ? ` / ${limit}` : ""}</span></div>
-              {limit && BILLING_ENABLED && <div className="h-2 overflow-hidden rounded-full bg-zinc-800"><div className="h-full rounded-full bg-violet-500" style={{ width: `${Math.min(100, (used / limit) * 100)}%` }} /></div>}
+              {limit && BILLING_ENABLED && <div className="h-2 overflow-hidden rounded-full bg-zinc-800"><div className="h-full rounded-full bg-brand-500" style={{ width: `${Math.min(100, (used / limit) * 100)}%` }} /></div>}
             </div>
           ))}
         </div>

@@ -141,16 +141,16 @@ export default function Onboarding() {
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           backgroundImage:
-            "radial-gradient(600px circle at 20% 0%, rgba(139,92,246,0.12), transparent 60%), radial-gradient(500px circle at 90% 20%, rgba(34,211,238,0.08), transparent 55%)",
+            "radial-gradient(600px circle at 20% 0%, rgba(34,197,94,0.12), transparent 60%), radial-gradient(500px circle at 90% 20%, rgba(34,211,238,0.08), transparent 55%)",
         }}
       />
       <header className="relative z-10 flex items-center justify-between gap-3 px-5 py-5 sm:px-10">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600 glow-violet">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-600 glow-brand">
             <Sparkles className="h-4 w-4 text-white" />
           </span>
           <span className="text-sm font-bold tracking-tight">
-            Assistify <span className="text-violet-400">OS</span>
+            Assistify <span className="text-brand-400">OS</span>
           </span>
         </div>
         <ProgressRail step={step} />

@@ -10,7 +10,7 @@ from docx import Document
 from docx.shared import Pt, RGBColor, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
-VIOLET = "#7C3AED"
+ASSISTIFY_GREEN = "#16A34A"
 
 
 def _money(v):
@@ -25,9 +25,9 @@ def _rows(invoice):
 
 
 def _hex_to_rgb(h):
-    h = (h or "#7C3AED").lstrip("#")
+    h = (h or ASSISTIFY_GREEN).lstrip("#")
     if len(h) != 6:
-        h = "7C3AED"
+        h = ASSISTIFY_GREEN.lstrip("#")
     return RGBColor(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
 
 
@@ -36,7 +36,7 @@ def _default_brand(brand):
     return {
         "company_name": b.get("company_name", "Assistify OS"),
         "logo_bytes": b.get("logo_bytes"),
-        "primary": b.get("primary") or VIOLET,
+        "primary": b.get("primary") or ASSISTIFY_GREEN,
         "address": b.get("address", ""), "website": b.get("website", ""),
         "email": b.get("email", ""), "phone": b.get("phone", ""),
         "vat": b.get("vat", ""), "kvk": b.get("kvk", ""), "footer": b.get("footer", ""),

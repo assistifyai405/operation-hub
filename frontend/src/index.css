@@ -3,8 +3,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Assistify design tokens (Sprint 29)
+  Premium dark + professional green — not neon.
+*/
 :root {
     color-scheme: dark;
+
+    /* Brand greens */
+    --brand-50:  #f0fdf4;
+    --brand-100: #dcfce7;
+    --brand-200: #bbf7d0;
+    --brand-300: #86efac; /* soft green */
+    --brand-400: #4ade80;
+    --brand-500: #22c55e; /* primary */
+    --brand-600: #16a34a; /* hover */
+    --brand-700: #15803d; /* dark green */
+    --brand-800: #166534;
+    --brand-900: #14532d;
+    --brand-soft: rgba(34, 197, 94, 0.08);
+    --brand-border: rgba(34, 197, 94, 0.20);
+    --brand-glow: rgba(34, 197, 94, 0.22);
 }
 
 * {
@@ -27,21 +46,21 @@ body {
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: rgba(139, 92, 246, 0.25);
+    background: rgba(34, 197, 94, 0.22);
     border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(139, 92, 246, 0.45);
+    background: rgba(34, 197, 94, 0.40);
 }
 
 ::selection {
-    background: rgba(139, 92, 246, 0.35);
+    background: rgba(34, 197, 94, 0.35);
     color: #fff;
 }
 
 /* Accessibility: visible keyboard focus indicator across the app */
 :focus-visible {
-    outline: 2px solid rgba(139, 92, 246, 0.9);
+    outline: 2px solid rgba(34, 197, 94, 0.85);
     outline-offset: 2px;
     border-radius: 4px;
 }
@@ -82,20 +101,27 @@ a:focus:not(:focus-visible) {
         --card-foreground: 0 0% 98%;
         --popover: 240 6% 6%;
         --popover-foreground: 0 0% 98%;
-        --primary: 262 83% 58%;
+        /* primary ≈ #22C55E */
+        --primary: 142 71% 45%;
         --primary-foreground: 0 0% 100%;
         --secondary: 240 4% 12%;
         --secondary-foreground: 0 0% 98%;
         --muted: 240 4% 12%;
         --muted-foreground: 240 5% 65%;
-        --accent: 262 83% 58%;
+        --accent: 142 71% 45%;
         --accent-foreground: 0 0% 100%;
         --destructive: 0 62% 45%;
         --destructive-foreground: 0 0% 98%;
         --border: 240 4% 16%;
         --input: 240 4% 16%;
-        --ring: 262 83% 58%;
+        --ring: 142 71% 45%;
         --radius: 0.75rem;
+        /* chart accents — green-forward, not purple */
+        --chart-1: 142 71% 45%;
+        --chart-2: 160 60% 40%;
+        --chart-3: 45 80% 50%;
+        --chart-4: 200 70% 45%;
+        --chart-5: 280 40% 55%;
     }
 }
 
@@ -121,15 +147,15 @@ a:focus:not(:focus-visible) {
     animation: pulse-glow 2s ease-in-out infinite;
 }
 
-.glow-violet {
-    box-shadow: 0 0 25px rgba(124, 58, 237, 0.25);
+.glow-brand,
+.glow-brand {
+    box-shadow: 0 0 25px var(--brand-glow);
 }
 
 .grid-bg {
     background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
     background-size: 32px 32px;
 }
-
 
 @keyframes ping-slow {
     0% { transform: scale(1); opacity: 0.5; }

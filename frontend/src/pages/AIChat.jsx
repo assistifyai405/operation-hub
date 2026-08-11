@@ -106,7 +106,7 @@ export default function AIChat() {
             key={a.id}
             onClick={() => setAgentId(a.id)}
             data-testid={`select-agent-${a.id}`}
-            className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${agentId === a.id ? "border-violet-500 bg-violet-600/15 text-violet-300" : "border-white/10 bg-zinc-950 text-zinc-400 hover:text-zinc-200"}`}
+            className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${agentId === a.id ? "border-brand-500 bg-brand-600/15 text-brand-300" : "border-white/10 bg-zinc-950 text-zinc-400 hover:text-zinc-200"}`}
           >
             {a.avatar ? (
               <img src={a.avatar} alt={`${a.name || "AI agent"} avatar`} className="h-5 w-5 rounded-full object-cover" />
@@ -122,7 +122,7 @@ export default function AIChat() {
       <div className="flex-1 overflow-y-auto rounded-xl border border-white/10 bg-zinc-950/50 p-4 sm:p-6">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600 glow-violet">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 glow-brand">
               <Sparkles className="h-7 w-7 text-white" />
             </div>
             <h2 className="mt-4 text-xl font-semibold text-zinc-100">{activeAgent?.name || "Assistify Copilot"}</h2>
@@ -133,7 +133,7 @@ export default function AIChat() {
                   key={s}
                   onClick={() => send(s)}
                   data-testid="chat-suggestion"
-                  className="rounded-lg border border-white/10 bg-zinc-950 px-4 py-3 text-left text-sm text-zinc-300 transition-all hover:border-violet-500/40 hover:text-white"
+                  className="rounded-lg border border-white/10 bg-zinc-950 px-4 py-3 text-left text-sm text-zinc-300 transition-all hover:border-brand-500/40 hover:text-white"
                 >
                   {s}
                 </button>
@@ -145,12 +145,12 @@ export default function AIChat() {
             {messages.map((m, i) => (
               <div key={i} className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`} data-testid={`chat-msg-${m.role}`}>
                 {m.role === "assistant" && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-600/20 text-violet-400">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600/20 text-brand-400">
                     <Bot className="h-4 w-4" />
                   </div>
                 )}
-                <div className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${m.role === "user" ? "bg-violet-600 text-white" : "border border-white/10 bg-zinc-900 text-zinc-200"}`}>
-                  {m.content || (streaming && i === messages.length - 1 ? <span className="inline-flex gap-1"><span className="h-2 w-2 animate-pulse-glow rounded-full bg-violet-400" /><span className="h-2 w-2 animate-pulse-glow rounded-full bg-violet-400" style={{ animationDelay: "0.2s" }} /><span className="h-2 w-2 animate-pulse-glow rounded-full bg-violet-400" style={{ animationDelay: "0.4s" }} /></span> : m.content)}
+                <div className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${m.role === "user" ? "bg-brand-600 text-white" : "border border-white/10 bg-zinc-900 text-zinc-200"}`}>
+                  {m.content || (streaming && i === messages.length - 1 ? <span className="inline-flex gap-1"><span className="h-2 w-2 animate-pulse-glow rounded-full bg-brand-400" /><span className="h-2 w-2 animate-pulse-glow rounded-full bg-brand-400" style={{ animationDelay: "0.2s" }} /><span className="h-2 w-2 animate-pulse-glow rounded-full bg-brand-400" style={{ animationDelay: "0.4s" }} /></span> : m.content)}
                 </div>
               </div>
             ))}
@@ -166,13 +166,13 @@ export default function AIChat() {
           onChange={(e) => setInput(e.target.value)}
           placeholder={`Message ${activeAgent?.name || "Copilot"}…`}
           data-testid="chat-input"
-          className="flex-1 rounded-xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 outline-none transition-all placeholder:text-zinc-600 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40"
+          className="flex-1 rounded-xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 outline-none transition-all placeholder:text-zinc-600 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40"
         />
         <button
           type="submit"
           disabled={streaming || !input.trim()}
           data-testid="chat-send"
-          className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-white transition-all hover:bg-violet-500 disabled:opacity-40 glow-violet"
+          className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white transition-all hover:bg-brand-500 disabled:opacity-40 glow-brand"
         >
           <Send className="h-4 w-4" />
         </button>

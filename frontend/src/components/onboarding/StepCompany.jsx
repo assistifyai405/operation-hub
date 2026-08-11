@@ -43,7 +43,7 @@ export function StepCompany({ data, setData, next, back }) {
     <StepShell>
       <div data-testid="onb-step-company">
         <div className="mb-6 flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600/15 text-violet-400" aria-hidden="true"><Building2 className="h-5 w-5" /></span>
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15 text-brand-400" aria-hidden="true"><Building2 className="h-5 w-5" /></span>
           <div>
             <h2 className="text-2xl font-bold text-zinc-50">Set up your company profile</h2>
             <p className="text-sm text-zinc-500">Only the essentials — so Assistify can personalize your workspace and AI.</p>
@@ -56,7 +56,7 @@ export function StepCompany({ data, setData, next, back }) {
               <Globe className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" aria-hidden="true" />
               <input value={c.website || ""} onChange={(e) => set("website", e.target.value)} data-testid="onb-website-input" className={`${inputCls} pl-9`} placeholder="acme.com" />
             </div>
-            <button type="button" onClick={analyze} disabled={analyzing} data-testid="onb-analyze-btn" className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-violet-500/40 bg-violet-500/10 px-3 py-2 text-sm font-medium text-violet-200 transition-all hover:bg-violet-500/20 disabled:opacity-50">
+            <button type="button" onClick={analyze} disabled={analyzing} data-testid="onb-analyze-btn" className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-sm font-medium text-brand-200 transition-all hover:bg-brand-500/20 disabled:opacity-50">
               {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Analyze
             </button>
           </div>

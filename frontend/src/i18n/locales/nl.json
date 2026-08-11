@@ -1,0 +1,424 @@
+{
+  "app": {
+    "name": "Assistify",
+    "tagline": "AI-gedreven bedrijfsbesturingssysteem",
+    "beta": "Assistify Beta"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "opportunities": "Kansen",
+    "automations": "Automatiseringen",
+    "crm": "CRM",
+    "pipeline": "Pipeline",
+    "clients": "Klanten",
+    "projects": "Projecten",
+    "tasks": "Taken",
+    "copilot": "Copilot",
+    "aiWorkspace": "AI-werkruimte",
+    "knowledgeBrain": "Knowledge Brain",
+    "aiAgents": "AI-agents",
+    "proposals": "Offertes",
+    "contracts": "Contracten",
+    "invoices": "Facturen",
+    "documents": "Documenten",
+    "emails": "E-mails",
+    "inbox": "Inbox",
+    "integrations": "Integraties",
+    "analytics": "Analytics",
+    "settings": "Instellingen"
+  },
+  "common": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "create": "Aanmaken",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "retry": "Opnieuw",
+    "loading": "Laden…",
+    "search": "Zoeken",
+    "close": "Sluiten",
+    "back": "Terug",
+    "continue": "Doorgaan",
+    "submit": "Versturen",
+    "logout": "Uitloggen",
+    "settings": "Instellingen",
+    "actions": "Acties",
+    "empty": "Nog niets hier",
+    "error": "Er ging iets mis. Probeer het opnieuw.",
+    "success": "Opgeslagen",
+    "optional": "optioneel",
+    "you": "Jij",
+    "help": "Hulp",
+    "learnMore": "Meer info",
+    "open": "Openen",
+    "refresh": "Vernieuwen",
+    "language": "Taal",
+    "sendFeedback": "Feedback sturen",
+    "or": "of",
+    "previous": "Vorige",
+    "next": "Volgende",
+    "pageOf": "Pagina {{page}} van {{pages}}"
+  },
+  "auth": {
+    "loginTitle": "Welkom terug",
+    "loginSubtitle": "Log in op je Assistify-workspace.",
+    "registerTitle": "Maak je account",
+    "registerSubtitle": "Zet je workspace op om klanten, projecten en AI op één plek te beheren.",
+    "email": "Zakelijk e-mailadres",
+    "password": "Wachtwoord",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "company": "Bedrijf",
+    "createAccount": "Account aanmaken",
+    "signIn": "Inloggen",
+    "alreadyHaveAccount": "Heb je al een account?",
+    "noAccount": "Nieuw bij Assistify?",
+    "forgotPassword": "Wachtwoord vergeten?",
+    "heroTitle": "Jouw AI-gedreven bedrijfsbesturingssysteem.",
+    "heroBody": "Voor kleine bedrijven, freelancers en teams die werk en AI vanuit één workspace willen beheren — klanten, projecten, taken, documenten, kansen en automatiseringen samen.",
+    "heroPoints": {
+      "one": "Klanten, projecten, taken en pipeline op één plek",
+      "two": "Copilot voor concepten en antwoorden · Agents voor gespecialiseerd werk",
+      "three": "Kansen, documenten en automatiseringen zonder tool-hoppen"
+    },
+    "joinTeam": "Sluit je aan bij je team",
+    "joinTeamSubtitle": "Maak een account om je uitnodiging te accepteren.",
+    "inviteLoginSubtitle": "Log in om je teamuitnodiging te accepteren.",
+    "emailPlaceholder": "jij@bedrijf.nl",
+    "companyPlaceholder": "Voorbeeldbedrijf",
+    "rememberMe": "Onthoud mij 7 dagen",
+    "exploreDemo": "Bekijk de demo-workspace",
+    "demoHint": "Aanmelden is niet nodig — er opent speciaal voor jou een privé-voorbeeldworkspace.",
+    "passwordMin": "Je wachtwoord moet minimaal 8 tekens bevatten",
+    "passwordMinPlaceholder": "Minimaal 8 tekens",
+    "passwordMismatch": "De wachtwoorden komen niet overeen",
+    "accountCreatedVerify": "Account aangemaakt! Je kunt je e-mailadres altijd verifiëren via Instellingen.",
+    "welcomeTeam": "Welkom bij het team",
+    "joinOrganization": "Deelnemen aan organisatie",
+    "forgotTitle": "Stel je wachtwoord opnieuw in",
+    "forgotSubtitle": "We sturen je een link om je wachtwoord opnieuw in te stellen.",
+    "backToSignIn": "Terug naar inloggen",
+    "resetSent": "Als er een account bestaat, is er een resetlink verstuurd.",
+    "devResetLink": "Ontwikkelmodus — resetlink:",
+    "sendResetLink": "Resetlink versturen",
+    "invalidResetTitle": "Ongeldige link",
+    "invalidResetSubtitle": "Deze resetlink ontbreekt of is ongeldig.",
+    "requestNewLink": "Nieuwe link aanvragen",
+    "resetTitle": "Kies een nieuw wachtwoord",
+    "resetSubtitle": "Kies een sterk wachtwoord dat je kunt onthouden.",
+    "passwordUpdated": "Wachtwoord bijgewerkt. Je wordt doorgestuurd naar inloggen…",
+    "newPassword": "Nieuw wachtwoord",
+    "confirmPassword": "Bevestig wachtwoord",
+    "confirmPasswordPlaceholder": "Vul je wachtwoord opnieuw in",
+    "updatePassword": "Wachtwoord bijwerken"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Een overzicht van wat er in je bedrijf gebeurt en waar je aandacht nodig is."
+    },
+    "clients": {
+      "title": "Klanten",
+      "description": "Beheer je klanten en houd belangrijke klantinformatie op één plek."
+    },
+    "projects": {
+      "title": "Projecten",
+      "description": "Organiseer klantwerk, deadlines, taken en AI-ondersteuning per project."
+    },
+    "tasks": {
+      "title": "Taken",
+      "description": "Houd bij wat er moet gebeuren, wie ermee bezig is en wanneer het af moet zijn."
+    },
+    "copilot": {
+      "title": "Copilot",
+      "description": "Je AI-assistent voor dagelijkse werkzaamheden, ideeën en het maken van content."
+    },
+    "aiAgents": {
+      "title": "AI-agents",
+      "description": "Gespecialiseerde AI-assistenten die helpen met verschillende soorten werk."
+    },
+    "aiWorkspace": {
+      "title": "AI-werkruimte",
+      "description": "Bekijk en beheer werk dat je samen met Assistify AI hebt gemaakt."
+    },
+    "knowledgeBrain": {
+      "title": "Knowledge Brain",
+      "description": "Geef Assistify bedrijfskennis en context zodat AI betere antwoorden kan geven."
+    },
+    "crm": {
+      "title": "CRM",
+      "description": "Beheer relaties, contactmomenten en belangrijke informatie over je klanten."
+    },
+    "pipeline": {
+      "title": "Pipeline",
+      "description": "Volg potentiële omzet van eerste kans tot gewonnen deal."
+    },
+    "opportunities": {
+      "title": "Kansen",
+      "description": "Assistify signaleert kansen en acties die mogelijk aandacht nodig hebben."
+    },
+    "automations": {
+      "title": "Automatiseringen",
+      "description": "Automatiseer terugkerend werk en laat Assistify processen voor je uitvoeren."
+    },
+    "proposals": {
+      "title": "Offertes",
+      "description": "Maak professionele voorstellen en offertes met je bestaande klant- en projectgegevens."
+    },
+    "contracts": {
+      "title": "Contracten",
+      "description": "Maak contractconcepten vanuit je klant-, project- en voorstelgegevens."
+    },
+    "invoices": {
+      "title": "Facturen",
+      "description": "Maak facturen op basis van je klant- en projectgegevens."
+    },
+    "documents": {
+      "title": "Documenten",
+      "description": "Bewaar en beheer belangrijke documenten die bij je werk horen."
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "Bekijk prestaties en trends op basis van echte gegevens uit je workspace."
+    },
+    "settings": {
+      "title": "Instellingen",
+      "description": "Beheer je workspace, team, integraties, beveiliging en voorkeuren."
+    },
+    "emails": {
+      "title": "E-mails",
+      "description": "Schrijf en volg uitgaande zakelijke e-mails vanuit je workspace."
+    },
+    "inbox": {
+      "title": "Inbox",
+      "description": "Bekijk verbonden mailbox-threads en AI-ondersteunde antwoorden."
+    },
+    "integrations": {
+      "title": "Integraties",
+      "description": "Koppel de tools die Assistify gebruikt om mail en agenda’s te synchroniseren."
+    }
+  },
+  "help": {
+    "businessHealth": "Een score op basis van echte workspace-activiteit — facturen, contracten, projecten, taken en pipeline. Lege categorieën tellen niet mee.",
+    "morningBrief": "Een dagelijks overzicht uit je echte klanten, projecten, deals en AI-activiteit — nooit verzonnen voorbeeldddata.",
+    "aiConfidence": "Een geschatte betrouwbaarheidsscore voor een AI-suggestie. Geen garantie op juistheid.",
+    "knowledgeBrain": "Herinneringen en feiten over je bedrijf die Assistify gebruikt om AI-antwoorden te verbeteren.",
+    "opportunities": "Aanbevolen vervolgacties die Assistify vindt door je workspace te scannen.",
+    "aiAgents": "Ingebouwde specialisten voor veelvoorkomend werk. Eigen agents maken is in deze release niet beschikbaar.",
+    "hoursSaved": "Geschatte tijdwinst op basis van typische taakduur — geen gemeten telemetrie."
+  },
+  "settings": {
+    "tabs": {
+      "general": "Algemeen",
+      "organization": "Organisatie",
+      "team": "Team",
+      "email": "E-mail",
+      "branding": "Branding",
+      "ai": "AI-instellingen",
+      "documents": "Documenten",
+      "notifications": "Meldingen",
+      "security": "Beveiliging",
+      "apikeys": "API-sleutels",
+      "billing": "Facturatie",
+      "integrations": "Integraties",
+      "operations": "Operaties",
+      "feedback": "Beta-feedback",
+      "language": "Taal"
+    },
+    "language": {
+      "title": "Taal",
+      "description": "Kies hoe Assistify eruitziet. Dit stuurt standaard ook AI-antwoorden.",
+      "label": "Interfacetaal",
+      "nl": "Nederlands",
+      "en": "English",
+      "hint": "Je keuze wordt opgeslagen op je account en blijft behouden na herladen.",
+      "saved": "Taal bijgewerkt"
+    },
+    "billingBeta": "Facturatie is niet beschikbaar tijdens de beta.",
+    "billingBetaHint": "Geen actief abonnement, proefperiode of betaalknop. Stripe komt later.",
+    "operationsTitle": "Operaties",
+    "operationsDescription": "Backend-status, AI-gebruik, workers en herstelacties voor owners en admins.",
+    "feedbackTitle": "Beta-feedback",
+    "feedbackDescription": "Feedback van gebruikers in deze workspace."
+  },
+  "beta": {
+    "sendFeedback": "Feedback sturen",
+    "feedbackTitle": "Feedback sturen",
+    "feedbackHint": "Bugs, ideeën of iets onduidelijks — we lezen alles.",
+    "category": "Categorie",
+    "closeFeedback": "Feedback sluiten",
+    "categories": {
+      "Bug": "Bug",
+      "Idea": "Idee",
+      "Confusing": "Onduidelijk",
+      "Other": "Overig"
+    },
+    "message": "Bericht",
+    "messagePlaceholder": "Wat gebeurde er, of wat zou helpen?",
+    "currentPage": "Huidige pagina: {{page}}",
+    "thanks": "Bedankt — je feedback is verstuurd.",
+    "messageRequired": "Schrijf een kort bericht.",
+    "sendError": "Feedback versturen is niet gelukt. Probeer het opnieuw.",
+    "aiRequestsToday": "AI-verzoeken vandaag",
+    "aiDailyLimit": "AI-daglimiet",
+    "betaFeedback": "Beta-feedback",
+    "worker": "Worker",
+    "scheduler": "Scheduler",
+    "failedJobs": "Mislukte jobs"
+  },
+  "billing": {
+    "notAvailable": "Facturatie is niet beschikbaar tijdens de beta.",
+    "pendingHint": "Stripe is niet geconfigureerd. Er is geen actief abonnement, proefperiode of betaalmethode."
+  },
+  "onboarding": {
+    "welcomeTitle": "Welkom bij Assistify",
+    "welcomeBody": "Je AI-gedreven bedrijfsbesturingssysteem — klanten, projecten, taken en AI in één workspace.",
+    "skip": "Overslaan",
+    "getStarted": "Aan de slag",
+    "company": "Je bedrijf",
+    "goal": "Je doel",
+    "ready": "Je bent klaar",
+    "checklist": {
+      "title": "Laat Assistify voor je werken",
+      "subtitle": "Voltooi deze stappen met echte gegevens uit je workspace — je voortgang wordt nooit verzonnen.",
+      "dismiss": "Installatiechecklist sluiten",
+      "progress": "{{done}} van {{total}} voltooid",
+      "progressLabel": "Voortgang van workspace-inrichting",
+      "items": {
+        "profile": "Vul je bedrijfsprofiel aan",
+        "client": "Maak je eerste klant",
+        "project": "Maak je eerste project",
+        "task": "Maak je eerste taak",
+        "copilot": "Vraag Copilot",
+        "agents": "Ontdek AI-agents"
+      }
+    }
+  },
+  "firstRun": {
+    "eyebrow": "Welkom",
+    "title": "Laten we je workspace voor je laten werken.",
+    "body": "Je dashboard blijft leeg tot je echte klanten, projecten en taken toevoegt — geen voorbeeldgrafieken of nep-scores. Kies hieronder een startpunt.",
+    "client": "Maak je eerste klant",
+    "clientHint": "Begin met relaties en werk bijhouden",
+    "project": "Maak je eerste project",
+    "projectHint": "Organiseer oplevering rond een klant",
+    "copilot": "Vraag Copilot",
+    "copilotHint": "Samenvattingen, concepten, plannen en meer",
+    "agents": "Ontdek AI-agents",
+    "agentsHint": "Specialisten voor sales, ops en schrijven"
+  },
+  "library": {
+    "kinds": {
+      "proposal_one": "offerte",
+      "proposal_other": "offertes",
+      "contract_one": "contract",
+      "contract_other": "contracten"
+    },
+    "organizationCount": "{{count}} {{kind}} in je organisatie.",
+    "searchPlaceholder": "Zoek in {{kind}}",
+    "sort": {
+      "recent": "Meest recent",
+      "title": "Titel (A–Z)"
+    },
+    "statuses": {
+      "All": "Alles",
+      "Draft": "Concept",
+      "Generated": "Gegenereerd",
+      "Sent": "Verstuurd",
+      "Signed": "Ondertekend",
+      "Accepted": "Geaccepteerd",
+      "Rejected": "Afgewezen",
+      "Paid": "Betaald",
+      "Overdue": "Achterstallig",
+      "Cancelled": "Geannuleerd",
+      "Archived": "Gearchiveerd"
+    },
+    "empty": {
+      "matchingTitle": "Geen overeenkomende {{kind}}",
+      "noneTitle": "Nog geen {{kind}}",
+      "filtered": "Probeer een andere zoekopdracht of filter.",
+      "create": "Open een project en gebruik de {{kind}}generator om je eerste te maken."
+    },
+    "goToProjects": "Naar Projecten",
+    "noClient": "Geen klant",
+    "noProject": "Geen project",
+    "project": "Project"
+  },
+  "command": {
+    "placeholder": "Zoek of voer een opdracht uit…",
+    "pages": "Pagina's",
+    "create": "Aanmaken",
+    "ai": "AI",
+    "empty": "Geen resultaten",
+    "newClient": "Nieuwe klant",
+    "newProject": "Nieuw project",
+    "newTask": "Nieuwe taak"
+  },
+  "legal": {
+    "privacy": "Privacy",
+    "terms": "Voorwaarden",
+    "betaNotice": "Beta-melding",
+    "placeholderNotice": "Tijdelijk document — geen juridisch advies. Bedrijfsgegevens hieronder zijn configuratie-placeholders tot na KVK-registratie.",
+    "companyBlock": "Bedrijfsgegevens (nog niet geconfigureerd)",
+    "companyBlockConfigured": "Bedrijfsgegevens",
+    "toBeFilled": "[In te vullen na KVK-registratie]",
+    "termsTitle": "Gebruiksvoorwaarden",
+    "privacyBody": "Assistify is een AI-gedreven bedrijfsbesturingssysteem. Tijdens de gesloten beta verwerken we account-, workspace- en gebruiksgegevens die nodig zijn om het product voor uitgenodigde gebruikers te laten werken.",
+    "privacyPlaceholderBody": "Deze pagina is een <strong>tijdelijke invulling</strong>. Er worden geen juridische entiteit, KVK-nummer, btw-nummer of vestigingsadres verzonnen. Vervang de placeholders na de bedrijfsregistratie.",
+    "privacyContact": "Neem voor privacyvragen contact op via het privacy-e-mailadres hierboven zodra dit is ingesteld, of met je beta-beheerder.",
+    "termsPlaceholderBody": "Deze voorwaarden zijn een <strong>tijdelijke invulling</strong> voor toegang tot de gesloten beta. Het zijn geen definitieve juridische voorwaarden en geen juridisch advies.",
+    "termsBody": "Assistify helpt bedrijven bij het beheren van klanten, projecten, taken, AI-ondersteund werk, offertes, contracten, facturen en dagelijkse werkprocessen. Toegang tot de beta kan zonder voorafgaande kennisgeving veranderen.",
+    "termsBilling": "Facturatie en betaalde abonnementen zijn niet beschikbaar tijdens de beta. Vertrouw niet op deze pagina als commerciële overeenkomst totdat deze is vervangen door juridisch beoordeelde voorwaarden.",
+    "betaBody": "Assistify bevindt zich in een <strong>gesloten beta</strong>. Functies kunnen onvolledig zijn, veranderen of niet werken. Gegevens kunnen worden gereset als de beheerders een migratie aankondigen.",
+    "betaItems": {
+      "sla": "Geen productie-SLA — alleen gebruiken voor evaluatie en vroege werkprocessen.",
+      "ai": "AI-functies gebruiken de door de beheerder ingestelde provider; uitvoer kan onjuist zijn.",
+      "billing": "Facturatie en Stripe zijn bewust uitgeschakeld.",
+      "email": "E-mailbezorging en OAuth kunnen afhankelijk van de configuratie zijn uitgeschakeld.",
+      "feedback": "Gebruik <em>Feedback sturen</em> in het product om bugs of onduidelijkheden te melden."
+    },
+    "fields": {
+      "companyName": "Juridische naam / bedrijfsnaam",
+      "tradeName": "Handelsnaam",
+      "kvkNumber": "KVK-nummer",
+      "vatNumber": "Btw-nummer",
+      "contactEmail": "Zakelijk e-mailadres",
+      "privacyEmail": "Privacycontact",
+      "address": "Vestigingsadres"
+    }
+  },
+  "tour": {
+    "skip": "Tour overslaan",
+    "next": "Volgende",
+    "done": "Begrepen",
+    "progress": "Snelle tour · {{current}}/{{total}}",
+    "dismiss": "Producttour sluiten",
+    "steps": {
+      "dashboard": {
+        "title": "Je dashboard",
+        "body": "Bekijk prioriteiten, snelle acties en de status van je workspace zodra je echte klanten en projecten toevoegt."
+      },
+      "clients": {
+        "title": "Klanten",
+        "body": "Begin met de mensen en bedrijven waarmee je werkt — al het andere is hieraan gekoppeld."
+      },
+      "copilot": {
+        "title": "Copilot",
+        "body": "Vraag om samenvattingen, concepten, projectplannen of offertes op basis van je workspace."
+      },
+      "agents": {
+        "title": "AI-agents",
+        "body": "Chat met specialisten voor sales, schrijven en bedrijfsvoering als je gerichte hulp wilt."
+      },
+      "search": {
+        "title": "Zoeken en opdrachten",
+        "body": "Druk op elk moment op ⌘K (of Ctrl+K) om naar een pagina te gaan of een nuttige AI-actie te starten."
+      }
+    }
+  },
+  "empty": {
+    "clients": "Voeg je eerste klant toe om werk te volgen.",
+    "projects": "Maak een project om oplevering te organiseren.",
+    "tasks": "Nog geen taken — voeg er een toe om op koers te blijven."
+  }
+}

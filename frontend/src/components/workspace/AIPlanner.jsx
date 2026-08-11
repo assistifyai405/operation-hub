@@ -31,7 +31,7 @@ function SectionView({ section, value }) {
   return (
     <div className="rounded-xl border border-white/10 bg-zinc-950 p-5" data-testid={`plan-section-${section.key}`}>
       <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100">
-        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-violet-600/15 text-violet-400"><Icon className="h-4 w-4" /></span>
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-600/15 text-brand-400"><Icon className="h-4 w-4" /></span>
         {section.label}
       </h3>
       {section.type === "text" ? (
@@ -40,7 +40,7 @@ function SectionView({ section, value }) {
         <ul className="space-y-1.5">
           {asList(value).length === 0 ? <li className="text-sm text-zinc-600">—</li> :
             asList(value).map((item, i) => (
-              <li key={i} className="flex gap-2 text-sm leading-relaxed text-zinc-300"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />{item}</li>
+              <li key={i} className="flex gap-2 text-sm leading-relaxed text-zinc-300"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />{item}</li>
             ))}
         </ul>
       )}
@@ -54,7 +54,7 @@ function SectionEdit({ section, value, onChange }) {
   return (
     <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
       <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100">
-        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-violet-600/15 text-violet-400"><Icon className="h-4 w-4" /></span>
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-600/15 text-brand-400"><Icon className="h-4 w-4" /></span>
         {section.label}
         {section.type === "list" && <span className="ml-auto text-xs font-normal text-zinc-500">one item per line</span>}
       </h3>
@@ -63,7 +63,7 @@ function SectionEdit({ section, value, onChange }) {
         onChange={(e) => onChange(section.type === "list" ? e.target.value.split("\n").filter((l) => l.trim() !== "") : e.target.value)}
         data-testid={`plan-edit-${section.key}`}
         rows={section.type === "list" ? 4 : 3}
-        className="w-full resize-none rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm leading-relaxed text-zinc-200 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40"
+        className="w-full resize-none rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm leading-relaxed text-zinc-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40"
       />
     </div>
   );
@@ -176,10 +176,10 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
     }
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-zinc-950/40 py-20 text-center" data-testid="planner-empty">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-600 glow-violet animate-pulse-glow"><Sparkles className="h-8 w-8 text-white" /></div>
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 glow-brand animate-pulse-glow"><Sparkles className="h-8 w-8 text-white" /></div>
         <h3 className="mt-5 text-lg font-semibold text-zinc-100">AI Project Planner</h3>
         <p className="mt-1 max-w-md text-sm text-zinc-500">Generate a complete, tailored project plan from your client, description, notes, tasks, documents and timeline — in seconds.</p>
-        <button onClick={generate} disabled={generating} data-testid="generate-plan-btn" className="mt-6 flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 glow-violet">
+        <button onClick={generate} disabled={generating} data-testid="generate-plan-btn" className="mt-6 flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-60 glow-brand">
           {generating ? <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing project…</> : <><Sparkles className="h-4 w-4" /> Generate Plan</>}
         </button>
       </div>
@@ -193,13 +193,13 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-zinc-950 p-3">
           <span className="mr-auto flex items-center gap-2 text-sm font-medium text-zinc-200">
-            <Sparkles className="h-4 w-4 text-violet-400" />
+            <Sparkles className="h-4 w-4 text-brand-400" />
             {draftVersion === null ? "Unsaved draft" : `Version ${draftVersion}`}
             {compareWith && <span className="text-zinc-500">· comparing with v{compareWith.version}</span>}
           </span>
           {!compareWith && (
             <>
-              <button onClick={() => setEditing((e) => !e)} data-testid="edit-plan-btn" className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${editing ? "border-violet-500 bg-violet-600/15 text-violet-300" : "border-white/10 bg-zinc-900 text-zinc-300 hover:text-white"}`}>
+              <button onClick={() => setEditing((e) => !e)} data-testid="edit-plan-btn" className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${editing ? "border-brand-500 bg-brand-600/15 text-brand-300" : "border-white/10 bg-zinc-900 text-zinc-300 hover:text-white"}`}>
                 {editing ? <><X className="h-4 w-4" /> Done editing</> : <><Pencil className="h-4 w-4" /> Edit</>}
               </button>
               <button onClick={generate} disabled={generating} data-testid="regenerate-plan-btn" className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-300 transition-all hover:text-white disabled:opacity-60">
@@ -208,7 +208,7 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
               <button onClick={() => exportPdf(projectName, draftVersion, draft)} data-testid="export-pdf-btn" className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-300 transition-all hover:text-white">
                 <Download className="h-4 w-4" /> Export PDF
               </button>
-              <button onClick={save} disabled={saving} data-testid="save-plan-btn" className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 glow-violet">
+              <button onClick={save} disabled={saving} data-testid="save-plan-btn" className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-60 glow-brand">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Version
               </button>
             </>
@@ -228,7 +228,7 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
               {SECTIONS.map((s) => <SectionView key={s.key} section={s} value={compareWith.sections[s.key]} />)}
             </div>
             <div className="space-y-4">
-              <div className="sticky top-0 rounded-lg bg-violet-600/20 px-3 py-2 text-center text-sm font-semibold text-violet-200">{draftVersion === null ? "Current draft" : `v${draftVersion}`}</div>
+              <div className="sticky top-0 rounded-lg bg-brand-600/20 px-3 py-2 text-center text-sm font-semibold text-brand-200">{draftVersion === null ? "Current draft" : `v${draftVersion}`}</div>
               {SECTIONS.map((s) => <SectionView key={s.key} section={s} value={draft[s.key]} />)}
             </div>
           </div>
@@ -244,16 +244,16 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
       {/* Version history sidebar */}
       <div className="space-y-3">
         <div className="rounded-xl border border-white/10 bg-zinc-950 p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><History className="h-4 w-4 text-violet-400" /> Version History</h3>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><History className="h-4 w-4 text-brand-400" /> Version History</h3>
           {versions.length === 0 ? (
             <p className="text-xs text-zinc-500" data-testid="no-versions">No saved versions yet. Save your draft to create v1.</p>
           ) : (
             <div className="space-y-2" data-testid="version-list">
               {versions.map((v) => (
-                <div key={v.id} className={`rounded-lg border p-2.5 transition-all ${draftVersion === v.version && !compareWith ? "border-violet-500/50 bg-violet-600/10" : "border-white/10 bg-zinc-900"}`} data-testid={`version-${v.version}`}>
+                <div key={v.id} className={`rounded-lg border p-2.5 transition-all ${draftVersion === v.version && !compareWith ? "border-brand-500/50 bg-brand-600/10" : "border-white/10 bg-zinc-900"}`} data-testid={`version-${v.version}`}>
                   <div className="flex items-center justify-between">
-                    <button onClick={() => viewVersion(v)} data-testid={`view-version-${v.version}`} className="text-sm font-medium text-zinc-200 hover:text-violet-300">Version {v.version}</button>
-                    <button onClick={() => { setCompareWith(v); }} disabled={draftVersion === v.version && draftVersion !== null} data-testid={`compare-version-${v.version}`} title="Compare with current" className="rounded p-1 text-zinc-500 transition-colors hover:text-violet-400 disabled:opacity-30">
+                    <button onClick={() => viewVersion(v)} data-testid={`view-version-${v.version}`} className="text-sm font-medium text-zinc-200 hover:text-brand-300">Version {v.version}</button>
+                    <button onClick={() => { setCompareWith(v); }} disabled={draftVersion === v.version && draftVersion !== null} data-testid={`compare-version-${v.version}`} title="Compare with current" className="rounded p-1 text-zinc-500 transition-colors hover:text-brand-400 disabled:opacity-30">
                       <GitCompare className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -263,8 +263,8 @@ export default function AIPlanner({ projectId, projectName, onSaved }) {
             </div>
           )}
         </div>
-        <button onClick={generate} disabled={generating} data-testid="sidebar-generate-btn" className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm font-medium text-zinc-300 transition-all hover:border-violet-500/40 hover:text-white disabled:opacity-60">
-          {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-violet-400" />} New Generation
+        <button onClick={generate} disabled={generating} data-testid="sidebar-generate-btn" className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm font-medium text-zinc-300 transition-all hover:border-brand-500/40 hover:text-white disabled:opacity-60">
+          {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-brand-400" />} New Generation
         </button>
       </div>
     </div>

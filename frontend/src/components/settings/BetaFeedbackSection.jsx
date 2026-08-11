@@ -43,7 +43,7 @@ export function BetaFeedbackSection() {
             <li key={f.id} className="rounded-xl border border-white/10 bg-zinc-950/60 p-4" data-testid={`beta-feedback-item-${f.id}`}>
               <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
                 <MessageSquare className="h-3.5 w-3.5" />
-                <span className="rounded bg-violet-600/20 px-1.5 py-0.5 font-medium text-violet-300">{f.category}</span>
+                <span className="rounded bg-brand-600/20 px-1.5 py-0.5 font-medium text-brand-300">{f.category}</span>
                 <span>{f.userName || f.userEmail}</span>
                 <span>·</span>
                 <span>{f.createdAt ? new Date(f.createdAt).toLocaleString() : "—"}</span>

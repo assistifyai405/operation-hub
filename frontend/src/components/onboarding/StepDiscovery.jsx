@@ -37,7 +37,7 @@ export function StepDiscovery({ data, setData, next }) {
       <div className="text-center" data-testid="onb-step-discovery">
         <motion.div
           animate={{ rotate: ready ? 0 : [0, 8, -8, 0] }} transition={{ repeat: ready ? 0 : Infinity, duration: 2 }}
-          className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-600 glow-violet"
+          className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 glow-brand"
         >
           <Brain className="h-8 w-8 text-white" />
         </motion.div>

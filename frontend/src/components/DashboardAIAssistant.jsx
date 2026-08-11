@@ -39,11 +39,11 @@ export default function DashboardAIAssistant() {
   if (!loaded) return null;
 
   return (
-    <div className="animate-fade-up rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-600/10 via-zinc-950 to-zinc-950 p-5 sm:p-6" data-testid="dashboard-ai-assistant">
+    <div className="animate-fade-up rounded-2xl border border-brand-500/20 bg-gradient-to-br from-brand-600/10 via-zinc-950 to-zinc-950 p-5 sm:p-6" data-testid="dashboard-ai-assistant">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-600/20"><Sparkles className="h-4 w-4 text-violet-300" /></span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600/20"><Sparkles className="h-4 w-4 text-brand-300" /></span>
             <h2 className="text-lg font-bold text-zinc-50" data-testid="ai-greeting">{greeting()}, {user?.firstName || "there"} 👋</h2>
           </div>
           <p className="text-sm text-zinc-400">Here's what Assistify has been working on for you.</p>
@@ -55,7 +55,7 @@ export default function DashboardAIAssistant() {
               done.map((a) => (
                 <div key={a.id} className="flex items-center gap-2.5 text-sm">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-500/15"><Check className="h-3 w-3 text-emerald-400" /></span>
-                  <AiIcon name={a.icon} className="h-3.5 w-3.5 shrink-0 text-violet-300" />
+                  <AiIcon name={a.icon} className="h-3.5 w-3.5 shrink-0 text-brand-300" />
                   <span className="truncate text-zinc-200">{a.title}</span>
                   <span className="ml-auto hidden shrink-0 text-xs text-zinc-500 sm:inline">saved {a.time_saved}m</span>
                 </div>
@@ -67,8 +67,8 @@ export default function DashboardAIAssistant() {
         {/* Time saved today */}
         <div className="shrink-0 rounded-xl border border-white/10 bg-zinc-950/70 px-5 py-4 text-center" data-testid="ai-time-saved-today">
           <p className="flex items-center justify-center gap-1.5 text-xs text-zinc-500"><Clock className="h-3.5 w-3.5" /> Time saved today</p>
-          <p className="mt-1 text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-cyan-300">{fmtDuration(saved?.today || 0)}</p>
-          <button onClick={() => navigate("/ai-workspace")} data-testid="ai-view-history" className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-violet-300 transition-colors hover:text-violet-200">
+          <p className="mt-1 text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-brand-300 to-cyan-300">{fmtDuration(saved?.today || 0)}</p>
+          <button onClick={() => navigate("/ai-workspace")} data-testid="ai-view-history" className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brand-300 transition-colors hover:text-brand-200">
             View all activity <ArrowRight className="h-3 w-3" />
           </button>
         </div>
@@ -81,11 +81,11 @@ export default function DashboardAIAssistant() {
           <div className="grid gap-2.5 sm:grid-cols-2">
             {insights.map((i) => (
               <button key={i.id} onClick={() => navigate(i.link)} data-testid={`ai-insight-${i.type}`}
-                className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all hover:border-violet-500/40 ${sevRing[i.severity] || sevRing.low}`}>
-                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-600/15 text-violet-300"><AiIcon name={i.icon} className="h-4 w-4" /></span>
+                className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all hover:border-brand-500/40 ${sevRing[i.severity] || sevRing.low}`}>
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-600/15 text-brand-300"><AiIcon name={i.icon} className="h-4 w-4" /></span>
                 <span className="min-w-0">
                   <span className="block text-sm leading-snug text-zinc-200">{i.explanation}</span>
-                  <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-violet-300">{i.action_label} <ArrowRight className="h-3 w-3" /></span>
+                  <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-brand-300">{i.action_label} <ArrowRight className="h-3 w-3" /></span>
                 </span>
               </button>
             ))}
