@@ -35,6 +35,7 @@ import InviteAccept from "@/pages/InviteAccept";
 import EmailCenter from "@/pages/EmailCenter";
 import Integrations from "@/pages/Integrations";
 import Inbox from "@/pages/Inbox";
+import { PrivacyPage, TermsPage, BetaNoticePage } from "@/pages/LegalPages";
 
 function App() {
   return (
@@ -49,6 +50,9 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/invite/:token" element={<InviteAccept />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/beta-notice" element={<BetaNoticePage />} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<Dashboard />} />

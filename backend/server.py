@@ -52,6 +52,7 @@ from routers.integrations import router as integrations_router
 from routers.inbox import router as inbox_router
 from routers.health import router as health_router
 from routers.ops import router as ops_router
+from routers.feedback import router as feedback_router
 from routers import team as team_mod
 from permissions import require_admin, normalize_role
 import ai_activity as aia
@@ -438,6 +439,7 @@ async def public_config():
         "demoLoginEnabled": bool(cfg.enable_demo_login),
         "demoSeedEnabled": bool(cfg.enable_demo_seed),
         "billingEnabled": False,  # Stripe not integrated; frontend also gates via REACT_APP_BILLING_ENABLED
+        "betaMode": bool(cfg.beta_mode),
         "environment": cfg.environment,
         "email": {
             "provider": cfg.email_provider,
@@ -460,6 +462,16 @@ async def public_config():
         "cookies": {
             "secure": bool(cfg.cookie_secure),
             "sameSite": cfg.cookie_samesite,
+        },
+        "legal": {
+            "companyName": cfg.legal_company_name or None,
+            "tradeName": cfg.legal_trade_name or None,
+            "contactEmail": cfg.legal_contact_email or None,
+            "privacyEmail": cfg.legal_privacy_email or None,
+            "address": cfg.legal_address or None,
+            "kvkNumber": cfg.legal_kvk_number or None,
+            "vatNumber": cfg.legal_vat_number or None,
+            "placeholders": not bool(cfg.legal_company_name and cfg.legal_contact_email),
         },
     }
 
@@ -1522,13 +1534,19 @@ async def get_billing(user: dict = Depends(current_user)):
         "contracts": await db.ai_contracts.count_documents(base),
         "invoices": await db.ai_invoices.count_documents(base),
     }
+    ai_usage = None
+    try:
+        from ai_usage import get_ai_usage
+        ai_usage = await get_ai_usage(org)
+    except Exception:
+        pass
     return {
         "plan": None,
         "price": None,
         "interval": None,
         "status": "pending",
         "billingConfigured": False,
-        "message": "Billing setup pending — Stripe is not configured.",
+        "message": "Billing is not available during beta.",
         "seats": {
             "used": seats_info["active_members"],
             "pending": seats_info["pending_invitations"],
@@ -1538,6 +1556,7 @@ async def get_billing(user: dict = Depends(current_user)):
         "usage": usage,
         "limits": {"projects": None, "documents": None, "ai_generations": None},
         "renews_on": None,
+        "aiUsage": ai_usage,
     }
 
 
@@ -2237,6 +2256,7 @@ app.include_router(integrations_router)
 app.include_router(inbox_router)
 app.include_router(health_router)
 app.include_router(ops_router)
+app.include_router(feedback_router)
 
 def _cors_origins() -> List[str]:
     try:

@@ -487,9 +487,26 @@ export const inboxApi = {
 
 export const opsApi = {
   status: () => req("/ops/status"),
+  aiUsage: () => req("/ops/ai-usage"),
   retryJob: (id) => req(`/ops/jobs/${id}/retry`, { method: "POST" }),
   syncMailbox: (id) => req(`/ops/mailboxes/${id}/sync`, { method: "POST" }),
   reconcile: () => req("/ops/emails/reconcile", { method: "POST" }),
   resolveEmail: (id, body) => req(`/ops/emails/${id}/resolve`, { method: "POST", body: JSON.stringify(body) }),
   integrationHealth: (provider) => req(`/ops/integrations/${provider}/health`, { method: "POST" }),
+};
+
+export const feedbackApi = {
+  submit: (body) => req("/feedback", { method: "POST", body: JSON.stringify(body) }),
+  list: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.category) qs.set("category", params.category);
+    if (params.limit) qs.set("limit", String(params.limit));
+    const q = qs.toString();
+    return req(`/feedback${q ? `?${q}` : ""}`);
+  },
+  count: () => req("/feedback/count"),
+};
+
+export const publicConfigApi = {
+  get: () => req("/config/public"),
 };

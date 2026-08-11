@@ -1,34 +1,21 @@
-# Closed beta runbook (Sprint 27)
+# Closed beta runbook (Sprint 28)
 
-Concise steps to run Assistify as a **local closed-beta release candidate**.  
-No production deploy. Billing/Stripe is off. Custom agents stay hidden.
+Concise steps to run Assistify as a **local closed-beta release candidate** for 1–5 real users.
 
-## Start the stack
+No production deploy. Billing/Stripe is off. Custom agents stay hidden. Demo login stays off.
+
+## 1. Start the full stack
 
 ```bash
-# From repo root (Windows: use Docker Desktop + PowerShell/WSL)
-export OPENAI_API_KEY=sk-...   # optional but required for real AI
+# From repo root (Windows: Docker Desktop + PowerShell/WSL)
+$env:OPENAI_API_KEY="sk-..."   # PowerShell; optional but required for real AI
 docker compose build
 docker compose up --force-recreate
 ```
 
 Services: `frontend` (:3000), `backend` (:8000), `mongo`, `redis`, `worker`, `scheduler`.
 
-## Required / important env
-
-| Var | Notes |
-|-----|--------|
-| `OPENAI_API_KEY` | Host env interpolated into compose (`${OPENAI_API_KEY:-}`). No hardcoded test key. |
-| `JWT_SECRET` | Set in compose for local only; use a strong secret outside local. |
-| `REDIS_URL` / `MONGO_URL` | Provided by compose service DNS. |
-| `WORKER_ENABLED` / `SCHEDULER_ENABLED` / `REQUIRE_REDIS` | `true` on API + workers in compose. |
-| `EMAIL_SENDING_ENABLED` | Keep `false` (console provider). |
-| `ENABLE_DEMO_LOGIN` / `ENABLE_DEMO_SEED` | Keep `false`. |
-| `REACT_APP_BILLING_ENABLED` | `false` (Stripe not implemented). |
-
-Never commit real secrets. Use `.env.example` as a template only.
-
-## Verify health (release gate)
+## 2. Run the release gate
 
 ```bash
 python scripts/check_local_release.py
@@ -36,41 +23,82 @@ python scripts/check_local_release.py
 FRONTEND_URL=http://localhost:3000 API_URL=http://localhost:8000 python scripts/check_local_release.py --json
 ```
 
-Expect: frontend reachable; `/api/health/live` + `/api/health/ready` = 200; alerts non-critical; Mongo/Redis healthy; `worker` + `scheduler` heartbeats `running`; `syncMode=false`; `workerEnabled`/`schedulerEnabled` true.
+Expect: frontend reachable; `/api/health/live` + `/api/health/ready` = 200; alerts non-critical;
+Mongo/Redis healthy; `worker` + `scheduler` heartbeats `running`; `syncMode=false`.
 
-## Verify worker / scheduler + Redis jobs
+## 3. Enable beta mode
 
-```bash
-# Heartbeats via ready payload
-curl -s http://localhost:8000/api/health/ready | python -m json.tool
-
-# Safe job drain (noop) + dead-letter path (fail)
-REDIS_URL=redis://127.0.0.1:6379/0 MONGO_URL=mongodb://127.0.0.1:27017 DB_NAME=assistify \
-  python scripts/enqueue_safe_test_job.py --mode noop
-REDIS_URL=redis://127.0.0.1:6379/0 MONGO_URL=mongodb://127.0.0.1:27017 DB_NAME=assistify \
-  python scripts/enqueue_safe_test_job.py --mode fail
-```
-
-`DB_NAME` must match the running API/worker database (compose default: `assistify`).
-
-## Async failure / recovery drill
+Set in backend / compose:
 
 ```bash
-docker compose stop worker
-# Wait ~90s for heartbeat TTL → READY should degrade (503) when REQUIRE_REDIS=true
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/api/health/ready
-
-docker compose start worker
-# Heartbeat resumes → READY returns 200
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/api/health/ready
-
-# Optional: same pattern for scheduler
-docker compose stop scheduler
-# ...observe degrade...
-docker compose start scheduler
+BETA_MODE=true
 ```
 
-This validates **stale heartbeat detection**, not merely config flags.
+Optional frontend build fallback: `REACT_APP_BETA_MODE=true` (runtime public config wins).
+
+When enabled:
+
+- Subtle **Assistify Beta** indicator in the authenticated product
+- **Send feedback** entry in the header
+- Owner/admin **Beta feedback** settings tab
+
+## 4. Set AI daily limit
+
+```bash
+AI_DAILY_REQUEST_LIMIT=200
+```
+
+- Per-workspace, server-side enforcement (not frontend-only)
+- `0` = unlimited (not recommended for shared owner keys)
+- Exceeded requests return **HTTP 429** with a clear message
+- Owner/admin: Settings → Operations (AI requests today / daily limit)
+- Also mirrored on Settings → Billing as informational usage (no payment)
+
+## 5. Create / invite first beta users
+
+1. Register the owner account at `/register` (or use an existing owner).
+2. Complete onboarding (no sample/demo data is seeded).
+3. Settings → Team → invite by email.
+4. **If `EMAIL_SENDING_ENABLED=false`:** the API creates the invite but does **not** pretend an email was sent. In development, copy the returned invite link and share it manually.
+5. Invitee opens `/invite/:token`, accepts, and joins the same workspace.
+
+Do not create a second user system — use Team invites only.
+
+## 6. Inspect feedback
+
+- In-app: Settings → **Beta feedback** (owner/admin)
+- API: `GET /api/feedback` (admin), `POST /api/feedback` (any authenticated user)
+
+Categories: Bug · Idea · Confusing · Other. Stored in MongoDB, org-scoped.
+
+## 7. Inspect AI usage
+
+- Settings → Operations → **AI requests today** / **AI daily limit**
+- `GET /api/ops/ai-usage` (admin)
+- `GET /api/ops/status` includes `aiUsage`, `betaFeedbackCount`, workspace counts, worker/scheduler
+
+## 8. Shut down safely
+
+```bash
+docker compose stop
+# or fully tear down:
+docker compose down
+# volumes (destroys local Mongo data — only if intentional):
+docker compose down -v
+```
+
+## Required / important env
+
+| Var | Notes |
+|-----|--------|
+| `BETA_MODE` | `true` for closed beta UI |
+| `AI_DAILY_REQUEST_LIMIT` | Default `200` |
+| `OPENAI_API_KEY` | Host env for compose; never commit |
+| `JWT_SECRET` | Strong outside local |
+| `EMAIL_SENDING_ENABLED` | Keep `false` unless Resend is ready |
+| `ENABLE_DEMO_LOGIN` / `ENABLE_DEMO_SEED` | Keep `false` |
+| `REACT_APP_BILLING_ENABLED` | `false` |
+| `LEGAL_*` | Optional placeholders — see [`KVK_LAUNCH_INFO.md`](./KVK_LAUNCH_INFO.md) |
 
 ## Live AI smoke (opt-in)
 
@@ -78,51 +106,22 @@ This validates **stale heartbeat detection**, not merely config flags.
 export RUN_LIVE_AI_TESTS=true
 export OPENAI_API_KEY=sk-...   # real key; never sk-test*
 cd backend && .venv/bin/pytest tests/test_sprint27_beta_runtime.py -k live -q
-# or Sprint 26 provider smoke:
-.venv/bin/pytest tests/test_sprint26_async_security.py::test_live_ai_smoke_optional -q
 ```
 
-If the key is missing: tests **skip (PENDING)** — do not treat as pass.
+Do **not** fake a PASS if the provider is unavailable.
 
-## Inspect logs (sanity)
+## Windows verification commands (operator)
 
-```bash
-docker compose logs backend --tail=200
-docker compose logs worker --tail=200
-docker compose logs scheduler --tail=200
-docker compose logs redis --tail=100
-```
-
-Flag: restart loops, repeated exceptions, Redis connection errors, stale heartbeats, auth storms, any `sk-` / API key material in output.
-
-## Reset local beta test data
-
-```bash
-docker compose down
-docker volume rm $(docker volume ls -q | grep mongo_data) 2>/dev/null || true
-# Or wipe DB only while stack is up:
-# docker compose exec mongo mongosh assistify --eval 'db.dropDatabase()'
+```powershell
+docker compose build
 docker compose up --force-recreate
+python scripts/check_local_release.py
 ```
 
-## Stop the stack
+## Related
 
-```bash
-docker compose down
-# Add -v to also delete the mongo volume
-```
-
-## OAuth / email readiness
-
-- OAuth: optional. `GET /api/config/public` → `oauth.{google,microsoft,slack}` = `configured` | `not_configured`.
-- Authenticated: `GET /api/integrations/status` → `oauthReadiness` + `redirectUriTemplates` (uses `API_URL`).
-- Never fake a successful OAuth connection without real credentials.
-- Email: console + `EMAIL_SENDING_ENABLED=false` → status `configured_disabled`, `canSend=false`.
-
-## Known limitations
-
-- **Billing / Stripe:** off / pending
-- **OAuth:** optional; providers may be `not_configured`
-- **Custom agents:** hidden / not part of closed beta surface
-- **Production deploy:** not automated by this sprint
-- **Demo login:** disabled
+- [`CLOSED_BETA_CHECKLIST.md`](./CLOSED_BETA_CHECKLIST.md)
+- [`KVK_READINESS_CHECKLIST.md`](./KVK_READINESS_CHECKLIST.md)
+- [`KVK_LAUNCH_INFO.md`](./KVK_LAUNCH_INFO.md)
+- [`ASYNC_WORKERS.md`](./ASYNC_WORKERS.md)
+- [`AUTH_COOKIES.md`](./AUTH_COOKIES.md)

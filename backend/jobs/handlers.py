@@ -102,8 +102,11 @@ async def handle_webhook(job: dict):
 async def handle_ai_summary(job: dict):
     # Optional deferred summary — invoke existing router logic pieces
     from core import db, now_iso, ai_service
+    from ai_usage import bind_ai_org
     payload = job.get("payload") or {}
     org_id = job.get("organizationId")
+    if org_id:
+        bind_ai_org(org_id)
     thread_id = payload.get("threadId")
     t = await db.email_threads.find_one({"id": thread_id, "organizationId": org_id}, {"_id": 0})
     if not t:

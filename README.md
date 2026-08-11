@@ -1,8 +1,30 @@
-# Assistify OS (Operations Hub)
+# Assistify
 
-Premium AI business operating system for agencies and founders — clients, projects, CRM, documents, automations, and Knowledge Brain in one dark-theme workspace.
+AI-powered business operating system for small businesses and freelancers — manage
+clients, projects, tasks, AI-assisted work, proposals/contracts/invoices, and workflow
+in one workspace.
 
 This repository is the **source of truth**. Do not regenerate the product from scratch.
+
+## Closed beta (Sprint 28)
+
+See:
+
+- [`docs/CLOSED_BETA_RUNBOOK.md`](./docs/CLOSED_BETA_RUNBOOK.md) — start stack, beta mode, AI limit, invites, feedback, shutdown
+- [`docs/CLOSED_BETA_CHECKLIST.md`](./docs/CLOSED_BETA_CHECKLIST.md)
+- [`docs/KVK_READINESS_CHECKLIST.md`](./docs/KVK_READINESS_CHECKLIST.md)
+- [`docs/KVK_LAUNCH_INFO.md`](./docs/KVK_LAUNCH_INFO.md)
+
+Quick Docker path (Windows operator):
+
+```powershell
+$env:OPENAI_API_KEY="sk-..."
+docker compose build
+docker compose up --force-recreate
+python scripts/check_local_release.py
+```
+
+Key closed-beta env: `BETA_MODE=true`, `AI_DAILY_REQUEST_LIMIT=200`, demo/billing flags off.
 
 ## Architecture
 
@@ -11,8 +33,8 @@ This repository is the **source of truth**. Do not regenerate the product from s
 | Frontend | React 19 + React Router 7, Craco/CRA, Tailwind, shadcn/ui |
 | Backend | FastAPI + Uvicorn |
 | Database | MongoDB (Motor/PyMongo) |
-| Auth | JWT access (30m) + rotating refresh (httpOnly cookie), bcrypt passwords, org tenancy |
-| AI | `AI_PROVIDER=openai` (OpenAI API) or `emergent` (optional Emergent proxy) |
+| Auth | Cookie-only JWT access (30m) + rotating refresh (httpOnly), CSRF, bcrypt, org tenancy |
+| AI | `AI_PROVIDER=openai` (OpenAI API) or `emergent` (optional proxy) |
 | Storage | `STORAGE_PROVIDER=local` (filesystem) or `emergent` (optional object store) |
 
 ```

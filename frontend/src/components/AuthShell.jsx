@@ -26,7 +26,14 @@ export function AuthShell({ title, subtitle, children, footer }) {
             <div>Opportunities, documents, and automations without tool-hopping</div>
           </div>
         </div>
-        <p className="relative z-10 text-xs text-zinc-600">© 2026 Assistify OS</p>
+        <p className="relative z-10 text-xs text-zinc-600">
+          © 2026 Assistify ·{" "}
+          <a href="/privacy" className="hover:text-zinc-400">Privacy</a>
+          {" · "}
+          <a href="/terms" className="hover:text-zinc-400">Terms</a>
+          {" · "}
+          <a href="/beta-notice" className="hover:text-zinc-400">Beta notice</a>
+        </p>
       </div>
 
       <div className="flex items-center justify-center p-6 sm:p-12">

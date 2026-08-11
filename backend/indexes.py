@@ -63,6 +63,8 @@ async def ensure_indexes(db) -> dict:
         ("job_runs.idempotency", db.job_runs.create_index([("idempotencyKey", 1)], unique=True, sparse=True)),
         ("organizations.id", db.organizations.create_index("id", unique=True)),
         ("automation_logs", db.automation_logs.create_index([("organizationId", 1), ("created_at", -1)])),
+        ("beta_feedback.org", db.beta_feedback.create_index([("organizationId", 1), ("createdAt", -1)])),
+        ("ai_usage_daily", db.ai_usage_daily.create_index([("organizationId", 1), ("day", 1)], unique=True)),
     ]
 
     for label, coro in specs:

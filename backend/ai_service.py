@@ -83,7 +83,18 @@ class AIService:
     def with_model(self, provider: str, model: str):
         return AIService(self.api_key, provider, model)
 
+    async def _before_provider_call(self) -> None:
+        """Server-side AI daily limit (per bound workspace). No-op when unbound."""
+        try:
+            from ai_usage import enforce_bound_ai_limit
+            await enforce_bound_ai_limit()
+        except Exception as e:
+            from fastapi import HTTPException
+            if isinstance(e, HTTPException):
+                raise
+            logger.debug("AI usage enforce skipped: %s", e)
     async def complete(self, system_message: str, prompt: str, session_id: str = None) -> str:
+        await self._before_provider_call()
         if self.provider == "openai":
             return await self._complete_openai(system_message, prompt)
         if self.provider == "emergent":
@@ -96,6 +107,7 @@ class AIService:
 
     async def stream(self, system_message: str, prompt: str, session_id: str = None) -> AsyncIterator[str]:
         """Yield text deltas for SSE endpoints."""
+        await self._before_provider_call()
         if self.provider == "openai":
             async for chunk in self._stream_openai(system_message, prompt):
                 yield chunk
