@@ -39,7 +39,7 @@ export function DashboardFirstRun() {
   const navigate = useNavigate();
   return (
     <div
-      className="rounded-2xl border border-brand-500/25 bg-gradient-to-br from-brand-600/10 via-zinc-950/80 to-transparent p-6 sm:p-8"
+      className="rounded-2xl border border-brand-500/25 bg-gradient-to-br from-brand-600/10 via-transparent to-transparent p-6 sm:p-8 theme-surface"
       data-testid="dashboard-first-run"
     >
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-400">{t("firstRun.eyebrow")}</p>
@@ -61,7 +61,7 @@ export function DashboardFirstRun() {
               className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-all ${
                 a.primary
                   ? "border-brand-500/40 bg-brand-600/15 hover:bg-brand-600/25"
-                  : "border-white/10 bg-zinc-950/80 hover:border-brand-500/30"
+                  : "border-white/10 bg-zinc-900/60 hover:border-brand-500/30"
               }`}
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-900 text-brand-400">

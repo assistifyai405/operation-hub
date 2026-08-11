@@ -153,7 +153,9 @@
 [data-theme="light"] .bg-black\/70,
 [data-theme="light"] .bg-black\/40,
 [data-theme="light"] .bg-zinc-950\/60,
-[data-theme="light"] .bg-zinc-950\/70 {
+[data-theme="light"] .bg-zinc-950\/70,
+[data-theme="light"] .bg-zinc-950\/80,
+[data-theme="light"] .bg-zinc-950\/40 {
   background-color: color-mix(in srgb, var(--theme-surface) 88%, transparent) !important;
 }
 [data-theme="light"] .bg-zinc-900,
