@@ -1815,5 +1815,23 @@
     "downloadPdf": "PDF downloaden",
     "exportWord": "Naar Word exporteren",
     "sendToClient": "Naar klant sturen"
+  },
+  "inbox": {
+    "views": {
+      "all": "Alles",
+      "unread": "Ongelezen",
+      "assigned": "Aan mij toegewezen",
+      "linked": "Gekoppeld",
+      "unlinked": "Niet gekoppeld"
+    }
+  },
+  "emails": {
+    "tabs": {
+      "drafts": "Concepten",
+      "awaiting": "Wacht op goedkeuring",
+      "scheduled": "Gepland",
+      "sent": "Verstuurd",
+      "failed": "Mislukt"
+    }
   }
 }

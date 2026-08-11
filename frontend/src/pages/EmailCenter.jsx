@@ -1,6 +1,8 @@
 import PageIntro from "@/components/PageIntro";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocale } from "@/context/LocaleContext";
+import { formatDateTime } from "@/i18n/format";
 import {
   Loader2, Mail, Plus, Send, Check, X, RotateCcw, Sparkles, Pencil, Ban, Search,
 } from "lucide-react";
@@ -19,11 +21,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const TABS = [
-  { id: "drafts", label: "Drafts" },
-  { id: "awaiting_approval", label: "Awaiting approval" },
-  { id: "scheduled", label: "Scheduled" },
-  { id: "sent", label: "Sent" },
-  { id: "failed", label: "Failed" },
+  { id: "drafts", labelKey: "emails.tabs.drafts" },
+  { id: "awaiting_approval", labelKey: "emails.tabs.awaiting" },
+  { id: "scheduled", labelKey: "emails.tabs.scheduled" },
+  { id: "sent", labelKey: "emails.tabs.sent" },
+  { id: "failed", labelKey: "emails.tabs.failed" },
 ];
 
 const statusStyle = {
@@ -40,14 +42,6 @@ const statusStyle = {
   rejected: "bg-rose-500/15 text-rose-300",
 };
 
-const fmtDate = (d) => {
-  if (!d) return "—";
-  try {
-    return new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return "—";
-  }
-};
 
 const emptyForm = () => ({
   to: "", cc: "", subject: "", textBody: "",
@@ -55,6 +49,8 @@ const emptyForm = () => ({
 
 export default function EmailCenter() {
   const { t } = useTranslation();
+  const { locale } = useLocale();
+  const fmtDate = (d) => formatDateTime(d, locale);
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const canApprove = user?.role === "owner" || user?.role === "admin";
@@ -234,19 +230,19 @@ export default function EmailCenter() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-1">
-          {TABS.map((t) => (
+          {TABS.map((tabItem) => (
             <button
-              key={t.id}
+              key={tabItem.id}
               type="button"
-              data-testid={`email-tab-${t.id}`}
-              onClick={() => setTab(t.id)}
+              data-testid={`email-tab-${tabItem.id}`}
+              onClick={() => setTab(tabItem.id)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                tab === t.id ? "bg-brand-600/15 text-brand-300" : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+                tab === tabItem.id ? "bg-brand-600/15 text-brand-300" : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
               }`}
             >
-              {t.label}
-              {typeof counts[t.id] === "number" && (
-                <span className="ml-1.5 text-zinc-500">{counts[t.id]}</span>
+              {t(tabItem.labelKey)}
+              {typeof counts[tabItem.id] === "number" && (
+                <span className="ml-1.5 text-zinc-500">{counts[tabItem.id]}</span>
               )}
             </button>
           ))}

@@ -84,14 +84,9 @@ test.describe("Sprint 29.5 extended localization journey", () => {
       const name = page.getByTestId("project-name-input");
       if (await name.count()) {
         await name.first().fill(`NL Project ${runId}`);
-        // Optional client select
-        const clientTrigger = page.getByTestId("project-client-trigger");
-        if (await clientTrigger.count()) {
-          await clientTrigger.click().catch(() => {});
-          const opt = page.locator("[data-testid^='project-client-']").first();
-          if (await opt.count()) await opt.click().catch(() => {});
-        }
         await page.getByTestId("project-save-btn").click();
+        // Wait for dialog to close
+        await expect(page.getByTestId("project-dialog")).toBeHidden({ timeout: 15_000 }).catch(() => {});
       }
     }
 

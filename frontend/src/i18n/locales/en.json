@@ -1815,5 +1815,23 @@
     "downloadPdf": "Download PDF",
     "exportWord": "Export Word",
     "sendToClient": "Send to Client"
+  },
+  "inbox": {
+    "views": {
+      "all": "All",
+      "unread": "Unread",
+      "assigned": "Assigned to me",
+      "linked": "Linked",
+      "unlinked": "Unlinked"
+    }
+  },
+  "emails": {
+    "tabs": {
+      "drafts": "Drafts",
+      "awaiting": "Awaiting approval",
+      "scheduled": "Scheduled",
+      "sent": "Sent",
+      "failed": "Failed"
+    }
   }
 }

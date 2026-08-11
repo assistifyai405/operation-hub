@@ -1,6 +1,8 @@
 import PageIntro from "@/components/PageIntro";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocale } from "@/context/LocaleContext";
+import { formatDateTime } from "@/i18n/format";
 import {
   Loader2, Mail, RefreshCw, Link2, Unlink, Sparkles, User, Search, Inbox as InboxIcon,
 } from "lucide-react";
@@ -11,25 +13,18 @@ import { inboxApi } from "@/lib/api";
 import EmptyState from "@/components/EmptyState";
 import HelpTip from "@/components/HelpTip";
 
-const fmtTime = (d) => {
-  if (!d) return "—";
-  try {
-    return new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return "—";
-  }
-};
-
 const VIEWS = [
-  { id: "all", label: "All" },
-  { id: "unread", label: "Unread" },
-  { id: "assigned", label: "Assigned to me" },
-  { id: "linked", label: "Linked" },
-  { id: "unlinked", label: "Unlinked" },
+  { id: "all", labelKey: "inbox.views.all" },
+  { id: "unread", labelKey: "inbox.views.unread" },
+  { id: "assigned", labelKey: "inbox.views.assigned" },
+  { id: "linked", labelKey: "inbox.views.linked" },
+  { id: "unlinked", labelKey: "inbox.views.unlinked" },
 ];
 
 export default function Inbox() {
   const { t } = useTranslation();
+  const { locale } = useLocale();
+  const fmtTime = (d) => formatDateTime(d, locale);
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -253,7 +248,7 @@ export default function Inbox() {
                 <button key={v.id} type="button" onClick={() => { setView(v.id); setThreads((t) => ({ ...t, page: 1 })); }}
                   className={`flex w-full rounded-lg px-3 py-2 text-left text-sm ${view === v.id ? "bg-brand-600/15 text-brand-300" : "text-zinc-400 hover:bg-zinc-900"}`}
                   data-testid={`inbox-view-${v.id}`}
-                >{v.label}</button>
+                >{v.labelKey ? t(v.labelKey) : v.label}</button>
               ))}
             </div>
           </div>
