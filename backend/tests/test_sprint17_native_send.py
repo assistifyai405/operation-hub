@@ -19,7 +19,7 @@ if str(BACKEND) not in sys.path:
 from integrations.crypto import encrypt_credentials  # noqa: E402
 from inbox.gmail_send import build_mime  # noqa: E402
 from inbox.transport_errors import map_http_error, EXPIRED_AUTH, RATE_LIMITED  # noqa: E402
-from conftest import auth_json
+from conftest import auth_json, clear_rate_limits  # noqa: E402
 
 
 @pytest.fixture
@@ -558,10 +558,13 @@ def test_member_cannot_send_native(client, mongo, sending_on):
     }).json()
     raw = (inv.get("invitationLink") or "").rsplit("/invite/", 1)[-1]
     _rl_store.clear()
-    mem = client.post("/api/auth/register", json={
+    clear_rate_limits()
+    mem_r = client.post("/api/auth/register", json={
         "firstName": "M", "lastName": "M", "email": inv["email"],
         "password": "Password123!", "invitationToken": raw,
-    }).json()
+    })
+    assert mem_r.status_code == 200, mem_r.text
+    mem = auth_json(client, mem_r)
     r = client.post(f"/api/emails/{eid}/send", headers=_auth(mem["accessToken"]))
     assert r.status_code == 403
 

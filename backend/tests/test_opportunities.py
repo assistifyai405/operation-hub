@@ -1,61 +1,113 @@
-"""Backend tests for the AI Opportunities & Recommendations sprint (iteration_23).
-Covers: list, brief, health, dismiss (7d snooze), archive-project, org-isolation.
+"""Opportunities tests — repaired for cookie-auth TestClient (Sprint 26).
+
+No longer depends on demo-login seeds. Creates real workspace conditions.
 """
-import os
+from __future__ import annotations
+
+import sys
+import uuid
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
 import pytest
-import requests
 from conftest import auth_json
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://operations-hub-75.preview.emergentagent.com").rstrip("/")
-API = f"{BASE_URL}/api"
+BACKEND = Path(__file__).resolve().parents[1]
+if str(BACKEND) not in sys.path:
+    sys.path.insert(0, str(BACKEND))
 
 
-def _demo_client():
-    s = requests.Session()
-    s.headers.update({"Content-Type": "application/json"})
-    r = s.post(f"{API}/auth/demo", json={})
-    assert r.status_code == 200, f"demo login failed: {r.status_code} {r.text[:200]}"
-    tok = auth_json(None, r).get("accessToken")
-    s.headers.update({"Authorization": f"Bearer {tok}"})
-    return s, r.json()
+def _clear_rl():
+    from dependencies import _rl_store
+    _rl_store.clear()
+    try:
+        from redis_client import get_redis
+        r = get_redis()
+        if r:
+            for k in list(r.scan_iter("assistify:rl:*")):
+                r.delete(k)
+    except Exception:
+        pass
+
+
+@pytest.fixture
+def client(api_client):
+    c, _ = api_client
+    return c
+
+
+def _register_workspace(client, company="Opp Co"):
+    _clear_rl()
+    email = f"opp_{uuid.uuid4().hex[:10]}@example.com"
+    r = client.post(
+        "/api/auth/register",
+        json={
+            "firstName": "Opp",
+            "lastName": "User",
+            "email": email,
+            "password": "Password123!",
+            "company": company,
+        },
+    )
+    assert r.status_code == 200, r.text
+    data = auth_json(client, r)
+    h = {"Authorization": f"Bearer {data['accessToken']}"}
+    # Seed conditions that should generate opportunities
+    cr = client.post("/api/clients", headers=h, json={"name": "Stale Client", "contact": "S", "email": "s@o.test", "status": "Active"})
+    assert cr.status_code == 200
+    cid = cr.json()["id"]
+    pr = client.post(
+        "/api/projects",
+        headers=h,
+        json={"name": "No Deadline Proj", "client_id": cid, "status": "Active"},
+    )
+    assert pr.status_code == 200
+    pid = pr.json()["id"]
+    due = (datetime.now(timezone.utc) - timedelta(days=3)).date().isoformat()
+    tr = client.post(
+        "/api/tasks",
+        headers=h,
+        json={"title": "Overdue Opp Task", "project_id": pid, "priority": "High", "due": due, "done": False},
+    )
+    assert tr.status_code == 200
+    return {"headers": h, "email": email, "client_id": cid, "project_id": pid, "task_id": tr.json()["id"]}
 
 
 @pytest.fixture(scope="module")
-def client():
-    s, _ = _demo_client()
-    return s
+def workspace(api_client):
+    c, _ = api_client
+    return _register_workspace(c, company="Opp Main")
 
 
 @pytest.fixture(scope="module")
-def client2():
-    """A second, independent demo org for isolation tests."""
-    s, _ = _demo_client()
-    return s
+def workspace2(api_client):
+    c, _ = api_client
+    return _register_workspace(c, company="Opp Other")
 
 
-# ---------------- GET /api/opportunities ----------------
 class TestOpportunitiesList:
-    def test_shape_and_sort(self, client):
-        r = client.get(f"{API}/opportunities")
+    def test_shape_and_sort(self, client, workspace):
+        r = client.get("/api/opportunities", headers=workspace["headers"])
         assert r.status_code == 200
         data = r.json()
         for k in ("items", "total", "total_time_saved", "counts", "generated_at"):
             assert k in data, f"missing {k}"
         assert isinstance(data["items"], list)
         assert set(data["counts"].keys()) >= {"critical", "high", "medium", "low"}
-        # sorted by score desc
         scores = [i["score"] for i in data["items"]]
         assert scores == sorted(scores, reverse=True)
-        # demo seeds ~6 opps
-        assert data["total"] >= 3, f"expected demo to seed opportunities, got {data['total']}"
+        # Real overdue/stale conditions should yield at least one opportunity
+        assert data["total"] >= 1, f"expected opportunities from seeded conditions, got {data['total']}"
 
-    def test_item_fields(self, client):
-        r = client.get(f"{API}/opportunities")
+    def test_item_fields(self, client, workspace):
+        r = client.get("/api/opportunities", headers=workspace["headers"])
         items = r.json()["items"]
         assert items, "expected at least one opportunity"
         it = items[0]
-        for k in ("id", "key", "type", "title", "explanation", "why", "time_saved",
-                  "confidence", "score", "priority", "color", "icon", "action", "entity"):
+        for k in (
+            "id", "key", "type", "title", "explanation", "why", "time_saved",
+            "confidence", "score", "priority", "color", "icon", "action", "entity",
+        ):
             assert k in it, f"missing field {k} on item"
         assert it["priority"] in ("Critical", "High", "Medium", "Low")
         assert it["color"] in ("red", "orange", "yellow", "green")
@@ -66,10 +118,9 @@ class TestOpportunitiesList:
         assert "project_name" in it["entity"] and "client_name" in it["entity"]
 
 
-# ---------------- GET /api/opportunities/brief ----------------
 class TestBrief:
-    def test_brief(self, client):
-        r = client.get(f"{API}/opportunities/brief")
+    def test_brief(self, client, workspace):
+        r = client.get("/api/opportunities/brief", headers=workspace["headers"])
         assert r.status_code == 200
         b = r.json()
         for k in ("greeting", "lines", "total_time_saved", "total", "top"):
@@ -79,10 +130,9 @@ class TestBrief:
         assert len(b["top"]) <= 3
 
 
-# ---------------- GET /api/opportunities/health ----------------
 class TestHealth:
-    def test_health(self, client):
-        r = client.get(f"{API}/opportunities/health")
+    def test_health(self, client, workspace):
+        r = client.get("/api/opportunities/health", headers=workspace["headers"])
         assert r.status_code == 200
         h = r.json()
         assert 0 <= h["score"] <= 100
@@ -96,53 +146,46 @@ class TestHealth:
         assert isinstance(h["top_reasons"], list)
 
 
-# ---------------- POST /api/opportunities/dismiss ----------------
 class TestDismiss:
-    def test_dismiss_hides_key(self, client):
-        r = client.get(f"{API}/opportunities")
+    def test_dismiss_hides_key(self, client, workspace):
+        r = client.get("/api/opportunities", headers=workspace["headers"])
         items = r.json()["items"]
         if not items:
             pytest.skip("no opportunities to dismiss")
         key = items[0]["key"]
-        d = client.post(f"{API}/opportunities/dismiss", json={"key": key})
+        d = client.post("/api/opportunities/dismiss", headers=workspace["headers"], json={"key": key})
         assert d.status_code == 200 and d.json().get("ok") is True
-        # reload
-        r2 = client.get(f"{API}/opportunities")
+        r2 = client.get("/api/opportunities", headers=workspace["headers"])
         keys = {i["key"] for i in r2.json()["items"]}
         assert key not in keys, f"dismissed key {key} still present"
 
 
-# ---------------- POST /api/opportunities/archive-project ----------------
 class TestArchive:
-    def test_404_unknown(self, client):
-        r = client.post(f"{API}/opportunities/archive-project/does-not-exist-xyz")
+    def test_404_unknown(self, client, workspace):
+        r = client.post("/api/opportunities/archive-project/does-not-exist-xyz", headers=workspace["headers"])
         assert r.status_code == 404
 
-    def test_archive_project(self, client):
-        # Find any non-archived project on this org
-        pr = client.get(f"{API}/projects")
+    def test_archive_project(self, client, workspace):
+        pr = client.get("/api/projects", headers=workspace["headers"])
         assert pr.status_code == 200
         projs = pr.json() if isinstance(pr.json(), list) else pr.json().get("items", [])
         target = next((p for p in projs if p.get("status") != "Archived"), None)
         if not target:
             pytest.skip("no non-archived project")
         pid = target["id"]
-        r = client.post(f"{API}/opportunities/archive-project/{pid}")
+        r = client.post(f"/api/opportunities/archive-project/{pid}", headers=workspace["headers"])
         assert r.status_code == 200
         assert r.json().get("status") == "Archived"
-        # verify via GET
-        g = client.get(f"{API}/projects/{pid}")
+        g = client.get(f"/api/projects/{pid}", headers=workspace["headers"])
         assert g.status_code == 200
         assert g.json().get("status") == "Archived"
 
 
-# ---------------- Org isolation ----------------
 class TestOrgIsolation:
-    def test_isolation(self, client, client2):
-        r1 = client.get(f"{API}/opportunities").json()
-        r2 = client2.get(f"{API}/opportunities").json()
+    def test_isolation(self, client, workspace, workspace2):
+        r1 = client.get("/api/opportunities", headers=workspace["headers"]).json()
+        r2 = client.get("/api/opportunities", headers=workspace2["headers"]).json()
         keys1 = {i["key"] for i in r1["items"]}
         keys2 = {i["key"] for i in r2["items"]}
-        # Distinct demo orgs should not share opportunity keys (which include entity IDs)
         overlap = keys1 & keys2
         assert not overlap, f"unexpected cross-org overlap: {overlap}"

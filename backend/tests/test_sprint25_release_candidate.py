@@ -18,6 +18,14 @@ if str(BACKEND) not in sys.path:
 def _clear_rl():
     from dependencies import _rl_store
     _rl_store.clear()
+    try:
+        from redis_client import get_redis
+        r = get_redis()
+        if r:
+            for k in list(r.scan_iter("assistify:rl:*")):
+                r.delete(k)
+    except Exception:
+        pass
 
 
 @pytest.fixture

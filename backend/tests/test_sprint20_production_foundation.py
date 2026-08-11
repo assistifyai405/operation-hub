@@ -94,8 +94,14 @@ def test_production_redis_required_when_worker():
     from config import ConfigError
     env = _base_prod(WORKER_ENABLED="true")
     env.pop("REDIS_URL", None)
-    with pytest.raises(ConfigError, match="REDIS_URL"):
-        _with_env(env)
+    # Ambient REDIS_URL from the test runner must also be cleared
+    old = os.environ.pop("REDIS_URL", None)
+    try:
+        with pytest.raises(ConfigError, match="REDIS_URL"):
+            _with_env(env)
+    finally:
+        if old is not None:
+            os.environ["REDIS_URL"] = old
 
 
 def test_production_settings_load_ok():

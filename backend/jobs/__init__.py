@@ -76,7 +76,6 @@ async def enqueue(
         "status": "queued",
         "attempts": 0,
         "maxAttempts": max_attempts,
-        "idempotencyKey": idempotency_key,
         "requestId": request_id,
         "lastError": None,
         "createdAt": now_iso(),
@@ -84,6 +83,9 @@ async def enqueue(
         "startedAt": None,
         "finishedAt": None,
     }
+    # Omit null idempotencyKey so unique sparse indexes allow multiple unset jobs
+    if idempotency_key:
+        doc["idempotencyKey"] = idempotency_key
     try:
         await db.job_runs.insert_one(dict(doc))
     except Exception:
