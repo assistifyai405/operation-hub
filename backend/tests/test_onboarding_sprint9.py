@@ -200,22 +200,26 @@ def test_checklist_shape_for_new_user(client):
     r = client.get("/api/onboarding/checklist", headers=a["headers"])
     assert r.status_code == 200
     j = r.json()
-    assert j["total"] == 6 and j["done"] == 0 and j["percent"] == 0
+    # Account is always complete for authenticated users
+    assert j["total"] == 5 and j["done"] == 1 and j["percent"] == 20
     keys = [i["key"] for i in j["items"]]
-    assert set(keys) == {"profile", "client", "project", "task", "copilot", "agents"}
+    assert set(keys) == {"account", "client", "project", "task", "copilot"}
     for i in j["items"]:
-        assert i["done"] is False and "to" in i and "label" in i
+        assert "to" in i and "label" in i
+        if i["key"] == "account":
+            assert i["done"] is True
+        else:
+            assert i["done"] is False
     assert j.get("dismissed") is False
-    assert "Assistify" in (j.get("title") or "")
+    assert j.get("title") == "Getting started"
 
 
 def test_checklist_reflects_flags_and_profile(client):
     a = register_user(client, company="CheckFlags")
     client.post("/api/onboarding/flag", headers=a["headers"], json={"key": "copilot"})
-    client.post("/api/onboarding/flag", headers=a["headers"], json={"key": "agents"})
     j = client.get("/api/onboarding/checklist", headers=a["headers"]).json()
     st = {i["key"]: i["done"] for i in j["items"]}
-    assert st["copilot"] is True and st["agents"] is True
+    assert st["account"] is True and st["copilot"] is True
     assert j["done"] >= 2
 
 
