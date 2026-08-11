@@ -90,14 +90,19 @@ describe("Sprint 23 empty states and CTAs", () => {
   test("landing/auth copy avoids fake trial language", () => {
     const login = read("Login.jsx");
     const shell = read("../components/AuthShell.jsx");
+    const en = JSON.parse(read("../i18n/locales/en.json"));
     expect(login).not.toMatch(/Start free trial/);
-    expect(login).toMatch(/Create an account/);
-    expect(shell).toMatch(/AI-powered business operating system/);
+    expect(login).toMatch(/t\("auth\.createAccount"\)/);
+    expect(en.auth.createAccount).toMatch(/Create (an )?account/);
+    expect(shell).toMatch(/t\("auth\.heroTitle"\)/);
+    expect(en.auth.heroTitle).toMatch(/AI-powered business operating system/);
   });
 
   test("billing remains setup-pending without fake upgrade when disabled", () => {
     const layout = read("../components/Layout.jsx");
-    expect(layout).toMatch(/Billing is not available during beta/);
+    const en = JSON.parse(read("../i18n/locales/en.json"));
+    expect(layout).toMatch(/t\("billing\.notAvailable"\)/);
+    expect(en.billing.notAvailable).toMatch(/Billing is not available during beta/);
     expect(layout).toMatch(/sidebar-billing-pending/);
   });
 });
