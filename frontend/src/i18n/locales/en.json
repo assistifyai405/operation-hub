@@ -1458,6 +1458,73 @@
       "insights": "AI Sales Insights",
       "leadsNeedingAttention": "Leads needing attention",
       "noneStalled": "Nothing stalled — your pipeline is moving."
+    },
+    "leadDrawer": {
+      "scoreConfidence": "Score {{score}} · {{confidence}}% confidence",
+      "noCompany": "No company linked",
+      "delete": "Delete lead",
+      "deleteConfirm": "Delete this lead?",
+      "convertProject": "Convert to project",
+      "openProject": "Open project",
+      "salesAssistant": "AI Sales Assistant",
+      "recommendedFollowups": "Recommended follow-ups",
+      "timeline": "Timeline",
+      "fields": {
+        "stage": "Stage",
+        "value": "Value ($)",
+        "probability": "Probability (%)",
+        "auto": "Auto",
+        "expectedClose": "Expected close",
+        "owner": "Owner",
+        "tags": "Tags",
+        "tagsPlaceholder": "comma, separated",
+        "notes": "Notes"
+      },
+      "oneClick": {
+        "title": "One-click AI",
+        "proposal": "Generate Proposal",
+        "contract": "Generate Contract",
+        "invoice": "Generate Invoice",
+        "improve": "Improve Proposal",
+        "followup": "Write Follow-up",
+        "meeting": "Prepare Meeting",
+        "translate": "Translate Email",
+        "summarizeCustomer": "Summarize Customer"
+      },
+      "toasts": {
+        "loadError": "Couldn't load lead",
+        "saved": "Lead saved",
+        "deleted": "Lead deleted",
+        "openingAssistant": "Opening the AI Assistant…",
+        "openingWorkspace": "Opening the workspace…",
+        "projectLinked": "Project linked"
+      }
+    },
+    "salesBrief": {
+      "failed": "AI brief failed",
+      "analyzing": "Analyzing this deal…",
+      "generate": "Generate AI Sales Brief",
+      "dealHealth": "Deal health",
+      "winProbability": "Win prob.",
+      "urgency": "Urgency",
+      "risk": "Risk",
+      "nextBestAction": "Next best action",
+      "relationshipSummary": "Relationship summary",
+      "conversationSummary": "Conversation summary",
+      "suggestedFollowup": "Suggested follow-up",
+      "objections": "Objections detected",
+      "missingInformation": "Missing information",
+      "regenerate": "Regenerate brief",
+      "health": {
+        "healthy": "Healthy",
+        "atRisk": "At Risk",
+        "critical": "Critical"
+      },
+      "level": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      }
     }
   },
   "pipeline": {
@@ -1641,6 +1708,241 @@
       "prepared": "Prepared for approval",
       "draftUpdated": "Draft updated",
       "disabled": "Automation disabled"
+    },
+    "meta": {
+      "modes": {
+        "suggest": {
+          "label": "Suggest only",
+          "short": "Suggest",
+          "description": "Detects and recommends — never prepares or runs."
+        },
+        "prepare": {
+          "label": "Prepare for approval",
+          "short": "Prepare",
+          "description": "Prepares drafts; you confirm before anything runs."
+        },
+        "auto": {
+          "label": "Fully automatic",
+          "short": "Automatic",
+          "description": "Safe internal actions run automatically; risky actions still need approval."
+        }
+      },
+      "risks": {
+        "low": "Low risk",
+        "medium": "Needs review",
+        "high": "High risk"
+      },
+      "kinds": {
+        "internal": "Internal",
+        "external": "Client-facing",
+        "generative": "AI draft",
+        "destructive": "Destructive"
+      }
+    },
+    "builder": {
+      "newAutomation": "New automation",
+      "editTitle": "Edit automation",
+      "createTitle": "Create automation",
+      "description": "Build a rule: when something happens, optionally check conditions, then prepare or run actions.",
+      "name": "Name",
+      "namePlaceholder": "e.g. Chase overdue enterprise invoices",
+      "when": "When",
+      "chooseTrigger": "Choose a trigger",
+      "days": "days",
+      "if": "If",
+      "addCondition": "Add condition",
+      "noConditions": "No conditions — the automation runs for every match.",
+      "valuePlaceholder": "value",
+      "removeCondition": "Remove condition",
+      "then": "Then",
+      "executionMode": "Execution mode",
+      "createAction": "Create automation",
+      "options": {
+        "triggers": {
+          "proposal_not_sent": {
+            "label": "Proposal not sent",
+            "description": "A proposal has been ready but not sent for X days."
+          },
+          "proposal_no_reply": {
+            "label": "Proposal sent, no reply",
+            "description": "A sent proposal hasn't had a reply for X days."
+          },
+          "contract_unsigned": {
+            "label": "Contract unsigned",
+            "description": "A contract is awaiting signature for X days."
+          },
+          "invoice_due_soon": {
+            "label": "Invoice due soon",
+            "description": "An invoice is due within X days."
+          },
+          "invoice_overdue": {
+            "label": "Invoice overdue",
+            "description": "An invoice is past its due date and unpaid."
+          },
+          "client_inactive": {
+            "label": "Client inactive",
+            "description": "No activity with a client for X days."
+          },
+          "lead_needs_followup": {
+            "label": "Lead needs follow-up",
+            "description": "An open lead has gone quiet for X days."
+          },
+          "project_no_task": {
+            "label": "Project has no next task",
+            "description": "An active project has no open task."
+          },
+          "project_blocked": {
+            "label": "Project appears blocked",
+            "description": "An active project has stalled for X days."
+          },
+          "contract_signed": {
+            "label": "Contract signed",
+            "description": "A contract was just signed — prepare the project."
+          },
+          "project_completed": {
+            "label": "Project completed",
+            "description": "A project was completed — prepare the invoice."
+          },
+          "new_client": {
+            "label": "New client added",
+            "description": "A client was added within the last X days."
+          },
+          "task_overdue": {
+            "label": "Task overdue",
+            "description": "A task is past its due date."
+          },
+          "inbound_message_received": {
+            "label": "Inbound email received",
+            "description": "A new inbox message was synchronized."
+          },
+          "unread_message_received": {
+            "label": "Unread inbox message",
+            "description": "An unread inbound message arrived."
+          },
+          "thread_created": {
+            "label": "Email thread created",
+            "description": "A new conversation thread was created from sync."
+          },
+          "message_linked_to_client": {
+            "label": "Email linked to client",
+            "description": "An inbox thread was linked to a client."
+          },
+          "message_linked_to_lead": {
+            "label": "Email linked to lead",
+            "description": "An inbox thread was linked to a lead."
+          }
+        },
+        "fields": {
+          "status": "Status",
+          "value": "Value",
+          "priority": "Priority",
+          "days_inactive": "Days inactive",
+          "invoice_amount": "Invoice amount",
+          "lead_score": "Lead score",
+          "tags": "Tags",
+          "owner": "Owner",
+          "client": "Client name",
+          "project": "Project name"
+        },
+        "operators": {
+          "eq": "equals",
+          "ne": "is not",
+          "gt": "greater than",
+          "gte": "at least",
+          "lt": "less than",
+          "lte": "at most",
+          "contains": "contains"
+        },
+        "actions": {
+          "create_task": "Create a task",
+          "add_note": "Add a note",
+          "change_internal_status": "Update internal status",
+          "notify_user": "Notify you",
+          "add_to_brief": "Add to your AI Brief",
+          "prepare_email": "Prepare an email",
+          "prepare_followup": "Prepare a follow-up",
+          "create_calendar_event": "Create calendar event",
+          "create_google_task": "Create Google Task",
+          "send_slack_message": "Send Slack message",
+          "send_discord_message": "Send Discord message",
+          "trigger_webhook": "Trigger webhook",
+          "generate_proposal": "Generate a proposal draft",
+          "generate_contract": "Generate a contract draft",
+          "generate_invoice": "Prepare an invoice draft",
+          "archive_project": "Archive the project"
+        }
+      }
+    },
+    "settingsPanel": {
+      "general": {
+        "title": "General",
+        "enable": "Enable automations",
+        "enableDescription": "Master switch. When off, nothing is detected, prepared or run.",
+        "defaultMode": "Default execution mode",
+        "defaultModeDescription": "Used by any automation that doesn't override it.",
+        "safeAutomatic": "Run safe internal actions automatically",
+        "safeAutomaticDescription": "Tasks, notes, notifications and internal status changes. Client-facing, AI-generated and destructive actions always need approval.",
+        "timezone": "Timezone",
+        "timezoneDescription": "Used for scheduling and quiet hours."
+      },
+      "approvals": {
+        "title": "Approval preferences",
+        "description": "These are always on for your safety — external, AI-generated and destructive actions require your explicit confirmation.",
+        "clientFacing": "Always confirm client-facing actions",
+        "clientFacingDescription": "Emails and follow-ups sent to clients.",
+        "aiDocuments": "Always confirm AI-generated documents",
+        "aiDocumentsDescription": "Proposals, contracts and invoices.",
+        "destructive": "Always confirm destructive actions",
+        "destructiveDescription": "Archiving or deleting anything."
+      },
+      "notifications": {
+        "title": "Notifications",
+        "approvals": "New approvals",
+        "approvalsDescription": "Notify me when an action is prepared for approval.",
+        "executions": "Executions",
+        "executionsDescription": "Notify me when an automation runs.",
+        "email": "Email notifications",
+        "emailDescription": "Also send these to my email."
+      },
+      "quietHours": {
+        "title": "Quiet hours",
+        "pause": "Pause automatic actions during quiet hours",
+        "pauseDescription": "Detection still runs, but nothing executes automatically and you won't be notified.",
+        "window": "Quiet window",
+        "windowDescription": "Between these times, automatic actions are held.",
+        "to": "to"
+      }
+    },
+    "approval": {
+      "suggestion": "Suggestion",
+      "trigger": "Trigger",
+      "expectedResult": "Expected result",
+      "saves": "Saves ~{{duration}}",
+      "fromAutomation": "from {{name}}",
+      "viewDraft": "View prepared draft",
+      "hideDraft": "Hide prepared draft",
+      "task": "Task",
+      "dataUsed": "Why it ran · data it used",
+      "approvalRequired": "Approval was required before anything ran (Prepare-for-approval mode).",
+      "prepare": "Prepare it",
+      "dismiss": "Dismiss",
+      "approve": "Approve",
+      "reject": "Reject",
+      "disableAutomation": "Disable this automation"
+    },
+    "card": {
+      "toggle": "Toggle {{name}}",
+      "conditions_one": "{{count}} condition",
+      "conditions_other": "{{count}} conditions",
+      "always": "Always",
+      "awaiting_one": "{{count}} awaiting approval",
+      "awaiting_other": "{{count}} awaiting approval",
+      "edit": "Edit automation",
+      "delete": "Delete automation",
+      "lastRun": "Last run {{time}}",
+      "nextCheck": "Next check {{time}}",
+      "soon": "soon",
+      "runsSaved": "{{runs}} runs · {{minutes}} min saved"
     }
   },
   "knowledge": {
@@ -1817,12 +2119,87 @@
     "sendToClient": "Send to Client"
   },
   "inbox": {
+    "title": "Inbox",
+    "intro": "Shared Gmail & Outlook conversations",
+    "help": "Connect Google/Microsoft under Integrations, then sync. Reply drafts go through Email Center approval — never sent automatically.",
+    "loadError": "Failed to load inbox",
+    "syncGmail": "Sync Gmail",
+    "syncOutlook": "Sync Outlook",
+    "viewsTitle": "Views",
     "views": {
       "all": "All",
       "unread": "Unread",
       "assigned": "Assigned to me",
       "linked": "Linked",
       "unlinked": "Unlinked"
+    },
+    "provider": "Provider",
+    "providerFilter": "Provider filter",
+    "providers": {
+      "all": "All",
+      "google": "Gmail",
+      "microsoft": "Outlook"
+    },
+    "mailboxes": "Mailboxes",
+    "noMailboxes": "No mailboxes yet. Connect Integrations, then sync.",
+    "lastSync": "Last sync: {{time}}",
+    "syncNow": "Sync now",
+    "searchLabel": "Search inbox",
+    "searchPlaceholder": "Search subject or participant…",
+    "unknown": "Unknown",
+    "client": "Client",
+    "lead": "Lead",
+    "assigned": "Assigned",
+    "selectConversation": "Select a conversation",
+    "syncedAt": "Synced {{time}}",
+    "crmLink": "CRM link",
+    "clientId": "Client ID",
+    "leadId": "Lead ID",
+    "linkedClient": "Client: {{id}}",
+    "linkedLead": "Lead: {{id}}",
+    "noClient": "No client",
+    "noLead": "No lead",
+    "empty": {
+      "title": "Inbox is empty",
+      "description": "Sync Gmail or Outlook after connecting Integrations."
+    },
+    "statuses": {
+      "idle": "idle",
+      "syncing": "syncing",
+      "synced": "synced",
+      "connected": "connected",
+      "error": "error",
+      "failed": "failed"
+    },
+    "actions": {
+      "summarize": "Summarize",
+      "draftReply": "Draft reply",
+      "assignMe": "Assign me",
+      "link": "Link",
+      "unlink": "Unlink"
+    },
+    "aiSummary": {
+      "title": "AI summary",
+      "metadata": "Intent: {{intent}} · Urgency: {{urgency}} · Sentiment: {{sentiment}}",
+      "next": "Next: {{next}}"
+    },
+    "messages": {
+      "youSent": "You (sent)",
+      "youSentVia": "You (sent via {{provider}})",
+      "deliveryUnconfirmed": "Delivery unconfirmed",
+      "openEmailCenter": "Open in Email Center",
+      "attachment": "{{filename}} ({{size}} KB) — download via authenticated inbox API"
+    },
+    "toasts": {
+      "adminOnly": "Only owners and admins can sync mailboxes",
+      "synced_one": "Synced {{count}} new message",
+      "synced_other": "Synced {{count}} new messages",
+      "summaryReady": "Summary ready",
+      "replyDraftCreated": "Reply draft created — opening Email Center",
+      "enterId": "Enter a client or lead ID",
+      "linked": "Linked",
+      "unlinked": "Unlinked",
+      "assigned": "Assigned to you"
     }
   },
   "emails": {

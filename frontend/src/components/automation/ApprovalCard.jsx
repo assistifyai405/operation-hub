@@ -1,11 +1,16 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, X, Pencil, Ban, Clock, ChevronDown, Sparkles, Info } from "lucide-react";
-import { AiIcon, relTime, fmtDuration } from "@/components/ai/aiHelpers";
+import { AiIcon, fmtDuration } from "@/components/ai/aiHelpers";
 import { RISK_META, KIND_META } from "./automationShared";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { useLocale } from "@/context/LocaleContext";
+import { formatRelativeTime } from "@/i18n/format";
 
 export function ApprovalCard({ item, onApprove, onReject, onPrepare, onEdit, onDisable, busy }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.actions || []);
@@ -32,34 +37,34 @@ export function ApprovalCard({ item, onApprove, onReject, onPrepare, onEdit, onD
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-semibold text-zinc-100">{item.what}</p>
             <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${risk.chip}`} data-testid={`approval-risk-${item.id}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${risk.dot}`} /> {risk.label}
+              <span className={`h-1.5 w-1.5 rounded-full ${risk.dot}`} /> {t(risk.labelKey)}
             </span>
-            {isSuggestion && <span className="rounded-full border border-sky-500/30 bg-sky-500/15 px-2 py-0.5 text-[10px] font-medium text-sky-300">Suggestion</span>}
+            {isSuggestion && <span className="rounded-full border border-sky-500/30 bg-sky-500/15 px-2 py-0.5 text-[10px] font-medium text-sky-300">{t("automations.approval.suggestion")}</span>}
           </div>
 
           <p className="mt-1.5 flex items-start gap-1.5 text-xs text-zinc-400"><Info className="mt-0.5 h-3 w-3 shrink-0 text-brand-400" /> {item.why}</p>
 
           <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
             <div className="rounded-lg border border-white/5 bg-zinc-900/60 px-2.5 py-2">
-              <p className="text-[10px] uppercase tracking-wide text-zinc-600">Trigger</p>
+              <p className="text-[10px] uppercase tracking-wide text-zinc-600">{t("automations.approval.trigger")}</p>
               <p className="mt-0.5 font-medium text-zinc-300">{item.trigger}</p>
             </div>
             <div className="rounded-lg border border-white/5 bg-zinc-900/60 px-2.5 py-2">
-              <p className="text-[10px] uppercase tracking-wide text-zinc-600">Expected result</p>
+              <p className="text-[10px] uppercase tracking-wide text-zinc-600">{t("automations.approval.expectedResult")}</p>
               <p className="mt-0.5 font-medium text-zinc-300">{item.expected_result}</p>
             </div>
           </div>
 
           <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-500">
-            <span className="inline-flex items-center gap-1 text-emerald-400"><Clock className="h-3 w-3" /> Saves ~{fmtDuration(item.time_saved)}</span>
-            <span>from {item.automation_name}</span>
-            <span>{relTime(item.created_at)}</span>
+            <span className="inline-flex items-center gap-1 text-emerald-400"><Clock className="h-3 w-3" /> {t("automations.approval.saves", { duration: fmtDuration(item.time_saved) })}</span>
+            <span>{t("automations.approval.fromAutomation", { name: item.automation_name })}</span>
+            <span>{formatRelativeTime(item.created_at, locale, t)}</span>
           </div>
 
           {/* Prepared draft preview / editor */}
           {!isSuggestion && (item.actions || []).some((a) => a.payload?.email || a.payload?.task) && (
             <button onClick={() => setOpen((o) => !o)} data-testid={`approval-expand-${item.id}`} className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-brand-300 hover:text-brand-200">
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} /> {open ? "Hide" : "View"} prepared draft
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} /> {t(open ? "automations.approval.hideDraft" : "automations.approval.viewDraft")}
             </button>
           )}
           {open && !isSuggestion && (
@@ -67,8 +72,8 @@ export function ApprovalCard({ item, onApprove, onReject, onPrepare, onEdit, onD
               {(editing ? draft : item.actions).map((a, idx) => (
                 <div key={idx} className="rounded-lg border border-white/10 bg-black/40 p-3">
                   <div className="mb-1.5 flex items-center gap-2">
-                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${(KIND_META[a.kind] || KIND_META.internal).chip}`}>{(KIND_META[a.kind] || KIND_META.internal).label}</span>
-                    <span className="text-xs font-medium text-zinc-300">{a.label}</span>
+                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${(KIND_META[a.kind] || KIND_META.internal).chip}`}>{t((KIND_META[a.kind] || KIND_META.internal).labelKey)}</span>
+                    <span className="text-xs font-medium text-zinc-300">{t(`automations.builder.options.actions.${a.type}`, { defaultValue: a.label })}</span>
                   </div>
                   {a.payload?.email && (
                     editing ? (
@@ -87,7 +92,7 @@ export function ApprovalCard({ item, onApprove, onReject, onPrepare, onEdit, onD
                     editing ? (
                       <Input value={a.payload.task.title} onChange={(e) => updateTaskTitle(idx, e.target.value)} data-testid={`approval-edit-task-${item.id}`} className="h-8 border-white/10 bg-zinc-900 text-xs" />
                     ) : (
-                      <p className="text-xs text-zinc-400">Task: <span className="text-zinc-200">{a.payload.task.title}</span> · {a.payload.task.priority}</p>
+                      <p className="text-xs text-zinc-400">{t("automations.approval.task")}: <span className="text-zinc-200">{a.payload.task.title}</span> · {t(`priorities.${a.payload.task.priority}`, { defaultValue: a.payload.task.priority })}</p>
                     )
                   )}
                 </div>
@@ -97,10 +102,10 @@ export function ApprovalCard({ item, onApprove, onReject, onPrepare, onEdit, onD
 
           {/* Transparency: data used */}
           <details className="mt-2.5 text-[11px] text-zinc-600">
-            <summary className="cursor-pointer select-none hover:text-zinc-400" data-testid={`approval-data-used-${item.id}`}>Why it ran · data it used</summary>
+            <summary className="cursor-pointer select-none hover:text-zinc-400" data-testid={`approval-data-used-${item.id}`}>{t("automations.approval.dataUsed")}</summary>
             <ul className="mt-1 list-disc space-y-0.5 pl-4">
               {(item.data_used || []).map((d, i) => <li key={i}>{d}</li>)}
-              <li>Approval was required before anything ran (Prepare-for-approval mode).</li>
+              <li>{t("automations.approval.approvalRequired")}</li>
             </ul>
           </details>
 
@@ -109,34 +114,34 @@ export function ApprovalCard({ item, onApprove, onReject, onPrepare, onEdit, onD
             {isSuggestion ? (
               <>
                 <button onClick={() => onPrepare(item)} disabled={busy} data-testid={`approval-prepare-${item.id}`} className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-50">
-                  <Sparkles className="h-3.5 w-3.5" /> Prepare it
+                  <Sparkles className="h-3.5 w-3.5" /> {t("automations.approval.prepare")}
                 </button>
                 <button onClick={() => onReject(item)} disabled={busy} data-testid={`approval-dismiss-${item.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-all hover:text-zinc-200">
-                  <X className="h-3.5 w-3.5" /> Dismiss
+                  <X className="h-3.5 w-3.5" /> {t("automations.approval.dismiss")}
                 </button>
               </>
             ) : editing ? (
               <>
                 <button onClick={saveEdit} data-testid={`approval-save-${item.id}`} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-emerald-500">
-                  <Check className="h-3.5 w-3.5" /> Save changes
+                  <Check className="h-3.5 w-3.5" /> {t("common.saveChanges")}
                 </button>
-                <button onClick={() => { setEditing(false); setDraft(item.actions || []); }} className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200">Cancel</button>
+                <button onClick={() => { setEditing(false); setDraft(item.actions || []); }} className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200">{t("common.cancel")}</button>
               </>
             ) : (
               <>
                 <button onClick={() => onApprove(item)} disabled={busy} data-testid={`approval-approve-${item.id}`} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-emerald-500 disabled:opacity-50">
-                  <Check className="h-3.5 w-3.5" /> Approve
+                  <Check className="h-3.5 w-3.5" /> {t("automations.approval.approve")}
                 </button>
                 {emailAction && (
                   <button onClick={() => { setOpen(true); setEditing(true); setDraft(item.actions || []); }} data-testid={`approval-edit-${item.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-all hover:bg-zinc-900">
-                    <Pencil className="h-3.5 w-3.5" /> Edit
+                    <Pencil className="h-3.5 w-3.5" /> {t("common.edit")}
                   </button>
                 )}
                 <button onClick={() => onReject(item)} disabled={busy} data-testid={`approval-reject-${item.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-all hover:text-red-300">
-                  <X className="h-3.5 w-3.5" /> Reject
+                  <X className="h-3.5 w-3.5" /> {t("automations.approval.reject")}
                 </button>
                 <button onClick={() => onDisable(item)} data-testid={`approval-disable-${item.id}`} className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-zinc-500 transition-all hover:text-amber-300">
-                  <Ban className="h-3 w-3" /> Disable this automation
+                  <Ban className="h-3 w-3" /> {t("automations.approval.disableAutomation")}
                 </button>
               </>
             )}

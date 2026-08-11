@@ -10,7 +10,8 @@ This repository is the **source of truth**. Do not regenerate the product from s
 
 Assistify uses a green product identity and supports Dutch (`nl`) and English (`en`)
 interface localization. See [`docs/BRANDING.md`](./docs/BRANDING.md) for palette and
-usage rules, and [`docs/LOCALIZATION.md`](./docs/LOCALIZATION.md) for locale detection,
+usage rules, [`docs/LOCALIZATION.md`](./docs/LOCALIZATION.md) for locale detection,
+and [`docs/MARKETING_SITE.md`](./docs/MARKETING_SITE.md) for the public sales website.
 translations, formatting, and AI language behavior.
 
 ## Closed beta (Sprint 28)

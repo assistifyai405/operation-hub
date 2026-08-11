@@ -12,10 +12,32 @@ import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import en from "./locales/en.json";
 import nl from "./locales/nl.json";
+import marketingEn from "./locales/marketing-en.json";
+import marketingNl from "./locales/marketing-nl.json";
 
 export const SUPPORTED_LOCALES = ["nl", "en"];
 export const DEFAULT_LOCALE = "en";
 export const LOCALE_STORAGE_KEY = "assistify_locale";
+
+function deepMerge(base, addition) {
+  const result = { ...base };
+  Object.entries(addition).forEach(([key, value]) => {
+    const current = result[key];
+    if (
+      value
+      && typeof value === "object"
+      && !Array.isArray(value)
+      && current
+      && typeof current === "object"
+      && !Array.isArray(current)
+    ) {
+      result[key] = deepMerge(current, value);
+    } else {
+      result[key] = value;
+    }
+  });
+  return result;
+}
 
 export function normalizeLocale(raw) {
   if (!raw || typeof raw !== "string") return null;
@@ -67,8 +89,8 @@ if (!i18n.isInitialized) {
     .use(initReactI18next)
     .init({
       resources: {
-        en: { translation: en },
-        nl: { translation: nl },
+        en: { translation: deepMerge(en, marketingEn) },
+        nl: { translation: deepMerge(nl, marketingNl) },
       },
       supportedLngs: SUPPORTED_LOCALES,
       fallbackLng: DEFAULT_LOCALE,

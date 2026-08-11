@@ -1458,6 +1458,73 @@
       "insights": "AI-verkoopinzichten",
       "leadsNeedingAttention": "Leads die aandacht nodig hebben",
       "noneStalled": "Niets is stilgevallen — je pipeline blijft in beweging."
+    },
+    "leadDrawer": {
+      "scoreConfidence": "Score {{score}} · {{confidence}}% betrouwbaar",
+      "noCompany": "Geen bedrijf gekoppeld",
+      "delete": "Lead verwijderen",
+      "deleteConfirm": "Deze lead verwijderen?",
+      "convertProject": "Omzetten naar project",
+      "openProject": "Project openen",
+      "salesAssistant": "AI-verkoopassistent",
+      "recommendedFollowups": "Aanbevolen follow-ups",
+      "timeline": "Tijdlijn",
+      "fields": {
+        "stage": "Fase",
+        "value": "Waarde ($)",
+        "probability": "Kans (%)",
+        "auto": "Automatisch",
+        "expectedClose": "Verwachte sluitingsdatum",
+        "owner": "Eigenaar",
+        "tags": "Tags",
+        "tagsPlaceholder": "gescheiden door komma's",
+        "notes": "Notities"
+      },
+      "oneClick": {
+        "title": "AI met één klik",
+        "proposal": "Offerte genereren",
+        "contract": "Contract genereren",
+        "invoice": "Factuur genereren",
+        "improve": "Offerte verbeteren",
+        "followup": "Follow-up schrijven",
+        "meeting": "Vergadering voorbereiden",
+        "translate": "E-mail vertalen",
+        "summarizeCustomer": "Klant samenvatten"
+      },
+      "toasts": {
+        "loadError": "Lead laden is niet gelukt",
+        "saved": "Lead opgeslagen",
+        "deleted": "Lead verwijderd",
+        "openingAssistant": "AI-assistent openen…",
+        "openingWorkspace": "Workspace openen…",
+        "projectLinked": "Project gekoppeld"
+      }
+    },
+    "salesBrief": {
+      "failed": "AI-verkoopoverzicht maken is niet gelukt",
+      "analyzing": "Deal analyseren…",
+      "generate": "AI-verkoopoverzicht genereren",
+      "dealHealth": "Dealstatus",
+      "winProbability": "Winkans",
+      "urgency": "Urgentie",
+      "risk": "Risico",
+      "nextBestAction": "Beste vervolgstap",
+      "relationshipSummary": "Relatiesamenvatting",
+      "conversationSummary": "Gesprekssamenvatting",
+      "suggestedFollowup": "Voorgestelde follow-up",
+      "objections": "Bezwaren gesignaleerd",
+      "missingInformation": "Ontbrekende informatie",
+      "regenerate": "Overzicht opnieuw genereren",
+      "health": {
+        "healthy": "Gezond",
+        "atRisk": "Loopt risico",
+        "critical": "Kritiek"
+      },
+      "level": {
+        "low": "Laag",
+        "medium": "Gemiddeld",
+        "high": "Hoog"
+      }
     }
   },
   "pipeline": {
@@ -1641,6 +1708,241 @@
       "prepared": "Voorbereid voor goedkeuring",
       "draftUpdated": "Concept bijgewerkt",
       "disabled": "Automatisering uitgeschakeld"
+    },
+    "meta": {
+      "modes": {
+        "suggest": {
+          "label": "Alleen voorstellen",
+          "short": "Voorstellen",
+          "description": "Signaleert en doet aanbevelingen — bereidt niets voor en voert niets uit."
+        },
+        "prepare": {
+          "label": "Voorbereiden voor goedkeuring",
+          "short": "Voorbereiden",
+          "description": "Bereidt concepten voor; jij bevestigt voordat er iets wordt uitgevoerd."
+        },
+        "auto": {
+          "label": "Volledig automatisch",
+          "short": "Automatisch",
+          "description": "Veilige interne acties worden automatisch uitgevoerd; risicovolle acties moeten nog steeds worden goedgekeurd."
+        }
+      },
+      "risks": {
+        "low": "Laag risico",
+        "medium": "Controle nodig",
+        "high": "Hoog risico"
+      },
+      "kinds": {
+        "internal": "Intern",
+        "external": "Voor de klant",
+        "generative": "AI-concept",
+        "destructive": "Destructief"
+      }
+    },
+    "builder": {
+      "newAutomation": "Nieuwe automatisering",
+      "editTitle": "Automatisering bewerken",
+      "createTitle": "Automatisering maken",
+      "description": "Maak een regel: wanneer er iets gebeurt, controleer je eventueel voorwaarden en bereid je vervolgens acties voor of voer je ze uit.",
+      "name": "Naam",
+      "namePlaceholder": "bijv. Achterstallige facturen van grote klanten opvolgen",
+      "when": "Wanneer",
+      "chooseTrigger": "Kies een trigger",
+      "days": "dagen",
+      "if": "Als",
+      "addCondition": "Voorwaarde toevoegen",
+      "noConditions": "Geen voorwaarden — de automatisering wordt bij elke overeenkomst uitgevoerd.",
+      "valuePlaceholder": "waarde",
+      "removeCondition": "Voorwaarde verwijderen",
+      "then": "Dan",
+      "executionMode": "Uitvoeringsmodus",
+      "createAction": "Automatisering maken",
+      "options": {
+        "triggers": {
+          "proposal_not_sent": {
+            "label": "Offerte niet verstuurd",
+            "description": "Een offerte staat al X dagen klaar, maar is nog niet verstuurd."
+          },
+          "proposal_no_reply": {
+            "label": "Offerte verstuurd, geen reactie",
+            "description": "Er is al X dagen geen reactie op een verstuurde offerte."
+          },
+          "contract_unsigned": {
+            "label": "Contract niet ondertekend",
+            "description": "Een contract wacht al X dagen op een handtekening."
+          },
+          "invoice_due_soon": {
+            "label": "Factuur vervalt binnenkort",
+            "description": "Een factuur vervalt binnen X dagen."
+          },
+          "invoice_overdue": {
+            "label": "Factuur achterstallig",
+            "description": "De vervaldatum van een factuur is verstreken en de factuur is niet betaald."
+          },
+          "client_inactive": {
+            "label": "Klant inactief",
+            "description": "Er is al X dagen geen activiteit met een klant."
+          },
+          "lead_needs_followup": {
+            "label": "Lead moet worden opgevolgd",
+            "description": "Een openstaande lead heeft al X dagen niets meer laten horen."
+          },
+          "project_no_task": {
+            "label": "Project heeft geen volgende taak",
+            "description": "Een actief project heeft geen openstaande taak."
+          },
+          "project_blocked": {
+            "label": "Project lijkt geblokkeerd",
+            "description": "Een actief project staat al X dagen stil."
+          },
+          "contract_signed": {
+            "label": "Contract ondertekend",
+            "description": "Een contract is zojuist ondertekend — bereid het project voor."
+          },
+          "project_completed": {
+            "label": "Project voltooid",
+            "description": "Een project is voltooid — bereid de factuur voor."
+          },
+          "new_client": {
+            "label": "Nieuwe klant toegevoegd",
+            "description": "Er is in de afgelopen X dagen een klant toegevoegd."
+          },
+          "task_overdue": {
+            "label": "Taak achterstallig",
+            "description": "De deadline van een taak is verstreken."
+          },
+          "inbound_message_received": {
+            "label": "Inkomende e-mail ontvangen",
+            "description": "Er is een nieuw inboxbericht gesynchroniseerd."
+          },
+          "unread_message_received": {
+            "label": "Ongelezen inboxbericht",
+            "description": "Er is een ongelezen inkomend bericht binnengekomen."
+          },
+          "thread_created": {
+            "label": "E-mailthread gemaakt",
+            "description": "Tijdens de synchronisatie is een nieuwe gespreksthread gemaakt."
+          },
+          "message_linked_to_client": {
+            "label": "E-mail aan klant gekoppeld",
+            "description": "Een inboxthread is aan een klant gekoppeld."
+          },
+          "message_linked_to_lead": {
+            "label": "E-mail aan lead gekoppeld",
+            "description": "Een inboxthread is aan een lead gekoppeld."
+          }
+        },
+        "fields": {
+          "status": "Status",
+          "value": "Waarde",
+          "priority": "Prioriteit",
+          "days_inactive": "Dagen inactief",
+          "invoice_amount": "Factuurbedrag",
+          "lead_score": "Leadscore",
+          "tags": "Tags",
+          "owner": "Eigenaar",
+          "client": "Klantnaam",
+          "project": "Projectnaam"
+        },
+        "operators": {
+          "eq": "is gelijk aan",
+          "ne": "is niet gelijk aan",
+          "gt": "is groter dan",
+          "gte": "is minimaal",
+          "lt": "is kleiner dan",
+          "lte": "is maximaal",
+          "contains": "bevat"
+        },
+        "actions": {
+          "create_task": "Taak maken",
+          "add_note": "Notitie toevoegen",
+          "change_internal_status": "Interne status bijwerken",
+          "notify_user": "Jou een melding sturen",
+          "add_to_brief": "Aan je AI-overzicht toevoegen",
+          "prepare_email": "E-mail voorbereiden",
+          "prepare_followup": "Follow-up voorbereiden",
+          "create_calendar_event": "Agenda-afspraak maken",
+          "create_google_task": "Google-taak maken",
+          "send_slack_message": "Slack-bericht sturen",
+          "send_discord_message": "Discord-bericht sturen",
+          "trigger_webhook": "Webhook activeren",
+          "generate_proposal": "Offerteconcept genereren",
+          "generate_contract": "Contractconcept genereren",
+          "generate_invoice": "Factuurconcept voorbereiden",
+          "archive_project": "Project archiveren"
+        }
+      }
+    },
+    "settingsPanel": {
+      "general": {
+        "title": "Algemeen",
+        "enable": "Automatiseringen inschakelen",
+        "enableDescription": "Hoofdschakelaar. Als deze uitstaat, wordt er niets gesignaleerd, voorbereid of uitgevoerd.",
+        "defaultMode": "Standaarduitvoeringsmodus",
+        "defaultModeDescription": "Wordt gebruikt door automatiseringen die geen eigen modus hebben.",
+        "safeAutomatic": "Veilige interne acties automatisch uitvoeren",
+        "safeAutomaticDescription": "Taken, notities, meldingen en interne statuswijzigingen. Acties voor klanten, door AI gegenereerde acties en destructieve acties moeten altijd worden goedgekeurd.",
+        "timezone": "Tijdzone",
+        "timezoneDescription": "Wordt gebruikt voor planning en stille uren."
+      },
+      "approvals": {
+        "title": "Goedkeuringsvoorkeuren",
+        "description": "Voor je veiligheid staan deze altijd aan — externe, door AI gegenereerde en destructieve acties vereisen jouw uitdrukkelijke bevestiging.",
+        "clientFacing": "Acties voor klanten altijd bevestigen",
+        "clientFacingDescription": "E-mails en follow-ups die naar klanten worden verstuurd.",
+        "aiDocuments": "Door AI gegenereerde documenten altijd bevestigen",
+        "aiDocumentsDescription": "Offertes, contracten en facturen.",
+        "destructive": "Destructieve acties altijd bevestigen",
+        "destructiveDescription": "Alles wat wordt gearchiveerd of verwijderd."
+      },
+      "notifications": {
+        "title": "Meldingen",
+        "approvals": "Nieuwe goedkeuringen",
+        "approvalsDescription": "Laat het me weten wanneer een actie klaarstaat voor goedkeuring.",
+        "executions": "Uitvoeringen",
+        "executionsDescription": "Laat het me weten wanneer een automatisering wordt uitgevoerd.",
+        "email": "E-mailmeldingen",
+        "emailDescription": "Stuur deze meldingen ook naar mijn e-mailadres."
+      },
+      "quietHours": {
+        "title": "Stille uren",
+        "pause": "Automatische acties tijdens stille uren pauzeren",
+        "pauseDescription": "De signalering blijft actief, maar niets wordt automatisch uitgevoerd en je ontvangt geen meldingen.",
+        "window": "Stille periode",
+        "windowDescription": "Tussen deze tijden worden automatische acties uitgesteld.",
+        "to": "tot"
+      }
+    },
+    "approval": {
+      "suggestion": "Suggestie",
+      "trigger": "Trigger",
+      "expectedResult": "Verwacht resultaat",
+      "saves": "Bespaart ~{{duration}}",
+      "fromAutomation": "van {{name}}",
+      "viewDraft": "Voorbereid concept bekijken",
+      "hideDraft": "Voorbereid concept verbergen",
+      "task": "Taak",
+      "dataUsed": "Waarom dit is uitgevoerd · gebruikte gegevens",
+      "approvalRequired": "Goedkeuring was vereist voordat er iets werd uitgevoerd (modus Voorbereiden voor goedkeuring).",
+      "prepare": "Voorbereiden",
+      "dismiss": "Negeren",
+      "approve": "Goedkeuren",
+      "reject": "Afwijzen",
+      "disableAutomation": "Deze automatisering uitschakelen"
+    },
+    "card": {
+      "toggle": "{{name}} in- of uitschakelen",
+      "conditions_one": "{{count}} voorwaarde",
+      "conditions_other": "{{count}} voorwaarden",
+      "always": "Altijd",
+      "awaiting_one": "{{count}} wacht op goedkeuring",
+      "awaiting_other": "{{count}} wachten op goedkeuring",
+      "edit": "Automatisering bewerken",
+      "delete": "Automatisering verwijderen",
+      "lastRun": "Laatst uitgevoerd: {{time}}",
+      "nextCheck": "Volgende controle: {{time}}",
+      "soon": "binnenkort",
+      "runsSaved": "{{runs}} uitvoeringen · {{minutes}} min. bespaard"
     }
   },
   "knowledge": {
@@ -1817,12 +2119,87 @@
     "sendToClient": "Naar klant sturen"
   },
   "inbox": {
+    "title": "Inbox",
+    "intro": "Gedeelde gesprekken uit Gmail en Outlook",
+    "help": "Koppel Google of Microsoft onder Integraties en synchroniseer daarna je mailbox. Antwoordconcepten worden via het E-mailcentrum goedgekeurd en nooit automatisch verstuurd.",
+    "loadError": "Inbox laden is niet gelukt",
+    "syncGmail": "Gmail synchroniseren",
+    "syncOutlook": "Outlook synchroniseren",
+    "viewsTitle": "Weergaven",
     "views": {
       "all": "Alles",
       "unread": "Ongelezen",
       "assigned": "Aan mij toegewezen",
       "linked": "Gekoppeld",
       "unlinked": "Niet gekoppeld"
+    },
+    "provider": "Provider",
+    "providerFilter": "Filter op provider",
+    "providers": {
+      "all": "Alle",
+      "google": "Gmail",
+      "microsoft": "Outlook"
+    },
+    "mailboxes": "Mailboxen",
+    "noMailboxes": "Nog geen mailboxen. Maak een koppeling onder Integraties en synchroniseer daarna.",
+    "lastSync": "Laatste synchronisatie: {{time}}",
+    "syncNow": "Nu synchroniseren",
+    "searchLabel": "Inbox doorzoeken",
+    "searchPlaceholder": "Zoek op onderwerp of deelnemer…",
+    "unknown": "Onbekend",
+    "client": "Klant",
+    "lead": "Lead",
+    "assigned": "Toegewezen",
+    "selectConversation": "Selecteer een gesprek",
+    "syncedAt": "Gesynchroniseerd op {{time}}",
+    "crmLink": "CRM-koppeling",
+    "clientId": "Klant-ID",
+    "leadId": "Lead-ID",
+    "linkedClient": "Klant: {{id}}",
+    "linkedLead": "Lead: {{id}}",
+    "noClient": "Geen klant",
+    "noLead": "Geen lead",
+    "empty": {
+      "title": "Je inbox is leeg",
+      "description": "Koppel eerst Integraties en synchroniseer daarna Gmail of Outlook."
+    },
+    "statuses": {
+      "idle": "inactief",
+      "syncing": "bezig met synchroniseren",
+      "synced": "gesynchroniseerd",
+      "connected": "verbonden",
+      "error": "fout",
+      "failed": "mislukt"
+    },
+    "actions": {
+      "summarize": "Samenvatten",
+      "draftReply": "Antwoordconcept maken",
+      "assignMe": "Aan mij toewijzen",
+      "link": "Koppelen",
+      "unlink": "Ontkoppelen"
+    },
+    "aiSummary": {
+      "title": "AI-samenvatting",
+      "metadata": "Intentie: {{intent}} · Urgentie: {{urgency}} · Sentiment: {{sentiment}}",
+      "next": "Volgende stap: {{next}}"
+    },
+    "messages": {
+      "youSent": "Jij (verstuurd)",
+      "youSentVia": "Jij (verstuurd via {{provider}})",
+      "deliveryUnconfirmed": "Bezorging niet bevestigd",
+      "openEmailCenter": "Openen in E-mailcentrum",
+      "attachment": "{{filename}} ({{size}} KB) — download via de beveiligde inbox-API"
+    },
+    "toasts": {
+      "adminOnly": "Alleen eigenaren en beheerders kunnen mailboxen synchroniseren",
+      "synced_one": "{{count}} nieuw bericht gesynchroniseerd",
+      "synced_other": "{{count}} nieuwe berichten gesynchroniseerd",
+      "summaryReady": "Samenvatting klaar",
+      "replyDraftCreated": "Antwoordconcept gemaakt — E-mailcentrum wordt geopend",
+      "enterId": "Vul een klant- of lead-ID in",
+      "linked": "Gekoppeld",
+      "unlinked": "Ontkoppeld",
+      "assigned": "Aan jou toegewezen"
     }
   },
   "emails": {

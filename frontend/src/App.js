@@ -37,6 +37,18 @@ import EmailCenter from "@/pages/EmailCenter";
 import Integrations from "@/pages/Integrations";
 import Inbox from "@/pages/Inbox";
 import { PrivacyPage, TermsPage, BetaNoticePage } from "@/pages/LegalPages";
+import HomePage from "@/pages/marketing/HomePage";
+import ProductIndexPage from "@/pages/marketing/ProductIndexPage";
+import CopilotPage from "@/pages/marketing/CopilotPage";
+import CrmPage from "@/pages/marketing/CrmPage";
+import MarketingProjectsPage from "@/pages/marketing/ProjectsPage";
+import MarketingAutomationsPage from "@/pages/marketing/AutomationsPage";
+import MarketingDocumentsPage from "@/pages/marketing/DocumentsPage";
+import PricingPage from "@/pages/marketing/PricingPage";
+import FaqPage from "@/pages/marketing/FaqPage";
+import SecurityPage from "@/pages/marketing/SecurityPage";
+import SolutionsPage from "@/pages/marketing/SolutionsPage";
+import ProductDetailPage from "@/pages/marketing/ProductDetailPage";
 
 function App() {
   return (
@@ -45,7 +57,7 @@ function App() {
         <AuthProvider>
           <LocaleProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -55,6 +67,22 @@ function App() {
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/beta-notice" element={<BetaNoticePage />} />
+            <Route path="/product" element={<ProductIndexPage />} />
+            <Route path="/product/copilot" element={<CopilotPage />} />
+            <Route path="/product/crm" element={<CrmPage />} />
+            <Route path="/product/projects" element={<MarketingProjectsPage />} />
+            <Route path="/product/automations" element={<MarketingAutomationsPage />} />
+            <Route path="/product/documents" element={<MarketingDocumentsPage />} />
+            <Route path="/product/proposals" element={<Navigate to="/product/documents" replace />} />
+            <Route path="/product/contracts" element={<Navigate to="/product/documents" replace />} />
+            <Route path="/product/invoices" element={<Navigate to="/product/documents" replace />} />
+            <Route path="/product/agents" element={<ProductDetailPage slug="agents" />} />
+            <Route path="/product/knowledge" element={<ProductDetailPage slug="knowledge" />} />
+            <Route path="/product/opportunities" element={<ProductDetailPage slug="opportunities" />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/security" element={<SecurityPage />} />
+            <Route path="/solutions" element={<SolutionsPage />} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<Dashboard />} />

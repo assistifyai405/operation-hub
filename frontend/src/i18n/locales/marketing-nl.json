@@ -1,0 +1,907 @@
+{
+  "marketing": {
+    "shell": {
+      "navigation": "Marketingnavigatie",
+      "product": "Product",
+      "solutions": "Oplossingen",
+      "pricing": "Prijzen",
+      "security": "Beveiliging",
+      "faq": "Veelgestelde vragen",
+      "signIn": "Inloggen",
+      "joinBeta": "Aanmelden voor bèta",
+      "footer": "Assistify brengt klantwerk, projecten, documenten en ondersteunde workflows samen.",
+      "privacy": "Privacy",
+      "terms": "Voorwaarden"
+    },
+    "product": {
+      "common": {
+        "allProducts": "Alle producten",
+        "what": "Wat",
+        "why": "Waarom",
+        "how": "Hoe",
+        "capabilities": "Wat kan ik doen?",
+        "connected": "Verbonden workflow",
+        "learnMore": "Module bekijken"
+      },
+      "index": {
+        "seo": {
+          "title": "Productoverzicht",
+          "description": "Bekijk Assistify-modules voor klantrelaties, projecten, documenten, ondersteunde acties en configureerbare workflows."
+        },
+        "eyebrow": "Eén verbonden werkruimte",
+        "title": "Voer klantwerk uit zonder de rode draad kwijt te raken",
+        "intro": "Assistify verbindt de informatie en praktische stappen achter je werk, van het eerste klantrecord tot projectoplevering en zakelijke documenten.",
+        "modulesTitle": "Modules die vanuit dezelfde context werken",
+        "modulesIntro": "Begin bij het deel van je werk dat structuur nodig heeft. Elke module gebruikt dezelfde werkruimterecords, zodat informatie met de opdracht meebeweegt.",
+        "why": {
+          "title": "Minder wisselen, duidelijker eigenaarschap",
+          "body": "Klantgegevens, projectwerk, documenten en ondersteunde acties zijn eenvoudiger te beheren wanneer ze verbonden blijven. Assistify is ontworpen om dubbele invoer te beperken en mensen de controle over beslissingen te laten houden."
+        },
+        "how": {
+          "title": "Bouw de workflow in bruikbare stappen",
+          "body": "Voeg klanten en projecten toe, organiseer taken en bronbestanden en gebruik daarna Copilot of geconfigureerde automatiseringen waar ze helpen. Controleer gegenereerde concepten en voorgestelde acties voordat je erop vertrouwt."
+        },
+        "connected": {
+          "title": "Van kans tot opgeleverd werk",
+          "body": "Een klant kan gekoppeld zijn aan kansen en projecten. Projecten kunnen taken, offertes, contractconcepten, factuurrecords en bronbestanden bevatten. Copilot en automatiseringen kunnen die werkruimtecontext gebruiken voor ondersteunde acties."
+        },
+        "cta": {
+          "title": "Ontdek hoe Assistify bij je werk past",
+          "body": "Meld je aan voor de gesloten bèta om een werkruimte te maken en de verbonden modules te proberen.",
+          "button": "Aanmelden voor bèta"
+        }
+      },
+      "details": {
+        "copilot": {
+          "name": "Copilot",
+          "summary": "Stel vragen over je werkruimte en bereid ondersteunde acties voor om zelf te beoordelen.",
+          "seo": {
+            "title": "Copilot voor klantwerk",
+            "description": "Gebruik Assistify Copilot met echte werkruimtecontext, bekijk ondersteunde acties vooraf en bevestig voordat er wijzigingen worden gemaakt."
+          },
+          "eyebrow": "Werkruimte-Copilot",
+          "title": "Vraag, controleer en handel",
+          "intro": "Copilot leest de werkruimtecontext waartoe je toegang hebt en kan concrete acties voorbereiden. Je ziet een voorbeeld en kiest zelf of je bevestigt voordat iets wordt aangemaakt of gegenereerd.",
+          "frame": {
+            "title": "Assistify Copilot",
+            "subtitle": "Actievoorbeeld",
+            "alt": "Illustratie van een actievoorbeeld in Copilot"
+          },
+          "what": {
+            "title": "Een assistent met je werkruimte als basis",
+            "body": "Copilot kan antwoorden vanuit actuele klant- en projectcontext en ondersteunde verzoeken omzetten in een beoordeelbare actie in plaats van alleen algemene tekst te geven."
+          },
+          "why": {
+            "title": "Van vraag naar volgende stap",
+            "body": "Je hoeft projectcontext niet in elke prompt opnieuw op te bouwen. Bevestigingskaarten maken het voorgestelde resultaat zichtbaar voordat Copilot naar je werkruimte schrijft."
+          },
+          "how": {
+            "title": "Een duidelijke bevestigingsstroom",
+            "steps": [
+              {
+                "title": "Vraag in gewone taal",
+                "body": "Vraag om een werkruimtesamenvatting, een nieuwe klant of nieuw project, een projectplan of een concept voor een zakelijk document."
+              },
+              {
+                "title": "Controleer het voorbeeld",
+                "body": "Copilot toont de ondersteunde actie en de gegevens die het gaat gebruiken."
+              },
+              {
+                "title": "Bevestig of annuleer",
+                "body": "Bevestig alleen wanneer het voorbeeld klopt. Copilot voert daarna die actie uit en koppelt je aan het resultaat."
+              }
+            ]
+          },
+          "capabilities": {
+            "title": "Concrete acties, met controle",
+            "intro": "De huidige Copilot-acties richten zich op de basisinrichting van de werkruimte en projectdocumenten.",
+            "items": [
+              "Klanten, projecten, taken en openstaande werkruimtecontext samenvatten",
+              "Een klant aanmaken nadat je het voorbeeld bevestigt",
+              "Een project aanmaken nadat je de gegevens bevestigt",
+              "Een projectplan voor een bestaand project genereren",
+              "Concepten voor offertes, contracten of facturen voor een project genereren",
+              "Een sessiegeschiedenis bewaren zodat je het gesprek kunt volgen"
+            ]
+          },
+          "connected": {
+            "title": "Acties komen terecht waar het werk staat",
+            "body": "Bevestigde klanten en projecten worden werkruimterecords. Gegenereerde plannen en documentconcepten blijven aan hun project gekoppeld, zodat de volgende persoon vanuit dezelfde context verder kan."
+          },
+          "cta": {
+            "title": "Probeer een Copilot die zijn volgende actie toont",
+            "body": "Maak een bèta-werkruimte, voeg bruikbare context toe en controleer elke voorgestelde actie voordat je bevestigt.",
+            "button": "Aanmelden voor bèta"
+          }
+        },
+        "crm": {
+          "name": "CRM",
+          "summary": "Bewaar klantcontext, activiteit, kansen en gekoppeld werk in één overzicht.",
+          "seo": {
+            "title": "CRM voor verbonden klantwerk",
+            "description": "Organiseer klantrecords, activiteit, kansen en projectcontext in Assistify CRM."
+          },
+          "eyebrow": "Klantrelaties",
+          "title": "Houd het volledige klantbeeld dichtbij",
+          "intro": "CRM brengt contactgegevens, activiteit, open kansen en gekoppeld projectwerk samen, zodat klantcontext niet tussen tools verdwijnt.",
+          "frame": {
+            "title": "Klantwerkruimte",
+            "subtitle": "Verbonden context",
+            "alt": "Illustratie van verbonden klantrecords"
+          },
+          "what": {
+            "title": "Een werkend record voor elke klant",
+            "body": "Gebruik doorzoekbare klantrecords en labels om bedrijven en mensen te organiseren. Open daarna een record om activiteit en gekoppeld werk te bekijken."
+          },
+          "why": {
+            "title": "Weet wat er gebeurde en wat volgt",
+            "body": "Met een gedeeld klantrecord bereid je eenvoudiger een opvolging voor, begrijp je een kans of start je een project zonder in losse notities te zoeken."
+          },
+          "how": {
+            "title": "Bouw context op terwijl de relatie groeit",
+            "steps": [
+              {
+                "title": "Voeg de klant toe",
+                "body": "Maak een klantrecord met bruikbare contact- en bedrijfsgegevens."
+              },
+              {
+                "title": "Organiseer de relatie",
+                "body": "Gebruik labels, notities, activiteit en kansrecords om actuele context zichtbaar te houden."
+              },
+              {
+                "title": "Verbind de uitvoering",
+                "body": "Koppel projecten en zakelijke documenten zodat relatiehistorie en actief werk bij elkaar blijven."
+              }
+            ]
+          },
+          "capabilities": {
+            "title": "Klantcontext die je kunt gebruiken",
+            "intro": "CRM ondersteunt de praktische informatie rond doorlopend klantwerk.",
+            "items": [
+              "Klant- en contactrecords doorzoeken",
+              "Records filteren met werkruimtelabels",
+              "Recente klantactiviteit bekijken",
+              "Open kansen en hun status bekijken",
+              "Gekoppelde projecten en zakelijke documenten openen",
+              "Klantcontext gebruiken in ondersteunde Copilot-workflows"
+            ]
+          },
+          "connected": {
+            "title": "Relatiecontext ontmoet uitvoering",
+            "body": "Klantrecords verbinden met kansen, projecten, offertes, contractconcepten en factuurrecords. Daardoor blijft commerciële context beschikbaar wanneer werk naar uitvoering gaat."
+          },
+          "cta": {
+            "title": "Geef elke klant een duidelijke plek",
+            "body": "Meld je aan voor de bèta en organiseer relatiecontext naast het werk dat eruit voortkomt.",
+            "button": "Aanmelden voor bèta"
+          }
+        },
+        "projects": {
+          "name": "Projecten",
+          "summary": "Plan de uitvoering met gekoppelde taken, bestanden, klantcontext en documentconcepten.",
+          "seo": {
+            "title": "Projectwerkruimte voor klantoplevering",
+            "description": "Beheer klantprojecten, taken, bestanden, plannen en concepten voor zakelijke documenten in één verbonden werkruimte."
+          },
+          "eyebrow": "Projectoplevering",
+          "title": "Maak van afgesproken werk een georganiseerd project",
+          "intro": "Projecten houden de briefing, het team, de einddatum, taken, plannen, bestanden en zakelijke documenten verbonden van start tot afronding.",
+          "frame": {
+            "title": "Projectwerkruimte",
+            "subtitle": "Uitvoeringsoverzicht",
+            "alt": "Illustratie van een verbonden projectwerkruimte"
+          },
+          "what": {
+            "title": "Een uitvoeringshub voor elke opdracht",
+            "body": "Elk project heeft een gerichte werkruimte voor status, gegevens, taken, notities, bronbestanden, plannen en gerelateerde zakelijke documenten."
+          },
+          "why": {
+            "title": "Maak de volgende stap zichtbaar",
+            "body": "Wanneer projectcontext en resultaten één plek delen, ziet het team wat eraan komt, wat geblokkeerd is en welk document of welke taak aandacht nodig heeft."
+          },
+          "how": {
+            "title": "Van inrichting tot oplevering",
+            "steps": [
+              {
+                "title": "Maak het project",
+                "body": "Koppel een klant, leg uitvoeringsgegevens vast en noteer de briefing."
+              },
+              {
+                "title": "Plan het werk",
+                "body": "Voeg taken handmatig toe of controleer een plan dat met AI-ondersteuning is gegenereerd."
+              },
+              {
+                "title": "Houd resultaten samen",
+                "body": "Beheer bestanden, offertes, contractconcepten, factuurrecords en notities in de projectwerkruimte."
+              }
+            ]
+          },
+          "capabilities": {
+            "title": "Beheer het werk rond de oplevering",
+            "intro": "Projectwerkruimtes combineren structuur met optionele AI-ondersteuning bij concepten.",
+            "items": [
+              "Projectgegevens en status aanmaken en bijwerken",
+              "Taken, prioriteiten, eigenaren en einddatums volgen",
+              "Een AI-ondersteund projectplan genereren en controleren",
+              "Projectnotities en bronbestanden samen bewaren",
+              "Offertes, contractconcepten en factuurrecords maken",
+              "Projectactiviteit in één tijdlijn bekijken"
+            ]
+          },
+          "connected": {
+            "title": "Het project verbindt elke overdracht",
+            "body": "Klantcontext komt mee in het project. Taken en plannen sturen de uitvoering, terwijl offertes, contractconcepten, facturen en bestanden aan de opdracht gekoppeld blijven."
+          },
+          "cta": {
+            "title": "Breng je volgende project in beeld",
+            "body": "Meld je aan voor de bèta en bouw een projectwerkruimte rond echt klantwerk.",
+            "button": "Aanmelden voor bèta"
+          }
+        },
+        "automations": {
+          "name": "Automatiseringen",
+          "summary": "Configureer regels voor ondersteunde interne acties, suggesties en beoordelingsstappen.",
+          "seo": {
+            "title": "Configureerbare workflowautomatiseringen",
+            "description": "Configureer Assistify-regels om ondersteunde situaties te herkennen, suggesties voor te bereiden en interne acties met controles uit te voeren."
+          },
+          "eyebrow": "Beheerste workflows",
+          "title": "Automatiseer herhaalbare controles zorgvuldig",
+          "intro": "Automatiseringen kunnen zoeken naar geconfigureerde situaties in de werkruimte en ondersteunde interne acties voorbereiden. Jij kiest de regel, modus, goedkeuring en wanneer alles wordt gepauzeerd.",
+          "frame": {
+            "title": "Automatiseringscontrole",
+            "subtitle": "Geconfigureerde regel",
+            "alt": "Illustratie van een configureerbare automatiseringsregel"
+          },
+          "what": {
+            "title": "Regels voor ondersteunde werkruimtegebeurtenissen",
+            "body": "De automatiseringsbouwer combineert beschikbare triggers en acties. Afhankelijk van de gekozen modus kan een overeenkomst een suggestie worden, op goedkeuring wachten of een ondersteunde interne actie uitvoeren."
+          },
+          "why": {
+            "title": "Beperk routinecontrole zonder controle te verbergen",
+            "body": "Regels kunnen opvolging en intern onderhoud consistent onder de aandacht brengen. Goedkeuringswachtrijen, geschiedenis, modi per regel en pauzeknoppen houden het gedrag inzichtelijk."
+          },
+          "how": {
+            "title": "Configureer, controleer en pas aan",
+            "steps": [
+              {
+                "title": "Kies een ondersteunde regel",
+                "body": "Selecteer uit de situaties en acties die momenteel in de bouwer beschikbaar zijn."
+              },
+              {
+                "title": "Stel de beheermodus in",
+                "body": "Gebruik suggesties of goedkeuringen wanneer iemand moet controleren, of sta geschikte interne acties toe waar dat passend is."
+              },
+              {
+                "title": "Bekijk de geschiedenis",
+                "body": "Controleer resultaten, pauzeer één regel of alle automatiseringen en wijzig instellingen wanneer de workflow verandert."
+              }
+            ]
+          },
+          "capabilities": {
+            "title": "Praktische controles voor huidige regels",
+            "intro": "Beschikbaarheid hangt af van ondersteunde triggers, het actietype, de configuratie en instellingen van gekoppelde diensten.",
+            "items": [
+              "Regels bouwen met beschikbare triggers en acties",
+              "Suggesties voorbereiden voor beoordeling",
+              "Acties in een wachtrij zetten wanneer goedkeuring nodig is",
+              "Geschikte interne acties uitvoeren in de geconfigureerde modus",
+              "Regels pauzeren, hervatten, bewerken of uitschakelen",
+              "Automatiseringsgeschiedenis en resultaten bekijken"
+            ]
+          },
+          "connected": {
+            "title": "Regels gebruiken bestaande werkruimtecontext",
+            "body": "Automatiseringen beoordelen ondersteunde situaties rond klanten, projecten, taken en documenten. Sommige acties blijven suggesties of concepten en stappen die van een aanbieder afhangen vereisen de juiste configuratie."
+          },
+          "cta": {
+            "title": "Begin met één duidelijk omschreven regel",
+            "body": "Meld je aan voor de bèta, kies een herhaalbare controle en houd beoordeling ingeschakeld tot het gedrag bij je workflow past.",
+            "button": "Aanmelden voor bèta"
+          }
+        },
+        "documents": {
+          "name": "Documenten",
+          "summary": "Bewaar bestanden en maak projectoffertes, contractconcepten en factuurrecords.",
+          "seo": {
+            "title": "Projectdocumenten en zakelijke concepten",
+            "description": "Organiseer bestanden en maak offertes, contractconcepten en factuurrecords naast klantprojecten."
+          },
+          "eyebrow": "Zakelijke documenten",
+          "title": "Houd projectbestanden en concepten verbonden",
+          "intro": "Bewaar bronbestanden bij je werk en bereid offertes, contractconcepten en factuurrecords voor vanuit de projectcontext die je al hebt.",
+          "frame": {
+            "title": "Projectdocumenten",
+            "subtitle": "Concept en controle",
+            "alt": "Illustratie van verbonden projectdocumenten"
+          },
+          "what": {
+            "title": "Bestanden en zakelijke documenten in context",
+            "body": "De documentbibliotheek organiseert geüploade bestanden, terwijl projectwerkruimtes gerichte editors bieden voor offertes, contracten en facturen."
+          },
+          "why": {
+            "title": "Bouw dezelfde context niet opnieuw op",
+            "body": "Projectgegevens kunnen een eerste concept sturen en het resulterende document blijft gekoppeld aan de klantopdracht voor controle en aanpassing."
+          },
+          "how": {
+            "title": "Voorbereiden, bewerken en beheren",
+            "steps": [
+              {
+                "title": "Open het project",
+                "body": "Gebruik de project- en klantcontext als startpunt voor een zakelijk document."
+              },
+              {
+                "title": "Maak een concept",
+                "body": "Schrijf handmatig of vraag om een AI-ondersteund concept voor een offerte, contract of factuur."
+              },
+              {
+                "title": "Controleer en volg",
+                "body": "Bewerk de inhoud, beheer de werkruimtestatus en houd relevante bronbestanden dichtbij."
+              }
+            ]
+          },
+          "capabilities": {
+            "title": "Werk met documenten rond een project",
+            "intro": "Assistify ondersteunt documentvoorbereiding en organisatie; het vervangt geen professionele beoordeling of betaaldienst.",
+            "items": [
+              "Werkruimtebestanden uploaden, zoeken, hernoemen, downloaden en verwijderen",
+              "Projectoffertes maken en bewerken",
+              "Contractconcepten maken en bewerken",
+              "Factuurrecords maken en hun werkruimtestatus beheren",
+              "AI-ondersteuning gebruiken om een eerste concept voor te bereiden",
+              "Zakelijke documenten aan klanten en projecten gekoppeld houden"
+            ]
+          },
+          "disclaimer": "Contractuitvoer is een concept en geen juridisch advies. Factuurfuncties maken en volgen factuurrecords; Assistify int geen betalingen.",
+          "connected": {
+            "title": "Documenten blijven bij de opdracht",
+            "body": "Offertes, contractconcepten, factuurrecords en geüploade bronbestanden zijn verbonden met project- en klantcontext, waardoor controle en overdracht eenvoudiger worden."
+          },
+          "cta": {
+            "title": "Bouw documenten vanuit bruikbare context",
+            "body": "Meld je aan voor de bèta om projectbestanden te organiseren en zakelijke concepten voor je eigen controle voor te bereiden.",
+            "button": "Aanmelden voor bèta"
+          }
+        },
+        "agents": {
+          "eyebrow": "AI-agents",
+          "title": "Gespecialiseerde AI-hulp voor gericht werk",
+          "intro": "Gebruik Assistify-agents als je gerichte hulp wilt bij sales, schrijven of bedrijfsvoering — zonder je workspace te verlaten.",
+          "seo": {
+            "title": "AI-agents",
+            "description": "Gespecialiseerde Assistify AI-assistenten voor veelvoorkomend zakelijk werk."
+          },
+          "what": {
+            "title": "Wat is het?",
+            "body": "Ingebouwde specialisten waarmee je kunt chatten voor veelvoorkomende taken. Eigen agents maken is in deze release beperkt."
+          },
+          "why": {
+            "title": "Waarom het ertoe doet",
+            "body": "Verschillend werk vraagt om andere focus. Agents houden prompts dichter bij de taak."
+          },
+          "how": {
+            "title": "Hoe werkt het?",
+            "steps": [
+              "Open AI-agents",
+              "Kies een specialist",
+              "Stel een vraag met je workspace in gedachten",
+              "Controleer en gebruik de output"
+            ]
+          },
+          "capabilities": {
+            "title": "Wat kun je ermee?",
+            "items": [
+              "Outreach opstellen met salesfocus",
+              "Schrijfhulp voor klantgerichte teksten",
+              "Operationele vragen stellen",
+              "Terug naar projecten en documenten springen"
+            ]
+          },
+          "connected": {
+            "title": "Gekoppelde workflow",
+            "body": "Agents werken naast Copilot, klanten en projecten zodat antwoorden in Assistify blijven."
+          },
+          "cta": {
+            "button": "Aan de slag",
+            "note": "Beschikbaar tijdens de gesloten beta."
+          }
+        },
+        "knowledge": {
+          "eyebrow": "Knowledge Brain",
+          "title": "Geef Assistify bedrijfskennis",
+          "intro": "Bewaar feiten, voorkeuren en schrijfrichtlijnen zodat Assistify antwoorden geeft met jouw bedrijf in gedachten.",
+          "seo": {
+            "title": "Knowledge Brain",
+            "description": "Voeg bedrijfskennis toe zodat Assistify AI betere antwoorden kan geven."
+          },
+          "what": {
+            "title": "Wat is het?",
+            "body": "Een plek voor herinneringen en bedrijfsfeiten die Assistify gebruikt bij antwoorden en concepten."
+          },
+          "why": {
+            "title": "Waarom het ertoe doet",
+            "body": "AI zonder context verzint. Knowledge Brain houdt antwoorden dichter bij hoe jouw bedrijf werkt."
+          },
+          "how": {
+            "title": "Hoe werkt het?",
+            "steps": [
+              "Voeg belangrijke bedrijfsfeiten toe",
+              "Leg schrijf- en merkvoorkeuren vast",
+              "Hergebruik context in Copilot en documenten",
+              "Werk kennis bij naarmate je bedrijf verandert"
+            ]
+          },
+          "capabilities": {
+            "title": "Wat kun je ermee?",
+            "items": [
+              "Diensten en positionering vastleggen",
+              "Prijsnotities bewaren",
+              "Tone of voice sturen",
+              "Offerte- en e-mailconcepten verbeteren"
+            ]
+          },
+          "connected": {
+            "title": "Gekoppelde workflow",
+            "body": "Knowledge Brain ondersteunt Copilot, agents en documentgeneratie in je workspace."
+          },
+          "cta": {
+            "button": "Aan de slag",
+            "note": "Beschikbaar tijdens de gesloten beta."
+          }
+        },
+        "opportunities": {
+          "eyebrow": "Kansen",
+          "title": "Zie wat aandacht nodig heeft",
+          "intro": "Assistify toont voorgestelde vervolgacties op basis van je workspace — zodat follow-ups minder snel blijven liggen.",
+          "seo": {
+            "title": "Kansen",
+            "description": "Assistify markeert acties en kansen die mogelijk aandacht nodig hebben."
+          },
+          "what": {
+            "title": "Wat is het?",
+            "body": "Een feed met aanbevolen acties op basis van echte workspacegegevens — geen verzonnen voorbeeldactiviteit."
+          },
+          "why": {
+            "title": "Waarom het ertoe doet",
+            "body": "Werk stapelt zich op over klanten en projecten. Kansen helpen je zien wat je hierna kunt doen."
+          },
+          "how": {
+            "title": "Hoe werkt het?",
+            "steps": [
+              "Werk gewoon door in Assistify",
+              "Bekijk voorgestelde kansen",
+              "Open de bijbehorende klant of het project",
+              "Onderneem actie of sluit af"
+            ]
+          },
+          "capabilities": {
+            "title": "Wat kun je ermee?",
+            "items": [
+              "Stilstaand werk spotten",
+              "Deals en taken opvolgen",
+              "Direct naar de juiste module",
+              "Tempo houden zonder extra tool"
+            ]
+          },
+          "connected": {
+            "title": "Gekoppelde workflow",
+            "body": "Kansen verbinden dashboardinzichten met CRM, projecten en taken."
+          },
+          "cta": {
+            "button": "Aan de slag",
+            "note": "Beschikbaar tijdens de gesloten beta."
+          }
+        }
+      }
+    },
+    "pricing": {
+      "seo": {
+        "title": "Prijzen",
+        "description": "Bekijk de geplande Starter-, Pro- en Business-structuur voor Assistify tijdens de gesloten bèta."
+      },
+      "eyebrow": "Abonnementen",
+      "beta": {
+        "title": "Prijzen tijdens de gesloten bèta",
+        "intro": "Assistify is in gesloten bèta. De abonnementsnamen tonen de beoogde structuur, maar openbare prijzen en zelfbedieningsfacturatie zijn nog niet beschikbaar.",
+        "notice": "Tijdens de gesloten bèta is geen kassa actief. Meld je aan voor toegang; we communiceren prijzen voordat een betaald abonnement start.",
+        "planStatus": "Toegang tot gesloten bèta — geen openbare prijs",
+        "action": "Aanmelden voor bèta"
+      },
+      "available": {
+        "title": "Abonnementen voor verschillende werkwijzen",
+        "intro": "Kies een structuur die past bij je klantwerk en teambehoeften. Neem contact met ons op voordat je een betaald abonnement start.",
+        "planStatus": "Prijs op aanvraag",
+        "action": "Toegang aanvragen"
+      },
+      "plans": {
+        "starter": {
+          "name": "Starter",
+          "audience": "Voor zelfstandig werk",
+          "description": "Basisorganisatie voor klanten, projecten, taken en documenten om een werkruimte op orde te brengen.",
+          "features": [
+            "Klant- en projectwerkruimtes",
+            "Taakbeheer",
+            "Bestanden en concepten voor zakelijke documenten",
+            "Copilot met bevestigingsstappen"
+          ]
+        },
+        "pro": {
+          "name": "Pro",
+          "audience": "Voor groeiend klantwerk",
+          "description": "Een bredere workflow voor bedrijven die meer actieve klantoplevering en herhaalbare processen beheren.",
+          "features": [
+            "Alles in Starter",
+            "Kans- en pipelineworkflows",
+            "Configureerbare automatiseringen",
+            "Geschiedenis en inzichten in de AI-werkruimte"
+          ]
+        },
+        "business": {
+          "name": "Business",
+          "audience": "Voor samenwerkende teams",
+          "description": "Werkruimtebeheer en operationele ondersteuning voor teams die samen klantwerk coördineren.",
+          "features": [
+            "Alles in Pro",
+            "Team- en werkruimtebeheer",
+            "Gedeelde operationele workflows",
+            "Onboardinggesprek voor bedrijven"
+          ]
+        }
+      },
+      "disclaimer": "De inhoud van abonnementen kan veranderen terwijl de bèta zich ontwikkelt. We tonen definitieve functies en prijzen voordat betaalde abonnementen worden ingeschakeld."
+    },
+    "faq": {
+      "seo": {
+        "title": "Veelgestelde vragen",
+        "description": "Antwoorden over de Assistify-bèta, productmodules, AI-ondersteund werk, automatiseringen, documenten, prijzen en beveiliging."
+      },
+      "eyebrow": "Veelgestelde vragen",
+      "title": "Vragen, helder beantwoord",
+      "intro": "Wat Assistify vandaag doet, waar controle nodig is en wat je tijdens de gesloten bèta kunt verwachten.",
+      "questions": [
+        {
+          "question": "Wat is Assistify?",
+          "answer": "Assistify is een werkruimte voor klantrelaties, kansen, projecten, taken, bestanden, concepten voor zakelijke documenten en ondersteunde workflows. De modules delen werkruimtecontext zodat gerelateerd werk verbonden kan blijven."
+        },
+        {
+          "question": "Is Assistify algemeen beschikbaar?",
+          "answer": "Nee. Assistify wordt momenteel als gesloten bèta aangeboden. Toegang en functies kunnen veranderen terwijl het product wordt getest."
+        },
+        {
+          "question": "Kan Copilot zelfstandig wijzigingen maken?",
+          "answer": "Copilot bereidt ondersteunde acties voor, zoals een klant of project maken en concepten voor projectdocumenten genereren. De huidige actiestroom toont een voorbeeld en vraagt je om te bevestigen of annuleren voordat de actie wordt uitgevoerd."
+        },
+        {
+          "question": "Hoe werken automatiseringen?",
+          "answer": "Je configureert regels met de momenteel ondersteunde triggers en acties. Regels kunnen suggesties voorbereiden, op goedkeuring wachten of geschikte interne acties uitvoeren, afhankelijk van hun modus. Ze kunnen worden gepauzeerd, bewerkt, uitgeschakeld en in de geschiedenis worden gecontroleerd."
+        },
+        {
+          "question": "Int Assistify factuurbetalingen?",
+          "answer": "Nee. Assistify kan factuurrecords maken en hun werkruimtestatus volgen, maar int geen betalingen."
+        },
+        {
+          "question": "Zijn gegenereerde contracten juridisch advies?",
+          "answer": "Nee. Contractuitvoer is een concept, geen juridisch advies. Je bent zelf verantwoordelijk voor controle en voor het inschakelen van gekwalificeerd juridisch advies waar nodig."
+        },
+        {
+          "question": "Hoe worden werkruimtegegevens gescheiden?",
+          "answer": "Geauthenticeerde verzoeken zijn beperkt tot de actieve werkruimte of organisatie. Assistify is ontworpen om te voorkomen dat de ene werkruimte records van een andere werkruimte leest."
+        },
+        {
+          "question": "Welke beveiligingsmaatregelen zijn geïmplementeerd?",
+          "answer": "Geïmplementeerde maatregelen zijn onder meer httpOnly-authenticatiecookies, CSRF-bescherming voor verzoeken die gegevens wijzigen, werkruimtegebonden gegevenstoegang, versleutelde opgeslagen integratietokens, omgevingsgebaseerde geheimen, beheer van AI-gebruik en gezondheidsmonitoring."
+        },
+        {
+          "question": "Wat kosten Starter, Pro en Business?",
+          "answer": "Openbare prijzen worden niet getoond zolang facturatie voor de gesloten bèta is uitgeschakeld. De abonnementsnamen beschrijven een beoogde structuur, geen abonnementen die nu gekocht kunnen worden."
+        },
+        {
+          "question": "Kan ik Assistify in het Nederlands en Engels gebruiken?",
+          "answer": "Ja. De applicatie en deze productpagina's ondersteunen Nederlands en Engels. Records die gebruikers zelf invoeren blijven in de taal waarin ze zijn geschreven."
+        }
+      ],
+      "more": {
+        "title": "Beoordeel je de bèta nog?",
+        "body": "Meld je aan voor de bèta om het huidige product te bekijken en feedback te delen over de workflow die je bedrijf nodig heeft."
+      }
+    },
+    "security": {
+      "seo": {
+        "title": "Beveiligingsaanpak",
+        "description": "Lees over Assistify's geïmplementeerde werkwijze voor cookies, CSRF, werkruimtescheiding, tokenversleuteling, geheimen, AI-beheer en monitoring."
+      },
+      "eyebrow": "Beveiliging",
+      "title": "Ontworpen met praktische beveiligingsmaatregelen",
+      "intro": "Assistify past beveiligingsmaatregelen toe op authenticatie, verzoeken die gegevens wijzigen, werkruimtegegevens, inloggegevens voor gekoppelde diensten, AI-gebruik en operationele monitoring.",
+      "practices": {
+        "cookies": {
+          "title": "httpOnly-authenticatiecookies",
+          "body": "Authenticatietokens worden in httpOnly-cookies bewaard, zodat JavaScript van de applicatie ze niet rechtstreeks kan lezen."
+        },
+        "csrf": {
+          "title": "CSRF-bescherming",
+          "body": "Browserverzoeken die gegevens wijzigen gebruiken een CSRF-tokenheader die naast de geauthenticeerde sessie wordt gecontroleerd."
+        },
+        "isolation": {
+          "title": "Werkruimtescheiding",
+          "body": "Gegevenstoegang is in applicatiequery's en acties beperkt tot de geauthenticeerde werkruimte of organisatie."
+        },
+        "tokens": {
+          "title": "Versleutelde integratietokens",
+          "body": "Opgeslagen inloggegevens voor gekoppelde diensten worden versleuteld voordat ze worden bewaard en alleen ontsleuteld voor ondersteunde integratiehandelingen."
+        },
+        "secrets": {
+          "title": "Geheimen in de omgeving",
+          "body": "Applicatiegeheimen en versleutelingssleutels worden via de runtimeomgeving geleverd en niet in frontendcode opgenomen."
+        },
+        "ai": {
+          "title": "Beheer van AI-gebruik",
+          "body": "Werkruimte-instellingen kunnen AI-gebruik beheren, terwijl beoordelings- en bevestigingsstappen worden gebruikt voor ondersteunde gegenereerde acties en concepten."
+        },
+        "monitoring": {
+          "title": "Gezondheidsmonitoring",
+          "body": "Gezondheidseindpunten en integratiecontroles geven operationele signalen voor de applicatie en geconfigureerde koppelingen."
+        }
+      },
+      "scope": {
+        "title": "Een beveiligingsaanpak, geen certificeringsclaim",
+        "body": "Deze pagina beschrijft geïmplementeerd productgedrag en ontwerpkeuzes. Er wordt geen externe beveiligings-, privacy- of zorgcertificering geclaimd."
+      }
+    },
+    "solutions": {
+      "seo": {
+        "title": "Oplossingen voor klantgerichte bedrijven",
+        "description": "Ontdek hoe freelancers, bureaus en kleine bedrijven klantwerk kunnen organiseren met Assistify."
+      },
+      "eyebrow": "Oplossingen",
+      "title": "Een verbonden workflow voor de manier waarop jij klanten bedient",
+      "intro": "Assistify geeft zelfstandige professionals en kleine teams één plek om relaties, uitvoering, documenten en ondersteunde vervolgstappen te organiseren.",
+      "useCases": "Gebruikssituaties",
+      "audiences": {
+        "freelancers": {
+          "title": "Freelancers",
+          "body": "Houd elke klantopdracht georganiseerd zonder voor iedere fase een losse verzameling tools samen te stellen.",
+          "useCases": [
+            "Een nieuwe klant omzetten in een gestructureerd project",
+            "Taken en einddatums over opdrachten heen volgen",
+            "Concepten voor offertes, contracten en facturen voorbereiden",
+            "Copilot vragen stellen over actuele werkruimtecontext"
+          ]
+        },
+        "agencies": {
+          "title": "Bureaus",
+          "body": "Geef klantrelaties en uitvoeringsteams gedeelde context van kans tot overdracht.",
+          "useCases": [
+            "Pipelinerecords verbinden met actieve uitvoering",
+            "Briefings, taken, bestanden en status bij elkaar houden",
+            "Suggesties voor herhaalbare workflows controleren",
+            "Klantactiviteit en gekoppelde documenten bekijken"
+          ]
+        },
+        "smallBusinesses": {
+          "title": "Kleine bedrijven",
+          "body": "Breng dagelijkse klantactiviteiten in een werkruimte die met duidelijkere processen kan meegroeien.",
+          "useCases": [
+            "Doorzoekbare klant- en contactrecords onderhouden",
+            "Projecten en interne opvolgtaken organiseren",
+            "Beheerste automatiseringsregels configureren",
+            "Documentrecords bewaren bij het werk dat ze ondersteunen"
+          ]
+        }
+      },
+      "workflow": {
+        "title": "Begin met de workflow die je al hebt",
+        "body": "Assistify verplicht je niet om elke module vanaf dag één te gebruiken. Begin met klanten en projecten en voeg documentconcepten, Copilot of beheerste automatisering toe waar die een praktische volgende stap bieden."
+      },
+      "cta": {
+        "title": "Neem één echte klantworkflow mee",
+        "body": "Meld je aan voor de gesloten bèta en ontdek hoe je huidige proces in een verbonden werkruimte past.",
+        "button": "Aanmelden voor bèta"
+      }
+    },
+    "seo": {
+      "homeTitle": "AI-bedrijfssoftware voor zelfstandige teams",
+      "homeDescription": "Breng klanten, projecten, documenten en je dagelijkse werk samen in één werkplek met AI."
+    },
+    "nav": {
+      "product": "Product",
+      "pricing": "Prijzen",
+      "security": "Beveiliging",
+      "faq": "Veelgestelde vragen",
+      "menuOpen": "Navigatie openen",
+      "menuClose": "Navigatie sluiten",
+      "copilot": "Copilot",
+      "crm": "CRM",
+      "projects": "Projecten",
+      "automations": "Automatiseringen"
+    },
+    "footer": {
+      "tagline": "Eén rustige werkplek om je bedrijf slimmer te runnen met AI.",
+      "product": "Product",
+      "company": "Bedrijf",
+      "legal": "Juridisch",
+      "account": "Account",
+      "overview": "Overzicht",
+      "pricing": "Prijzen",
+      "security": "Beveiliging",
+      "faq": "FAQ",
+      "about": "Over Assistify",
+      "contact": "Contact",
+      "privacy": "Privacy",
+      "terms": "Voorwaarden",
+      "betaNotice": "Beta-informatie",
+      "login": "Inloggen",
+      "register": "Account aanmaken",
+      "dashboard": "Open Assistify",
+      "language": "Taal",
+      "copyright": "© {{year}} Assistify. Alle rechten voorbehouden.",
+      "solutions": "Oplossingen",
+      "documents": "Documenten"
+    },
+    "cta": {
+      "login": "Inloggen",
+      "getStarted": "Aan de slag",
+      "openAssistify": "Open Assistify",
+      "learnMore": "Ontdek het product"
+    },
+    "hero": {
+      "eyebrow": "Jouw bedrijf, één slimme werkplek",
+      "headline": "Beheer je bedrijf slimmer met AI.",
+      "body": "Assistify brengt je klanten, projecten, offertes en financiën samen en helpt je om werk vooruit te brengen. Minder wisselen, minder administratie en meer tijd voor wat echt telt.",
+      "primary": "Aan de slag",
+      "secondary": "Bekijk hoe het werkt"
+    },
+    "betaBanner": "Beta",
+    "pillars": {
+      "eyebrow": "Gemaakt voor vooruitgang",
+      "title": "Alles blijft met elkaar verbonden",
+      "body": "Assistify bewaart de samenhang in je werk, zodat je direct verder kunt zonder elke dag opnieuw het overzicht te moeten maken.",
+      "items": {
+        "unified": {
+          "title": "Eén werkplek voor je bedrijf",
+          "body": "Klanten, projecten, documenten en financiën staan bij elkaar in plaats van in losse tools."
+        },
+        "ai": {
+          "title": "AI die jouw context begrijpt",
+          "body": "Krijg bruikbare concepten, vervolgstappen en antwoorden op basis van het werk in je omgeving."
+        },
+        "control": {
+          "title": "Jij houdt de regie",
+          "body": "Controleer belangrijke acties voordat ze plaatsvinden en zie duidelijk wat Assistify heeft voorbereid."
+        },
+        "focus": {
+          "title": "Meer tijd voor echt werk",
+          "body": "Verminder terugkerende administratie en geef je aandacht aan klanten, keuzes en resultaat."
+        }
+      }
+    },
+    "howItWorks": {
+      "eyebrow": "Zo werkt het",
+      "title": "Van verspreid werk naar een heldere volgende stap",
+      "body": "Begin met wat je al weet. Assistify zet die context om in praktische hulp voor je hele workflow.",
+      "steps": {
+        "connect": {
+          "title": "Breng je werk samen",
+          "body": "Organiseer klanten, kansen, projecten en kennis in één werkplek."
+        },
+        "understand": {
+          "title": "Laat Assistify de context begrijpen",
+          "body": "Je AI-copilot werkt met de informatie die jij in Assistify wilt bewaren."
+        },
+        "move": {
+          "title": "Controleer en ga verder",
+          "body": "Zet suggesties om in offertes, taken, documenten en opvolging, terwijl jij beslist."
+        }
+      }
+    },
+    "modules": {
+      "eyebrow": "De Assistify-werkplek",
+      "title": "De tools die je bedrijf nodig heeft, als één geheel",
+      "body": "Gebruik wat je vandaag nodig hebt en behoud dezelfde context terwijl je bedrijf groeit.",
+      "explore": "Ontdek {{module}}",
+      "copilot": {
+        "title": "AI Copilot",
+        "body": "Stel vragen, werk ideeën uit en vertaal je bedrijfscontext naar concrete vervolgstappen."
+      },
+      "crm": {
+        "title": "CRM",
+        "body": "Houd iedere klant, contactpersoon en afspraak overzichtelijk bij elkaar."
+      },
+      "projects": {
+        "title": "Projecten",
+        "body": "Plan de uitvoering, verdeel taken en houd grip op de voortgang."
+      },
+      "agents": {
+        "title": "AI Agents",
+        "body": "Zet gespecialiseerde AI-assistenten in voor terugkerende delen van je werk."
+      },
+      "proposals": {
+        "title": "Offertes",
+        "body": "Maak sneller sterke offertes met de juiste klant- en projectinformatie."
+      },
+      "contracts": {
+        "title": "Contracten",
+        "body": "Bewaar afspraken bij het werk en de klantrelaties waar ze bij horen."
+      },
+      "invoices": {
+        "title": "Facturen",
+        "body": "Maak en volg facturen vanuit de projecten waarop ze betrekking hebben."
+      },
+      "automations": {
+        "title": "Automatiseringen",
+        "body": "Laat routinewerk doorlopen met transparante workflows die je zelf kunt controleren."
+      },
+      "knowledge": {
+        "title": "Kennis",
+        "body": "Bouw een betrouwbare kennisbasis voor je bedrijf én je AI."
+      },
+      "opportunities": {
+        "title": "Kansen",
+        "body": "Volg mogelijk werk vanaf het eerste signaal tot een duidelijke volgende actie."
+      }
+    },
+    "beforeAfter": {
+      "eyebrow": "Rustiger werken",
+      "title": "Ruil losse tools in voor één verbonden workflow",
+      "body": "Assistify is niet nóg een los tabblad. Het geeft het werk dat je al doet één gezamenlijke plek.",
+      "beforeTitle": "Zonder Assistify",
+      "afterTitle": "Met Assistify",
+      "before": {
+        "one": "Klantinformatie verspreid over inboxen en notities",
+        "two": "Dezelfde gegevens steeds kopiëren tussen losse tools",
+        "three": "Belangrijke opvolging die afhangt van je geheugen"
+      },
+      "after": {
+        "one": "Een helder beeld van elke klant en ieder actief project",
+        "two": "Dezelfde context van eerste gesprek tot factuur",
+        "three": "Door AI voorbereide vervolgstappen die jij controleert"
+      }
+    },
+    "aiTrust": {
+      "eyebrow": "Verantwoorde AI",
+      "title": "Hulp van AI zonder de regie kwijt te raken",
+      "body": "Assistify helpt je voorbereiden en kiezen, maar verbergt geen belangrijke acties. Jij bepaalt de context, controleert betekenisvolle output en blijft verantwoordelijk voor wat er wordt verstuurd.",
+      "pointOne": "Menselijke controle bij belangrijke acties",
+      "pointTwo": "Duidelijke context vanuit jouw werkplek",
+      "pointThree": "Geen verzonnen prestatieclaims"
+    },
+    "useCases": {
+      "eyebrow": "Voor ondernemende teams",
+      "title": "Een slimmer fundament voor jouw manier van werken",
+      "body": "Of je nu zelfstandig werkt of met een groeiend team: Assistify helpt om klantwerk in beweging te houden.",
+      "explore": "Bekijk oplossingen",
+      "freelancer": {
+        "title": "Freelancers",
+        "body": "Regel klantcontact, uitvoering en administratie zonder een verzameling losse tools."
+      },
+      "agency": {
+        "title": "Bureaus",
+        "body": "Geef je team één plek voor sales, klantinformatie en projectuitvoering."
+      },
+      "smallBusiness": {
+        "title": "Kleine bedrijven",
+        "body": "Werk steeds slimmer en houd beslissingen en klantcontext dicht bij elkaar."
+      }
+    },
+    "finalCta": {
+      "eyebrow": "Klaar wanneer jij dat bent",
+      "title": "Geef je bedrijf één plek om vooruit te gaan",
+      "body": "Breng je klantwerk, bedrijfsvoering en hulp van AI samen in Assistify.",
+      "button": "Maak je account aan"
+    },
+    "mock": {
+      "dashboardSub": "Je bedrijf in één oogopslag",
+      "dashboardAlt": "Voorbeeld van het Assistify-bedrijfsdashboard",
+      "brief": "Vandaag in Assistify",
+      "briefBody": "Je klantwerk, prioriteiten en vervolgstappen staan klaar in één overzicht.",
+      "clients": "Klanten",
+      "clientsHint": "Relaties en context",
+      "projects": "Projecten",
+      "projectsHint": "Werk in uitvoering",
+      "tasks": "Vervolgstappen",
+      "tasksHint": "Helder en controleerbaar",
+      "copilot": "AI Copilot",
+      "copilotLine": "Maak een korte projectupdate op basis van de laatste activiteit in je werkplek."
+    }
+  }
+}

@@ -9,7 +9,7 @@ function LegalShell({ title, children }) {
   return (
     <div className="min-h-screen bg-black text-zinc-100">
       <header className="border-b border-white/10 px-6 py-5">
-        <Link to="/login" className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-100">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-100">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
             <Sparkles className="h-4 w-4 text-white" />
           </span>
