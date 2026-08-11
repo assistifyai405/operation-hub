@@ -120,3 +120,13 @@ All help chrome and module copy live under `help.*` in NL and EN. Do not ship En
 - Help entry on `/crm` and `/pipeline`
 - Mini walkthrough: open CRM → new lead → fill → save → stage → note → board
 - Try it yourself: navigates to `/pipeline` and highlights `pipeline-new-lead`, form fields, save, follow-up
+
+## Sprint 31.5 expansions
+
+Full mini tutorials + guided tours now ship for:
+
+- Dashboard
+- Projects
+- Copilot
+
+CRM / Pipeline remains the reference sales-lead prototype.

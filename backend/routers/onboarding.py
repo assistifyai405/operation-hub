@@ -298,12 +298,11 @@ async def clear_demo_data(user: dict = Depends(current_user)):
 # Persistent checklist (derived from real workspace activity)
 # ---------------------------------------------------------------------------
 CHECKLIST = [
-    {"key": "profile", "label": "Complete company profile", "to": "/settings"},
+    {"key": "account", "label": "Create account", "to": "/dashboard"},
     {"key": "client", "label": "Create your first client", "to": "/clients"},
     {"key": "project", "label": "Create your first project", "to": "/projects"},
     {"key": "task", "label": "Create your first task", "to": "/tasks"},
-    {"key": "copilot", "label": "Ask Copilot", "to": "/ai-chat"},
-    {"key": "agents", "label": "Explore AI Agents", "to": "/ai-agents"},
+    {"key": "copilot", "label": "Try Copilot", "to": "/ai-chat"},
 ]
 
 
@@ -311,20 +310,12 @@ CHECKLIST = [
 async def checklist(user: dict = Depends(current_user)):
     org = user["organizationId"]
     flags = user.get("onboarding_flags", {})
-    profile = await db.business_profiles.find_one({"organizationId": org}, {"_id": 0, "sections": 1})
-    org_doc = await db.organizations.find_one({"id": org}, {"_id": 0, "name": 1, "industry": 1})
-    has_profile = (
-        bool((profile or {}).get("sections"))
-        or bool(flags.get("profile"))
-        or bool((org_doc or {}).get("name") and (org_doc or {}).get("industry"))
-    )
     state = {
-        "profile": has_profile,
+        "account": True,
         "client": (await db.clients.count_documents({"organizationId": org, "is_demo": {"$ne": True}})) > 0,
         "project": (await db.projects.count_documents({"organizationId": org, "is_demo": {"$ne": True}})) > 0,
         "task": (await db.tasks.count_documents({"organizationId": org, "is_demo": {"$ne": True}})) > 0,
         "copilot": bool(flags.get("copilot")),
-        "agents": bool(flags.get("agents")),
     }
     items = [{**c, "done": state.get(c["key"], False)} for c in CHECKLIST]
     done = sum(1 for i in items if i["done"])
@@ -335,7 +326,7 @@ async def checklist(user: dict = Depends(current_user)):
         "percent": round(done / len(items) * 100) if items else 0,
         "completed": user.get("onboardingCompleted", False),
         "dismissed": bool(user.get("checklist_dismissed")),
-        "title": "Get Assistify working for you",
+        "title": "Getting started",
         "subtitle": "Complete these steps using your real workspace — progress is never faked.",
     }
 

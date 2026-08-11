@@ -38,6 +38,15 @@ describe("Sprint 31 help system", () => {
     expect(registry).toMatch(/lead-save/);
   });
 
+  test("Dashboard, Projects and Copilot have full help prototypes", () => {
+    expect(registry).toMatch(/dashboard:[\s\S]*hasFullTutorial:\s*true/);
+    expect(registry).toMatch(/projects:[\s\S]*hasFullTutorial:\s*true/);
+    expect(registry).toMatch(/copilot:[\s\S]*hasFullTutorial:\s*true/);
+    expect(helpEn.help.modules.dashboard.tutorial.steps.length).toBeGreaterThanOrEqual(3);
+    expect(helpNl.help.modules.projects.tutorial.steps.length).toBeGreaterThanOrEqual(3);
+    expect(helpEn.help.modules.copilot.tutorial.steps.length).toBeGreaterThanOrEqual(4);
+  });
+
   test("NL and EN help copy for CRM", () => {
     expect(helpEn.help.modules.crm.title).toBe("CRM");
     expect(helpNl.help.modules.crm.title).toBe("CRM");

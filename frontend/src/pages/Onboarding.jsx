@@ -13,9 +13,10 @@ import { ProgressRail } from "@/components/onboarding/onboardingShared";
 import { StepWelcome } from "@/components/onboarding/StepWelcome";
 import { StepCompany } from "@/components/onboarding/StepCompany";
 import { StepGoal } from "@/components/onboarding/StepGoal";
+import { StepFirstActions } from "@/components/onboarding/StepFirstActions";
 import { StepReady } from "@/components/onboarding/StepReady";
 
-const LAST_STEP = 3;
+const LAST_STEP = 4;
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -53,9 +54,13 @@ export default function Onboarding() {
           navigate("/dashboard", { replace: true });
           return;
         }
-        // Migrate legacy 8-step progress into the 4-step flow
+        // Migrate legacy progress into the 5-step flow (welcome → company → goal → first actions → ready)
         if (typeof s.step === "number") {
-          const mapped = s.step <= 1 ? s.step : s.step <= 5 ? 2 : Math.min(s.step - 4, LAST_STEP);
+          let mapped = s.step;
+          if (s.step <= 1) mapped = s.step;
+          else if (s.step === 2) mapped = 2;
+          else if (s.step === 3) mapped = 4; // old ready → new ready
+          else mapped = Math.min(s.step, LAST_STEP);
           setStep(Math.min(Math.max(mapped, 0), LAST_STEP));
         }
         if (s.data && Object.keys(s.data).length) {
@@ -143,6 +148,7 @@ export default function Onboarding() {
     <StepWelcome key="w" {...stepProps} onSkip={skip} />,
     <StepCompany key="c" {...stepProps} />,
     <StepGoal key="g" {...stepProps} />,
+    <StepFirstActions key="f" {...stepProps} onSkip={skip} />,
     <StepReady key="r" data={data} finish={finish} />,
   ];
 

@@ -32,7 +32,57 @@
           "Lees je workspace-overzicht",
           "Open een prioriteit",
           "Start werk via een snelle actie"
-        ]
+        ],
+        "tutorial": {
+          "title": "Zo gebruik je het Dashboard",
+          "duration": "±40 sec",
+          "steps": [
+            {
+              "title": "Je workspace-overzicht",
+              "body": "Het Dashboard toont wat er speelt in Assistify op basis van je echte klanten, projecten en activiteit — nooit verzonnen steekproefgrafieken.",
+              "stage": 0,
+              "visual": "Dashboard-overzicht"
+            },
+            {
+              "title": "Prioriteiten en aandacht",
+              "body": "Bekijk prioriteiten, recent werk en checklist-items zodat je weet waar je vandaag begint.",
+              "stage": 1,
+              "visual": "Prioriteiten"
+            },
+            {
+              "title": "Snelle acties",
+              "body": "Ga naar Copilot, zoeken of de ochtendbriefing wanneer je een snellere volgende stap wilt.",
+              "stage": 2,
+              "visual": "Snelle acties"
+            },
+            {
+              "title": "Waarheen verder",
+              "body": "Gebruik Uitleg bij elke module, of open Klanten, Projecten en Copilot via de sidebar.",
+              "stage": 3,
+              "visual": "Vervolg"
+            }
+          ]
+        },
+        "tour": {
+          "steps": {
+            "overview": {
+              "title": "Dit is je Dashboard",
+              "body": "Begin hier voor een rustig overzicht van workspace-activiteit."
+            },
+            "priorities": {
+              "title": "Zie wat aandacht vraagt",
+              "body": "Checklist-items en briefingregels wijzen naar echt werk — niets is verzonnen."
+            },
+            "quick-actions": {
+              "title": "Gebruik een snelle actie",
+              "body": "Vraag AI, open zoeken of ga door met een briefing wanneer je klaar bent."
+            },
+            "next": {
+              "title": "Ga hier verder",
+              "body": "Open altijd Uitleg, of ga naar Klanten, Projecten en Copilot."
+            }
+          }
+        }
       },
       "clients": {
         "title": "Klanten",
@@ -158,7 +208,57 @@
           "Een project maken",
           "Een projectworkspace openen",
           "Leveringsstatus volgen"
-        ]
+        ],
+        "tutorial": {
+          "title": "Zo gebruik je Projecten",
+          "duration": "±45 sec",
+          "steps": [
+            {
+              "title": "Maak een project",
+              "body": "Projecten organiseren klantlevering. Jij blijft in controle over elke opslag.",
+              "stage": 0,
+              "visual": "Nieuw project"
+            },
+            {
+              "title": "Naam en details",
+              "body": "Geef het project een duidelijke titel zodat je het later terugvindt.",
+              "stage": 1,
+              "visual": "Projectformulier"
+            },
+            {
+              "title": "Koppel een klant",
+              "body": "Koppel het project aan een klant wanneer je er een hebt — context blijft bij elkaar.",
+              "stage": 2,
+              "visual": "Klant koppelen"
+            },
+            {
+              "title": "Sla op wanneer klaar",
+              "body": "Er wordt niets aangemaakt tot jij Opslaan kiest. Daarna kun je taken toevoegen en AI met projectcontext gebruiken.",
+              "stage": 3,
+              "visual": "Project opslaan"
+            }
+          ]
+        },
+        "tour": {
+          "steps": {
+            "create": {
+              "title": "Maak hier een project",
+              "body": "Klik op Nieuw project om het formulier te openen. Assistify maakt niets aan tot jij opslaat."
+            },
+            "details": {
+              "title": "Vul de projectnaam in",
+              "body": "Geef een duidelijke titel voor het werk dat je organiseert."
+            },
+            "client": {
+              "title": "Koppel een klant als dat kan",
+              "body": "Optioneel maar nuttig — zo blijft levering verbonden met de relatie."
+            },
+            "save": {
+              "title": "Sla het project op",
+              "body": "Klik op Opslaan wanneer je klaar bent. Deze tour slaat nooit voor je op."
+            }
+          }
+        }
       },
       "tasks": {
         "title": "Taken",
@@ -188,7 +288,63 @@
           "Stel een duidelijke vraag",
           "Controleer AI-output vóór verzenden",
           "Gebruik klant- of projectcontext wanneer beschikbaar"
-        ]
+        ],
+        "tutorial": {
+          "title": "Zo gebruik je Copilot",
+          "duration": "±45 sec",
+          "steps": [
+            {
+              "title": "Open Copilot",
+              "body": "Copilot is je AI-assistent in Assistify — geen generieke lege chat. Die kan workspace-context gebruiken waar dat ondersteund wordt.",
+              "stage": 0,
+              "visual": "Open Copilot"
+            },
+            {
+              "title": "Stel een zakelijke vraag",
+              "body": "Voorbeeld (alleen demo): “Maak een korte projectupdate voor klant Acme op basis van de laatste projectactiviteiten.” Dit voorbeeld maakt Acme niet aan in je workspace.",
+              "stage": 1,
+              "visual": "Vragen"
+            },
+            {
+              "title": "Gebruik klant- of projectcontext",
+              "body": "Als klanten en projecten bestaan, kan Copilot concepten daarop baseren.",
+              "stage": 2,
+              "visual": "Context"
+            },
+            {
+              "title": "Genereer een concept",
+              "body": "Assistify bereidt nuttige tekst voor. Jij controleert vóór iets wordt verstuurd of gepubliceerd.",
+              "stage": 3,
+              "visual": "Concept"
+            },
+            {
+              "title": "Jij blijft in controle",
+              "body": "AI kan fouten maken. Controleer het antwoord, pas het aan en bepaal zelf de volgende stap.",
+              "stage": 4,
+              "visual": "Review"
+            }
+          ]
+        },
+        "tour": {
+          "steps": {
+            "open": {
+              "title": "Je bent in Copilot",
+              "body": "Hier vraag je om samenvattingen, concepten en plannen vanuit Assistify."
+            },
+            "ask": {
+              "title": "Typ een duidelijke vraag",
+              "body": "Vraag over een klant, projectplan, opvolgmail of wat aandacht nodig heeft — jij blijft in controle over verzenden."
+            },
+            "send": {
+              "title": "Verstuur wanneer jij klaar bent",
+              "body": "De tour verstuurt niet voor je. Controleer elk antwoord vóór je ernaar handelt."
+            },
+            "review": {
+              "title": "Controleer vóór je handelt",
+              "body": "Assistify bereidt voor. Jij bepaalt wat er daarna gebeurt."
+            }
+          }
+        }
       },
       "agents": {
         "title": "AI Agents",

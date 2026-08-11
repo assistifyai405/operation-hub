@@ -32,7 +32,57 @@
           "Read your workspace overview",
           "Open a priority item",
           "Start work from a quick action"
-        ]
+        ],
+        "tutorial": {
+          "title": "How to use the Dashboard",
+          "duration": "About 40 sec",
+          "steps": [
+            {
+              "title": "Your workspace overview",
+              "body": "The Dashboard shows what is happening across Assistify using your real clients, projects and activity — never invented sample charts.",
+              "stage": 0,
+              "visual": "Dashboard overview"
+            },
+            {
+              "title": "Priorities and attention",
+              "body": "Scan priorities, recent work and checklist items so you know where to start today.",
+              "stage": 1,
+              "visual": "Priorities"
+            },
+            {
+              "title": "Quick actions",
+              "body": "Jump into Copilot, search, or morning brief when you want a faster next step.",
+              "stage": 2,
+              "visual": "Quick actions"
+            },
+            {
+              "title": "Where to go next",
+              "body": "Use Help on any module, or open Clients, Projects and Copilot from the sidebar.",
+              "stage": 3,
+              "visual": "Next steps"
+            }
+          ]
+        },
+        "tour": {
+          "steps": {
+            "overview": {
+              "title": "This is your Dashboard",
+              "body": "Start here for a calm overview of workspace activity."
+            },
+            "priorities": {
+              "title": "See what needs attention",
+              "body": "Checklist items and brief lines point to real work — nothing is faked."
+            },
+            "quick-actions": {
+              "title": "Use a quick action",
+              "body": "Ask AI, open search, or continue a brief when you are ready."
+            },
+            "next": {
+              "title": "Continue from here",
+              "body": "Open Help anytime, or move to Clients, Projects and Copilot."
+            }
+          }
+        }
       },
       "clients": {
         "title": "Clients",
@@ -158,7 +208,57 @@
           "Create a project",
           "Open a project workspace",
           "Track delivery status"
-        ]
+        ],
+        "tutorial": {
+          "title": "How to use Projects",
+          "duration": "About 45 sec",
+          "steps": [
+            {
+              "title": "Create a project",
+              "body": "Projects organize client delivery. You stay in control of every save.",
+              "stage": 0,
+              "visual": "New project"
+            },
+            {
+              "title": "Name and details",
+              "body": "Give the project a clear title so it is easy to find later.",
+              "stage": 1,
+              "visual": "Project form"
+            },
+            {
+              "title": "Link a client",
+              "body": "Connect the project to a client when you have one — context stays together.",
+              "stage": 2,
+              "visual": "Link client"
+            },
+            {
+              "title": "Save when ready",
+              "body": "Nothing is created until you click Save. Then add tasks and use AI with project context.",
+              "stage": 3,
+              "visual": "Save project"
+            }
+          ]
+        },
+        "tour": {
+          "steps": {
+            "create": {
+              "title": "Create a project here",
+              "body": "Click New project to open the form. Assistify will not create anything until you save."
+            },
+            "details": {
+              "title": "Add the project name",
+              "body": "Enter a clear title for the work you are organizing."
+            },
+            "client": {
+              "title": "Link a client when you can",
+              "body": "Optional but useful — it keeps delivery connected to the relationship."
+            },
+            "save": {
+              "title": "Save the project",
+              "body": "Click Save when you are ready. This tour never saves for you."
+            }
+          }
+        }
       },
       "tasks": {
         "title": "Tasks",
@@ -188,7 +288,63 @@
           "Ask a clear question",
           "Review AI output before sending",
           "Use client or project context when available"
-        ]
+        ],
+        "tutorial": {
+          "title": "How to use Copilot",
+          "duration": "About 45 sec",
+          "steps": [
+            {
+              "title": "Open Copilot",
+              "body": "Copilot is your AI assistant inside Assistify — not a generic empty chat. It can use workspace context where supported.",
+              "stage": 0,
+              "visual": "Open Copilot"
+            },
+            {
+              "title": "Ask a business question",
+              "body": "Example (demo only): “Create a short project update for client Acme based on the latest project activity.” This example does not create Acme in your workspace.",
+              "stage": 1,
+              "visual": "Ask"
+            },
+            {
+              "title": "Use client or project context",
+              "body": "When clients and projects exist, Copilot can ground drafts in that information.",
+              "stage": 2,
+              "visual": "Context"
+            },
+            {
+              "title": "Generate a draft",
+              "body": "Assistify prepares helpful text. You review before anything is sent or published.",
+              "stage": 3,
+              "visual": "Draft"
+            },
+            {
+              "title": "You stay in control",
+              "body": "AI can be wrong. Review the answer, edit it, and decide the next step yourself.",
+              "stage": 4,
+              "visual": "Review"
+            }
+          ]
+        },
+        "tour": {
+          "steps": {
+            "open": {
+              "title": "You are in Copilot",
+              "body": "This is where you ask for summaries, drafts and plans grounded in Assistify."
+            },
+            "ask": {
+              "title": "Type a clear question",
+              "body": "Ask about a client, project plan, follow-up email or what needs attention — you stay in control of sending."
+            },
+            "send": {
+              "title": "Send when you are ready",
+              "body": "The tour will not send for you. Review every answer before acting on it."
+            },
+            "review": {
+              "title": "Review before you act",
+              "body": "Assistify prepares. You decide what happens next."
+            }
+          }
+        }
       },
       "agents": {
         "title": "AI Agents",

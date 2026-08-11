@@ -68,7 +68,7 @@ export default function MiniWalkthrough() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          <CrmTutorialStage stage={current.stage || step} label={current.visual} />
+          <ModuleTutorialStage moduleId={contentId} stage={current.stage || step} label={current.visual} />
           <p className="mt-5 text-sm leading-6 text-zinc-300">{current.body}</p>
           <p className="mt-3 text-xs text-zinc-500" data-testid="mini-walkthrough-progress">
             {t("help.tutorialProgress", { current: step + 1, total: steps.length })}
@@ -122,7 +122,95 @@ export default function MiniWalkthrough() {
   );
 }
 
-/** Isolated visual demo — example labels only, never writes to the workspace. */
+/** Isolated visual demos — example labels only, never write to the workspace. */
+function ModuleTutorialStage({ moduleId, stage, label }) {
+  if (moduleId === "projects") return <ProjectsTutorialStage stage={stage} label={label} />;
+  if (moduleId === "copilot") return <CopilotTutorialStage stage={stage} label={label} />;
+  if (moduleId === "dashboard") return <DashboardTutorialStage stage={stage} label={label} />;
+  return <CrmTutorialStage stage={stage} label={label} />;
+}
+
+function Frame({ title, children, testid, label }) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900" data-testid={testid} aria-label={label || title}>
+      <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
+        <span className="h-2 w-2 rounded-full bg-zinc-600" />
+        <span className="h-2 w-2 rounded-full bg-zinc-600" />
+        <span className="h-2 w-2 rounded-full bg-zinc-600" />
+        <span className="ml-2 text-[11px] text-zinc-500">{title}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DashboardTutorialStage({ stage, label }) {
+  const active = ["overview", "priorities", "actions", "next"][stage] || "overview";
+  return (
+    <Frame title="Assistify · Dashboard" testid="dashboard-tutorial-stage" label={label}>
+      <div className="space-y-2 p-3">
+        <div className={`rounded-xl border p-3 ${active === "overview" ? "border-brand-500/40 bg-brand-500/5" : "border-white/10"}`}>
+          <p className="text-xs font-semibold text-zinc-200">Good morning</p>
+          <p className="mt-1 text-[10px] text-zinc-500">Workspace overview from real activity</p>
+        </div>
+        <div className={`rounded-xl border p-3 ${active === "priorities" ? "border-brand-500/40 bg-brand-500/5" : "border-white/10"}`}>
+          <p className="text-[10px] font-semibold text-zinc-400">Priorities</p>
+          <div className="mt-2 h-2 rounded bg-zinc-800" />
+          <div className="mt-1 h-2 w-2/3 rounded bg-zinc-800" />
+        </div>
+        <div className={`flex gap-2 ${active === "actions" || active === "next" ? "opacity-100" : "opacity-70"}`}>
+          <span className={`rounded-md px-2 py-1 text-[10px] ${active === "actions" ? "bg-brand-600 text-white" : "bg-zinc-800 text-zinc-500"}`}>Ask Copilot</span>
+          <span className={`rounded-md px-2 py-1 text-[10px] ${active === "next" ? "bg-brand-600/20 text-brand-200" : "bg-zinc-800 text-zinc-500"}`}>Open Clients</span>
+        </div>
+      </div>
+    </Frame>
+  );
+}
+
+function ProjectsTutorialStage({ stage, label }) {
+  const active = ["create", "form", "client", "save"][stage] || "create";
+  return (
+    <Frame title="Assistify · Projects" testid="projects-tutorial-stage" label={label}>
+      <div className="space-y-2 p-3">
+        <div className="flex justify-between">
+          <p className="text-xs font-semibold text-zinc-200">Projects</p>
+          <span className={`rounded-md px-2 py-1 text-[10px] font-semibold ${active === "create" ? "bg-brand-600 text-white ring-2 ring-brand-300" : "bg-zinc-800 text-zinc-400"}`}>+ New project</span>
+        </div>
+        <div className={`rounded-xl border p-3 ${active === "form" || active === "client" || active === "save" ? "border-brand-500/40 bg-brand-500/5" : "border-white/10"}`}>
+          <div className={`h-7 rounded-md border px-2 text-[10px] leading-7 ${active === "form" ? "border-brand-500/50 text-zinc-200" : "border-white/10 text-zinc-500"}`}>Website redesign</div>
+          <div className={`mt-2 h-7 rounded-md border px-2 text-[10px] leading-7 ${active === "client" ? "border-brand-500/50 text-zinc-200" : "border-white/10 text-zinc-500"}`}>Client: Acme (example)</div>
+          <span className={`mt-2 inline-block rounded-md px-2 py-1 text-[10px] ${active === "save" ? "bg-brand-600 text-white ring-2 ring-brand-300" : "bg-zinc-800 text-zinc-500"}`}>Save</span>
+        </div>
+      </div>
+    </Frame>
+  );
+}
+
+function CopilotTutorialStage({ stage, label }) {
+  const active = ["open", "ask", "context", "draft", "review"][stage] || "open";
+  return (
+    <Frame title="Assistify · Copilot" testid="copilot-tutorial-stage" label={label}>
+      <div className="space-y-2 p-3">
+        <div className={`rounded-xl border p-3 ${active === "open" || active === "ask" ? "border-brand-500/40 bg-brand-500/5" : "border-white/10"}`}>
+          <p className="text-[10px] text-zinc-500">Ask Copilot</p>
+          <p className={`mt-1 text-[11px] ${active === "ask" || active === "context" ? "text-zinc-200" : "text-zinc-500"}`}>
+            Create a short project update for client Acme based on the latest project activity.
+          </p>
+          <p className="mt-1 text-[9px] text-zinc-600">Demo prompt only — does not create Acme</p>
+        </div>
+        <div className={`rounded-xl border p-3 ${active === "context" ? "border-brand-500/40 bg-brand-500/5" : "border-white/10"}`}>
+          <p className="text-[10px] text-zinc-500">Context used when available</p>
+          <p className="mt-1 text-[11px] text-zinc-400">Client · Project · Tasks</p>
+        </div>
+        <div className={`rounded-xl border p-3 ${active === "draft" || active === "review" ? "border-brand-500/40 bg-brand-500/5" : "border-white/10"}`}>
+          <p className="text-[10px] font-semibold text-brand-300">Draft ready for review</p>
+          <p className="mt-1 text-[11px] text-zinc-400">Assistify prepares. You decide what happens next.</p>
+        </div>
+      </div>
+    </Frame>
+  );
+}
+
 function CrmTutorialStage({ stage, label }) {
   const highlights = {
     0: "nav",

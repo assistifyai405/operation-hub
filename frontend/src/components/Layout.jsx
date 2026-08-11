@@ -24,6 +24,7 @@ import BetaFeedbackButton from "@/components/BetaFeedbackButton";
 import HelpPanel from "@/help/HelpPanel";
 import MiniWalkthrough from "@/help/MiniWalkthrough";
 import GuidedTour from "@/help/GuidedTour";
+import { useTheme } from "@/context/ThemeContext";
 
 const relativeTime = (iso) => {
   if (!iso) return "";
@@ -119,9 +120,7 @@ const Sidebar = ({ onNavigate, betaMode, t }) => (
 
 export default function Layout() {
   const { t } = useTranslation();
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", "dark");
-  }, []);
+  const { resolved } = useTheme();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -166,7 +165,7 @@ export default function Layout() {
   const resendVerification = async () => {
     try {
       await authApi.resendVerification();
-      toast.success("Verification email sent — please check your inbox.");
+      toast.success(t("verifyEmail.sent"));
     } catch (e) {
       toast.error(e.message);
     }
@@ -174,18 +173,18 @@ export default function Layout() {
 
   return (
     <AssistantProvider>
-    <div className="min-h-screen bg-black text-zinc-50">
+    <div className="min-h-screen bg-[var(--theme-background)] text-[var(--theme-text-primary)]" data-testid="app-shell" data-resolved-theme={resolved}>
       {/* Desktop sidebar */}
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r border-white/10 bg-black lg:block">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r border-[var(--theme-border)] bg-[var(--theme-surface)] lg:block">
         <Sidebar betaMode={betaMode} t={t} />
       </aside>
 
       {/* Mobile sidebar */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-64 border-r border-white/10 bg-black animate-fade-up">
-            <button className="absolute right-3 top-5 text-zinc-400 focus-visible:ring-2 focus-visible:ring-brand-500 rounded-md" onClick={() => setMobileOpen(false)} data-testid="mobile-close" aria-label="Close navigation menu">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute left-0 top-0 h-full w-64 border-r border-[var(--theme-border)] bg-[var(--theme-surface)] animate-fade-up">
+            <button className="absolute right-3 top-5 text-[var(--theme-text-secondary)] focus-visible:ring-2 focus-visible:ring-brand-500 rounded-md" onClick={() => setMobileOpen(false)} data-testid="mobile-close" aria-label={t("nav.closeMenu", { defaultValue: "Close navigation menu" })}>
               <X className="h-5 w-5" />
             </button>
             <Sidebar onNavigate={() => setMobileOpen(false)} betaMode={betaMode} t={t} />
@@ -195,8 +194,8 @@ export default function Layout() {
 
       <div className="lg:ml-64">
         {/* Header */}
-        <header className="sticky top-0 z-30 flex items-center gap-4 border-b border-white/10 bg-black/60 px-4 py-3.5 backdrop-blur-xl sm:px-8">
-          <button className="lg:hidden text-zinc-400" onClick={() => setMobileOpen(true)} data-testid="mobile-menu" aria-label="Open navigation menu">
+        <header className="sticky top-0 z-30 flex items-center gap-4 border-b border-[var(--theme-border)] bg-[color-mix(in_srgb,var(--theme-surface)_88%,transparent)] px-4 py-3.5 backdrop-blur-xl sm:px-8">
+          <button className="lg:hidden text-[var(--theme-text-secondary)]" onClick={() => setMobileOpen(true)} data-testid="mobile-menu" aria-label={t("nav.openMenu", { defaultValue: "Open navigation menu" })}>
             <Menu className="h-5 w-5" />
           </button>
           <h1 className="min-w-0 truncate text-lg font-semibold tracking-tight" data-testid="page-title">{pageTitle}</h1>
@@ -293,9 +292,9 @@ export default function Layout() {
         {user && !user.emailVerified && !bannerDismissed && (
           <div data-testid="verify-email-banner" role="status" className="flex flex-wrap items-center gap-3 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2.5 sm:px-8">
             <MailWarning className="h-4 w-4 shrink-0 text-amber-400" />
-            <p className="text-sm text-amber-200">Verify your email to unlock sending proposals, contracts &amp; invoices to clients.</p>
-            <button onClick={resendVerification} data-testid="banner-resend" className="ml-auto rounded-md border border-amber-500/40 px-2.5 py-1 text-xs font-medium text-amber-200 transition-colors hover:bg-amber-500/15 focus-visible:ring-2 focus-visible:ring-amber-400">Resend email</button>
-            <button onClick={dismissBanner} data-testid="banner-dismiss" aria-label="Dismiss email verification reminder" className="rounded-md p-1 text-amber-300/70 transition-colors hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-400">
+            <p className="text-sm text-amber-200">{t("verifyEmail.banner")}</p>
+            <button onClick={resendVerification} data-testid="banner-resend" className="ml-auto rounded-md border border-amber-500/40 px-2.5 py-1 text-xs font-medium text-amber-200 transition-colors hover:bg-amber-500/15 focus-visible:ring-2 focus-visible:ring-amber-400">{t("verifyEmail.resend")}</button>
+            <button onClick={dismissBanner} data-testid="banner-dismiss" aria-label={t("verifyEmail.dismiss")} className="rounded-md p-1 text-amber-300/70 transition-colors hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-400">
               <X className="h-4 w-4" />
             </button>
           </div>

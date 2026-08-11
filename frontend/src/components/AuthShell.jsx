@@ -1,43 +1,45 @@
 import { Sparkles } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { applyTheme, getStoredTheme } from "@/lib/theme";
 
 export function AuthShell({ title, subtitle, children, footer }) {
   const { t } = useTranslation();
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", "dark");
+    // Auth follows the same preference as the app (default light for new users)
+    applyTheme(getStoredTheme());
   }, []);
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-black lg:grid-cols-2">
-      <div className="relative hidden overflow-hidden border-r border-white/10 lg:flex lg:flex-col lg:justify-between grid-bg p-12">
-        <div className="absolute -left-32 top-1/3 h-96 w-96 rounded-full bg-brand-600/20 blur-[120px]" />
+    <div className="grid min-h-screen grid-cols-1 bg-[var(--theme-background)] text-[var(--theme-text-primary)] lg:grid-cols-2">
+      <div className="relative hidden overflow-hidden border-r border-[var(--theme-border)] bg-[var(--theme-surface)] lg:flex lg:flex-col lg:justify-between marketing-grid-bg p-12">
+        <div className="absolute -left-32 top-1/3 h-96 w-96 rounded-full bg-brand-600/15 blur-[120px]" />
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 glow-brand">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
-          <p className="text-lg font-bold tracking-tight">{t("app.name")} <span className="text-brand-400">OS</span></p>
+          <p className="text-lg font-bold tracking-tight">{t("app.name")} <span className="text-brand-600">OS</span></p>
         </div>
         <div className="relative z-10 max-w-md">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-400">{t("app.name")} OS</p>
-          <h2 className="mt-3 text-4xl font-bold leading-tight tracking-tight text-zinc-50">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">{t("app.name")} OS</p>
+          <h2 className="mt-3 text-4xl font-bold leading-tight tracking-tight text-[var(--theme-text-primary)]">
             {t("auth.heroTitle")}
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-zinc-400">
+          <p className="mt-4 text-base leading-relaxed text-[var(--theme-text-secondary)]">
             {t("auth.heroBody")}
           </p>
-          <div className="mt-8 flex flex-col gap-2 text-sm font-medium text-zinc-300">
+          <div className="mt-8 flex flex-col gap-2 text-sm font-medium text-[var(--theme-text-secondary)]">
             <div>{t("auth.heroPoints.one")}</div>
             <div>{t("auth.heroPoints.two")}</div>
             <div>{t("auth.heroPoints.three")}</div>
           </div>
         </div>
-        <p className="relative z-10 text-xs text-zinc-600">
+        <p className="relative z-10 text-xs text-[var(--theme-text-muted)]">
           © 2026 {t("app.name")} ·{" "}
-          <a href="/privacy" className="hover:text-zinc-400">{t("legal.privacy")}</a>
+          <a href="/privacy" className="hover:text-[var(--theme-text-secondary)]">{t("legal.privacy")}</a>
           {" · "}
-          <a href="/terms" className="hover:text-zinc-400">{t("legal.terms")}</a>
+          <a href="/terms" className="hover:text-[var(--theme-text-secondary)]">{t("legal.terms")}</a>
           {" · "}
-          <a href="/beta-notice" className="hover:text-zinc-400">{t("legal.betaNotice")}</a>
+          <a href="/beta-notice" className="hover:text-[var(--theme-text-secondary)]">{t("legal.betaNotice")}</a>
         </p>
       </div>
 

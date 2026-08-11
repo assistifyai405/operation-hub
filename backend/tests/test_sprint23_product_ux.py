@@ -61,11 +61,11 @@ def test_checklist_shape_and_real_progress(client):
     data = _register(client)
     tok = data["accessToken"]
     j = client.get("/api/onboarding/checklist", headers=_auth(tok)).json()
-    assert j["total"] == 6 and j["done"] == 0 and j["percent"] == 0
+    assert j["total"] == 5 and j["done"] == 1 and j["percent"] == 20
     keys = {i["key"] for i in j["items"]}
-    assert keys == {"profile", "client", "project", "task", "copilot", "agents"}
+    assert keys == {"account", "client", "project", "task", "copilot"}
     assert j.get("dismissed") is False
-    assert "Assistify" in (j.get("title") or "")
+    assert j.get("title") == "Getting started"
 
     assert client.post("/api/clients", headers=_auth(tok), json={
         "name": "S23 Client", "contact": "A", "email": "a@a.com",
@@ -81,15 +81,14 @@ def test_checklist_shape_and_real_progress(client):
             "title": "S23 Task", "project_id": items[0]["id"], "priority": "Medium",
         })
     client.post("/api/onboarding/flag", headers=_auth(tok), json={"key": "copilot"})
-    client.post("/api/onboarding/flag", headers=_auth(tok), json={"key": "agents"})
 
     j2 = client.get("/api/onboarding/checklist", headers=_auth(tok)).json()
     st = {i["key"]: i["done"] for i in j2["items"]}
+    assert st["account"] is True
     assert st["client"] is True
     assert st["project"] is True
     assert st["copilot"] is True
-    assert st["agents"] is True
-    assert j2["done"] >= 3
+    assert j2["done"] >= 4
 
 
 def test_checklist_dismiss_persists(client):

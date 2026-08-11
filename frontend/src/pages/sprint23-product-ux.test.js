@@ -13,12 +13,13 @@ describe("Sprint 23 onboarding flow", () => {
   const goal = read("../components/onboarding/StepGoal.jsx");
   const ready = read("../components/onboarding/StepReady.jsx");
 
-  test("uses a 4-step welcome → company → goal → ready flow", () => {
+  test("uses a 5-step welcome → company → goal → first actions → ready flow", () => {
     expect(onboarding).toMatch(/StepWelcome/);
     expect(onboarding).toMatch(/StepCompany/);
     expect(onboarding).toMatch(/StepGoal/);
+    expect(onboarding).toMatch(/StepFirstActions/);
     expect(onboarding).toMatch(/StepReady/);
-    expect(onboarding).toMatch(/LAST_STEP = 3/);
+    expect(onboarding).toMatch(/LAST_STEP = 4/);
   });
 
   test("skip/save-exit marks onboarding complete so returning users are not trapped", () => {
@@ -33,7 +34,8 @@ describe("Sprint 23 onboarding flow", () => {
     expect(welcome).toMatch(/onboarding\.capabilities\.\$\{key\}/);
     expect(welcome).toMatch(/capabilities/);
     const en = JSON.parse(read("../i18n/locales/en.json"));
-    expect(en.onboarding.welcomeHeadline).toMatch(/AI-powered business operating system/);
+    expect(en.onboarding.welcomeHeadline).toMatch(/Welcome to Assistify/);
+    expect(en.onboarding.welcomeBody).toMatch(/clients, projects, tasks, documents and AI/);
     expect(en.onboarding.capabilities.clients).toMatch(/Clients/);
     expect(en.onboarding.capabilities.projects).toMatch(/Projects/);
     expect(en.onboarding.capabilities.ai).toMatch(/AI/);
@@ -68,12 +70,12 @@ describe("Sprint 23 dashboard first-run", () => {
   });
 
   test("checklist wording is workspace-oriented and uses real API progress", () => {
-    expect(checklist).toMatch(/onboarding\.checklist\.title|Get Assistify working for you/);
+    expect(checklist).toMatch(/onboarding\.checklist\.title|Getting started/);
     expect(checklist).not.toMatch(/AI employee/);
     expect(checklist).toMatch(/dismissChecklist/);
     expect(checklist).toMatch(/\.checklist\(\)/);
     const en = JSON.parse(read("../i18n/locales/en.json"));
-    expect(en.onboarding.checklist.title).toMatch(/Get Assistify working for you/);
+    expect(en.onboarding.checklist.title).toMatch(/Getting started/);
   });
 });
 

@@ -58,3 +58,17 @@ Preserved across themes:
 Outfit remains the product typeface. Marketing uses a subtle grid + soft green radial wash (`marketing-grid-bg`, `marketing-soft-green`) without neon glow.
 
 `prefers-reduced-motion` disables decorative animations globally.
+
+## Authenticated light mode (Sprint 31.5)
+
+The authenticated application now defaults to **Light** for new users and shares
+the same token system as marketing.
+
+- Preference: Settings → Appearance (`light` | `dark` | `system`)
+- Storage: `localStorage.assistify_theme`
+- `data-theme` on `<html>` is always the **resolved** light/dark value
+- `data-theme-preference` stores the user choice including `system`
+- Marketing pages force light while mounted
+- Compatibility CSS remaps common zinc/black utilities under `[data-theme="light"]`
+
+Dark mode remains fully available.

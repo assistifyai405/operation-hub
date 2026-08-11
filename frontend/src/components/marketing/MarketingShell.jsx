@@ -71,8 +71,9 @@ export default function MarketingShell({ children }) {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", "light");
+    document.documentElement.setAttribute("data-theme-preference", "light");
     return () => {
-      // Leave light for other marketing routes; App shell will re-apply dark on authenticated views if needed.
+      // ThemeProvider / next route re-applies the authenticated preference.
     };
   }, []);
 

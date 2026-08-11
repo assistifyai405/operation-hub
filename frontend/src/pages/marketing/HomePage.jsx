@@ -28,6 +28,7 @@ import { marketingEvents } from "@/pages/marketing/marketingAnalytics";
 import { BILLING_ENABLED } from "@/lib/config";
 
 const SHOWCASE_TABS = ["crm", "projects", "copilot", "proposals", "automations", "opportunities"];
+const DAY_STEPS = ["client", "crm", "project", "tasks", "copilot", "proposal", "followup"];
 const CAPABILITY_KEYS = ["clients", "work", "proposals", "plan", "knowledge", "followups", "repetitive", "drafts"];
 const AI_EXAMPLES = ["summarize", "plan", "email", "proposal", "attention", "tasks"];
 const WORKFLOW_KEYS = ["freelancer", "agency", "smallBusiness"];
@@ -195,6 +196,39 @@ export default function HomePage() {
                 <p className="mt-5 text-center text-sm font-medium text-[var(--theme-text-primary)]">{t("marketing.withoutWith.message")}</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Day with Assistify */}
+        <section className="border-b border-[var(--theme-border)] py-16 sm:py-20" data-testid="day-with-assistify">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <SectionHeading
+              eyebrow={t("marketing.dayWith.eyebrow")}
+              title={t("marketing.dayWith.title")}
+              body={t("marketing.dayWith.body")}
+            />
+            <ol className="mt-12 space-y-3">
+              {DAY_STEPS.map((key, index) => (
+                <li key={key}>
+                  <Link
+                    to={t(`marketing.dayWith.steps.${key}.path`)}
+                    className="flex flex-col gap-2 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-soft transition-colors hover:border-[var(--theme-brand-border)] sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--theme-brand-soft)] text-sm font-bold text-[var(--theme-brand)]">
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[var(--theme-text-primary)]">{t(`marketing.dayWith.steps.${key}.title`)}</p>
+                      <p className="mt-0.5 text-sm text-[var(--theme-text-secondary)]">{t(`marketing.dayWith.steps.${key}.body`)}</p>
+                    </div>
+                    {index < DAY_STEPS.length - 1 ? (
+                      <ArrowRight className="hidden h-4 w-4 rotate-90 text-[var(--theme-brand)] sm:block sm:rotate-0" aria-hidden="true" />
+                    ) : null}
+                  </Link>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-8 text-center text-base font-semibold text-[var(--theme-brand)]">{t("marketing.dayWith.message")}</p>
           </div>
         </section>
 

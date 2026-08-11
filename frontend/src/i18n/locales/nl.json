@@ -249,7 +249,8 @@
       "integrations": "Integraties",
       "operations": "Operaties",
       "feedback": "Beta-feedback",
-      "language": "Taal"
+      "language": "Taal",
+      "appearance": "Weergave"
     },
     "language": {
       "title": "Taal",
@@ -563,7 +564,17 @@
     "operationsTitle": "Operaties",
     "operationsDescription": "Backend-status, AI-gebruik, workers en herstelacties voor owners en admins.",
     "feedbackTitle": "Beta-feedback",
-    "feedbackDescription": "Feedback van gebruikers in deze workspace."
+    "feedbackDescription": "Feedback van gebruikers in deze workspace.",
+    "appearance": {
+      "title": "Weergave",
+      "description": "Kies hoe Assistify eruitziet op dit apparaat. Marketingpagina’s blijven licht.",
+      "label": "Thema",
+      "light": "Licht",
+      "dark": "Donker",
+      "system": "Systeem",
+      "hint": "Momenteel: {{resolved}}. Wijzigingen gelden meteen.",
+      "saved": "Weergave bijgewerkt"
+    }
   },
   "beta": {
     "sendFeedback": "Feedback sturen",
@@ -601,8 +612,8 @@
   },
   "onboarding": {
     "welcomeTitle": "Welkom bij Assistify",
-    "welcomeHeadline": "Je AI-gedreven bedrijfsbesturingssysteem.",
-    "welcomeBody": "Assistify helpt kleine bedrijven, freelancers en teams om werk en AI vanuit één workspace te beheren — zonder aparte tools voor klanten, projecten en documenten.",
+    "welcomeHeadline": "Welkom bij Assistify",
+    "welcomeBody": "Assistify brengt je klanten, projecten, taken, documenten en AI samen in één werkplek. We helpen je nu met de belangrijkste eerste stappen.",
     "skip": "Overslaan",
     "skipExplore": "Setup overslaan — verken de workspace",
     "getStarted": "Aan de slag",
@@ -686,18 +697,43 @@
       "projectForDocs": "Maak een project voor documenten"
     },
     "checklist": {
-      "title": "Laat Assistify voor je werken",
-      "subtitle": "Voltooi deze stappen met echte gegevens uit je workspace — je voortgang wordt nooit verzonnen.",
+      "title": "Aan de slag",
+      "subtitle": "Een kort pad met je echte workspace — er wordt niets aangemaakt tot jij dat doet.",
       "dismiss": "Installatiechecklist sluiten",
       "progress": "{{done}} van {{total}} voltooid",
       "progressLabel": "Voortgang van workspace-inrichting",
       "items": {
-        "profile": "Vul je bedrijfsprofiel aan",
-        "client": "Maak je eerste klant",
+        "account": "Account aangemaakt",
+        "client": "Voeg je eerste klant toe",
         "project": "Maak je eerste project",
-        "task": "Maak je eerste taak",
-        "copilot": "Vraag Copilot",
-        "agents": "Ontdek AI-agents"
+        "task": "Voeg je eerste taak toe",
+        "copilot": "Probeer Copilot",
+        "profile": "Bedrijfsprofiel afronden",
+        "agents": "Verken AI Agents"
+      }
+    },
+    "firstActions": {
+      "eyebrow": "Eerste stappen",
+      "title": "Zet je workspace klaar met echt werk",
+      "body": "Deze stappen gebruiken je echte Assistify-workspace. Er wordt niets automatisch aangemaakt — jij bepaalt wanneer je een klant, project, taak of Copilot-vraag toevoegt.",
+      "note": "Je kunt nu een stap openen, of doorgaan en later de checklist op het dashboard gebruiken.",
+      "items": {
+        "client": {
+          "title": "Maak je eerste klant",
+          "body": "Bewaar de relatie waarmee je werkt."
+        },
+        "project": {
+          "title": "Maak je eerste project",
+          "body": "Organiseer levering rond een klant."
+        },
+        "task": {
+          "title": "Voeg je eerste taak toe",
+          "body": "Leg vast wat er moet gebeuren."
+        },
+        "copilot": {
+          "title": "Probeer Copilot",
+          "body": "Vraag om een samenvatting, concept of plan — en controleer het."
+        }
       }
     }
   },
@@ -2210,5 +2246,11 @@
       "sent": "Verstuurd",
       "failed": "Mislukt"
     }
+  },
+  "verifyEmail": {
+    "banner": "Bevestig je e-mailadres om offertes, contracten en facturen naar klanten te kunnen versturen.",
+    "resend": "E-mail opnieuw versturen",
+    "dismiss": "E-mailverificatiebanner sluiten",
+    "sent": "Verificatie-e-mail verzonden — controleer je inbox."
   }
 }

@@ -1215,6 +1215,49 @@
         "locale": "Dutch and English throughout marketing and product.",
         "billing": "No payment required during beta while checkout is disabled."
       }
+    },
+    "dayWith": {
+      "eyebrow": "Connected workflow",
+      "title": "A day with Assistify",
+      "body": "Everything stays connected as work moves forward — from first contact to follow-up.",
+      "message": "Everything is connected.",
+      "steps": {
+        "client": {
+          "title": "New client",
+          "body": "Store the relationship and important contact details.",
+          "path": "/product/crm"
+        },
+        "crm": {
+          "title": "CRM",
+          "body": "Keep opportunities and notes next to the client.",
+          "path": "/product/crm"
+        },
+        "project": {
+          "title": "Project",
+          "body": "Make client work clear and organized.",
+          "path": "/product/projects"
+        },
+        "tasks": {
+          "title": "Tasks",
+          "body": "Capture what needs to happen next.",
+          "path": "/product/projects"
+        },
+        "copilot": {
+          "title": "Copilot",
+          "body": "Use relevant workspace context to prepare work.",
+          "path": "/product/copilot"
+        },
+        "proposal": {
+          "title": "Proposal",
+          "body": "Draft a proposal from the same workspace.",
+          "path": "/product/documents"
+        },
+        "followup": {
+          "title": "Follow-up",
+          "body": "Track the next step without losing context.",
+          "path": "/product/opportunities"
+        }
+      }
     }
   }
 }
