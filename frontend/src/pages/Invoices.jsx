@@ -72,9 +72,9 @@ export default function Invoices() {
       {loading ? (
         <div className="flex items-center justify-center py-20 text-zinc-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : data.items.length === 0 ? (
-        <EmptyState icon={Receipt} title={q || status !== "All" ? "No matching invoices" : "No invoices yet"}
-          description={q || status !== "All" ? "Try a different search or filter." : "Open a project and use the invoice generator to bill your client."}
-          actionLabel={q || status !== "All" ? undefined : "Go to Projects"} onAction={() => navigate("/projects")} testid="invoices-empty" />
+        <EmptyState icon={Receipt} title={q || status !== "All" ? "Geen bijpassende facturen" : "Nog geen facturen"}
+          description={q || status !== "All" ? "Probeer een andere zoekopdracht of filter." : "Open een project en gebruik de factuurgenerator om je klant te factureren."}
+          actionLabel={q || status !== "All" ? undefined : "Naar Projecten"} onAction={() => navigate("/projects")} testid="invoices-empty" />
       ) : (
         <>
           <div className="overflow-hidden rounded-xl border border-white/10">
