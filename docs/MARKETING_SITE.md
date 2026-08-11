@@ -1,6 +1,6 @@
 # Assistify marketing site
 
-Public sales website for Assistify (Sprint 30). Lives in the same CRA app as the
+Public sales website for Assistify (Sprint 30–31). Lives in the same CRA app as the
 authenticated product so branding tokens and i18n stay shared.
 
 ## Public routes
@@ -102,3 +102,12 @@ No fingerprinting. No sensitive payloads.
 4. Link from homepage modules + footer
 5. Add SeoHead + `data-testid="marketing-product-<slug>"`
 6. Extend Playwright marketing journey if it is a primary CTA path
+
+
+## Sprint 31 updates
+
+- **Light-first** marketing visual direction (`docs/LIGHT_DESIGN.md`)
+- Stronger homepage narrative: What is Assistify, Without/With, interactive showcase, AI context, capabilities, workflows, trust facts, pricing + FAQ previews
+- Secondary CTA **See how it works** scrolls to `#product-showcase`
+- No fake testimonials or invented social proof
+- Route-level lazy loading for marketing + authenticated pages in `App.js`

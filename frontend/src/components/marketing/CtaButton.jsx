@@ -2,9 +2,9 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const variants = {
-  primary: "bg-brand-500 text-white shadow-brand hover:bg-brand-600",
-  secondary: "border border-white/15 bg-white/[0.04] text-zinc-100 hover:border-brand-500/40 hover:bg-brand-500/10",
-  ghost: "text-zinc-300 hover:bg-white/[0.06] hover:text-white",
+  primary: "bg-[var(--theme-brand)] text-white shadow-brand-soft hover:bg-[var(--theme-brand-hover)]",
+  secondary: "border border-[var(--theme-border-strong)] bg-[var(--theme-surface)] text-[var(--theme-text-primary)] hover:border-[var(--theme-brand-border)] hover:bg-[var(--theme-brand-soft)]",
+  ghost: "text-[var(--theme-text-secondary)] hover:bg-[var(--theme-surface-muted)] hover:text-[var(--theme-text-primary)]",
 };
 
 export default function CtaButton({

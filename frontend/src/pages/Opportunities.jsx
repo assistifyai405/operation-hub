@@ -35,7 +35,7 @@ export default function Opportunities() {
 
   return (
     <div className="space-y-6" data-testid="opportunities-page">
-      <PageIntro title={t("pages.opportunities.title")} description={t("pages.opportunities.description")} help={t("help.opportunities")} />
+      <PageIntro title={t("pages.opportunities.title")} description={t("pages.opportunities.description")} helpModule="opportunities" help={t("help.opportunities")} />
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

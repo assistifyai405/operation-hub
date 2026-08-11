@@ -166,7 +166,7 @@ export default function Clients() {
 
   return (
     <div className="space-y-5" data-testid="clients-page">
-      <PageIntro title={t("pages.clients.title")} description={t("pages.clients.description")} />
+      <PageIntro title={t("pages.clients.title")} description={t("pages.clients.description")} helpModule="clients" />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-zinc-400">{t("clients.count", { count: list.length })}</p>

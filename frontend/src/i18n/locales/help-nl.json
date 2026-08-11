@@ -1,0 +1,294 @@
+{
+  "help": {
+    "entry": "Uitleg",
+    "entryAria": "Open uitleg voor {{module}}",
+    "panelEyebrow": "Hoe dit werkt",
+    "close": "Sluiten",
+    "youLearn": "Je leert",
+    "quickTips": "Wat je hier kunt doen",
+    "watchTutorial": "Bekijk uitleg",
+    "tryYourself": "Probeer het zelf",
+    "moreHelp": "Meer module-tutorials volgen later.",
+    "skip": "Overslaan",
+    "back": "Terug",
+    "next": "Volgende",
+    "done": "Klaar",
+    "restart": "Opnieuw",
+    "tourDone": "Tour voltooid",
+    "tutorialProgress": "Stap {{current}} van {{total}}",
+    "tourProgress": "Begeleide tour · {{current}}/{{total}}",
+    "tourClickHint": "Klik op de gemarkeerde knop om verder te gaan. Assistify handelt niet voor je.",
+    "betaDefault": "Sommige onderdelen van deze module zijn tijdens de beta nog beperkt.",
+    "modules": {
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Bekijk prioriteiten, recente activiteit en nuttige vervolgstappen op basis van je echte data.",
+        "quickTips": [
+          "Scan wat vandaag aandacht vraagt",
+          "Ga naar klanten, projecten of Copilot",
+          "Gebruik de ochtendbriefing wanneer beschikbaar"
+        ],
+        "learn": [
+          "Lees je workspace-overzicht",
+          "Open een prioriteit",
+          "Start werk via een snelle actie"
+        ]
+      },
+      "clients": {
+        "title": "Klanten",
+        "description": "Bewaar de mensen en bedrijven waarmee je werkt, zodat projecten, documenten en AI verbonden blijven.",
+        "quickTips": [
+          "Voeg een klant toe met duidelijke contactgegevens",
+          "Open een klant om gekoppeld werk te bekijken",
+          "Bewaar notities die later helpen bij opvolging"
+        ],
+        "learn": [
+          "Een klant toevoegen",
+          "Snel een klant vinden",
+          "Gekoppelde projecten openen"
+        ]
+      },
+      "crm": {
+        "title": "CRM",
+        "description": "Beheer leads, klanten en verkoopkansen vanuit één plek.",
+        "quickTips": [
+          "Bekijk contacten en open deals",
+          "Ga naar Pipeline om leads toe te voegen en op te volgen",
+          "Bewaar notities zodat opvolging duidelijk blijft"
+        ],
+        "learn": [
+          "Een lead toevoegen",
+          "De status aanpassen",
+          "Een notitie toevoegen",
+          "Een lead opvolgen"
+        ],
+        "tutorial": {
+          "title": "Zo gebruik je CRM",
+          "duration": "±45 sec",
+          "steps": [
+            {
+              "title": "Open CRM / Pipeline",
+              "body": "Pipeline is de plek voor verkoop-leads. CRM-contacten houden de relatiecontext naast die kansen.",
+              "stage": 0,
+              "visual": "Open CRM-navigatie"
+            },
+            {
+              "title": "Klik op Nieuwe lead",
+              "body": "Start een lead wanneer iemand interesse toont. Jij blijft in controle over elke opslag.",
+              "stage": 1,
+              "visual": "Markeer Nieuwe lead"
+            },
+            {
+              "title": "Vul voorbeeldgegevens in",
+              "body": "Geef een duidelijke titel en basisgegevens zodat je de kans later herkent.",
+              "stage": 2,
+              "visual": "Vul leadformulier in"
+            },
+            {
+              "title": "Sla de lead op",
+              "body": "Opslaan bewaart de lead in je workspace. Er wordt niets aangemaakt tot jij Opslaan kiest.",
+              "stage": 3,
+              "visual": "Lead opslaan"
+            },
+            {
+              "title": "Pas de status aan",
+              "body": "Verplaats de lead door fases zoals Nieuw, Contact gelegd of Gekwalificeerd.",
+              "stage": 4,
+              "visual": "Status wijzigen"
+            },
+            {
+              "title": "Voeg een notitie of opvolging toe",
+              "body": "Leg de volgende stap vast, zodat je niet alleen op je geheugen vertrouwt.",
+              "stage": 5,
+              "visual": "Notitie toevoegen"
+            },
+            {
+              "title": "Zie de lead op het bord",
+              "body": "De lead verschijnt in de juiste kolom, zodat je kunt opvolgen en momentum houdt.",
+              "stage": 6,
+              "visual": "Lead op bord"
+            }
+          ]
+        },
+        "tour": {
+          "steps": {
+            "new-lead": {
+              "title": "Voeg hier een nieuwe lead toe",
+              "body": "Klik op Nieuwe lead om het formulier te openen. Assistify maakt niets aan tot jij opslaat."
+            },
+            "fill-form": {
+              "title": "Vul de belangrijkste gegevens in",
+              "body": "Geef de lead een duidelijke titel en vul velden in die helpen bij opvolging."
+            },
+            "save": {
+              "title": "Sla de lead op",
+              "body": "Klik op Opslaan wanneer je klaar bent. Deze tour slaat nooit voor je op."
+            },
+            "follow-up": {
+              "title": "Vanaf hier kun je opvolgen",
+              "body": "Mooi. Vanaf hier kun je de status aanpassen, notities toevoegen en de lead opvolgen."
+            }
+          }
+        }
+      },
+      "pipeline": {
+        "title": "Pipeline",
+        "description": "Volg potentiële omzet van eerste kans tot gewonnen deal.",
+        "quickTips": [
+          "Maak leads met Nieuwe lead",
+          "Sleep kaarten tussen fases",
+          "Open een lead om waarde, status en notities te bewerken"
+        ],
+        "learn": [
+          "Een lead toevoegen",
+          "Een fase verplaatsen",
+          "Leaddetails openen",
+          "Pipelinewaarde volgen"
+        ]
+      },
+      "projects": {
+        "title": "Projecten",
+        "description": "Organiseer klantlevering met deadlines, taken en gedeelde context.",
+        "quickTips": [
+          "Maak een project voor actief klantwerk",
+          "Koppel de juiste klant",
+          "Gebruik de workspace voor notities en documenten"
+        ],
+        "learn": [
+          "Een project maken",
+          "Een projectworkspace openen",
+          "Leveringsstatus volgen"
+        ]
+      },
+      "tasks": {
+        "title": "Taken",
+        "description": "Houd bij wat er moet gebeuren, wie het doet en wanneer het af moet.",
+        "quickTips": [
+          "Voeg taken toe met duidelijke eigenaren",
+          "Filter op status of project",
+          "Sluit werk af wanneer het klaar is"
+        ],
+        "learn": [
+          "Een taak maken",
+          "Status bijwerken",
+          "Focussen op werk met deadline"
+        ]
+      },
+      "copilot": {
+        "title": "Copilot",
+        "description": "Copilot is je AI-assistent in Assistify. Die kan workspace-context gebruiken om te plannen, schrijven en samenvatten — controleer de output altijd.",
+        "quickTips": [
+          "Vat een klant samen",
+          "Schrijf een opvolgmail",
+          "Maak een projectplan",
+          "Bereid een offerte-opzet voor",
+          "Vraag wat vandaag aandacht nodig heeft"
+        ],
+        "learn": [
+          "Stel een duidelijke vraag",
+          "Controleer AI-output vóór verzenden",
+          "Gebruik klant- of projectcontext wanneer beschikbaar"
+        ]
+      },
+      "agents": {
+        "title": "AI Agents",
+        "description": "Gerichte assistenten voor terugkerende onderdelen van je werk. Jij blijft verantwoordelijk voor beslissingen.",
+        "quickTips": [
+          "Open een agent voor een specifiek doel",
+          "Geef genoeg context",
+          "Controleer concepten vóór gebruik"
+        ],
+        "learn": [
+          "Kies een agent",
+          "Start een gerichte conversatie",
+          "Hergebruik nuttige output zorgvuldig"
+        ]
+      },
+      "proposals": {
+        "title": "Offertes",
+        "description": "Maak offerteconcepten met klant- en projectinformatie die al in je workspace staat.",
+        "quickTips": [
+          "Start vanuit een echte klant",
+          "Controleer prijs en scope",
+          "Exporteer wanneer het concept klaar is"
+        ],
+        "learn": [
+          "Een offerte maken",
+          "Gegenereerde secties bewerken",
+          "Documenten bij het project houden"
+        ]
+      },
+      "documents": {
+        "title": "Documenten",
+        "description": "Houd belangrijke bedrijfsdocumenten verbonden aan het werk waar ze bij horen.",
+        "quickTips": [
+          "Bewaar bestanden bij projecten",
+          "Hergebruik context in concepten",
+          "Verspreid bronbestanden niet onnodig"
+        ],
+        "learn": [
+          "Documenten doorzoeken",
+          "Een gerelateerd bestand openen",
+          "Namen consistent houden"
+        ]
+      },
+      "automations": {
+        "title": "Automatiseringen",
+        "description": "Stel herhaalbare regels in met de triggers en acties die nu beschikbaar zijn. Automatiseringen blijven controleerbaar en kunnen worden gepauzeerd.",
+        "betaNote": "Automatiseringen zijn tijdens de beta beperkt beschikbaar. De hulp beschrijft alleen besturingselementen die nu bestaan.",
+        "quickTips": [
+          "Bekijk bestaande regels vóór je meer inschakelt",
+          "Kies goedkeuringsmodi voor belangrijke acties",
+          "Controleer geschiedenis nadat een regel draait"
+        ],
+        "learn": [
+          "Open een automatiseringsregel",
+          "Begrijp trigger en actie",
+          "Pauzeer of schakel uit bij twijfel"
+        ]
+      },
+      "knowledge": {
+        "title": "Knowledge Brain",
+        "description": "Bewaar bedrijfsfeiten die Assistify kan gebruiken voor betere antwoorden. Jij bepaalt wat wordt onthouden.",
+        "quickTips": [
+          "Voeg duidelijke, feitelijke herinneringen toe",
+          "Werk verouderde informatie bij",
+          "Houd gevoelige geheimen waar mogelijk uit vrije notities"
+        ],
+        "learn": [
+          "Een kennisitem toevoegen",
+          "Opgeslagen feiten bekijken",
+          "AI-context in de loop van tijd verbeteren"
+        ]
+      },
+      "opportunities": {
+        "title": "Kansen",
+        "description": "Bekijk voorgestelde opvolgingen en signalen die aandacht kunnen vragen. Behandel suggesties als richting, niet als automatische beslissingen.",
+        "quickTips": [
+          "Bekijk suggesties met context",
+          "Handel alleen op wat ertoe doet",
+          "Negeer ruis wanneer nodig"
+        ],
+        "learn": [
+          "Open een kans",
+          "Bepaal de volgende stap",
+          "Houd eigenaarschap bij je team"
+        ]
+      },
+      "integrations": {
+        "title": "Integraties",
+        "description": "Koppel ondersteunde tools zodat Assistify kan werken met mailboxen en andere diensten die jij inschakelt.",
+        "quickTips": [
+          "Koppel alleen wat je nodig hebt",
+          "Owners en admins beheren verbindingen",
+          "Tokens blijven versleuteld opgeslagen"
+        ],
+        "learn": [
+          "Beschikbare integraties bekijken",
+          "Een provider verbinden wanneer klaar",
+          "Verbinding verbreken als toegang moet eindigen"
+        ]
+      }
+    }
+  }
+}

@@ -92,3 +92,9 @@ overrides that default.
 - Do not use bright green for large background areas, body text, or decorative
   glow without restraint.
 - Do not override an organization's explicitly configured export branding.
+
+
+## Light marketing direction (Sprint 31)
+
+Public marketing uses the premium light theme documented in `docs/LIGHT_DESIGN.md`.
+Brand green on light surfaces prefers `#16A34A`. Authenticated app remains dark-first until a dedicated light conversion sprint.
