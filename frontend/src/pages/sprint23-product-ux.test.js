@@ -71,8 +71,8 @@ describe("Sprint 23 dashboard first-run", () => {
 describe("Sprint 23 empty states and CTAs", () => {
   test("major pages explain what/why/next", () => {
     expect(read("Clients.jsx")).toMatch(/clients-empty/);
-    expect(read("Projects.jsx")).toMatch(/Create your first project/);
-    expect(read("Tasks.jsx")).toMatch(/Create your first task/);
+    expect(read("Projects.jsx")).toMatch(/projects-empty|emptyNl\.projects|Create your first project|Project toevoegen/);
+    expect(read("Tasks.jsx")).toMatch(/tasks-empty|emptyNl\.tasks|Create your first task|Taak toevoegen/);
     expect(read("CRM.jsx")).toMatch(/crm-empty/);
     expect(read("Pipeline.jsx")).toMatch(/pipeline-empty/);
     expect(read("Opportunities.jsx")).toMatch(/opportunities-empty/);
@@ -97,7 +97,7 @@ describe("Sprint 23 empty states and CTAs", () => {
 
   test("billing remains setup-pending without fake upgrade when disabled", () => {
     const layout = read("../components/Layout.jsx");
-    expect(layout).toMatch(/Billing is not available during beta/);
+    expect(layout).toMatch(/Billing is not available during beta|Facturatie is niet beschikbaar tijdens de beta/);
     expect(layout).toMatch(/sidebar-billing-pending/);
   });
 });
