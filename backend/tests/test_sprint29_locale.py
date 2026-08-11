@@ -82,6 +82,40 @@ def test_ai_language_instruction_uses_user_preference(language, expected):
     assert expected in prompt
 
 
+def test_register_persists_client_language(client):
+    email = f"nlreg_{uuid.uuid4().hex[:8]}@example.com"
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "firstName": "Jan",
+            "lastName": "Jansen",
+            "email": email,
+            "password": "Password123!",
+            "company": "NL Co",
+            "language": "nl",
+        },
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["user"]["language"] == "nl"
+
+
+def test_register_accept_language_header_fallback(client):
+    email = f"hdr_{uuid.uuid4().hex[:8]}@example.com"
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "firstName": "Ann",
+            "lastName": "User",
+            "email": email,
+            "password": "Password123!",
+            "company": "Hdr Co",
+        },
+        headers={"Accept-Language": "nl-NL,nl;q=0.9,en;q=0.8"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["user"]["language"] == "nl"
+
+
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [

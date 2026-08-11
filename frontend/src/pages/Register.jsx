@@ -3,12 +3,14 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useLocale } from "@/context/LocaleContext";
 import { AuthShell, inputClass } from "@/components/AuthShell";
 import { events } from "@/lib/analytics";
 import { toast } from "sonner";
 
 export default function Register() {
   const { t } = useTranslation();
+  const { locale } = useLocale();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const inviteToken = params.get("invite") || sessionStorage.getItem("pending_invite_token") || "";
@@ -31,7 +33,7 @@ export default function Register() {
     if (form.password.length < 8) { setError(t("auth.passwordMin")); return; }
     setLoading(true);
     try {
-      const payload = { ...form };
+      const payload = { ...form, language: locale || "en" };
       if (inviteToken) payload.invitationToken = inviteToken;
       const data = await register(payload);
       events.userRegistered({ via_invite: Boolean(inviteToken) });

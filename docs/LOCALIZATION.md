@@ -22,6 +22,11 @@ storage. Changing the language in Settings updates the interface immediately,
 writes `assistify_locale`, and persists `user.language` through
 `PATCH /api/auth/profile` for authenticated users.
 
+On registration, the SPA sends the currently resolved locale as `language` in the
+payload so a Dutch browser continues in Dutch after account creation. If the client
+omits `language`, the API falls back to the `Accept-Language` header, then English.
+Invalid values are rejected (`nl` | `en` only).
+
 The backend only persists supported locale preferences. Shared normalization and
 AI-language helpers live in `backend/locale_util.py`.
 

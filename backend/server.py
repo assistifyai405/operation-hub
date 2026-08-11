@@ -82,6 +82,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     company: str = ""
     invitationToken: Optional[str] = None
+    language: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
@@ -203,6 +204,22 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     if await db.users.find_one({"email": email}):
         raise HTTPException(status_code=409, detail="An account with this email already exists")
 
+    from locale_util import is_allowed_locale, normalize_locale
+    # Prefer explicit client locale; else Accept-Language; else English.
+    lang = None
+    if payload.language:
+        if not is_allowed_locale(payload.language):
+            raise HTTPException(status_code=400, detail="language must be 'nl' or 'en'")
+        lang = normalize_locale(payload.language)
+    else:
+        accept = request.headers.get("accept-language") or ""
+        for part in accept.split(","):
+            tag = part.split(";")[0].strip()
+            if tag and is_allowed_locale(tag):
+                lang = normalize_locale(tag)
+                break
+    lang = lang or "en"
+
     now = now_iso()
     user_id = A.gen_id()
     invite = None
@@ -223,7 +240,7 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     user = {
         "id": user_id, "firstName": payload.firstName.strip(), "lastName": payload.lastName.strip(),
         "email": email, "passwordHash": A.hash_password(payload.password), "emailVerified": False,
-        "avatar": "", "role": role, "organizationId": org_id, "timezone": "UTC", "language": "en",
+        "avatar": "", "role": role, "organizationId": org_id, "timezone": "UTC", "language": lang,
         "createdAt": now, "updatedAt": now, "lastLogin": now, "joinedAt": now,
         "onboardingCompleted": onboarding_done,
     }

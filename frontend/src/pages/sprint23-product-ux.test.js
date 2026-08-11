@@ -24,15 +24,19 @@ describe("Sprint 23 onboarding flow", () => {
   test("skip/save-exit marks onboarding complete so returning users are not trapped", () => {
     expect(onboarding).toMatch(/markComplete/);
     expect(onboarding).toMatch(/onboardingApi\.complete/);
-    expect(onboarding).toMatch(/Skip for now/);
+    expect(onboarding).toMatch(/onboarding\.skip|onboarding-save-exit/);
     expect(onboarding).toMatch(/user\?\.onboardingCompleted/);
   });
 
   test("welcome explains the product clearly", () => {
-    expect(welcome).toMatch(/AI-powered business operating system/);
-    expect(welcome).toMatch(/Clients/);
-    expect(welcome).toMatch(/Projects/);
-    expect(welcome).toMatch(/AI workflows/);
+    expect(welcome).toMatch(/onboarding\.welcomeHeadline/);
+    expect(welcome).toMatch(/onboarding\.capabilities\.\$\{key\}/);
+    expect(welcome).toMatch(/capabilities/);
+    const en = JSON.parse(read("../i18n/locales/en.json"));
+    expect(en.onboarding.welcomeHeadline).toMatch(/AI-powered business operating system/);
+    expect(en.onboarding.capabilities.clients).toMatch(/Clients/);
+    expect(en.onboarding.capabilities.projects).toMatch(/Projects/);
+    expect(en.onboarding.capabilities.ai).toMatch(/AI/);
   });
 
   test("goal step persists a primary goal choice", () => {
@@ -52,8 +56,11 @@ describe("Sprint 23 dashboard first-run", () => {
     expect(dashboard).toMatch(/DashboardFirstRun/);
     expect(dashboard).toMatch(/workspaceEmpty/);
     expect(dashboard).toMatch(/workspace_empty/);
-    expect(firstRun).toMatch(/get your workspace working for you/);
-    expect(firstRun).toMatch(/no sample charts or fake scores/i);
+    expect(firstRun).toMatch(/firstRun\.title|get your workspace working for you/);
+    expect(firstRun).toMatch(/firstRun\.body|no sample charts or fake scores/i);
+    const en = JSON.parse(read("../i18n/locales/en.json"));
+    expect(en.firstRun.title).toMatch(/workspace working for you/);
+    expect(en.firstRun.body).toMatch(/no sample charts or fake scores/i);
   });
 
   test("morning brief does not auto-open on empty workspace", () => {
@@ -61,10 +68,12 @@ describe("Sprint 23 dashboard first-run", () => {
   });
 
   test("checklist wording is workspace-oriented and uses real API progress", () => {
-    expect(checklist).toMatch(/Get Assistify working for you/);
+    expect(checklist).toMatch(/onboarding\.checklist\.title|Get Assistify working for you/);
     expect(checklist).not.toMatch(/AI employee/);
     expect(checklist).toMatch(/dismissChecklist/);
     expect(checklist).toMatch(/\.checklist\(\)/);
+    const en = JSON.parse(read("../i18n/locales/en.json"));
+    expect(en.onboarding.checklist.title).toMatch(/Get Assistify working for you/);
   });
 });
 

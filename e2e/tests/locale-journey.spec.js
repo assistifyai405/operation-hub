@@ -41,9 +41,8 @@ test.describe("Sprint 29 localization journey", () => {
     await expect(page.getByTestId("register-form")).toBeVisible({ timeout: 20_000 });
 
     // Dutch default from browser language
-    await expect(page.getByTestId("register-submit")).toContainText(/Account aanmaken|Create account/i);
-    const registerHtml = await page.locator("body").innerText();
-    expect(registerHtml).toMatch(/Account aanmaken|Wachtwoord|Voornaam|E-mail|Werk-e-mail|Create account|Password|First name/i);
+    await expect(page.getByTestId("register-submit")).toContainText(/Account aanmaken/i);
+    await expect(page.locator("body")).toContainText(/Wachtwoord|Voornaam|e-mail|E-mail/i);
 
     await page.getByTestId("register-firstname").fill("Locale");
     await page.getByTestId("register-lastname").fill("Tester");
@@ -70,35 +69,36 @@ test.describe("Sprint 29 localization journey", () => {
 
     // Create a client (localized nav)
     await page.goto("/clients", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("page-intro-description").or(page.getByTestId("clients-page"))).toBeVisible({ timeout: 20_000 });
-    const newClient = page.getByTestId("new-client-btn").or(page.getByRole("button", { name: /nieuwe klant|new client|add client|klant/i }));
+    await expect(page.getByTestId("clients-page")).toBeVisible({ timeout: 20_000 });
+    const intro = page.getByTestId("page-intro-description");
+    if (await intro.count()) {
+      await expect(intro.first()).toContainText(/klanten|clients|customer|informatie|information/i);
+    }
+    const newClient = page.getByTestId("add-client-btn");
     if (await newClient.count()) {
       await newClient.first().click();
-      const nameInput = page.getByTestId("client-name").or(page.getByLabel(/name|naam/i)).first();
+      const nameInput = page.getByTestId("client-name-input");
       if (await nameInput.count()) {
         await nameInput.fill(`Locale Client ${runId}`);
-        const save = page.getByTestId("client-save").or(page.getByRole("button", { name: /save|opslaan|create|aanmaken/i })).first();
+        const save = page.getByTestId("client-save-btn");
         if (await save.count()) await save.click();
       }
     }
 
-    // Settings → Language → English
     await page.goto("/settings?tab=language", { waitUntil: "domcontentloaded" });
-    // Fall back to clicking language tab if query unsupported
-    const langTab = page.getByTestId("settings-tab-language").or(page.getByRole("button", { name: /language|taal/i }));
+    const langTab = page.getByTestId("settings-tab-language");
     if (await langTab.count()) await langTab.first().click().catch(() => {});
-    await expect(page.getByTestId("language-options").or(page.getByTestId("settings-language"))).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("language-options")).toBeVisible({ timeout: 20_000 });
     await page.getByTestId("language-option-en").click();
     await expect(page.getByTestId("language-option-en")).toBeVisible();
 
     // Immediate English UI somewhere visible
     await page.goto("/clients", { waitUntil: "domcontentloaded" });
     await dismissTourIfPresent(page);
-    const clientsCopy = await page.locator("[data-testid='page-intro-description'], [data-testid='page-intro-title'], body").first().innerText();
-    expect(clientsCopy.toLowerCase()).toMatch(/client|manage|customer|klant/);
+    await expect(page.getByTestId("page-intro-title")).toContainText(/Clients/i);
 
     // Prefer English nav label after switch
-    const navClients = page.getByTestId("nav-clients").or(page.getByRole("link", { name: /^Clients$|^Klanten$/i }));
+    const navClients = page.getByTestId("nav-clients");
     if (await navClients.count()) {
       await expect(navClients.first()).toContainText(/Clients/i);
     }
@@ -108,7 +108,6 @@ test.describe("Sprint 29 localization journey", () => {
     await page.goto("/settings?tab=language", { waitUntil: "domcontentloaded" });
     if (await langTab.count()) await langTab.first().click().catch(() => {});
     await expect(page.getByTestId("language-option-en")).toBeVisible({ timeout: 20_000 });
-    // Selected state: brand styling or aria — at minimum option still present and localStorage set
     const stored = await page.evaluate(() => localStorage.getItem("assistify_locale"));
     expect(stored).toBe("en");
 
