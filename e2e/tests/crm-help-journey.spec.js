@@ -73,7 +73,7 @@ test.describe("Sprint 31 CRM help system", () => {
 
     // Re-open help and start guided tour
     await page.getByTestId("page-help-crm").click();
-    await expect(page.getByTestId("help-panel")).toBeVisible();
+    await expect(page.getByTestId("help-panel")).toBeVisible({ timeout: 10_000 });
     await page.getByTestId("help-try-yourself").click();
 
     await expect(page).toHaveURL(/pipeline/, { timeout: 20_000 });

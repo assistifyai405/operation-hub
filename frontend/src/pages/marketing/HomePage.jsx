@@ -121,7 +121,15 @@ export default function HomePage() {
                   to="/#product-showcase"
                   variant="secondary"
                   data-testid="hero-cta-secondary"
-                  onClick={() => trackHero("secondary", "#product-showcase")}
+                  onClick={(e) => {
+                    trackHero("secondary", "#product-showcase");
+                    const el = document.getElementById("product-showcase");
+                    if (el) {
+                      e.preventDefault();
+                      el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      window.history.replaceState(null, "", "#product-showcase");
+                    }
+                  }}
                 >
                   {t("marketing.hero.secondary")}
                 </CtaButton>
@@ -485,7 +493,13 @@ export default function HomePage() {
                 <CtaButton to="/register" showArrow onClick={() => trackRegister("final_cta")}>
                   {t("marketing.finalCta.button")}
                 </CtaButton>
-                <CtaButton to="/#product-showcase" variant="secondary">
+                <CtaButton to="/#product-showcase" variant="secondary" onClick={(e) => {
+                  const el = document.getElementById("product-showcase");
+                  if (el) {
+                    e.preventDefault();
+                    el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}>
                   {t("marketing.hero.secondary")}
                 </CtaButton>
               </div>

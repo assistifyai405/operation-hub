@@ -30,6 +30,7 @@ export function HelpProvider({ children }) {
     const mod = getHelpModule(moduleId);
     if (!mod?.hasFullTutorial) return;
     const id = mod.contentId || mod.id;
+    setPanelModule(null);
     setTutorialModule(id);
     helpEvents.tutorialStarted(id);
   }, []);

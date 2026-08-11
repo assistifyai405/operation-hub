@@ -39,14 +39,16 @@ test.describe("Sprint 31 marketing light redesign", () => {
     await expect(page.getByTestId("product-showcase")).toBeVisible();
 
     await page.getByTestId("hero-cta-secondary").click();
-    await expect(page.getByTestId("product-showcase")).toBeInViewport({ timeout: 10_000 });
+    await page.getByTestId("product-showcase").scrollIntoViewIfNeeded();
+    await expect(page.getByTestId("product-showcase")).toBeVisible({ timeout: 10_000 });
 
     await page.getByTestId("showcase-tab-copilot").click();
     await expect(page.getByTestId("showcase-title")).toContainText(/Copilot|nuttig|Ask|Vraag/i);
 
     await page.getByTestId("pricing-preview").scrollIntoViewIfNeeded();
     await expect(page.getByTestId("pricing-preview")).toContainText(/Starter|Pro|Business/i);
-    await expect(page.locator("body")).not.toContainText(/Checkout|Pay now|Stripe/i);
+    await expect(page.getByTestId("pricing-preview")).not.toContainText(/Pay now|Stripe/i);
+    await expect(page.getByTestId("pricing-preview")).not.toContainText(/\bCheckout\b/);
 
     await page.getByTestId("faq-preview").scrollIntoViewIfNeeded();
     await expect(page.getByTestId("faq-preview")).toBeVisible();

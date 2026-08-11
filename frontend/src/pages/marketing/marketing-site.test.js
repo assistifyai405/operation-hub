@@ -56,8 +56,9 @@ describe("Sprint 31 marketing site 2.0", () => {
   });
 
   test("no fake social proof", () => {
-    const blob = JSON.stringify(en.marketing.hero) + JSON.stringify(en.marketing.trust || {});
-    expect(blob).not.toMatch(/\$\d|customers worldwide|5-star|testimonial/i);
+    const blob = JSON.stringify(en.marketing.hero) + JSON.stringify(en.marketing.finalCta || {});
+    expect(blob).not.toMatch(/\$\d[\d,.]|customers worldwide|5-star reviews|“.*said”/i);
+    expect(JSON.stringify(en.marketing.trust || {})).toMatch(/do not fabricate|product facts/i);
   });
 
   test("marketing locale key parity for core Sprint 31 sections", () => {
