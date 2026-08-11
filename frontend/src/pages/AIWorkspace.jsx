@@ -7,18 +7,18 @@ import {
   MessageSquare, FolderPlus, BarChart3, FolderOpen, History, Layers,
 } from "lucide-react";
 import { aiApi } from "@/lib/api";
-import { AiIcon, fmtDuration, relTime } from "@/components/ai/aiHelpers";
+import { AiIcon, fmtDuration } from "@/components/ai/aiHelpers";
+import { useLocale } from "@/context/LocaleContext";
+import { formatRelativeTime } from "@/i18n/format";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 
 const RANGES = [
-  { v: "all", label: "All time" }, { v: "today", label: "Today" },
-  { v: "week", label: "Past week" }, { v: "month", label: "Past month" },
+  "all", "today", "week", "month",
 ];
 const SORTS = [
-  { v: "newest", label: "Newest first" }, { v: "oldest", label: "Oldest first" },
-  { v: "most_saved", label: "Most time saved" },
+  "newest", "oldest", "most_saved",
 ];
 
 const groupByDay = (items) => {
@@ -26,12 +26,12 @@ const groupByDay = (items) => {
   const key = (iso) => {
     const d = new Date(iso);
     const days = Math.floor((now.setHours(0, 0, 0, 0) - new Date(iso).setHours(0, 0, 0, 0)) / 86400000);
-    if (days <= 0) return "Today";
-    if (days === 1) return "Yesterday";
-    if (days <= 7) return "This Week";
-    return "Earlier";
+    if (days <= 0) return "today";
+    if (days === 1) return "yesterday";
+    if (days <= 7) return "week";
+    return "earlier";
   };
-  const order = ["Today", "Yesterday", "This Week", "Earlier"];
+  const order = ["today", "yesterday", "week", "earlier"];
   const map = {};
   items.forEach((it) => { (map[key(it.created_at)] ||= []).push(it); });
   return order.filter((k) => map[k]).map((k) => ({ label: k, items: map[k] }));
@@ -45,7 +45,7 @@ const StatCard = ({ icon: Icon, label, value, accent, testid }) => (
   </div>
 );
 
-const Sparkline = ({ data }) => {
+const Sparkline = ({ data, locale }) => {
   const max = Math.max(1, ...data.map((d) => d.count));
   return (
     <div className="flex items-end gap-1.5" data-testid="ai-workspace-sparkline">
@@ -53,7 +53,7 @@ const Sparkline = ({ data }) => {
         <div key={d.date} className="flex flex-1 flex-col items-center gap-1.5" title={`${d.date}: ${d.count}`}>
           <div className="w-full rounded-t bg-gradient-to-t from-brand-600/40 to-brand-400/80 transition-all"
             style={{ height: `${8 + (d.count / max) * 48}px` }} />
-          <span className="text-[9px] text-zinc-600">{new Date(d.date).toLocaleDateString(undefined, { weekday: "narrow" })}</span>
+          <span className="text-[9px] text-zinc-600">{new Date(d.date).toLocaleDateString(locale === "nl" ? "nl-NL" : "en-US", { weekday: "narrow" })}</span>
         </div>
       ))}
     </div>
@@ -61,14 +61,15 @@ const Sparkline = ({ data }) => {
 };
 
 const QUICK = [
-  { icon: MessageSquare, label: "Ask Copilot", to: "/ai-chat", hint: "Chat & generate" },
-  { icon: FolderPlus, label: "New Project", to: "/projects", hint: "Start AI work" },
-  { icon: FolderOpen, label: "Documents", to: "/documents", hint: "Browse library" },
-  { icon: BarChart3, label: "Analytics", to: "/analytics", hint: "See the numbers" },
+  { icon: MessageSquare, key: "copilot", to: "/ai-chat" },
+  { icon: FolderPlus, key: "project", to: "/projects" },
+  { icon: FolderOpen, key: "documents", to: "/documents" },
+  { icon: BarChart3, key: "analytics", to: "/analytics" },
 ];
 
 export default function AIWorkspace() {
   const { t } = useTranslation();
+  const { locale } = useLocale();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [insights, setInsights] = useState([]);
@@ -116,15 +117,14 @@ export default function AIWorkspace() {
         <div>
           <h1 className="flex items-center gap-2.5 text-3xl font-bold tracking-tight text-zinc-50">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 glow-brand"><Sparkles className="h-5 w-5 text-white" /></span>
-            AI Workspace
+            {t("aiWorkspace.title")}
           </h1>
           <p className="mt-1.5 text-sm text-zinc-400">
-            A history of AI outputs across your workspace — proposals, plans, invoices, and more.
-            Use Copilot to create new work; use Agents for specialized chats; use this page to find what AI already produced.
+            {t("aiWorkspace.intro")}
           </p>
         </div>
         <div className="rounded-xl border border-brand-500/20 bg-brand-500/[0.06] px-4 py-2.5 text-right">
-          <p className="flex items-center justify-end gap-1.5 text-xs text-zinc-500"><Clock className="h-3.5 w-3.5" /> Lifetime time saved</p>
+          <p className="flex items-center justify-end gap-1.5 text-xs text-zinc-500"><Clock className="h-3.5 w-3.5" /> {t("aiWorkspace.lifetimeSaved")}</p>
           <p className="bg-gradient-to-r from-brand-300 to-cyan-300 bg-clip-text text-xl font-extrabold text-transparent" data-testid="ai-workspace-lifetime-saved">
             {stats ? fmtDuration(stats.total_time_saved) : "—"}
           </p>
@@ -133,27 +133,27 @@ export default function AIWorkspace() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5" data-testid="ai-workspace-stats">
-        <StatCard testid="stat-total-actions" icon={Sparkles} label="AI actions" accent="bg-brand-600/15 text-brand-300" value={stats ? stats.total_actions : "—"} />
-        <StatCard testid="stat-week" icon={TrendingUp} label="This week" accent="bg-cyan-500/15 text-cyan-300" value={stats ? stats.week_count : "—"} />
-        <StatCard testid="stat-confidence" icon={Gauge} label="Avg confidence" accent="bg-emerald-500/15 text-emerald-300" value={stats ? `${stats.avg_confidence}%` : "—"} />
-        <StatCard testid="stat-gen-time" icon={Zap} label="Avg speed" accent="bg-amber-500/15 text-amber-300" value={stats && stats.avg_gen_ms ? `${(stats.avg_gen_ms / 1000).toFixed(1)}s` : "—"} />
+        <StatCard testid="stat-total-actions" icon={Sparkles} label={t("aiWorkspace.stats.actions")} accent="bg-brand-600/15 text-brand-300" value={stats ? stats.total_actions : "—"} />
+        <StatCard testid="stat-week" icon={TrendingUp} label={t("aiWorkspace.stats.week")} accent="bg-cyan-500/15 text-cyan-300" value={stats ? stats.week_count : "—"} />
+        <StatCard testid="stat-confidence" icon={Gauge} label={t("aiWorkspace.stats.confidence")} accent="bg-emerald-500/15 text-emerald-300" value={stats ? `${stats.avg_confidence}%` : "—"} />
+        <StatCard testid="stat-gen-time" icon={Zap} label={t("aiWorkspace.stats.speed")} accent="bg-amber-500/15 text-amber-300" value={stats && stats.avg_gen_ms ? `${(stats.avg_gen_ms / 1000).toFixed(1)}s` : "—"} />
         <div className="col-span-2 rounded-2xl border border-white/10 bg-zinc-950 p-4 md:col-span-3 lg:col-span-1">
-          <p className="mb-2 text-xs text-zinc-500">Last 7 days</p>
-          {stats ? <Sparkline data={stats.sparkline} /> : <div className="h-14" />}
+          <p className="mb-2 text-xs text-zinc-500">{t("aiWorkspace.lastDays", { count: 7 })}</p>
+          {stats ? <Sparkline data={stats.sparkline} locale={locale} /> : <div className="h-14" />}
         </div>
       </div>
 
       {/* Quick actions */}
       <div>
-        <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">Quick actions</p>
+        <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">{t("aiWorkspace.quick.title")}</p>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4" data-testid="ai-workspace-quick-actions">
           {QUICK.map((a) => (
             <button key={a.to} onClick={() => navigate(a.to)} data-testid={`quick-action-${a.to.replace("/", "")}`}
               className="group flex items-center gap-3 rounded-xl border border-white/10 bg-zinc-950 p-3.5 text-left transition-all hover:border-brand-500/40 hover:bg-brand-500/[0.04]">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600/15 text-brand-300 transition-transform group-hover:scale-105"><a.icon className="h-4 w-4" /></span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-zinc-100">{a.label}</span>
-                <span className="block truncate text-xs text-zinc-500">{a.hint}</span>
+                <span className="block truncate text-sm font-semibold text-zinc-100">{t(`aiWorkspace.quick.${a.key}.label`)}</span>
+                <span className="block truncate text-xs text-zinc-500">{t(`aiWorkspace.quick.${a.key}.hint`)}</span>
               </span>
             </button>
           ))}
@@ -167,28 +167,28 @@ export default function AIWorkspace() {
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
               <input value={q} onChange={(e) => setQ(e.target.value)} data-testid="ai-workspace-search-input"
-                placeholder="Search proposals, invoices, clients, projects…"
+                placeholder={t("aiWorkspace.search")}
                 className="w-full rounded-xl border border-white/10 bg-zinc-900 py-2.5 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-brand-500/50 focus:outline-none" />
             </div>
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
               <select value={type} onChange={(e) => setType(e.target.value)} data-testid="ai-workspace-filter-type"
                 className="rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 focus:border-brand-500/50 focus:outline-none">
-                <option value="">All types</option>
+                <option value="">{t("aiWorkspace.filters.allTypes")}</option>
                 {(types.length ? types : []).map((t) => <option key={t.type} value={t.type}>{t.label}</option>)}
               </select>
               <select value={range} onChange={(e) => setRange(e.target.value)} data-testid="ai-workspace-filter-range"
                 className="rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 focus:border-brand-500/50 focus:outline-none">
-                {RANGES.map((r) => <option key={r.v} value={r.v}>{r.label}</option>)}
+                {RANGES.map((r) => <option key={r} value={r}>{t(`aiWorkspace.ranges.${r}`)}</option>)}
               </select>
               <select value={sort} onChange={(e) => setSort(e.target.value)} data-testid="ai-workspace-filter-sort"
                 className="rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 focus:border-brand-500/50 focus:outline-none">
-                {SORTS.map((s) => <option key={s.v} value={s.v}>{s.label}</option>)}
+                {SORTS.map((s) => <option key={s} value={s}>{t(`aiWorkspace.sorts.${s}`)}</option>)}
               </select>
             </div>
           </div>
 
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            <History className="h-3.5 w-3.5" /> Timeline
+            <History className="h-3.5 w-3.5" /> {t("aiWorkspace.timeline")}
             {results && <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-zinc-400">{results.length}</span>}
           </p>
 
@@ -197,18 +197,18 @@ export default function AIWorkspace() {
           ) : !results || results.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950 px-4 py-14 text-center" data-testid="ai-workspace-timeline-empty">
               <Sparkles className="mx-auto h-8 w-8 text-zinc-700" aria-hidden="true" />
-              <p className="mt-3 text-sm font-medium text-zinc-300">No AI activity yet</p>
+              <p className="mt-3 text-sm font-medium text-zinc-300">{t("aiWorkspace.empty.title")}</p>
               <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">
-                When you generate a proposal, plan, contract, or invoice — or use Copilot — results appear here. Nothing is pre-filled with sample data.
+                {t("aiWorkspace.empty.description")}
               </p>
               <button type="button" onClick={() => navigate("/ai-chat")} data-testid="ai-workspace-empty-action" className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500">
-                Ask Copilot <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                {t("aiWorkspace.empty.action")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           ) : (
             groups.map((g) => (
               <div key={g.label} data-testid={`ai-workspace-group-${g.label.replace(/\s/g, "-").toLowerCase()}`}>
-                <p className="mb-2 mt-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-600">{g.label}</p>
+                <p className="mb-2 mt-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-600">{t(`aiWorkspace.groups.${g.label}`)}</p>
                 <div className="space-y-2">
                   {g.items.map((a) => (
                     <div key={a.id} data-testid="ai-workspace-item"
@@ -218,11 +218,11 @@ export default function AIWorkspace() {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="truncate text-sm font-semibold text-zinc-100">{a.title}</p>
-                          <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">+{a.time_saved}m saved</span>
+                          <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">{t("aiWorkspace.minutesSaved", { count: a.time_saved })}</span>
                           {a.gen_ms ? <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-zinc-400">{(a.gen_ms / 1000).toFixed(1)}s</span> : null}
                         </div>
                         <p className="mt-1 text-sm leading-snug text-zinc-400">{a.explanation}</p>
-                        <p className="mt-1.5 text-xs text-zinc-600">{a.source_page} · {relTime(a.created_at)}</p>
+                        <p className="mt-1.5 text-xs text-zinc-600">{a.source_page} · {formatRelativeTime(a.created_at, locale, t)}</p>
                       </div>
                     </div>
                   ))}
@@ -235,10 +235,10 @@ export default function AIWorkspace() {
         {/* Right: insights + version compare */}
         <div className="space-y-6">
           <div>
-            <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Zap className="h-3.5 w-3.5" /> Insights</p>
+            <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Zap className="h-3.5 w-3.5" /> {t("aiWorkspace.insights")}</p>
             {insights.length === 0 ? (
               <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5 text-center text-xs text-zinc-500" data-testid="ai-workspace-insights-empty">
-                You're all caught up — no actions need attention right now.
+                {t("aiWorkspace.noInsights")}
               </div>
             ) : (
               <div className="space-y-2" data-testid="ai-workspace-insights">
@@ -258,10 +258,10 @@ export default function AIWorkspace() {
           </div>
 
           <div>
-            <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Layers className="h-3.5 w-3.5" /> Version compare</p>
+            <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Layers className="h-3.5 w-3.5" /> {t("aiWorkspace.versions.title")}</p>
             {versions.length === 0 ? (
               <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5 text-center text-xs text-zinc-500" data-testid="ai-workspace-versions-empty">
-                Documents with multiple versions will appear here so you can review how they evolved.
+                {t("aiWorkspace.versions.empty")}
               </div>
             ) : (
               <div className="space-y-2" data-testid="ai-workspace-versions">
@@ -273,7 +273,7 @@ export default function AIWorkspace() {
                       <span className="block truncate text-sm font-medium text-zinc-100">{v.project_name}</span>
                       <span className="block text-xs text-zinc-500">{v.label}</span>
                     </span>
-                    <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-zinc-300">{v.versions.length} versions</span>
+                    <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-zinc-300">{t("aiWorkspace.versions.count", { count: v.versions.length })}</span>
                   </button>
                 ))}
               </div>
@@ -289,7 +289,7 @@ export default function AIWorkspace() {
               {compareDoc && <AiIcon name={compareDoc.icon} className="h-4 w-4 text-brand-300" />}
               {compareDoc?.project_name} — {compareDoc?.label}
             </DialogTitle>
-            <DialogDescription className="text-zinc-500">Review how this document evolved across versions, then open a side-by-side compare.</DialogDescription>
+            <DialogDescription className="text-zinc-500">{t("aiWorkspace.versions.description")}</DialogDescription>
           </DialogHeader>
           {compareDoc && (
             <div className="space-y-3">
@@ -298,16 +298,16 @@ export default function AIWorkspace() {
                   <div key={ver.version} className="flex items-center gap-3 rounded-lg border border-white/10 bg-zinc-900 p-3">
                     <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${i === 0 ? "bg-brand-600 text-white" : "bg-white/5 text-zinc-400"}`}>v{ver.version}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm text-zinc-200">{ver.title || `Version ${ver.version}`}</p>
-                      <p className="text-xs text-zinc-600">{relTime(ver.created_at)}{ver.status ? ` · ${ver.status}` : ""}</p>
+                      <p className="truncate text-sm text-zinc-200">{ver.title || t("aiWorkspace.versions.version", { version: ver.version })}</p>
+                      <p className="text-xs text-zinc-600">{formatRelativeTime(ver.created_at, locale, t)}{ver.status ? ` · ${ver.status}` : ""}</p>
                     </div>
-                    {i === 0 && <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">Current</span>}
+                    {i === 0 && <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">{t("aiWorkspace.versions.current")}</span>}
                   </div>
                 ))}
               </div>
               <button onClick={() => { navigate(compareDoc.link); setCompareDoc(null); }} data-testid="ai-workspace-open-compare"
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-500">
-                Open side-by-side compare <ArrowRight className="h-4 w-4" />
+                {t("aiWorkspace.versions.openCompare")} <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           )}

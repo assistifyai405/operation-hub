@@ -16,17 +16,16 @@ import { ApprovalCard } from "@/components/automation/ApprovalCard";
 import { AutomationBuilder } from "@/components/automation/AutomationBuilder";
 import { AutomationSettingsPanel } from "@/components/automation/AutomationSettingsPanel";
 import { PAUSE_OPTIONS } from "@/components/automation/automationShared";
-import { AiIcon, relTime } from "@/components/ai/aiHelpers";
+import { useLocale } from "@/context/LocaleContext";
+import { formatRelativeTime } from "@/i18n/format";
 
 const APPROVAL_TABS = [
-  { v: "pending", label: "Pending" },
-  { v: "suggested", label: "Suggestions" },
-  { v: "executed", label: "Done" },
-  { v: "rejected", label: "Rejected" },
+  "pending", "suggested", "executed", "rejected",
 ];
 
 export default function Automations() {
   const { t } = useTranslation();
+  const { locale } = useLocale();
   const [summary, setSummary] = useState(null);
   const [tab, setTab] = useState("automations");
   const [automations, setAutomations] = useState([]);
@@ -60,7 +59,7 @@ export default function Automations() {
     setBusy(true);
     try {
       const r = await automationApi.run();
-      toast.success(`Scan complete — ${r.prepared} prepared, ${r.executed} run, ${r.suggested} suggested`);
+      toast.success(t("automations.toasts.scanComplete", r));
       refreshAll();
     } catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
@@ -69,7 +68,7 @@ export default function Automations() {
     try {
       const s = await automationApi.updateSettings({ enabled: v });
       setSettings(s); loadSummary();
-      toast.success(v ? "Automations enabled" : "All automations paused");
+      toast.success(v ? t("automations.toasts.enabled") : t("automations.toasts.allPaused"));
     } catch (e) { toast.error(e.message); }
   };
 
@@ -77,14 +76,14 @@ export default function Automations() {
     try {
       const s = await automationApi.pause(duration);
       setSettings(s); loadSummary();
-      toast.success("Automations paused");
+      toast.success(t("automations.toasts.paused"));
     } catch (e) { toast.error(e.message); }
   };
   const resumeAll = async () => {
     try {
       const s = await automationApi.resume();
       setSettings(s); loadSummary();
-      toast.success("Automations resumed");
+      toast.success(t("automations.toasts.resumed"));
     } catch (e) { toast.error(e.message); }
   };
 
@@ -94,19 +93,19 @@ export default function Automations() {
     catch (e) { toast.error(e.message); }
   };
   const onMode = async (a, mode) => {
-    try { await automationApi.setMode(a.id, mode); loadAutomations(); toast.success(`Mode set to ${mode}`); }
+    try { await automationApi.setMode(a.id, mode); loadAutomations(); toast.success(t("automations.toasts.modeSet", { mode })); }
     catch (e) { toast.error(e.message); }
   };
   const onDelete = async (a) => {
-    if (!window.confirm(`Delete "${a.name}"?`)) return;
-    try { await automationApi.deleteAutomation(a.id); loadAutomations(); loadSummary(); toast.success("Automation deleted"); }
+    if (!window.confirm(t("automations.confirm.delete", { name: a.name }))) return;
+    try { await automationApi.deleteAutomation(a.id); loadAutomations(); loadSummary(); toast.success(t("automations.toasts.deleted")); }
     catch (e) { toast.error(e.message); }
   };
   const onEditRule = (a) => { setEditing(a); setBuilderOpen(true); };
   const saveBuilder = async (body) => {
     try {
-      if (editing) { await automationApi.updateAutomation(editing.id, body); toast.success("Automation updated"); }
-      else { await automationApi.createAutomation(body); toast.success("Automation created"); }
+      if (editing) { await automationApi.updateAutomation(editing.id, body); toast.success(t("automations.toasts.updated")); }
+      else { await automationApi.createAutomation(body); toast.success(t("automations.toasts.created")); }
       setBuilderOpen(false); setEditing(null); loadAutomations(); loadSummary();
     } catch (e) { toast.error(e.message); }
   };
@@ -114,26 +113,26 @@ export default function Automations() {
   // approval handlers
   const onApprove = async (item) => {
     setBusy(true);
-    try { const r = await automationApi.approve(item.id); toast.success(r.status === "executed" ? "Approved & done" : "Approved (some steps failed)"); loadApprovals(approvalStatus); loadSummary(); }
+    try { const r = await automationApi.approve(item.id); toast.success(r.status === "executed" ? t("automations.toasts.approvedDone") : t("automations.toasts.approvedPartial")); loadApprovals(approvalStatus); loadSummary(); }
     catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
   const onReject = async (item) => {
     setBusy(true);
-    try { await automationApi.reject(item.id); toast.success("Dismissed"); loadApprovals(approvalStatus); loadSummary(); }
+    try { await automationApi.reject(item.id); toast.success(t("automations.toasts.dismissed")); loadApprovals(approvalStatus); loadSummary(); }
     catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
   const onPrepare = async (item) => {
     setBusy(true);
-    try { await automationApi.prepareSuggestion(item.id); toast.success("Prepared for approval"); loadApprovals(approvalStatus); loadSummary(); }
+    try { await automationApi.prepareSuggestion(item.id); toast.success(t("automations.toasts.prepared")); loadApprovals(approvalStatus); loadSummary(); }
     catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
   const onEditApproval = async (item, actions) => {
-    try { await automationApi.editApproval(item.id, actions); toast.success("Draft updated"); loadApprovals(approvalStatus); }
+    try { await automationApi.editApproval(item.id, actions); toast.success(t("automations.toasts.draftUpdated")); loadApprovals(approvalStatus); }
     catch (e) { toast.error(e.message); }
   };
   const onDisableFromApproval = async (item) => {
-    if (!window.confirm(`Disable the "${item.automation_name}" automation?`)) return;
-    try { await automationApi.toggleAutomation(item.automation_id, false); toast.success("Automation disabled"); loadApprovals(approvalStatus); loadAutomations(); loadSummary(); }
+    if (!window.confirm(t("automations.confirm.disable", { name: item.automation_name }))) return;
+    try { await automationApi.toggleAutomation(item.automation_id, false); toast.success(t("automations.toasts.disabled")); loadApprovals(approvalStatus); loadAutomations(); loadSummary(); }
     catch (e) { toast.error(e.message); }
   };
 
@@ -157,37 +156,36 @@ export default function Automations() {
         <div>
           <h1 className="flex items-center gap-2.5 text-3xl font-bold tracking-tight text-zinc-50">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 glow-brand"><Zap className="h-5 w-5 text-white" /></span>
-            Automations
+            {t("automations.title")}
           </h1>
           <p className="mt-1.5 max-w-2xl text-sm text-zinc-400">
-            Background rules that prepare drafts and reminders from real workspace events. You approve before anything sends.
-            Different from Copilot (chat) and AI Agents (specialist chats).
+            {t("automations.intro")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button onClick={runNow} disabled={busy} data-testid="run-now-btn" className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm font-medium text-zinc-300 transition-all hover:border-brand-500/40 hover:text-zinc-100 disabled:opacity-50">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />} Run now
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />} {t("automations.actions.runNow")}
           </button>
           {paused ? (
             <button onClick={resumeAll} data-testid="resume-all-btn" className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-emerald-500">
-              <Play className="h-4 w-4" /> Resume
+              <Play className="h-4 w-4" /> {t("automations.actions.resume")}
             </button>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button data-testid="pause-all-btn" className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm font-medium text-zinc-300 transition-all hover:text-zinc-100">
-                  <Pause className="h-4 w-4" /> Pause all <ChevronDown className="h-3.5 w-3.5" />
+                  <Pause className="h-4 w-4" /> {t("automations.actions.pauseAll")} <ChevronDown className="h-3.5 w-3.5" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="border-white/10 bg-zinc-950 text-zinc-200">
                 {PAUSE_OPTIONS.map((o) => (
-                  <DropdownMenuItem key={o.v} onClick={() => pauseAll(o.v)} data-testid={`pause-${o.v}`} className="focus:bg-zinc-900">{o.label}</DropdownMenuItem>
+                  <DropdownMenuItem key={o.v} onClick={() => pauseAll(o.v)} data-testid={`pause-${o.v}`} className="focus:bg-zinc-900">{t(`automations.pauseOptions.${o.v}`)}</DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
           <button onClick={() => { setEditing(null); setBuilderOpen(true); }} data-testid="new-automation-btn" className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500">
-            <Plus className="h-4 w-4" /> New automation
+            <Plus className="h-4 w-4" /> {t("automations.actions.new")}
           </button>
         </div>
       </div>
@@ -197,20 +195,20 @@ export default function Automations() {
         <div className="flex flex-wrap items-center gap-3" data-testid="automation-status-strip">
           <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${paused ? "border-amber-500/30 bg-amber-500/15 text-amber-300" : summary.enabled ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-300" : "border-zinc-600/40 bg-zinc-800/40 text-zinc-400"}`}>
             {paused ? <PauseCircle className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
-            {paused ? `Paused until ${relTime(summary.paused_until)}` : summary.enabled ? "Active · Prepare for approval" : "All automations off"}
+            {paused ? t("automations.status.pausedUntil", { time: formatRelativeTime(summary.paused_until, locale, t) }) : summary.enabled ? t("automations.status.active") : t("automations.status.off")}
           </span>
-          <span className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1 text-xs text-zinc-400">{summary.active_automations}/{summary.total_automations} enabled</span>
-          <span className="rounded-full border border-brand-500/20 bg-brand-500/[0.08] px-3 py-1 text-xs text-brand-200" data-testid="summary-pending">{summary.pending} awaiting approval</span>
-          <span className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1 text-xs text-zinc-400">{summary.executed_count} completed · {summary.time_saved_total} min saved</span>
+          <span className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1 text-xs text-zinc-400">{t("automations.status.enabledCount", { active: summary.active_automations, total: summary.total_automations })}</span>
+          <span className="rounded-full border border-brand-500/20 bg-brand-500/[0.08] px-3 py-1 text-xs text-brand-200" data-testid="summary-pending">{t("automations.status.awaiting", { count: summary.pending })}</span>
+          <span className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1 text-xs text-zinc-400">{t("automations.status.completedSaved", { count: summary.executed_count, minutes: summary.time_saved_total })}</span>
         </div>
       )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="bg-zinc-900/60" data-testid="automation-tabs">
-          <TabsTrigger value="automations" data-testid="tab-automations"><Zap className="mr-1.5 h-4 w-4" /> Automations</TabsTrigger>
-          <TabsTrigger value="approvals" data-testid="tab-approvals"><Inbox className="mr-1.5 h-4 w-4" /> Approval Center{summary?.pending ? ` (${summary.pending})` : ""}</TabsTrigger>
-          <TabsTrigger value="history" data-testid="tab-history"><HistoryIcon className="mr-1.5 h-4 w-4" /> History</TabsTrigger>
-          <TabsTrigger value="settings" data-testid="tab-settings"><SlidersHorizontal className="mr-1.5 h-4 w-4" /> Settings</TabsTrigger>
+          <TabsTrigger value="automations" data-testid="tab-automations"><Zap className="mr-1.5 h-4 w-4" /> {t("automations.tabs.automations")}</TabsTrigger>
+          <TabsTrigger value="approvals" data-testid="tab-approvals"><Inbox className="mr-1.5 h-4 w-4" /> {t("automations.tabs.approvals")}{summary?.pending ? ` (${summary.pending})` : ""}</TabsTrigger>
+          <TabsTrigger value="history" data-testid="tab-history"><HistoryIcon className="mr-1.5 h-4 w-4" /> {t("automations.tabs.history")}</TabsTrigger>
+          <TabsTrigger value="settings" data-testid="tab-settings"><SlidersHorizontal className="mr-1.5 h-4 w-4" /> {t("automations.tabs.settings")}</TabsTrigger>
         </TabsList>
 
         {loading ? (
@@ -221,9 +219,9 @@ export default function Automations() {
               {automations.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950 px-4 py-16 text-center" data-testid="automations-empty">
                   <Zap className="mx-auto h-9 w-9 text-zinc-600" aria-hidden="true" />
-                  <p className="mt-3 text-sm font-semibold text-zinc-200">No automations yet</p>
+                  <p className="mt-3 text-sm font-semibold text-zinc-200">{t("automations.empty.title")}</p>
                   <p className="mx-auto mt-1 max-w-md text-xs text-zinc-500">
-                    Automations watch for events like overdue invoices or stalled proposals and prepare the next step for your approval.
+                    {t("automations.empty.description")}
                   </p>
                   <button
                     type="button"
@@ -231,7 +229,7 @@ export default function Automations() {
                     data-testid="automations-empty-action"
                     className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500"
                   >
-                    <Plus className="h-4 w-4" aria-hidden="true" /> Create your first automation
+                    <Plus className="h-4 w-4" aria-hidden="true" /> {t("automations.empty.action")}
                   </button>
                 </div>
               ) : (
@@ -243,18 +241,18 @@ export default function Automations() {
 
             <TabsContent value="approvals" className="mt-5 space-y-4">
               <div className="flex flex-wrap items-center gap-2">
-                {APPROVAL_TABS.map((t) => (
-                  <button key={t.v} onClick={() => switchApprovalStatus(t.v)} data-testid={`approval-tab-${t.v}`}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${approvalStatus === t.v ? "border-brand-500 bg-brand-600/15 text-brand-200" : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"}`}>
-                    {t.label} <span className="rounded-full bg-white/10 px-1.5 text-[10px]">{approvals.counts?.[t.v] || 0}</span>
+                {APPROVAL_TABS.map((status) => (
+                  <button key={status} onClick={() => switchApprovalStatus(status)} data-testid={`approval-tab-${status}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${approvalStatus === status ? "border-brand-500 bg-brand-600/15 text-brand-200" : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"}`}>
+                    {t(`automations.approvalStatus.${status}`)} <span className="rounded-full bg-white/10 px-1.5 text-[10px]">{approvals.counts?.[status] || 0}</span>
                   </button>
                 ))}
               </div>
               {approvals.items.length === 0 ? (
                 <div className="rounded-2xl border border-white/10 bg-zinc-950 py-16 text-center" data-testid="approvals-empty">
                   <CheckCircle2 className="mx-auto h-9 w-9 text-emerald-500" />
-                  <p className="mt-3 text-sm font-semibold text-zinc-200">Nothing here</p>
-                  <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">Assistify hasn't prepared anything in this state. It re-scans your workspace automatically.</p>
+                  <p className="mt-3 text-sm font-semibold text-zinc-200">{t("automations.approvalsEmpty.title")}</p>
+                  <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">{t("automations.approvalsEmpty.description")}</p>
                 </div>
               ) : (
                 approvals.items.map((item) => (
@@ -266,7 +264,7 @@ export default function Automations() {
 
             <TabsContent value="history" className="mt-5">
               {logs.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-zinc-950 py-16 text-center text-sm text-zinc-500" data-testid="history-empty">No automation activity yet.</div>
+                <div className="rounded-2xl border border-white/10 bg-zinc-950 py-16 text-center text-sm text-zinc-500" data-testid="history-empty">{t("automations.historyEmpty")}</div>
               ) : (
                 <div className="rounded-2xl border border-white/10 bg-zinc-950" data-testid="automation-history">
                   {logs.map((l) => (
@@ -274,7 +272,7 @@ export default function Automations() {
                       <span className={`mt-0.5 rounded-md px-2 py-0.5 text-[10px] font-semibold ${eventChip(l.event)}`}>{l.event_label}</span>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm text-zinc-200">{l.message}</p>
-                        <p className="text-[11px] text-zinc-600">{l.automation_name} · {relTime(l.created_at)}</p>
+                        <p className="text-[11px] text-zinc-600">{l.automation_name} · {formatRelativeTime(l.created_at, locale, t)}</p>
                       </div>
                     </div>
                   ))}

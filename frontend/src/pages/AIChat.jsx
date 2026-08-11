@@ -2,17 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Send, Sparkles, Bot } from "lucide-react";
 import { getCsrfToken } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-const suggestions = [
-  "Draft a cold email for a SaaS prospect",
-  "Summarize my priorities this week",
-  "Write a project kickoff checklist",
-  "Give me 3 pricing strategy ideas",
-];
-
 export default function AIChat() {
+  const { t } = useTranslation();
+  const suggestions = t("aiChat.suggestions", { returnObjects: true });
   const [params] = useSearchParams();
   const [agents, setAgents] = useState([]);
   const [agentId, setAgentId] = useState(params.get("agent") || "copilot");
@@ -89,7 +85,7 @@ export default function AIChat() {
     } catch (e) {
       setMessages((m) => {
         const copy = [...m];
-        copy[copy.length - 1] = { role: "assistant", content: "Sorry, something went wrong. Please try again." };
+        copy[copy.length - 1] = { role: "assistant", content: t("aiChat.error") };
         return copy;
       });
     } finally {
@@ -109,7 +105,7 @@ export default function AIChat() {
             className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${agentId === a.id ? "border-brand-500 bg-brand-600/15 text-brand-300" : "border-white/10 bg-zinc-950 text-zinc-400 hover:text-zinc-200"}`}
           >
             {a.avatar ? (
-              <img src={a.avatar} alt={`${a.name || "AI agent"} avatar`} className="h-5 w-5 rounded-full object-cover" />
+              <img src={a.avatar} alt={t("aiChat.avatarAlt", { name: a.name || t("aiChat.agent") })} className="h-5 w-5 rounded-full object-cover" />
             ) : (
               <Bot className="h-4 w-4" />
             )}
@@ -126,7 +122,7 @@ export default function AIChat() {
               <Sparkles className="h-7 w-7 text-white" />
             </div>
             <h2 className="mt-4 text-xl font-semibold text-zinc-100">{activeAgent?.name || "Assistify Copilot"}</h2>
-            <p className="mt-1 max-w-sm text-sm text-zinc-500">{activeAgent?.description || "How can I help you run your business today?"}</p>
+            <p className="mt-1 max-w-sm text-sm text-zinc-500">{activeAgent?.description || t("aiChat.emptyDescription")}</p>
             <div className="mt-6 grid w-full max-w-lg grid-cols-1 gap-2 sm:grid-cols-2">
               {suggestions.map((s) => (
                 <button
@@ -164,7 +160,7 @@ export default function AIChat() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={`Message ${activeAgent?.name || "Copilot"}…`}
+          placeholder={t("aiChat.placeholder", { name: activeAgent?.name || "Copilot" })}
           data-testid="chat-input"
           className="flex-1 rounded-xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 outline-none transition-all placeholder:text-zinc-600 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40"
         />

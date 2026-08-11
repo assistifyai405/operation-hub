@@ -1,22 +1,25 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { BarChart3 } from "lucide-react";
+import { useLocale } from "@/context/LocaleContext";
 import { money } from "./execShared";
 
-const METRICS = [
-  { k: "revenue", label: "Revenue", color: "#34d399", fmt: money },
-  { k: "pipeline", label: "Pipeline", color: "#8b5cf6", fmt: money },
-  { k: "hours_saved", label: "Hours Saved", color: "#22d3ee", fmt: (v) => `${v}h` },
-  { k: "deals", label: "Deals", color: "#f59e0b", fmt: (v) => `${v}` },
-  { k: "clients", label: "Clients", color: "#f472b6", fmt: (v) => `${v}` },
-  { k: "automations", label: "Automations", color: "#86EFAC", fmt: (v) => `${v}` },
-  { k: "ai_activity", label: "AI Activity", color: "#60a5fa", fmt: (v) => `${v}` },
-];
-
 export function BusinessPerformanceChart({ trends, workspaceEmpty }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const [active, setActive] = useState("revenue");
-  const m = METRICS.find((x) => x.k === active);
+  const metrics = [
+    { k: "revenue", label: t("dashboard.performance.revenue"), color: "#34d399", fmt: (v) => money(v, locale) },
+    { k: "pipeline", label: t("dashboard.performance.pipeline"), color: "#8b5cf6", fmt: (v) => money(v, locale) },
+    { k: "hours_saved", label: t("dashboard.performance.hoursSaved"), color: "#22d3ee", fmt: (v) => `${v}h` },
+    { k: "deals", label: t("dashboard.performance.deals"), color: "#f59e0b", fmt: (v) => `${v}` },
+    { k: "clients", label: t("dashboard.performance.clients"), color: "#f472b6", fmt: (v) => `${v}` },
+    { k: "automations", label: t("dashboard.performance.automations"), color: "#86EFAC", fmt: (v) => `${v}` },
+    { k: "ai_activity", label: t("dashboard.performance.aiActivity"), color: "#60a5fa", fmt: (v) => `${v}` },
+  ];
+  const m = metrics.find((x) => x.k === active);
   const data = (trends?.labels || []).map((label, i) => ({ label, value: (trends?.series?.[active] || [])[i] || 0 }));
   const total = data.reduce((s, d) => s + d.value, 0);
   const empty = Boolean(workspaceEmpty) || data.every((d) => !d.value);
@@ -24,12 +27,12 @@ export function BusinessPerformanceChart({ trends, workspaceEmpty }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-zinc-950/80 p-5 backdrop-blur-xl" data-testid="performance-chart">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><BarChart3 className="h-4 w-4 text-brand-400" /> Business Performance</h2>
-        <span className="text-xs text-zinc-500">Last 8 weeks</span>
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><BarChart3 className="h-4 w-4 text-brand-400" /> {t("dashboard.performance.title")}</h2>
+        <span className="text-xs text-zinc-500">{t("dashboard.performance.lastWeeks", { count: 8 })}</span>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-1.5" data-testid="chart-metric-switcher">
-        {METRICS.map((x) => (
+        {metrics.map((x) => (
           <button key={x.k} onClick={() => setActive(x.k)} data-testid={`chart-metric-${x.k}`}
             className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all ${active === x.k ? "border-transparent text-black" : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"}`}
             style={active === x.k ? { background: x.color } : {}}>
@@ -41,14 +44,14 @@ export function BusinessPerformanceChart({ trends, workspaceEmpty }) {
       {empty ? (
         <div className="mt-8 flex flex-col items-center justify-center py-16 text-center" data-testid="performance-empty">
           <BarChart3 className="h-8 w-8 text-zinc-600" />
-          <p className="mt-3 text-sm font-medium text-zinc-300">No performance data yet</p>
-          <p className="mt-1 max-w-sm text-xs text-zinc-500">Once you add clients, deals, invoices or AI activity, trends will appear here.</p>
+          <p className="mt-3 text-sm font-medium text-zinc-300">{t("dashboard.performance.empty")}</p>
+          <p className="mt-1 max-w-sm text-xs text-zinc-500">{t("dashboard.performance.emptyHint")}</p>
         </div>
       ) : (
         <>
           <div className="mt-4 flex items-baseline gap-2">
             <p className="text-2xl font-bold text-zinc-50">{m.fmt(total)}</p>
-            <span className="text-xs text-zinc-500">total · {m.label.toLowerCase()}</span>
+            <span className="text-xs text-zinc-500">{t("dashboard.performance.totalMetric", { metric: m.label })}</span>
           </div>
 
           <div className="mt-2 h-56" data-testid={`chart-canvas-${active}`}>

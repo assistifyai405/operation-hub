@@ -96,3 +96,16 @@ call the shared resolution path without a user preference; after sign-in,
 `user.language` remains authoritative. Add marketing copy under a dedicated,
 matching namespace in both locale JSON files instead of creating a second detector
 or another local-storage key.
+
+
+## Hardcoded string audit
+
+Run a lightweight heuristic scan for likely customer-facing English left in JSX:
+
+```bash
+python scripts/audit_hardcoded_strings.py
+python scripts/audit_hardcoded_strings.py --json --limit 500
+```
+
+The scanner is intentionally imperfect. Classify hits as technical/internal,
+test-only, proper nouns, or follow-up — do not treat every hit as a defect.

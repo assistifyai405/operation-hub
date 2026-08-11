@@ -1,16 +1,20 @@
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Activity } from "lucide-react";
 import { AiIcon, fmtDuration } from "@/components/ai/aiHelpers";
+import { useLocale } from "@/context/LocaleContext";
 import { Section, relTime } from "./execShared";
 
 export function AiActivityTimeline({ activity }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const navigate = useNavigate();
   return (
-    <Section title="Recent AI Activity" icon={Activity} testid="ai-activity-section"
-      action={<button onClick={() => navigate("/ai-workspace")} className="text-xs font-medium text-brand-400 hover:text-brand-300">View all</button>}>
+    <Section title={t("dashboard.activity.title")} icon={Activity} testid="ai-activity-section"
+      action={<button onClick={() => navigate("/ai-workspace")} className="text-xs font-medium text-brand-400 hover:text-brand-300">{t("dashboard.activity.viewAll")}</button>}>
       <div className="rounded-2xl border border-white/10 bg-zinc-950 p-2">
         {!activity?.length ? (
-          <p className="py-8 text-center text-sm text-zinc-500" data-testid="ai-activity-empty">Assistify hasn't done anything yet — generate a document to see it here.</p>
+          <p className="py-8 text-center text-sm text-zinc-500" data-testid="ai-activity-empty">{t("dashboard.activity.empty")}</p>
         ) : (
           <div className="relative">
             {activity.map((a, i) => (
@@ -21,9 +25,9 @@ export function AiActivityTimeline({ activity }) {
                   <p className="truncate text-sm font-medium text-zinc-100">{a.title}</p>
                   <p className="line-clamp-1 text-xs text-zinc-500">{a.explanation}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-zinc-600">
-                    <span>{relTime(a.created_at)}</span>
-                    {a.time_saved ? <span className="text-emerald-500/80">saved ~{fmtDuration(a.time_saved)}</span> : null}
-                    {a.confidence ? <span>{a.confidence}% confidence</span> : null}
+                    <span>{relTime(a.created_at, locale, t)}</span>
+                    {a.time_saved ? <span className="text-emerald-500/80">{t("dashboard.activity.saved", { duration: fmtDuration(a.time_saved) })}</span> : null}
+                    {a.confidence ? <span>{t("dashboard.confidence", { value: a.confidence })}</span> : null}
                     {a.project_name ? <span>{a.project_name}</span> : null}
                   </div>
                 </div>

@@ -14,7 +14,9 @@ describe("Sprint 24 custom agent entry", () => {
     expect(agents).not.toMatch(/new-agent-btn/);
     expect(agents).not.toMatch(/>\s*New Agent\s*</);
     expect(agents).toMatch(/custom-agents-note/);
-    expect(agents).toMatch(/not available in this release/);
+    expect(agents).toMatch(/aiAgents\.customUnavailable/);
+    const en = JSON.parse(read("../i18n/locales/en.json"));
+    expect(en.aiAgents.customUnavailable).toMatch(/not available in this release/);
   });
 
   test("agent chat routes through Copilot with a real prompt", () => {

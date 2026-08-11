@@ -57,7 +57,31 @@
     "or": "or",
     "previous": "Previous",
     "next": "Next",
-    "pageOf": "Page {{page}} of {{pages}}"
+    "pageOf": "Page {{page}} of {{pages}}",
+    "status": "Status",
+    "saveChanges": "Save changes",
+    "upload": "Upload",
+    "remove": "Remove",
+    "imageUploaded": "Image uploaded",
+    "logoPreview": "Logo preview",
+    "apiErrors": {
+      "validEmail": "Please enter a valid email address",
+      "alreadyMember": "This person is already a member of your organization",
+      "pendingInvitationExists": "A pending invitation already exists for this email",
+      "invitationNotFound": "Invitation not found",
+      "memberNotFound": "Member not found",
+      "cannotRemoveMembers": "You do not have permission to remove members",
+      "alreadyOwner": "You already own this organization",
+      "jobNotFound": "Job not found",
+      "mailboxNotFound": "Mailbox not found",
+      "emailNotFound": "Email not found",
+      "emailNotResolvable": "Email is not in a resolvable state",
+      "confirmDeliveryBeforeRetry": "Confirm delivery before retrying",
+      "network": "Network error. Please try again.",
+      "rateLimited": "Too many requests. Please wait and try again.",
+      "unauthorized": "Session expired. Please sign in again.",
+      "forbidden": "You do not have permission to do that."
+    }
   },
   "auth": {
     "loginTitle": "Welcome back",
@@ -236,6 +260,304 @@
       "hint": "Your choice is saved to your account and kept after reload.",
       "saved": "Language updated"
     },
+    "general": {
+      "title": "General",
+      "description": "Your personal profile and preferences.",
+      "avatarUrl": "Avatar URL",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "timezone": "Time zone",
+      "languageHint": "Interface language is managed under Settings → Language.",
+      "saved": "Profile saved"
+    },
+    "organization": {
+      "title": "Organization",
+      "description": "Company details used across proposals, contracts, and invoices.",
+      "logo": "Organization logo",
+      "logoHint": "PNG, JPG, or SVG up to 5 MB.",
+      "name": "Organization name",
+      "website": "Website",
+      "businessEmail": "Business email",
+      "phone": "Phone",
+      "vatNumber": "VAT number",
+      "kvkNumber": "KVK number",
+      "defaultCurrency": "Default currency",
+      "defaultVat": "Default VAT (%)",
+      "address": "Address",
+      "saved": "Organization saved"
+    },
+    "branding": {
+      "title": "Branding",
+      "description": "Colors, logos, and document footers for a consistent brand.",
+      "primaryColor": "Primary color",
+      "secondaryColor": "Secondary color",
+      "brandLogo": "Brand logo",
+      "pdfLogo": "Default PDF logo",
+      "proposalFooter": "Proposal footer",
+      "contractFooter": "Contract footer",
+      "invoiceFooter": "Invoice footer",
+      "saved": "Branding saved"
+    },
+    "ai": {
+      "title": "AI settings",
+      "description": "Defaults for AI-generated proposals, contracts, and invoices.",
+      "defaultProvider": "Default AI provider",
+      "providerHint": "Provider routing is ready for future options.",
+      "proposalTone": "Proposal tone",
+      "contractTone": "Contract tone",
+      "temperature": "Temperature",
+      "invoiceNotes": "Default invoice notes",
+      "invoiceNotesPlaceholder": "For example: Payment due within 14 days.",
+      "saved": "AI settings saved",
+      "tones": {
+        "professional": "Professional",
+        "formal": "Formal",
+        "friendly": "Friendly",
+        "persuasive": "Persuasive",
+        "concise": "Concise"
+      }
+    },
+    "documents": {
+      "title": "Documents",
+      "description": "Numbering, prefixes, and PDF defaults.",
+      "proposalPrefix": "Proposal prefix",
+      "contractPrefix": "Contract prefix",
+      "invoicePrefix": "Invoice prefix",
+      "invoicePrefixHint": "Used for new invoice numbers.",
+      "numberingStart": "Numbering starts at",
+      "pdfPageSize": "PDF page size",
+      "pdfAccentColor": "PDF accent color",
+      "saved": "Document settings saved"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choose what you want to hear about.",
+      "rows": {
+        "emailNotifications": {
+          "label": "Email notifications",
+          "description": "Receive important updates by email"
+        },
+        "productUpdates": {
+          "label": "Product updates",
+          "description": "News about new features and improvements"
+        },
+        "securityAlerts": {
+          "label": "Security alerts",
+          "description": "Sign-in and security-related notifications"
+        },
+        "billingAlerts": {
+          "label": "Billing alerts",
+          "description": "Payment and subscription notices (future)"
+        },
+        "taskReminders": {
+          "label": "Task reminders",
+          "description": "Reminders for upcoming tasks"
+        },
+        "weeklyDigest": {
+          "label": "Weekly digest",
+          "description": "A summary of your business every Monday"
+        },
+        "aiAlerts": {
+          "label": "AI generation alerts",
+          "description": "Notify me when AI documents finish generating"
+        }
+      }
+    },
+    "security": {
+      "changePassword": "Change password",
+      "passwordDescription": "Use a strong, unique password.",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "updatePassword": "Update password",
+      "passwordMin": "Your new password must be at least 8 characters.",
+      "passwordMismatch": "The passwords do not match.",
+      "passwordChanged": "Password changed",
+      "activeSessions": "Active sessions",
+      "activeSessionsDescription": "Devices currently signed in.",
+      "logoutAll": "Log out of all devices",
+      "signedOutAll": "Signed out of all devices",
+      "noActiveSessions": "No active sessions.",
+      "unknownDevice": "Unknown device",
+      "lastActive": "last active {{date}}",
+      "recentLogins": "Recent sign-ins",
+      "recentLoginsDescription": "Your latest sign-in activity.",
+      "noLoginHistory": "No sign-in history."
+    },
+    "apiKeys": {
+      "title": "API keys",
+      "description": "Programmatic access to your Assistify workspace.",
+      "comingSoon": "API access is coming soon",
+      "hint": "Generate scoped API keys to integrate Assistify with your own tools and workflows.",
+      "create": "Create API key"
+    },
+    "integrations": {
+      "title": "Integrations",
+      "description": "Connect Google, Microsoft, Slack, Discord, Zapier, and webhooks.",
+      "hint": "Manage connections, permissions, health checks, and OAuth from the Integrations hub.",
+      "open": "Open Integrations"
+    },
+    "billing": {
+      "title": "Billing",
+      "description": "Plans and usage.",
+      "plan": "{{plan}} plan",
+      "active": "Active",
+      "intervals": {
+        "day": "day",
+        "week": "week",
+        "month": "month",
+        "year": "year"
+      },
+      "renewsAndSeats": "Renews on {{date}} · {{used}}/{{included}} seats used",
+      "managePlan": "Manage plan",
+      "managePlanInfo": "Manage your plan.",
+      "notAvailable": "Billing is not available during beta.",
+      "notAvailableHint": "Stripe is not configured. There is no active subscription, trial countdown, or payment method — the usage below is informational only.",
+      "aiUsage": "AI requests today: {{used}}{{limit}} (workspace daily limit)",
+      "usageThisPeriod": "Usage this period",
+      "usage": {
+        "projects": "Projects",
+        "documents": "Documents",
+        "proposals": "Proposals",
+        "contracts": "Contracts",
+        "invoices": "Invoices"
+      }
+    },
+    "email": {
+      "title": "Email",
+      "description": "Default outbound sender and approval rules for your organization. Provider API keys are configured only on the server.",
+      "saved": "Email settings saved",
+      "globalSending": "Global sending",
+      "provider": "Provider",
+      "notConfigured": "not configured",
+      "today": "Today",
+      "senderName": "Sender name",
+      "senderEmail": "Sender email",
+      "replyToEmail": "Reply-to email",
+      "dailySendingLimit": "Daily sending limit",
+      "companySignature": "Company signature",
+      "enableSending": "Enable organization sending",
+      "enableSendingDescription": "EMAIL_SENDING_ENABLED must also be enabled on the server.",
+      "requireApproval": "Require approval before sending",
+      "requireApprovalDescription": "Members submit drafts; owners and admins approve them.",
+      "allowAutoSend": "Allow automations to send automatically",
+      "allowAutoSendDescription": "Only when approval is off and the automation explicitly uses automatic mode. Global sending safeguards still apply."
+    },
+    "team": {
+      "title": "Team",
+      "description": "People in your organization.",
+      "organizationFallback": "Organization",
+      "memberCount_one": "{{count}} member",
+      "memberCount_other": "{{count}} members",
+      "loading": "Loading team",
+      "loadError": "Could not load the team.",
+      "emailRequired": "Email is required.",
+      "invitationCreatedManual": "Invitation created — email sending is disabled",
+      "shareDevInviteLink": "Share this invitation link manually. It is shown once in development.",
+      "shareInviteLink": "Share the invitation link manually with the recipient.",
+      "devInvitationLink": "Development invitation link",
+      "invitationSent": "Invitation sent to {{email}}",
+      "roleUpdated": "{{name}} is now {{role}}",
+      "memberRemoved": "Member removed",
+      "invitationCancelled": "Invitation cancelled",
+      "ownershipTransferred": "Ownership transferred",
+      "seatsActive_one": "Seats in use: {{count}} active",
+      "seatsActive_other": "Seats in use: {{count}} active",
+      "seatsPending_one": "{{count}} pending invitation",
+      "seatsPending_other": "{{count}} pending invitations",
+      "seatsUnlimited": "unlimited (billing not enforced)",
+      "seatsLimit": "limit {{count}}",
+      "noMembers": "No members yet.",
+      "member": "Member",
+      "role": "Role",
+      "status": "Status",
+      "joined": "Joined",
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "member": "Member"
+      },
+      "statuses": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "pending": "Pending",
+        "invited": "Invited",
+        "suspended": "Suspended"
+      },
+      "changeRoleFor": "Change role for {{email}}",
+      "transferTo": "Transfer ownership to {{email}}",
+      "transfer": "Transfer",
+      "leaveOrganization": "Leave organization",
+      "removePerson": "Remove {{email}}",
+      "leave": "Leave",
+      "remove": "Remove",
+      "inviteMember": "Invite member",
+      "inviteDescription": "Invite a teammate to this organization.",
+      "inviteEmailNote": "When email sending is disabled, the invitation is created but not emailed. Share the invitation link manually; in development it is shown once.",
+      "email": "Email",
+      "emailPlaceholder": "colleague@company.com",
+      "invite": "Invite",
+      "pendingInvitations": "Pending invitations",
+      "expires": "expires {{date}}",
+      "cancelInvitationTo": "Cancel invitation to {{email}}",
+      "confirmTransferTitle": "Transfer ownership?",
+      "confirmLeaveTitle": "Leave organization?",
+      "confirmRemoveTitle": "Remove member?",
+      "confirmCancelInviteTitle": "Cancel invitation?",
+      "confirmTransferPrefix": "You will become an admin.",
+      "confirmTransferSuffix": "will become the owner.",
+      "confirmRemovePrefix": "Remove",
+      "confirmRemoveSuffix": "from this organization?",
+      "confirmLeaveDescription": "You will leave this organization and receive a new personal workspace.",
+      "confirmCancelInvitePrefix": "Cancel the pending invitation to",
+      "confirm": "Confirm"
+    },
+    "operations": {
+      "title": "Operations",
+      "description": "Backend readiness, AI usage, workers, and recovery actions for owners and admins.",
+      "release": "Release",
+      "appHealth": "App health",
+      "workspaces": "Workspaces",
+      "workspaceUsers": "Workspace users",
+      "queueDepth": "Queued jobs",
+      "failedQueueDepth": "Jobs in failed queue",
+      "stuckEmails": "Stuck emails",
+      "unhealthyIntegrations": "Unhealthy integrations",
+      "betaMode": "Beta mode",
+      "mailboxes": "Mailboxes",
+      "noMailboxes": "No mailboxes connected.",
+      "never": "never",
+      "lastSync": "last sync: {{date}}",
+      "sync": "Sync",
+      "syncQueued": "Sync queued",
+      "reconciliationComplete": "Reconciliation complete",
+      "reconcileStuckEmails": "Reconcile stuck emails",
+      "recoveryNote": "Resolve individual needs-review emails in the Email Center or through the API. Never retry a message with a provider message ID until you have confirmed delivery in Gmail or Outlook.",
+      "statuses": {
+        "ok": "Healthy",
+        "down": "Unavailable",
+        "unset": "Not configured",
+        "degraded": "Degraded",
+        "running": "Running",
+        "stale": "Not responding",
+        "unavailable": "Unavailable",
+        "disabled": "Disabled",
+        "enabled": "Enabled",
+        "inline": "Inline processing",
+        "off": "Off",
+        "on": "On",
+        "unlimited": "Unlimited",
+        "active": "Active",
+        "pending": "Pending",
+        "connected": "Connected",
+        "syncing": "Syncing",
+        "synced": "Synced",
+        "error": "Error",
+        "failed": "Failed",
+        "idle": "Idle"
+      }
+    },
     "billingBeta": "Billing is not available during beta.",
     "billingBetaHint": "No active plan, trial countdown, or payment CTA. Stripe comes later.",
     "operationsTitle": "Operations",
@@ -266,7 +588,12 @@
     "betaFeedback": "Beta feedback",
     "worker": "Worker",
     "scheduler": "Scheduler",
-    "failedJobs": "Failed jobs"
+    "failedJobs": "Failed jobs",
+    "adminTitle": "Beta feedback",
+    "adminDescription": "Feedback submitted by users in this workspace.",
+    "submissionCount_one": "{{count}} submission",
+    "submissionCount_other": "{{count}} submissions",
+    "noFeedback": "No feedback yet."
   },
   "billing": {
     "notAvailable": "Billing is not available during beta.",
@@ -508,5 +835,985 @@
     "clients": "Add your first client to start tracking work.",
     "projects": "Create a project to organize delivery.",
     "tasks": "No tasks yet — add one to stay on track."
+  },
+  "statuses": {
+    "Active": "Active",
+    "Lead": "Lead",
+    "Churned": "Churned",
+    "In Progress": "In Progress",
+    "Review": "Review",
+    "Completed": "Completed",
+    "Blocked": "Blocked",
+    "Draft": "Draft",
+    "Generated": "Generated",
+    "Sent": "Sent",
+    "Signed": "Signed",
+    "Accepted": "Accepted",
+    "Rejected": "Rejected",
+    "Paid": "Paid",
+    "Overdue": "Overdue",
+    "Expired": "Expired",
+    "Cancelled": "Cancelled",
+    "Archived": "Archived"
+  },
+  "priorities": {
+    "High": "High",
+    "Medium": "Medium",
+    "Low": "Low"
+  },
+  "clients": {
+    "count_one": "{{count}} client in your workspace.",
+    "count_other": "{{count}} clients in your workspace.",
+    "add": "Add Client",
+    "searchPlaceholder": "Search clients",
+    "loading": "Loading clients",
+    "loadError": "Couldn't load clients",
+    "form": {
+      "editTitle": "Edit Client",
+      "newTitle": "New Client",
+      "companyName": "Company name",
+      "companyPlaceholder": "Company name",
+      "contact": "Contact",
+      "contactPlaceholder": "Contact name",
+      "dealValue": "Deal value (EUR)",
+      "email": "Email",
+      "emailPlaceholder": "name@company.com"
+    },
+    "validation": {
+      "companyRequired": "Company name is required",
+      "email": "Enter a valid email",
+      "valueNumber": "Value must be a number"
+    },
+    "toasts": {
+      "created": "Client created",
+      "updated": "Client updated",
+      "deleted": "Client deleted"
+    },
+    "empty": {
+      "title": "No clients yet",
+      "description": "Clients are the companies and people you work with — linked to projects, tasks, and opportunities.",
+      "why": "Add one real client to unlock CRM views, pipeline deals, and AI summaries grounded in your data.",
+      "action": "Create your first client"
+    },
+    "table": {
+      "client": "Client",
+      "contact": "Contact",
+      "value": "Value",
+      "projects": "Projects"
+    },
+    "delete": {
+      "title": "Delete client?",
+      "description": "This will permanently remove “{{name}}” and unlink its projects. This cannot be undone."
+    }
+  },
+  "projects": {
+    "count_one": "{{count}} project across its lifecycle.",
+    "count_other": "{{count}} projects across their lifecycle.",
+    "new": "New Project",
+    "loading": "Loading projects",
+    "loadError": "Couldn't load projects",
+    "noClient": "No client",
+    "noProjects": "No projects",
+    "progress": "Progress",
+    "validation": {
+      "nameRequired": "Project name is required"
+    },
+    "toasts": {
+      "created": "Project created",
+      "updated": "Project updated",
+      "deleted": "Project deleted"
+    },
+    "form": {
+      "editTitle": "Edit Project",
+      "newTitle": "New Project",
+      "name": "Project name",
+      "namePlaceholder": "Brand Redesign",
+      "client": "Client",
+      "members": "Members",
+      "progress": "Progress ({{progress}}%)",
+      "dueDate": "Due date",
+      "description": "Description",
+      "descriptionPlaceholder": "What is this project about?"
+    },
+    "empty": {
+      "title": "No projects yet",
+      "description": "Projects organize delivery for a client — plans, tasks, proposals, and documents live here.",
+      "why": "Create one project to start tracking work and unlock AI plans and proposals.",
+      "action": "Create your first project"
+    },
+    "delete": {
+      "title": "Delete project?",
+      "description": "This will permanently remove “{{name}}” and unlink its tasks. This cannot be undone."
+    }
+  },
+  "tasks": {
+    "add": "Add Task",
+    "loading": "Loading tasks",
+    "loadError": "Couldn't load tasks",
+    "noProject": "No project",
+    "validation": {
+      "titleRequired": "Task title is required"
+    },
+    "toasts": {
+      "created": "Task created",
+      "updated": "Task updated",
+      "deleted": "Task deleted"
+    },
+    "form": {
+      "editTitle": "Edit Task",
+      "newTitle": "New Task",
+      "title": "Task title",
+      "titlePlaceholder": "Finalize proposal",
+      "project": "Project",
+      "priority": "Priority",
+      "dueDate": "Due date"
+    },
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "done": "Done"
+    },
+    "empty": {
+      "title": "No tasks yet",
+      "description": "Tasks are the concrete next steps on your projects — due dates, priorities, and progress.",
+      "why": "Add a task so Assistify can surface overdue work and keep priorities clear.",
+      "action": "Create your first task",
+      "filtered": "No {{filter}} tasks."
+    },
+    "delete": {
+      "title": "Delete task?",
+      "description": "This will permanently remove “{{title}}”. This cannot be undone."
+    }
+  },
+  "workspace": {
+    "noDate": "No date",
+    "noClient": "No client",
+    "due": "Due {{date}}",
+    "manage": "Manage",
+    "tabs": {
+      "overview": "Overview",
+      "planner": "AI Planner",
+      "proposal": "Proposal",
+      "contract": "Contract",
+      "invoice": "Invoice",
+      "chat": "AI Chat",
+      "tasks": "Tasks",
+      "documents": "Documents",
+      "proposals": "Proposals",
+      "notes": "Notes",
+      "activity": "Activity"
+    },
+    "overview": {
+      "client": "Client",
+      "deadline": "Deadline",
+      "progress": "Progress",
+      "overallProgress": "Overall progress",
+      "description": "Description",
+      "noDescription": "No description yet. Edit the project to add details.",
+      "linkedTasks": "Linked Tasks",
+      "noTasks": "No tasks linked yet",
+      "linkedDocuments": "Linked Documents",
+      "noDocuments": "No documents linked yet"
+    },
+    "chat": {
+      "error": "Sorry, something went wrong.",
+      "context": "This AI chat is dedicated to {{project}} and remembers your conversation history.",
+      "empty": "Ask anything about this project — planning, drafts, next steps.",
+      "placeholder": "Message project copilot…"
+    },
+    "tasks": {
+      "emptyDescription": "Add tasks to break this project into actionable steps."
+    },
+    "documents": {
+      "nameRequired": "Document name is required",
+      "uploaded": "Document uploaded",
+      "deleted": "Document deleted",
+      "add": "Add Document",
+      "upload": "Upload",
+      "emptyTitle": "No documents yet",
+      "emptyDescription": "Attach documents and files relevant to this project.",
+      "placeholder": "e.g. Statement of Work.pdf",
+      "types": {
+        "Doc": "Document",
+        "PDF": "PDF",
+        "Sheet": "Spreadsheet",
+        "Image": "Image",
+        "Archive": "Archive"
+      }
+    },
+    "proposals": {
+      "titleRequired": "Proposal title is required",
+      "generated": "Proposal generated",
+      "deleted": "Proposal deleted",
+      "new": "New Proposal",
+      "generate": "Generate",
+      "emptyTitle": "No proposals yet",
+      "emptyDescription": "Generate a proposal to send to your client for this project.",
+      "titlePlaceholder": "Proposal title",
+      "amountPlaceholder": "Amount in EUR",
+      "contentPlaceholder": "Summary / scope (optional)"
+    },
+    "notes": {
+      "saved": "Notes saved",
+      "placeholder": "Jot down meeting notes, ideas, decisions…",
+      "save": "Save Notes"
+    },
+    "activity": {
+      "emptyTitle": "No activity yet",
+      "emptyDescription": "Actions on this project will be logged here automatically."
+    }
+  },
+  "writers": {
+    "onePerLine": "one per line",
+    "version": "Version",
+    "draft": "draft",
+    "lastGenerated": "Last generated",
+    "done": "Done",
+    "regenerate": "Regenerate",
+    "versions": "Versions",
+    "versionHistory": "Version History",
+    "noVersions": "No versions yet. Save to create v1.",
+    "compareCurrent": "Compare with current",
+    "restore": "Restore",
+    "exitCompare": "Exit compare",
+    "currentDraft": "Current draft",
+    "savedVersion": "{{type}} saved as v{{version}}",
+    "restoredVersion": "Restored v{{oldVersion}} as new version v{{version}}",
+    "exporting": "Exporting {{format}}…",
+    "sections": {
+      "executive_summary": "Executive Summary",
+      "scope": "Scope",
+      "deliverables": "Deliverables",
+      "timeline": "Timeline",
+      "pricing": "Pricing",
+      "terms": "Terms",
+      "next_steps": "Next Steps",
+      "parties": "Parties",
+      "services": "Services",
+      "payment_terms": "Payment Terms",
+      "confidentiality": "Confidentiality",
+      "intellectual_property": "Intellectual Property",
+      "termination": "Termination",
+      "signatures": "Signatures"
+    },
+    "proposal": {
+      "name": "Proposal",
+      "defaultTitle": "{{project}} — Proposal",
+      "markedSent": "Proposal marked as Sent",
+      "emptyTitle": "AI Proposal Writer",
+      "emptyDescription": "Generate a polished, client-ready proposal from your project context — client, plan, notes, tasks, documents and timeline. No copy/paste.",
+      "generate": "Generate Proposal",
+      "generating": "Writing proposal…",
+      "titlePlaceholder": "Proposal name",
+      "workflow": {
+        "title": "Writing your proposal",
+        "steps": [
+          "Reading client information",
+          "Understanding the project scope",
+          "Reviewing the plan, notes & tasks",
+          "Looking for pricing opportunities",
+          "Writing your client-ready proposal"
+        ]
+      }
+    },
+    "contract": {
+      "name": "Contract",
+      "defaultTitle": "{{project}} — Service Agreement",
+      "markedSent": "Contract marked as Sent",
+      "emptyTitle": "AI Contract Generator",
+      "emptyDescription": "Generate a legally-structured service agreement from your client, proposal, plan, timeline, tasks and documents — auto-filled, no copy/paste.",
+      "generate": "Generate Contract",
+      "generating": "Drafting agreement…",
+      "titlePlaceholder": "Contract name",
+      "workflow": {
+        "title": "Drafting your agreement",
+        "steps": [
+          "Reading client & project details",
+          "Reviewing the linked proposal",
+          "Applying standard protective clauses",
+          "Structuring the service agreement",
+          "Finalizing your contract"
+        ]
+      }
+    },
+    "invoice": {
+      "name": "Invoice",
+      "defaultTitle": "{{project}} — Invoice",
+      "markedSent": "Invoice marked as Sent",
+      "emptyTitle": "AI Invoice Generator",
+      "emptyDescription": "Generate a professional invoice from your client, project, proposal, contract and payment terms — with auto-calculated line items and VAT.",
+      "generate": "Generate Invoice",
+      "generating": "Preparing invoice…",
+      "titlePlaceholder": "Invoice name",
+      "billTo": "Bill To",
+      "details": "Details",
+      "issue": "Issue",
+      "due": "Due",
+      "description": "Description",
+      "quantity": "Qty",
+      "unitPrice": "Unit Price",
+      "amount": "Amount",
+      "subtotal": "Subtotal",
+      "vat": "VAT",
+      "vatAmount": "VAT amount",
+      "total": "Total",
+      "addLineItem": "Add line item",
+      "fields": {
+        "billing_address": "Billing Address",
+        "description": "Description",
+        "payment_terms": "Payment Terms",
+        "bank_details": "Bank Details",
+        "notes": "Notes"
+      },
+      "workflow": {
+        "title": "Preparing your invoice",
+        "steps": [
+          "Reading client & billing details",
+          "Pulling scope from proposal & contract",
+          "Building line items",
+          "Calculating VAT & totals",
+          "Finalizing your invoice"
+        ]
+      }
+    }
+  },
+  "planner": {
+    "plan": "Plan",
+    "aiProjectPlan": "AI Project Plan",
+    "version": "Version",
+    "draft": "Draft",
+    "onePerLine": "one item per line",
+    "popupBlocked": "Popup blocked — allow popups to export",
+    "savedVersion": "Plan saved as v{{version}}",
+    "emptyTitle": "AI Project Planner",
+    "emptyDescription": "Generate a complete, tailored project plan from your client, description, notes, tasks, documents and timeline — in seconds.",
+    "generate": "Generate Plan",
+    "generating": "Analyzing project…",
+    "unsavedDraft": "Unsaved draft",
+    "versionNumber": "Version {{version}}",
+    "comparingWith": "comparing with v{{version}}",
+    "doneEditing": "Done editing",
+    "exportPdf": "Export PDF",
+    "saveVersion": "Save Version",
+    "noVersions": "No saved versions yet. Save your draft to create v1.",
+    "newGeneration": "New Generation",
+    "sections": {
+      "executive_summary": "Executive Summary",
+      "business_goal": "Business Goal",
+      "technical_requirements": "Technical Requirements",
+      "recommended_plan": "Recommended Project Plan",
+      "milestones": "Milestones",
+      "suggested_tasks": "Suggested Task List",
+      "estimated_timeline": "Estimated Timeline",
+      "risks": "Risks & Challenges",
+      "next_actions": "Recommended Next Actions"
+    },
+    "workflow": {
+      "title": "Analyzing your project",
+      "steps": [
+        "Reading the project brief & notes",
+        "Understanding your goals",
+        "Mapping phases & milestones",
+        "Identifying risks & dependencies",
+        "Writing your project plan"
+      ]
+    }
+  },
+  "copilot": {
+    "title": "Assistify Copilot",
+    "description": "Your day-to-day AI assistant across the whole workspace. Ask it to summarize a client, draft an email, create a project plan, prepare a proposal, or analyze recent activity.",
+    "hint": "Copilot is for quick questions and actions. For specialized roles, open AI Agents. For everything AI has already created, use AI Workspace.",
+    "action": "Action",
+    "aboutToCreate": "I'm about to create:",
+    "done": "Done",
+    "confirm": "Confirm",
+    "actionCancelled": "(Action cancelled.)",
+    "messageLabel": "Message Copilot",
+    "placeholder": "Ask anything or say “Create a project for…”",
+    "send": "Send message",
+    "tools": {
+      "create_client": "Create Client",
+      "create_project": "Create Project",
+      "generate_plan": "Generate AI Plan",
+      "generate_proposal": "Generate Proposal",
+      "generate_contract": "Generate Contract",
+      "generate_invoice": "Generate Invoice"
+    },
+    "suggestions": {
+      "clients": {
+        "text": "Summarize my top clients",
+        "prompt": "Summarize my top clients and what needs attention."
+      },
+      "followup": {
+        "text": "Draft a follow-up email",
+        "prompt": "Draft a polite follow-up email for a recent proposal."
+      },
+      "plan": {
+        "text": "Create a project plan",
+        "prompt": "Help me create a project plan for a new engagement."
+      },
+      "proposal": {
+        "text": "Prepare a proposal outline",
+        "prompt": "Outline a proposal for a mid-size consulting project."
+      }
+    }
+  },
+  "aiChat": {
+    "agent": "AI agent",
+    "avatarAlt": "{{name}} avatar",
+    "emptyDescription": "How can I help you run your business today?",
+    "placeholder": "Message {{name}}…",
+    "error": "Sorry, something went wrong. Please try again.",
+    "suggestions": [
+      "Draft a cold email for a SaaS prospect",
+      "Summarize my priorities this week",
+      "Write a project kickoff checklist",
+      "Give me 3 pricing strategy ideas"
+    ]
+  },
+  "aiAgents": {
+    "untitled": "Untitled agent",
+    "assistant": "Assistant",
+    "specialist": "specialist",
+    "loadError": "Could not load agents",
+    "loadErrorStatus": "Could not load agents ({{status}})",
+    "openPrompt": "I'd like help from the {{name}} agent.",
+    "intro": "are specialists for a role — sales, operations, writing, and more. Chat with a built-in specialist below. For quick questions across your whole business, use",
+    "introEnd": ".",
+    "customUnavailable": "Custom agent creation is not available in this release — built-in specialists are ready to use.",
+    "available": "Available",
+    "fallbackDescription": "{{name}} specializes in {{role}} work inside your Assistify workspace.",
+    "chatWith": "Chat with {{name}}",
+    "loading": "Loading agents…",
+    "empty": {
+      "title": "No AI agents available yet",
+      "description": "Agents are specialists you can chat with for a specific job — like writing or sales follow-up.",
+      "why": "When agents are enabled for your workspace, they appear here. Meanwhile, Copilot can help across your business.",
+      "action": "Ask Copilot"
+    }
+  },
+  "aiWorkflow": {
+    "done": "Done",
+    "working": "Assistify is working"
+  },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "dashboard": {
+    "loadError": "Couldn't load dashboard",
+    "welcome": "Welcome",
+    "emptyDescription": "Your AI-powered business operating system is ready — start with one useful action.",
+    "askAi": "Ask AI",
+    "confidence": "{{value}}% confidence",
+    "search": {
+      "label": "Search workspace",
+      "placeholder": "Search everything…",
+      "clear": "Clear search",
+      "noResults": "No results for “{{query}}”"
+    },
+    "kpis": {
+      "health": "Business Health",
+      "healthTooltip": "Overall health (0–100) from overdue invoices, unanswered leads, stalled deals, overdue tasks, inactive clients, proposal conversion, automation success and AI activity.",
+      "pipeline": "Pipeline Value",
+      "pipelineTooltip": "Total value of your open deals across the sales pipeline.",
+      "hoursSaved": "Hours Saved",
+      "hoursSavedTooltip": "Hours Assistify saved you this week across AI documents and executed automations.",
+      "revenueMonth": "Revenue This Month",
+      "revenueMonthTooltip": "Revenue from invoices marked paid in the last 30 days."
+    },
+    "execHero": {
+      "subtitle": "Here's what your business needs today.",
+      "revenueAtRisk": "Revenue at risk",
+      "hoursSavedWeek": "Hours saved this week",
+      "aiConfidence": "AI confidence",
+      "biggestPriority": "Biggest priority today",
+      "allClear": "Your workspace is in great shape — nothing urgent right now. 🎉",
+      "aiBrief": "Today's AI brief"
+    },
+    "revenue": {
+      "title": "Revenue Snapshot",
+      "pipelineValue": "Pipeline Value",
+      "expectedWeighted": "Expected (weighted)",
+      "outstandingInvoices": "Outstanding Invoices",
+      "closedRevenue": "Closed Revenue",
+      "averageDealSize": "Average Deal Size",
+      "growth": "Growth vs last 30d"
+    },
+    "morning": {
+      "title": "AI Morning Brief",
+      "goodMorning": "Good morning",
+      "emptyWorkspace": "Your workspace is ready — add a client or project to see a live brief.",
+      "awaySummary": "Here's what happened while you were away.",
+      "revenue": "Revenue",
+      "pipeline": "Pipeline",
+      "hoursSaved": "Hours Saved",
+      "hoursSavedEstimated": "~Hours saved (est.)",
+      "businessHealth": "Business Health",
+      "activeClients": "Active Clients",
+      "dealsClosing": "Deals Closing",
+      "todaySummary": "Today's Summary",
+      "businessWins": "Business Wins",
+      "risks": "Risks",
+      "recommendations": "AI Recommendations",
+      "whatAiDid": "What AI Did",
+      "savedTime": "saved ~{{duration}}",
+      "viewDashboard": "View dashboard"
+    },
+    "priority": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "priorities": {
+      "title": "Today's Priorities",
+      "empty": "Nothing needs attention right now. You're all caught up.",
+      "items_one": "{{count}} item",
+      "items_other": "{{count}} items",
+      "score": "Score {{score}}",
+      "revenueImpact": "revenue impact",
+      "minutesSaved": "~{{count}}m saved"
+    },
+    "executive": {
+      "title": "AI Executive Brief",
+      "healthStrong": "Business health is strong at {{score}}/100",
+      "atRisk": "{{amount}} at risk",
+      "atRiskWhy": "Across unpaid invoices and stalled open deals.",
+      "review": "Review",
+      "noInsights": "No workspace insights yet.",
+      "allClear": "All clear — nothing needs your attention.",
+      "emptyHint": "Add clients, projects or deals and Assistify will surface real recommendations here."
+    },
+    "performance": {
+      "title": "Business Performance",
+      "lastWeeks": "Last {{count}} weeks",
+      "revenue": "Revenue",
+      "pipeline": "Pipeline",
+      "hoursSaved": "Hours Saved",
+      "deals": "Deals",
+      "clients": "Clients",
+      "automations": "Automations",
+      "aiActivity": "AI Activity",
+      "empty": "No performance data yet",
+      "emptyHint": "Once you add clients, deals, invoices or AI activity, trends will appear here.",
+      "totalMetric": "total · {{metric}}"
+    },
+    "documents": {
+      "title": "Recent Documents",
+      "empty": "No documents yet — generate a proposal, contract or invoice from a project."
+    },
+    "activity": {
+      "title": "Recent AI Activity",
+      "viewAll": "View all",
+      "empty": "Assistify hasn't done anything yet — generate a document to see it here.",
+      "saved": "saved ~{{duration}}"
+    }
+  },
+  "crm": {
+    "title": "CRM",
+    "intro": "Your company and contact directory — the same clients you manage under Clients, enriched with deals and activity. Use Pipeline to move open deals through stages.",
+    "search": "Search companies, people, emails…",
+    "all": "All",
+    "company": "Company",
+    "openDeals": "Open deals",
+    "pipeline": "Pipeline",
+    "lastActivity": "Last activity {{time}}",
+    "empty": {
+      "title": "No contacts yet",
+      "filteredTitle": "No contacts match your search",
+      "description": "CRM shows companies and people from your Clients. Add a client to start building your directory.",
+      "filteredDescription": "Try a different search or clear the tag filter.",
+      "action": "Create your first client"
+    },
+    "detail": {
+      "loadError": "Couldn't load contact",
+      "loading": "Loading contact",
+      "back": "Back to CRM",
+      "openPipeline": "{{amount}} open pipeline",
+      "aiSummary": "AI Relationship Summary",
+      "analyzing": "Analyzing relationship…",
+      "generateSummary": "Generate AI summary",
+      "strengths": "Strengths",
+      "risks": "Risks",
+      "nextAction": "Next best action",
+      "deals": "Deals",
+      "noDeals": "No deals yet",
+      "noProjects": "No projects yet",
+      "noDocuments": "No documents yet",
+      "details": "Details",
+      "owner": "Owner",
+      "timeline": "Timeline"
+    },
+    "sales": {
+      "title": "Sales",
+      "pipelineValue": "Pipeline value",
+      "closingWeek": "Closing this week",
+      "needAttention": "Need attention",
+      "winRate": "Win rate",
+      "averageDeal": "Avg deal size",
+      "conversion": "Conversion",
+      "insights": "AI Sales Insights",
+      "leadsNeedingAttention": "Leads needing attention",
+      "noneStalled": "Nothing stalled — your pipeline is moving."
+    }
+  },
+  "pipeline": {
+    "title": "Sales Pipeline",
+    "intro": "Track open deals by stage. Different from Opportunities (AI-suggested next actions) and CRM (your contact directory).",
+    "openValue": "{{amount}} in open pipeline.",
+    "newLead": "New lead",
+    "search": "Search deals, companies, contacts…",
+    "sort": {
+      "score": "Sort: Score",
+      "value": "Sort: Value",
+      "close": "Sort: Close date"
+    },
+    "empty": {
+      "title": "No deals in your pipeline yet",
+      "description": "Pipeline is where you track sales deals from New to Won. Add a lead to see stages fill with real opportunities.",
+      "action": "Create your first lead"
+    },
+    "dropHere": "Drop here",
+    "stages": {
+      "New": "New",
+      "Qualified": "Qualified",
+      "Meeting Scheduled": "Meeting Scheduled",
+      "Proposal Sent": "Proposal Sent",
+      "Negotiating": "Negotiating",
+      "Won": "Won",
+      "Lost": "Lost"
+    },
+    "toasts": {
+      "moved": "Moved to {{stage}}",
+      "moveFailed": "Move failed"
+    }
+  },
+  "invoices": {
+    "stats": {
+      "paidRevenue": "Revenue (Paid)",
+      "outstanding": "Outstanding",
+      "total": "Total invoices"
+    },
+    "status": {
+      "All": "All",
+      "Draft": "Draft",
+      "Generated": "Generated",
+      "Sent": "Sent",
+      "Paid": "Paid",
+      "Overdue": "Overdue",
+      "Cancelled": "Cancelled",
+      "Archived": "Archived"
+    },
+    "search": "Search invoices",
+    "help": "Every AI-generated invoice across your organization. Open one to edit, change status or export in the Project Workspace.",
+    "empty": {
+      "title": "No invoices yet",
+      "filteredTitle": "No matching invoices",
+      "description": "Open a project and use the invoice generator to bill your client.",
+      "filteredDescription": "Try a different search or filter.",
+      "action": "Go to Projects"
+    },
+    "table": {
+      "invoice": "Invoice",
+      "client": "Client",
+      "date": "Date",
+      "status": "Status",
+      "total": "Total"
+    },
+    "noProject": "No project"
+  },
+  "integrations": {
+    "title": "Integrations",
+    "description": "Connect Google, Microsoft, Slack, Discord, Zapier, and webhooks.",
+    "help": "OAuth refresh tokens are encrypted at rest and never sent to the browser. Only owners and admins can connect or disconnect.",
+    "loadError": "Failed to load integrations",
+    "permissions": "Permissions",
+    "lastSync": "Last sync",
+    "account": "Account",
+    "status": {
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "error": "Error",
+      "expired": "Expired"
+    },
+    "health": {
+      "label": "Health",
+      "healthy": "Healthy",
+      "unhealthy": "Unhealthy",
+      "error": "Error",
+      "degraded": "Degraded",
+      "unknown": "Unknown"
+    },
+    "actions": {
+      "connect": "Connect",
+      "health": "Health",
+      "reconnect": "Reconnect",
+      "disconnect": "Disconnect"
+    },
+    "toasts": {
+      "connectedProvider": "Connected {{provider}}",
+      "connectionFailed": "Connection failed: {{error}}",
+      "adminOnly": "Only owners and admins can manage integrations",
+      "connected": "Connected",
+      "webhookRequired": "HTTPS webhook URL is required",
+      "disconnected": "Disconnected",
+      "tokensRefreshed": "Tokens refreshed"
+    },
+    "dialog": {
+      "title": "Connect {{provider}}",
+      "description": "Paste an HTTPS webhook URL. Secrets are encrypted and never shown again.",
+      "webhookUrl": "Webhook URL",
+      "defaultChannel": "Default channel (optional)",
+      "channel": "Channel"
+    },
+    "confirm": {
+      "title": "Confirm {{action}}",
+      "disconnect": "This removes stored tokens for the organization. Automations using this provider will fail until reconnected.",
+      "reconnect": "Reconnect to refresh permissions and credentials.",
+      "action": "Confirm"
+    }
+  },
+  "automations": {
+    "title": "Automations",
+    "intro": "Background rules that prepare drafts and reminders from real workspace events. You approve before anything sends. Different from Copilot (chat) and AI Agents (specialist chats).",
+    "actions": {
+      "runNow": "Run now",
+      "resume": "Resume",
+      "pauseAll": "Pause all",
+      "new": "New automation"
+    },
+    "pauseOptions": {
+      "1h": "For 1 hour",
+      "tomorrow": "Until tomorrow",
+      "1w": "For 1 week",
+      "forever": "Indefinitely"
+    },
+    "status": {
+      "pausedUntil": "Paused until {{time}}",
+      "active": "Active · Prepare for approval",
+      "off": "All automations off",
+      "enabledCount": "{{active}}/{{total}} enabled",
+      "awaiting": "{{count}} awaiting approval",
+      "completedSaved": "{{count}} completed · {{minutes}} min saved"
+    },
+    "tabs": {
+      "automations": "Automations",
+      "approvals": "Approval Center",
+      "history": "History",
+      "settings": "Settings"
+    },
+    "approvalStatus": {
+      "pending": "Pending",
+      "suggested": "Suggestions",
+      "executed": "Done",
+      "rejected": "Rejected"
+    },
+    "empty": {
+      "title": "No automations yet",
+      "description": "Automations watch for events like overdue invoices or stalled proposals and prepare the next step for your approval.",
+      "action": "Create your first automation"
+    },
+    "approvalsEmpty": {
+      "title": "Nothing here",
+      "description": "Assistify hasn't prepared anything in this state. It re-scans your workspace automatically."
+    },
+    "historyEmpty": "No automation activity yet.",
+    "confirm": {
+      "delete": "Delete “{{name}}”?",
+      "disable": "Disable the “{{name}}” automation?"
+    },
+    "toasts": {
+      "scanComplete": "Scan complete — {{prepared}} prepared, {{executed}} run, {{suggested}} suggested",
+      "enabled": "Automations enabled",
+      "allPaused": "All automations paused",
+      "paused": "Automations paused",
+      "resumed": "Automations resumed",
+      "modeSet": "Mode set to {{mode}}",
+      "deleted": "Automation deleted",
+      "updated": "Automation updated",
+      "created": "Automation created",
+      "approvedDone": "Approved & done",
+      "approvedPartial": "Approved (some steps failed)",
+      "dismissed": "Dismissed",
+      "prepared": "Prepared for approval",
+      "draftUpdated": "Draft updated",
+      "disabled": "Automation disabled"
+    }
+  },
+  "knowledge": {
+    "title": "Knowledge Brain",
+    "intro": "Business knowledge and context used by Copilot and Agents — preferences, services, tone, and facts you teach Assistify.",
+    "confidence": "Confidence",
+    "used": "used {{count}}×",
+    "confirmDelete": "Delete this memory?",
+    "askPlaceholder": "Ask your Brain anything — e.g. “What's my usual pricing and tone?”",
+    "search": "Search memories…",
+    "all": "All",
+    "selected": "{{count}} selected",
+    "insights": "AI Insights",
+    "noInsights": "Insights sharpen as you do more work.",
+    "actions": {
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "toggleLearning": "Toggle learning",
+      "analyze": "Analyze new learning",
+      "memory": "Memory",
+      "merge": "Merge",
+      "mergeOne": "Merge into one"
+    },
+    "stats": {
+      "memories": "Memories",
+      "avgConfidence": "Avg confidence",
+      "timesReused": "Times reused",
+      "learnedToday": "Learned today"
+    },
+    "sort": {
+      "recent": "Recently updated",
+      "used": "Most used",
+      "confidence": "Highest confidence",
+      "newest": "Newest"
+    },
+    "empty": {
+      "title": "No memories yet",
+      "description": "Memories are facts and preferences Assistify uses for better AI answers. Add one manually, or complete company setup during onboarding.",
+      "action": "Add your first memory"
+    },
+    "profile": {
+      "title": "Business Profile",
+      "generate": "Generate",
+      "empty": "Generate an evolving profile of your business from everything Assistify knows."
+    },
+    "modal": {
+      "new": "New memory",
+      "edit": "Edit memory",
+      "title": "Title",
+      "content": "What Assistify should remember…",
+      "keywords": "keywords, comma separated",
+      "save": "Save memory"
+    },
+    "toasts": {
+      "pinned": "Pinned",
+      "unpinned": "Unpinned",
+      "learningOn": "Learning on",
+      "learningPaused": "Learning paused",
+      "deleted": "Deleted",
+      "saved": "Saved",
+      "learned_one": "Learned {{count}} new memory",
+      "learned_other": "Learned {{count}} new memories",
+      "noPatterns": "No new patterns yet — keep working and I'll learn more",
+      "profileUpdated": "Business profile updated",
+      "selectTwo": "Select at least two",
+      "merged": "Merged"
+    },
+    "categories": {
+      "Business": "Business",
+      "Writing Style": "Writing Style",
+      "Pricing": "Pricing",
+      "Customers": "Customers",
+      "Projects": "Projects",
+      "Processes": "Processes",
+      "Frequently Used Terms": "Frequently Used Terms",
+      "Products": "Products",
+      "Services": "Services",
+      "Brand Voice": "Brand Voice",
+      "Policies": "Policies",
+      "Preferences": "Preferences",
+      "Relationships": "Relationships"
+    }
+  },
+  "aiWorkspace": {
+    "title": "AI Workspace",
+    "intro": "A history of AI outputs across your workspace — proposals, plans, invoices, and more. Use Copilot to create new work; use Agents for specialized chats; use this page to find what AI already produced.",
+    "lifetimeSaved": "Lifetime time saved",
+    "lastDays": "Last {{count}} days",
+    "search": "Search proposals, invoices, clients, projects…",
+    "timeline": "Timeline",
+    "minutesSaved": "+{{count}}m saved",
+    "insights": "Insights",
+    "noInsights": "You're all caught up — no actions need attention right now.",
+    "stats": {
+      "actions": "AI actions",
+      "week": "This week",
+      "confidence": "Avg confidence",
+      "speed": "Avg speed"
+    },
+    "quick": {
+      "title": "Quick actions",
+      "copilot": {
+        "label": "Ask Copilot",
+        "hint": "Chat & generate"
+      },
+      "project": {
+        "label": "New Project",
+        "hint": "Start AI work"
+      },
+      "documents": {
+        "label": "Documents",
+        "hint": "Browse library"
+      },
+      "analytics": {
+        "label": "Analytics",
+        "hint": "See the numbers"
+      }
+    },
+    "filters": {
+      "allTypes": "All types"
+    },
+    "ranges": {
+      "all": "All time",
+      "today": "Today",
+      "week": "Past week",
+      "month": "Past month"
+    },
+    "sorts": {
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "most_saved": "Most time saved"
+    },
+    "groups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "This Week",
+      "earlier": "Earlier"
+    },
+    "empty": {
+      "title": "No AI activity yet",
+      "description": "When you generate a proposal, plan, contract, or invoice — or use Copilot — results appear here. Nothing is pre-filled with sample data.",
+      "action": "Ask Copilot"
+    },
+    "versions": {
+      "title": "Version compare",
+      "empty": "Documents with multiple versions will appear here so you can review how they evolved.",
+      "count_one": "{{count}} version",
+      "count_other": "{{count}} versions",
+      "description": "Review how this document evolved across versions, then open a side-by-side compare.",
+      "version": "Version {{version}}",
+      "current": "Current",
+      "openCompare": "Open side-by-side compare"
+    }
+  },
+  "aiReport": {
+    "justNow": "just now",
+    "underSecond": "under 1s",
+    "seconds": "{{count}}s",
+    "generated": "Your {{type}} has been generated successfully.",
+    "generatedIn": "Generated in {{duration}}",
+    "whatAssistifyDid": "What Assistify did",
+    "timeSaved": "Time saved",
+    "savedApproximately": "You saved approximately",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "lifetimeSaved": "Lifetime time saved",
+    "confidence": "AI Confidence",
+    "why": "Why Assistify made these decisions",
+    "quality": "Quality indicators",
+    "nextSteps": "Suggested next steps",
+    "reviewDocument": "Review Document",
+    "downloadPdf": "Download PDF",
+    "exportWord": "Export Word",
+    "sendToClient": "Send to Client"
   }
 }

@@ -9,8 +9,8 @@ import {
 import { analyticsApi } from "@/lib/api";
 import { toast } from "sonner";
 import HelpTip from "@/components/HelpTip";
-
-const money = (n) => `$${(n || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+import { useLocale } from "@/context/LocaleContext";
+import { formatCurrency } from "@/i18n/format";
 
 const Card = ({ children, className = "" }) => (
   <div className={`rounded-xl border border-white/10 bg-zinc-950 p-5 ${className}`}>{children}</div>
@@ -18,6 +18,8 @@ const Card = ({ children, className = "" }) => (
 
 export default function Analytics() {
   const { t } = useTranslation();
+  const { locale } = useLocale();
+  const money = (n) => formatCurrency(n || 0, locale, "EUR");
   const [data, setData] = useState(null);
 
   useEffect(() => { analyticsApi.get().then(setData).catch((e) => toast.error(e.message)); }, []);

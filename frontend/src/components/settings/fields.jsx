@@ -4,6 +4,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { settingsApi } from "@/lib/api";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { localizeApiError } from "@/i18n/errors";
 
 export const inputCls =
   "w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none transition-all placeholder:text-zinc-600 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40 disabled:opacity-60";
@@ -89,6 +91,7 @@ export function ToggleRow({ label, description, checked, onChange, testid }) {
 }
 
 export function ImageUpload({ label, value, onChange, testid, hint }) {
+  const { t } = useTranslation();
   const ref = useRef(null);
   const [busy, setBusy] = useState(false);
   const upload = async (e) => {
@@ -98,32 +101,33 @@ export function ImageUpload({ label, value, onChange, testid, hint }) {
     try {
       const res = await settingsApi.uploadImage(file);
       onChange(res.url);
-      toast.success("Image uploaded");
-    } catch (err) { toast.error(err.message); }
+      toast.success(t("common.imageUploaded"));
+    } catch (err) { toast.error(localizeApiError(t, err)); }
     finally { setBusy(false); if (ref.current) ref.current.value = ""; }
   };
   return (
     <Field label={label} hint={hint}>
       <div className="flex items-center gap-4">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-zinc-900">
-          {value ? <img src={settingsApi.imageUrl(value)} alt="Logo preview" className="h-full w-full object-contain" /> : <ImageIcon className="h-6 w-6 text-zinc-600" />}
+          {value ? <img src={settingsApi.imageUrl(value)} alt={t("common.logoPreview")} className="h-full w-full object-contain" /> : <ImageIcon className="h-6 w-6 text-zinc-600" />}
         </div>
         <input ref={ref} type="file" accept="image/*" onChange={upload} className="hidden" data-testid={`${testid}-input`} />
         <button type="button" onClick={() => ref.current?.click()} disabled={busy} data-testid={testid}
           className="flex items-center gap-2 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 transition-all hover:border-brand-500/40 disabled:opacity-60">
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Upload
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} {t("common.upload")}
         </button>
-        {value && <button type="button" onClick={() => onChange("")} className="text-xs text-zinc-500 hover:text-red-400">Remove</button>}
+        {value && <button type="button" onClick={() => onChange("")} className="text-xs text-zinc-500 hover:text-red-400">{t("common.remove")}</button>}
       </div>
     </Field>
   );
 }
 
-export function SaveButton({ onClick, saving, testid, label = "Save changes" }) {
+export function SaveButton({ onClick, saving, testid, label }) {
+  const { t } = useTranslation();
   return (
     <button onClick={onClick} disabled={saving} data-testid={testid}
       className="mt-2 flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-60 glow-brand">
-      {saving && <Loader2 className="h-4 w-4 animate-spin" />} {label}
+      {saving && <Loader2 className="h-4 w-4 animate-spin" />} {label || t("common.saveChanges")}
     </button>
   );
 }

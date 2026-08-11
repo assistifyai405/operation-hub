@@ -57,7 +57,31 @@
     "or": "of",
     "previous": "Vorige",
     "next": "Volgende",
-    "pageOf": "Pagina {{page}} van {{pages}}"
+    "pageOf": "Pagina {{page}} van {{pages}}",
+    "status": "Status",
+    "saveChanges": "Wijzigingen opslaan",
+    "upload": "Uploaden",
+    "remove": "Verwijderen",
+    "imageUploaded": "Afbeelding geüpload",
+    "logoPreview": "Voorbeeld van logo",
+    "apiErrors": {
+      "validEmail": "Vul een geldig e-mailadres in",
+      "alreadyMember": "Deze persoon is al lid van je organisatie",
+      "pendingInvitationExists": "Er bestaat al een openstaande uitnodiging voor dit e-mailadres",
+      "invitationNotFound": "Uitnodiging niet gevonden",
+      "memberNotFound": "Lid niet gevonden",
+      "cannotRemoveMembers": "Je hebt geen rechten om leden te verwijderen",
+      "alreadyOwner": "Je bent al eigenaar van deze organisatie",
+      "jobNotFound": "Taak niet gevonden",
+      "mailboxNotFound": "Mailbox niet gevonden",
+      "emailNotFound": "E-mail niet gevonden",
+      "emailNotResolvable": "E-mail kan niet worden opgelost",
+      "confirmDeliveryBeforeRetry": "Bevestig bezorging voordat je opnieuw probeert",
+      "network": "Netwerkfout. Probeer het opnieuw.",
+      "rateLimited": "Te veel verzoeken. Wacht even en probeer opnieuw.",
+      "unauthorized": "Sessie verlopen. Log opnieuw in.",
+      "forbidden": "Je hebt geen toestemming voor deze actie."
+    }
   },
   "auth": {
     "loginTitle": "Welkom terug",
@@ -236,6 +260,304 @@
       "hint": "Je keuze wordt opgeslagen op je account en blijft behouden na herladen.",
       "saved": "Taal bijgewerkt"
     },
+    "general": {
+      "title": "Algemeen",
+      "description": "Je persoonlijke profiel en voorkeuren.",
+      "avatarUrl": "URL van profielfoto",
+      "firstName": "Voornaam",
+      "lastName": "Achternaam",
+      "email": "E-mail",
+      "timezone": "Tijdzone",
+      "languageHint": "Je beheert de interfacetaal via Instellingen → Taal.",
+      "saved": "Profiel opgeslagen"
+    },
+    "organization": {
+      "title": "Organisatie",
+      "description": "Bedrijfsgegevens voor offertes, contracten en facturen.",
+      "logo": "Organisatielogo",
+      "logoHint": "PNG, JPG of SVG van maximaal 5 MB.",
+      "name": "Organisatienaam",
+      "website": "Website",
+      "businessEmail": "Zakelijk e-mailadres",
+      "phone": "Telefoonnummer",
+      "vatNumber": "Btw-nummer",
+      "kvkNumber": "KVK-nummer",
+      "defaultCurrency": "Standaardvaluta",
+      "defaultVat": "Standaard-btw (%)",
+      "address": "Adres",
+      "saved": "Organisatie opgeslagen"
+    },
+    "branding": {
+      "title": "Branding",
+      "description": "Kleuren, logo's en documentvoetteksten voor een herkenbare huisstijl.",
+      "primaryColor": "Primaire kleur",
+      "secondaryColor": "Secundaire kleur",
+      "brandLogo": "Merklogo",
+      "pdfLogo": "Standaardlogo voor pdf's",
+      "proposalFooter": "Voettekst offerte",
+      "contractFooter": "Voettekst contract",
+      "invoiceFooter": "Voettekst factuur",
+      "saved": "Branding opgeslagen"
+    },
+    "ai": {
+      "title": "AI-instellingen",
+      "description": "Standaardinstellingen voor door AI gemaakte offertes, contracten en facturen.",
+      "defaultProvider": "Standaard AI-provider",
+      "providerHint": "De providerroutering is voorbereid op toekomstige opties.",
+      "proposalTone": "Toon van offertes",
+      "contractTone": "Toon van contracten",
+      "temperature": "Creativiteit",
+      "invoiceNotes": "Standaardnotities op facturen",
+      "invoiceNotesPlaceholder": "Bijvoorbeeld: Betaling binnen 14 dagen.",
+      "saved": "AI-instellingen opgeslagen",
+      "tones": {
+        "professional": "Professioneel",
+        "formal": "Formeel",
+        "friendly": "Vriendelijk",
+        "persuasive": "Overtuigend",
+        "concise": "Bondig"
+      }
+    },
+    "documents": {
+      "title": "Documenten",
+      "description": "Nummering, voorvoegsels en standaardinstellingen voor pdf's.",
+      "proposalPrefix": "Voorvoegsel offerte",
+      "contractPrefix": "Voorvoegsel contract",
+      "invoicePrefix": "Voorvoegsel factuur",
+      "invoicePrefixHint": "Wordt gebruikt voor nieuwe factuurnummers.",
+      "numberingStart": "Nummering begint bij",
+      "pdfPageSize": "Paginaformaat pdf",
+      "pdfAccentColor": "Accentkleur pdf",
+      "saved": "Documentinstellingen opgeslagen"
+    },
+    "notifications": {
+      "title": "Meldingen",
+      "description": "Kies waarover je meldingen wilt ontvangen.",
+      "rows": {
+        "emailNotifications": {
+          "label": "E-mailmeldingen",
+          "description": "Ontvang belangrijke updates per e-mail"
+        },
+        "productUpdates": {
+          "label": "Productupdates",
+          "description": "Nieuws over nieuwe functies en verbeteringen"
+        },
+        "securityAlerts": {
+          "label": "Beveiligingsmeldingen",
+          "description": "Meldingen over inloggen en beveiliging"
+        },
+        "billingAlerts": {
+          "label": "Facturatiemeldingen",
+          "description": "Meldingen over betalingen en abonnementen (toekomstig)"
+        },
+        "taskReminders": {
+          "label": "Taakherinneringen",
+          "description": "Herinneringen voor aankomende taken"
+        },
+        "weeklyDigest": {
+          "label": "Weekoverzicht",
+          "description": "Elke maandag een overzicht van je bedrijf"
+        },
+        "aiAlerts": {
+          "label": "Meldingen over AI-generatie",
+          "description": "Laat het me weten wanneer AI-documenten klaar zijn"
+        }
+      }
+    },
+    "security": {
+      "changePassword": "Wachtwoord wijzigen",
+      "passwordDescription": "Gebruik een sterk, uniek wachtwoord.",
+      "currentPassword": "Huidig wachtwoord",
+      "newPassword": "Nieuw wachtwoord",
+      "confirmPassword": "Bevestig nieuw wachtwoord",
+      "updatePassword": "Wachtwoord bijwerken",
+      "passwordMin": "Je nieuwe wachtwoord moet minimaal 8 tekens bevatten.",
+      "passwordMismatch": "De wachtwoorden komen niet overeen.",
+      "passwordChanged": "Wachtwoord gewijzigd",
+      "activeSessions": "Actieve sessies",
+      "activeSessionsDescription": "Apparaten waarop je nu bent ingelogd.",
+      "logoutAll": "Op alle apparaten uitloggen",
+      "signedOutAll": "Je bent op alle apparaten uitgelogd",
+      "noActiveSessions": "Geen actieve sessies.",
+      "unknownDevice": "Onbekend apparaat",
+      "lastActive": "laatst actief op {{date}}",
+      "recentLogins": "Recente aanmeldingen",
+      "recentLoginsDescription": "Je meest recente aanmeldactiviteit.",
+      "noLoginHistory": "Geen aanmeldgeschiedenis."
+    },
+    "apiKeys": {
+      "title": "API-sleutels",
+      "description": "Programmatische toegang tot je Assistify-workspace.",
+      "comingSoon": "API-toegang komt binnenkort",
+      "hint": "Maak API-sleutels met gerichte rechten om Assistify aan je eigen tools en workflows te koppelen.",
+      "create": "API-sleutel maken"
+    },
+    "integrations": {
+      "title": "Integraties",
+      "description": "Koppel Google, Microsoft, Slack, Discord, Zapier en webhooks.",
+      "hint": "Beheer koppelingen, rechten, statuscontroles en OAuth vanuit het Integratiecentrum.",
+      "open": "Integraties openen"
+    },
+    "billing": {
+      "title": "Facturatie",
+      "description": "Abonnementen en gebruik.",
+      "plan": "Abonnement {{plan}}",
+      "active": "Actief",
+      "intervals": {
+        "day": "dag",
+        "week": "week",
+        "month": "maand",
+        "year": "jaar"
+      },
+      "renewsAndSeats": "Wordt verlengd op {{date}} · {{used}} van {{included}} plaatsen in gebruik",
+      "managePlan": "Abonnement beheren",
+      "managePlanInfo": "Beheer je abonnement.",
+      "notAvailable": "Facturatie is niet beschikbaar tijdens de beta.",
+      "notAvailableHint": "Stripe is niet geconfigureerd. Er is geen actief abonnement, proefperiode of betaalmethode — het onderstaande gebruik is alleen ter informatie.",
+      "aiUsage": "AI-verzoeken vandaag: {{used}}{{limit}} (daglimiet van workspace)",
+      "usageThisPeriod": "Gebruik in deze periode",
+      "usage": {
+        "projects": "Projecten",
+        "documents": "Documenten",
+        "proposals": "Offertes",
+        "contracts": "Contracten",
+        "invoices": "Facturen"
+      }
+    },
+    "email": {
+      "title": "E-mail",
+      "description": "Standaardafzender en goedkeuringsregels voor uitgaande e-mails van je organisatie. API-sleutels van providers worden alleen op de server ingesteld.",
+      "saved": "E-mailinstellingen opgeslagen",
+      "globalSending": "Wereldwijd verzenden",
+      "provider": "Provider",
+      "notConfigured": "niet geconfigureerd",
+      "today": "Vandaag",
+      "senderName": "Naam afzender",
+      "senderEmail": "E-mailadres afzender",
+      "replyToEmail": "Antwoordadres",
+      "dailySendingLimit": "Dagelijkse verzendlimiet",
+      "companySignature": "Bedrijfshandtekening",
+      "enableSending": "Verzenden voor organisatie inschakelen",
+      "enableSendingDescription": "EMAIL_SENDING_ENABLED moet ook op de server zijn ingeschakeld.",
+      "requireApproval": "Goedkeuring vereisen voor verzending",
+      "requireApprovalDescription": "Leden dienen concepten in; eigenaren en beheerders keuren ze goed.",
+      "allowAutoSend": "Automatiseringen automatisch laten verzenden",
+      "allowAutoSendDescription": "Alleen als goedkeuring uitstaat en de automatisering expliciet de automatische modus gebruikt. De algemene verzendbeveiliging blijft gelden."
+    },
+    "team": {
+      "title": "Team",
+      "description": "Mensen in je organisatie.",
+      "organizationFallback": "Organisatie",
+      "memberCount_one": "{{count}} teamlid",
+      "memberCount_other": "{{count}} teamleden",
+      "loading": "Team laden",
+      "loadError": "Het team kon niet worden geladen.",
+      "emailRequired": "E-mailadres is verplicht.",
+      "invitationCreatedManual": "Uitnodiging gemaakt — e-mailverzending is uitgeschakeld",
+      "shareDevInviteLink": "Deel deze uitnodigingslink handmatig. In de ontwikkelomgeving wordt deze eenmalig getoond.",
+      "shareInviteLink": "Deel de uitnodigingslink handmatig met de ontvanger.",
+      "devInvitationLink": "Uitnodigingslink voor ontwikkelomgeving",
+      "invitationSent": "Uitnodiging verstuurd naar {{email}}",
+      "roleUpdated": "{{name}} is nu {{role}}",
+      "memberRemoved": "Teamlid verwijderd",
+      "invitationCancelled": "Uitnodiging ingetrokken",
+      "ownershipTransferred": "Eigenaarschap overgedragen",
+      "seatsActive_one": "Plaatsen in gebruik: {{count}} actief",
+      "seatsActive_other": "Plaatsen in gebruik: {{count}} actief",
+      "seatsPending_one": "{{count}} openstaande uitnodiging",
+      "seatsPending_other": "{{count}} openstaande uitnodigingen",
+      "seatsUnlimited": "onbeperkt (facturatie niet actief)",
+      "seatsLimit": "limiet {{count}}",
+      "noMembers": "Nog geen teamleden.",
+      "member": "Teamlid",
+      "role": "Rol",
+      "status": "Status",
+      "joined": "Lid sinds",
+      "roles": {
+        "owner": "Eigenaar",
+        "admin": "Beheerder",
+        "member": "Lid"
+      },
+      "statuses": {
+        "active": "Actief",
+        "inactive": "Inactief",
+        "pending": "In afwachting",
+        "invited": "Uitgenodigd",
+        "suspended": "Geschorst"
+      },
+      "changeRoleFor": "Rol van {{email}} wijzigen",
+      "transferTo": "Eigenaarschap overdragen aan {{email}}",
+      "transfer": "Overdragen",
+      "leaveOrganization": "Organisatie verlaten",
+      "removePerson": "{{email}} verwijderen",
+      "leave": "Verlaten",
+      "remove": "Verwijderen",
+      "inviteMember": "Teamlid uitnodigen",
+      "inviteDescription": "Nodig een teamgenoot uit voor deze organisatie.",
+      "inviteEmailNote": "Als e-mailverzending is uitgeschakeld, wordt de uitnodiging wel gemaakt maar niet verstuurd. Deel de uitnodigingslink handmatig; in de ontwikkelomgeving wordt deze eenmalig getoond.",
+      "email": "E-mail",
+      "emailPlaceholder": "collega@bedrijf.nl",
+      "invite": "Uitnodigen",
+      "pendingInvitations": "Openstaande uitnodigingen",
+      "expires": "verloopt op {{date}}",
+      "cancelInvitationTo": "Uitnodiging aan {{email}} intrekken",
+      "confirmTransferTitle": "Eigenaarschap overdragen?",
+      "confirmLeaveTitle": "Organisatie verlaten?",
+      "confirmRemoveTitle": "Teamlid verwijderen?",
+      "confirmCancelInviteTitle": "Uitnodiging intrekken?",
+      "confirmTransferPrefix": "Je wordt beheerder.",
+      "confirmTransferSuffix": "wordt de eigenaar.",
+      "confirmRemovePrefix": "Wil je",
+      "confirmRemoveSuffix": "uit deze organisatie verwijderen?",
+      "confirmLeaveDescription": "Je verlaat deze organisatie en krijgt een nieuwe persoonlijke workspace.",
+      "confirmCancelInvitePrefix": "Openstaande uitnodiging intrekken voor",
+      "confirm": "Bevestigen"
+    },
+    "operations": {
+      "title": "Operaties",
+      "description": "Status van de backend, AI-gebruik, workers en herstelacties voor eigenaren en beheerders.",
+      "release": "Release",
+      "appHealth": "Applicatiestatus",
+      "workspaces": "Workspaces",
+      "workspaceUsers": "Workspacegebruikers",
+      "queueDepth": "Jobs in wachtrij",
+      "failedQueueDepth": "Jobs in foutwachtrij",
+      "stuckEmails": "Vastgelopen e-mails",
+      "unhealthyIntegrations": "Integraties met problemen",
+      "betaMode": "Betamodus",
+      "mailboxes": "Mailboxen",
+      "noMailboxes": "Geen mailboxen gekoppeld.",
+      "never": "nooit",
+      "lastSync": "laatste synchronisatie: {{date}}",
+      "sync": "Synchroniseren",
+      "syncQueued": "Synchronisatie in wachtrij gezet",
+      "reconciliationComplete": "Afstemming voltooid",
+      "reconcileStuckEmails": "Vastgelopen e-mails afstemmen",
+      "recoveryNote": "Handel afzonderlijke e-mails met de status 'controle nodig' af in het E-mailcentrum of via de API. Probeer een bericht met een providerbericht-ID nooit opnieuw te verzenden voordat je de bezorging in Gmail of Outlook hebt gecontroleerd.",
+      "statuses": {
+        "ok": "In orde",
+        "down": "Niet beschikbaar",
+        "unset": "Niet geconfigureerd",
+        "degraded": "Verminderde werking",
+        "running": "Actief",
+        "stale": "Reageert niet",
+        "unavailable": "Niet beschikbaar",
+        "disabled": "Uitgeschakeld",
+        "enabled": "Ingeschakeld",
+        "inline": "Directe verwerking",
+        "off": "Uit",
+        "on": "Aan",
+        "unlimited": "Onbeperkt",
+        "active": "Actief",
+        "pending": "In afwachting",
+        "connected": "Verbonden",
+        "syncing": "Bezig met synchroniseren",
+        "synced": "Gesynchroniseerd",
+        "error": "Fout",
+        "failed": "Mislukt",
+        "idle": "Inactief"
+      }
+    },
     "billingBeta": "Facturatie is niet beschikbaar tijdens de beta.",
     "billingBetaHint": "Geen actief abonnement, proefperiode of betaalknop. Stripe komt later.",
     "operationsTitle": "Operaties",
@@ -266,7 +588,12 @@
     "betaFeedback": "Beta-feedback",
     "worker": "Worker",
     "scheduler": "Scheduler",
-    "failedJobs": "Mislukte jobs"
+    "failedJobs": "Mislukte jobs",
+    "adminTitle": "Beta-feedback",
+    "adminDescription": "Feedback van gebruikers in deze workspace.",
+    "submissionCount_one": "{{count}} inzending",
+    "submissionCount_other": "{{count}} inzendingen",
+    "noFeedback": "Nog geen feedback."
   },
   "billing": {
     "notAvailable": "Facturatie is niet beschikbaar tijdens de beta.",
@@ -508,5 +835,985 @@
     "clients": "Voeg je eerste klant toe om werk te volgen.",
     "projects": "Maak een project om oplevering te organiseren.",
     "tasks": "Nog geen taken — voeg er een toe om op koers te blijven."
+  },
+  "statuses": {
+    "Active": "Actief",
+    "Lead": "Lead",
+    "Churned": "Vertrokken",
+    "In Progress": "In uitvoering",
+    "Review": "Beoordeling",
+    "Completed": "Voltooid",
+    "Blocked": "Geblokkeerd",
+    "Draft": "Concept",
+    "Generated": "Gegenereerd",
+    "Sent": "Verstuurd",
+    "Signed": "Ondertekend",
+    "Accepted": "Geaccepteerd",
+    "Rejected": "Afgewezen",
+    "Paid": "Betaald",
+    "Overdue": "Achterstallig",
+    "Expired": "Verlopen",
+    "Cancelled": "Geannuleerd",
+    "Archived": "Gearchiveerd"
+  },
+  "priorities": {
+    "High": "Hoog",
+    "Medium": "Gemiddeld",
+    "Low": "Laag"
+  },
+  "clients": {
+    "count_one": "{{count}} klant in je workspace.",
+    "count_other": "{{count}} klanten in je workspace.",
+    "add": "Klant toevoegen",
+    "searchPlaceholder": "Klanten zoeken",
+    "loading": "Klanten laden",
+    "loadError": "Klanten laden is niet gelukt",
+    "form": {
+      "editTitle": "Klant bewerken",
+      "newTitle": "Nieuwe klant",
+      "companyName": "Bedrijfsnaam",
+      "companyPlaceholder": "Bedrijfsnaam",
+      "contact": "Contactpersoon",
+      "contactPlaceholder": "Naam contactpersoon",
+      "dealValue": "Dealwaarde (EUR)",
+      "email": "E-mail",
+      "emailPlaceholder": "naam@bedrijf.nl"
+    },
+    "validation": {
+      "companyRequired": "Bedrijfsnaam is verplicht",
+      "email": "Vul een geldig e-mailadres in",
+      "valueNumber": "De waarde moet een getal zijn"
+    },
+    "toasts": {
+      "created": "Klant aangemaakt",
+      "updated": "Klant bijgewerkt",
+      "deleted": "Klant verwijderd"
+    },
+    "empty": {
+      "title": "Nog geen klanten",
+      "description": "Klanten zijn de bedrijven en personen waarmee je werkt — gekoppeld aan projecten, taken en kansen.",
+      "why": "Voeg één echte klant toe om CRM-weergaven, pipeline-deals en AI-samenvattingen op basis van jouw gegevens te gebruiken.",
+      "action": "Maak je eerste klant"
+    },
+    "table": {
+      "client": "Klant",
+      "contact": "Contactpersoon",
+      "value": "Waarde",
+      "projects": "Projecten"
+    },
+    "delete": {
+      "title": "Klant verwijderen?",
+      "description": "Hiermee verwijder je “{{name}}” definitief en ontkoppel je de bijbehorende projecten. Dit kan niet ongedaan worden gemaakt."
+    }
+  },
+  "projects": {
+    "count_one": "{{count}} project in de projectcyclus.",
+    "count_other": "{{count}} projecten in de projectcyclus.",
+    "new": "Nieuw project",
+    "loading": "Projecten laden",
+    "loadError": "Projecten laden is niet gelukt",
+    "noClient": "Geen klant",
+    "noProjects": "Geen projecten",
+    "progress": "Voortgang",
+    "validation": {
+      "nameRequired": "Projectnaam is verplicht"
+    },
+    "toasts": {
+      "created": "Project aangemaakt",
+      "updated": "Project bijgewerkt",
+      "deleted": "Project verwijderd"
+    },
+    "form": {
+      "editTitle": "Project bewerken",
+      "newTitle": "Nieuw project",
+      "name": "Projectnaam",
+      "namePlaceholder": "Nieuwe huisstijl",
+      "client": "Klant",
+      "members": "Teamleden",
+      "progress": "Voortgang ({{progress}}%)",
+      "dueDate": "Deadline",
+      "description": "Beschrijving",
+      "descriptionPlaceholder": "Waar gaat dit project over?"
+    },
+    "empty": {
+      "title": "Nog geen projecten",
+      "description": "Projecten organiseren de oplevering voor een klant — plannen, taken, offertes en documenten vind je hier.",
+      "why": "Maak één project om werk bij te houden en AI-plannen en offertes te gebruiken.",
+      "action": "Maak je eerste project"
+    },
+    "delete": {
+      "title": "Project verwijderen?",
+      "description": "Hiermee verwijder je “{{name}}” definitief en ontkoppel je de bijbehorende taken. Dit kan niet ongedaan worden gemaakt."
+    }
+  },
+  "tasks": {
+    "add": "Taak toevoegen",
+    "loading": "Taken laden",
+    "loadError": "Taken laden is niet gelukt",
+    "noProject": "Geen project",
+    "validation": {
+      "titleRequired": "Taaktitel is verplicht"
+    },
+    "toasts": {
+      "created": "Taak aangemaakt",
+      "updated": "Taak bijgewerkt",
+      "deleted": "Taak verwijderd"
+    },
+    "form": {
+      "editTitle": "Taak bewerken",
+      "newTitle": "Nieuwe taak",
+      "title": "Taaktitel",
+      "titlePlaceholder": "Offerte afronden",
+      "project": "Project",
+      "priority": "Prioriteit",
+      "dueDate": "Deadline"
+    },
+    "filters": {
+      "all": "Alle",
+      "active": "Actief",
+      "done": "Voltooid"
+    },
+    "empty": {
+      "title": "Nog geen taken",
+      "description": "Taken zijn de concrete vervolgstappen binnen je projecten — met deadlines, prioriteiten en voortgang.",
+      "why": "Voeg een taak toe zodat Assistify achterstallig werk kan signaleren en prioriteiten duidelijk blijven.",
+      "action": "Maak je eerste taak",
+      "filtered": "Geen {{filter}} taken."
+    },
+    "delete": {
+      "title": "Taak verwijderen?",
+      "description": "Hiermee verwijder je “{{title}}” definitief. Dit kan niet ongedaan worden gemaakt."
+    }
+  },
+  "workspace": {
+    "noDate": "Geen datum",
+    "noClient": "Geen klant",
+    "due": "Deadline {{date}}",
+    "manage": "Beheren",
+    "tabs": {
+      "overview": "Overzicht",
+      "planner": "AI-planner",
+      "proposal": "Offerte",
+      "contract": "Contract",
+      "invoice": "Factuur",
+      "chat": "AI-chat",
+      "tasks": "Taken",
+      "documents": "Documenten",
+      "proposals": "Offertes",
+      "notes": "Notities",
+      "activity": "Activiteit"
+    },
+    "overview": {
+      "client": "Klant",
+      "deadline": "Deadline",
+      "progress": "Voortgang",
+      "overallProgress": "Totale voortgang",
+      "description": "Beschrijving",
+      "noDescription": "Nog geen beschrijving. Bewerk het project om details toe te voegen.",
+      "linkedTasks": "Gekoppelde taken",
+      "noTasks": "Nog geen taken gekoppeld",
+      "linkedDocuments": "Gekoppelde documenten",
+      "noDocuments": "Nog geen documenten gekoppeld"
+    },
+    "chat": {
+      "error": "Sorry, er ging iets mis.",
+      "context": "Deze AI-chat hoort bij {{project}} en onthoudt je gespreksgeschiedenis.",
+      "empty": "Vraag alles over dit project — planning, concepten of vervolgstappen.",
+      "placeholder": "Stuur de projectcopilot een bericht…"
+    },
+    "tasks": {
+      "emptyDescription": "Voeg taken toe om dit project in concrete stappen op te delen."
+    },
+    "documents": {
+      "nameRequired": "Documentnaam is verplicht",
+      "uploaded": "Document geüpload",
+      "deleted": "Document verwijderd",
+      "add": "Document toevoegen",
+      "upload": "Uploaden",
+      "emptyTitle": "Nog geen documenten",
+      "emptyDescription": "Voeg documenten en bestanden toe die voor dit project relevant zijn.",
+      "placeholder": "bijv. Opdrachtomschrijving.pdf",
+      "types": {
+        "Doc": "Document",
+        "PDF": "PDF",
+        "Sheet": "Spreadsheet",
+        "Image": "Afbeelding",
+        "Archive": "Archief"
+      }
+    },
+    "proposals": {
+      "titleRequired": "Offertetitel is verplicht",
+      "generated": "Offerte gegenereerd",
+      "deleted": "Offerte verwijderd",
+      "new": "Nieuwe offerte",
+      "generate": "Genereren",
+      "emptyTitle": "Nog geen offertes",
+      "emptyDescription": "Genereer een offerte om voor dit project naar je klant te sturen.",
+      "titlePlaceholder": "Offertetitel",
+      "amountPlaceholder": "Bedrag in EUR",
+      "contentPlaceholder": "Samenvatting / scope (optioneel)"
+    },
+    "notes": {
+      "saved": "Notities opgeslagen",
+      "placeholder": "Noteer vergadernotities, ideeën en besluiten…",
+      "save": "Notities opslaan"
+    },
+    "activity": {
+      "emptyTitle": "Nog geen activiteit",
+      "emptyDescription": "Acties binnen dit project worden hier automatisch bijgehouden."
+    }
+  },
+  "writers": {
+    "onePerLine": "één per regel",
+    "version": "Versie",
+    "draft": "concept",
+    "lastGenerated": "Laatst gegenereerd",
+    "done": "Klaar",
+    "regenerate": "Opnieuw genereren",
+    "versions": "Versies",
+    "versionHistory": "Versiegeschiedenis",
+    "noVersions": "Nog geen versies. Sla op om v1 te maken.",
+    "compareCurrent": "Vergelijken met huidige versie",
+    "restore": "Herstellen",
+    "exitCompare": "Vergelijking sluiten",
+    "currentDraft": "Huidig concept",
+    "savedVersion": "{{type}} opgeslagen als v{{version}}",
+    "restoredVersion": "v{{oldVersion}} hersteld als nieuwe versie v{{version}}",
+    "exporting": "{{format}} exporteren…",
+    "sections": {
+      "executive_summary": "Managementsamenvatting",
+      "scope": "Scope",
+      "deliverables": "Opleveringen",
+      "timeline": "Planning",
+      "pricing": "Prijs",
+      "terms": "Voorwaarden",
+      "next_steps": "Vervolgstappen",
+      "parties": "Partijen",
+      "services": "Diensten",
+      "payment_terms": "Betalingsvoorwaarden",
+      "confidentiality": "Vertrouwelijkheid",
+      "intellectual_property": "Intellectueel eigendom",
+      "termination": "Beëindiging",
+      "signatures": "Handtekeningen"
+    },
+    "proposal": {
+      "name": "Offerte",
+      "defaultTitle": "{{project}} — Offerte",
+      "markedSent": "Offerte gemarkeerd als verstuurd",
+      "emptyTitle": "AI-offerteschrijver",
+      "emptyDescription": "Genereer een verzorgde offerte voor je klant vanuit de projectcontext — klant, plan, notities, taken, documenten en planning. Kopiëren en plakken is niet nodig.",
+      "generate": "Offerte genereren",
+      "generating": "Offerte schrijven…",
+      "titlePlaceholder": "Naam van offerte",
+      "workflow": {
+        "title": "Je offerte schrijven",
+        "steps": [
+          "Klantgegevens lezen",
+          "Projectscope begrijpen",
+          "Plan, notities en taken bekijken",
+          "Prijsopties onderzoeken",
+          "Je klantklare offerte schrijven"
+        ]
+      }
+    },
+    "contract": {
+      "name": "Contract",
+      "defaultTitle": "{{project}} — Dienstverleningsovereenkomst",
+      "markedSent": "Contract gemarkeerd als verstuurd",
+      "emptyTitle": "AI-contractgenerator",
+      "emptyDescription": "Genereer een juridisch gestructureerde dienstverleningsovereenkomst vanuit je klant, offerte, plan, planning, taken en documenten — automatisch ingevuld, zonder kopiëren en plakken.",
+      "generate": "Contract genereren",
+      "generating": "Overeenkomst opstellen…",
+      "titlePlaceholder": "Naam van contract",
+      "workflow": {
+        "title": "Je overeenkomst opstellen",
+        "steps": [
+          "Klant- en projectgegevens lezen",
+          "Gekoppelde offerte bekijken",
+          "Standaard beschermende bepalingen toepassen",
+          "Dienstverleningsovereenkomst structureren",
+          "Je contract afronden"
+        ]
+      }
+    },
+    "invoice": {
+      "name": "Factuur",
+      "defaultTitle": "{{project}} — Factuur",
+      "markedSent": "Factuur gemarkeerd als verstuurd",
+      "emptyTitle": "AI-factuurgenerator",
+      "emptyDescription": "Genereer een professionele factuur vanuit je klant, project, offerte, contract en betalingsvoorwaarden — met automatisch berekende regels en btw.",
+      "generate": "Factuur genereren",
+      "generating": "Factuur voorbereiden…",
+      "titlePlaceholder": "Naam van factuur",
+      "billTo": "Factuur voor",
+      "details": "Details",
+      "issue": "Factuurdatum",
+      "due": "Vervaldatum",
+      "description": "Omschrijving",
+      "quantity": "Aantal",
+      "unitPrice": "Prijs per eenheid",
+      "amount": "Bedrag",
+      "subtotal": "Subtotaal",
+      "vat": "Btw",
+      "vatAmount": "Btw-bedrag",
+      "total": "Totaal",
+      "addLineItem": "Factuurregel toevoegen",
+      "fields": {
+        "billing_address": "Factuuradres",
+        "description": "Omschrijving",
+        "payment_terms": "Betalingsvoorwaarden",
+        "bank_details": "Bankgegevens",
+        "notes": "Notities"
+      },
+      "workflow": {
+        "title": "Je factuur voorbereiden",
+        "steps": [
+          "Klant- en factuurgegevens lezen",
+          "Scope uit offerte en contract ophalen",
+          "Factuurregels opstellen",
+          "Btw en totalen berekenen",
+          "Je factuur afronden"
+        ]
+      }
+    }
+  },
+  "planner": {
+    "plan": "Plan",
+    "aiProjectPlan": "AI-projectplan",
+    "version": "Versie",
+    "draft": "Concept",
+    "onePerLine": "één item per regel",
+    "popupBlocked": "Pop-up geblokkeerd — sta pop-ups toe om te exporteren",
+    "savedVersion": "Plan opgeslagen als v{{version}}",
+    "emptyTitle": "AI-projectplanner",
+    "emptyDescription": "Genereer binnen enkele seconden een volledig projectplan op maat vanuit je klant, beschrijving, notities, taken, documenten en planning.",
+    "generate": "Plan genereren",
+    "generating": "Project analyseren…",
+    "unsavedDraft": "Niet-opgeslagen concept",
+    "versionNumber": "Versie {{version}}",
+    "comparingWith": "vergelijken met v{{version}}",
+    "doneEditing": "Klaar met bewerken",
+    "exportPdf": "PDF exporteren",
+    "saveVersion": "Versie opslaan",
+    "noVersions": "Nog geen opgeslagen versies. Sla je concept op om v1 te maken.",
+    "newGeneration": "Nieuwe generatie",
+    "sections": {
+      "executive_summary": "Managementsamenvatting",
+      "business_goal": "Bedrijfsdoel",
+      "technical_requirements": "Technische vereisten",
+      "recommended_plan": "Aanbevolen projectplan",
+      "milestones": "Mijlpalen",
+      "suggested_tasks": "Voorgestelde taken",
+      "estimated_timeline": "Geschatte planning",
+      "risks": "Risico's en uitdagingen",
+      "next_actions": "Aanbevolen vervolgstappen"
+    },
+    "workflow": {
+      "title": "Je project analyseren",
+      "steps": [
+        "Projectbrief en notities lezen",
+        "Je doelen begrijpen",
+        "Fasen en mijlpalen uitwerken",
+        "Risico's en afhankelijkheden vaststellen",
+        "Je projectplan schrijven"
+      ]
+    }
+  },
+  "copilot": {
+    "title": "Assistify Copilot",
+    "description": "Je dagelijkse AI-assistent voor je hele workspace. Vraag om een klantsamenvatting, e-mailconcept, projectplan, offerte of analyse van recente activiteit.",
+    "hint": "Copilot is voor snelle vragen en acties. Open AI-agents voor gespecialiseerde rollen. In de AI-werkruimte vind je alles wat AI al heeft gemaakt.",
+    "action": "Actie",
+    "aboutToCreate": "Ik sta op het punt dit aan te maken:",
+    "done": "Klaar",
+    "confirm": "Bevestigen",
+    "actionCancelled": "(Actie geannuleerd.)",
+    "messageLabel": "Bericht aan Copilot",
+    "placeholder": "Vraag iets of zeg ‘Maak een project voor…’",
+    "send": "Bericht versturen",
+    "tools": {
+      "create_client": "Klant aanmaken",
+      "create_project": "Project aanmaken",
+      "generate_plan": "AI-plan genereren",
+      "generate_proposal": "Offerte genereren",
+      "generate_contract": "Contract genereren",
+      "generate_invoice": "Factuur genereren"
+    },
+    "suggestions": {
+      "clients": {
+        "text": "Vat mijn belangrijkste klanten samen",
+        "prompt": "Vat mijn belangrijkste klanten samen en geef aan wat aandacht nodig heeft."
+      },
+      "followup": {
+        "text": "Schrijf een follow-up-e-mail",
+        "prompt": "Schrijf een beleefde follow-up-e-mail voor een recente offerte."
+      },
+      "plan": {
+        "text": "Maak een projectplan",
+        "prompt": "Help me een projectplan te maken voor een nieuwe opdracht."
+      },
+      "proposal": {
+        "text": "Maak een offerteopzet",
+        "prompt": "Maak een offerteopzet voor een middelgroot adviesproject."
+      }
+    }
+  },
+  "aiChat": {
+    "agent": "AI-agent",
+    "avatarAlt": "Avatar van {{name}}",
+    "emptyDescription": "Hoe kan ik je vandaag helpen je bedrijf te runnen?",
+    "placeholder": "Stuur {{name}} een bericht…",
+    "error": "Sorry, er ging iets mis. Probeer het opnieuw.",
+    "suggestions": [
+      "Schrijf een koude e-mail voor een SaaS-prospect",
+      "Vat mijn prioriteiten van deze week samen",
+      "Schrijf een checklist voor een projectkick-off",
+      "Geef me 3 ideeën voor een prijsstrategie"
+    ]
+  },
+  "aiAgents": {
+    "untitled": "Naamloze agent",
+    "assistant": "Assistent",
+    "specialist": "specialist",
+    "loadError": "AI-agents laden is niet gelukt",
+    "loadErrorStatus": "AI-agents laden is niet gelukt ({{status}})",
+    "openPrompt": "Ik wil graag hulp van de agent {{name}}.",
+    "intro": "zijn specialisten voor een rol — sales, bedrijfsvoering, schrijven en meer. Chat hieronder met een ingebouwde specialist. Gebruik voor snelle vragen over je hele bedrijf",
+    "introEnd": ".",
+    "customUnavailable": "Eigen agents maken is in deze release niet beschikbaar — de ingebouwde specialisten staan voor je klaar.",
+    "available": "Beschikbaar",
+    "fallbackDescription": "{{name}} is gespecialiseerd in {{role}} binnen je Assistify-workspace.",
+    "chatWith": "Chat met {{name}}",
+    "loading": "AI-agents laden…",
+    "empty": {
+      "title": "Nog geen AI-agents beschikbaar",
+      "description": "Agents zijn specialisten waarmee je kunt chatten over een specifieke taak, zoals schrijven of salesfollow-up.",
+      "why": "Zodra agents voor je workspace zijn ingeschakeld, verschijnen ze hier. Tot die tijd kan Copilot je met je hele bedrijf helpen.",
+      "action": "Vraag Copilot"
+    }
+  },
+  "aiWorkflow": {
+    "done": "Klaar",
+    "working": "Assistify is bezig"
+  },
+  "time": {
+    "justNow": "zojuist",
+    "minutesAgo": "{{count}}m geleden",
+    "hoursAgo": "{{count}}u geleden",
+    "daysAgo": "{{count}}d geleden"
+  },
+  "dashboard": {
+    "loadError": "Dashboard laden is niet gelukt",
+    "welcome": "Welkom",
+    "emptyDescription": "Je AI-gestuurde bedrijfsomgeving staat klaar — begin met één nuttige actie.",
+    "askAi": "Vraag AI",
+    "confidence": "{{value}}% betrouwbaar",
+    "search": {
+      "label": "Workspace doorzoeken",
+      "placeholder": "Alles doorzoeken…",
+      "clear": "Zoekopdracht wissen",
+      "noResults": "Geen resultaten voor ‘{{query}}’"
+    },
+    "kpis": {
+      "health": "Bedrijfsgezondheid",
+      "healthTooltip": "Algemene gezondheid (0–100) op basis van achterstallige facturen, onbeantwoorde leads, stilgevallen deals, verlopen taken, inactieve klanten, offerteconversie, geslaagde automatiseringen en AI-activiteit.",
+      "pipeline": "Pipelinewaarde",
+      "pipelineTooltip": "Totale waarde van je openstaande deals in de verkooppipeline.",
+      "hoursSaved": "Bespaarde uren",
+      "hoursSavedTooltip": "Uren die Assistify je deze week heeft bespaard met AI-documenten en uitgevoerde automatiseringen.",
+      "revenueMonth": "Omzet deze maand",
+      "revenueMonthTooltip": "Omzet uit facturen die in de afgelopen 30 dagen als betaald zijn gemarkeerd."
+    },
+    "execHero": {
+      "subtitle": "Dit heeft je bedrijf vandaag nodig.",
+      "revenueAtRisk": "Omzet met risico",
+      "hoursSavedWeek": "Bespaarde uren deze week",
+      "aiConfidence": "AI-betrouwbaarheid",
+      "biggestPriority": "Belangrijkste prioriteit van vandaag",
+      "allClear": "Je workspace staat er goed voor — er is nu niets dringends. 🎉",
+      "aiBrief": "AI-overzicht van vandaag"
+    },
+    "revenue": {
+      "title": "Omzetoverzicht",
+      "pipelineValue": "Pipelinewaarde",
+      "expectedWeighted": "Verwacht (gewogen)",
+      "outstandingInvoices": "Openstaande facturen",
+      "closedRevenue": "Gerealiseerde omzet",
+      "averageDealSize": "Gemiddelde dealwaarde",
+      "growth": "Groei t.o.v. afgelopen 30 dagen"
+    },
+    "morning": {
+      "title": "AI-ochtendoverzicht",
+      "goodMorning": "Goedemorgen",
+      "emptyWorkspace": "Je workspace staat klaar — voeg een klant of project toe voor een actueel overzicht.",
+      "awaySummary": "Dit is er gebeurd terwijl je weg was.",
+      "revenue": "Omzet",
+      "pipeline": "Pipeline",
+      "hoursSaved": "Bespaarde uren",
+      "hoursSavedEstimated": "~Bespaarde uren (schatting)",
+      "businessHealth": "Bedrijfsgezondheid",
+      "activeClients": "Actieve klanten",
+      "dealsClosing": "Deals die bijna sluiten",
+      "todaySummary": "Samenvatting van vandaag",
+      "businessWins": "Zakelijke successen",
+      "risks": "Risico's",
+      "recommendations": "AI-aanbevelingen",
+      "whatAiDid": "Wat AI heeft gedaan",
+      "savedTime": "~{{duration}} bespaard",
+      "viewDashboard": "Dashboard bekijken"
+    },
+    "priority": {
+      "critical": "Kritiek",
+      "high": "Hoog",
+      "medium": "Gemiddeld",
+      "low": "Laag"
+    },
+    "priorities": {
+      "title": "Prioriteiten van vandaag",
+      "empty": "Er is nu niets dat aandacht nodig heeft. Je bent helemaal bij.",
+      "items_one": "{{count}} item",
+      "items_other": "{{count}} items",
+      "score": "Score {{score}}",
+      "revenueImpact": "omzetimpact",
+      "minutesSaved": "~{{count}} min. bespaard"
+    },
+    "executive": {
+      "title": "AI-managementoverzicht",
+      "healthStrong": "Je bedrijf staat er met {{score}}/100 goed voor",
+      "atRisk": "{{amount}} loopt risico",
+      "atRiskWhy": "Door onbetaalde facturen en stilgevallen openstaande deals.",
+      "review": "Bekijken",
+      "noInsights": "Nog geen inzichten voor je workspace.",
+      "allClear": "Alles in orde — niets vraagt nu je aandacht.",
+      "emptyHint": "Voeg klanten, projecten of deals toe. Assistify toont hier dan echte aanbevelingen."
+    },
+    "performance": {
+      "title": "Bedrijfsprestaties",
+      "lastWeeks": "Afgelopen {{count}} weken",
+      "revenue": "Omzet",
+      "pipeline": "Pipeline",
+      "hoursSaved": "Bespaarde uren",
+      "deals": "Deals",
+      "clients": "Klanten",
+      "automations": "Automatiseringen",
+      "aiActivity": "AI-activiteit",
+      "empty": "Nog geen prestatiegegevens",
+      "emptyHint": "Zodra je klanten, deals, facturen of AI-activiteit toevoegt, verschijnen hier trends.",
+      "totalMetric": "totaal · {{metric}}"
+    },
+    "documents": {
+      "title": "Recente documenten",
+      "empty": "Nog geen documenten — genereer vanuit een project een offerte, contract of factuur."
+    },
+    "activity": {
+      "title": "Recente AI-activiteit",
+      "viewAll": "Alles bekijken",
+      "empty": "Assistify heeft nog niets gedaan — genereer een document om het hier te zien.",
+      "saved": "~{{duration}} bespaard"
+    }
+  },
+  "crm": {
+    "title": "CRM",
+    "intro": "Je bedrijven- en contactenlijst — dezelfde klanten als onder Klanten, aangevuld met deals en activiteit. Gebruik Pipeline om openstaande deals door de fasen te verplaatsen.",
+    "search": "Zoek bedrijven, personen, e-mailadressen…",
+    "all": "Alles",
+    "company": "Bedrijf",
+    "openDeals": "Openstaande deals",
+    "pipeline": "Pipeline",
+    "lastActivity": "Laatste activiteit {{time}}",
+    "empty": {
+      "title": "Nog geen contacten",
+      "filteredTitle": "Geen contacten gevonden",
+      "description": "CRM toont bedrijven en personen uit je klantenbestand. Voeg een klant toe om je contactenlijst op te bouwen.",
+      "filteredDescription": "Probeer een andere zoekopdracht of wis het tagfilter.",
+      "action": "Maak je eerste klant"
+    },
+    "detail": {
+      "loadError": "Contact laden is niet gelukt",
+      "loading": "Contact laden",
+      "back": "Terug naar CRM",
+      "openPipeline": "{{amount}} in openstaande pipeline",
+      "aiSummary": "AI-relatiesamenvatting",
+      "analyzing": "Relatie analyseren…",
+      "generateSummary": "AI-samenvatting genereren",
+      "strengths": "Sterke punten",
+      "risks": "Risico's",
+      "nextAction": "Beste vervolgstap",
+      "deals": "Deals",
+      "noDeals": "Nog geen deals",
+      "noProjects": "Nog geen projecten",
+      "noDocuments": "Nog geen documenten",
+      "details": "Details",
+      "owner": "Eigenaar",
+      "timeline": "Tijdlijn"
+    },
+    "sales": {
+      "title": "Verkoop",
+      "pipelineValue": "Pipelinewaarde",
+      "closingWeek": "Sluit deze week",
+      "needAttention": "Aandacht nodig",
+      "winRate": "Succespercentage",
+      "averageDeal": "Gem. dealwaarde",
+      "conversion": "Conversie",
+      "insights": "AI-verkoopinzichten",
+      "leadsNeedingAttention": "Leads die aandacht nodig hebben",
+      "noneStalled": "Niets is stilgevallen — je pipeline blijft in beweging."
+    }
+  },
+  "pipeline": {
+    "title": "Verkooppipeline",
+    "intro": "Volg openstaande deals per fase. Dit verschilt van Kansen (door AI voorgestelde vervolgstappen) en CRM (je contactenlijst).",
+    "openValue": "{{amount}} in de openstaande pipeline.",
+    "newLead": "Nieuwe lead",
+    "search": "Zoek deals, bedrijven, contacten…",
+    "sort": {
+      "score": "Sorteren: score",
+      "value": "Sorteren: waarde",
+      "close": "Sorteren: sluitingsdatum"
+    },
+    "empty": {
+      "title": "Nog geen deals in je pipeline",
+      "description": "In de pipeline volg je verkoopdeals van Nieuw tot Gewonnen. Voeg een lead toe om de fasen met echte kansen te vullen.",
+      "action": "Maak je eerste lead"
+    },
+    "dropHere": "Zet hier neer",
+    "stages": {
+      "New": "Nieuw",
+      "Qualified": "Gekwalificeerd",
+      "Meeting Scheduled": "Afspraak gepland",
+      "Proposal Sent": "Offerte verstuurd",
+      "Negotiating": "In onderhandeling",
+      "Won": "Gewonnen",
+      "Lost": "Verloren"
+    },
+    "toasts": {
+      "moved": "Verplaatst naar {{stage}}",
+      "moveFailed": "Verplaatsen is niet gelukt"
+    }
+  },
+  "invoices": {
+    "stats": {
+      "paidRevenue": "Omzet (betaald)",
+      "outstanding": "Openstaand",
+      "total": "Totaal aantal facturen"
+    },
+    "status": {
+      "All": "Alles",
+      "Draft": "Concept",
+      "Generated": "Gegenereerd",
+      "Sent": "Verstuurd",
+      "Paid": "Betaald",
+      "Overdue": "Achterstallig",
+      "Cancelled": "Geannuleerd",
+      "Archived": "Gearchiveerd"
+    },
+    "search": "Facturen zoeken",
+    "help": "Alle door AI gemaakte facturen in je organisatie. Open een factuur om deze te bewerken, de status te wijzigen of vanuit de Projectwerkruimte te exporteren.",
+    "empty": {
+      "title": "Nog geen facturen",
+      "filteredTitle": "Geen passende facturen",
+      "description": "Open een project en gebruik de factuurgenerator om je klant te factureren.",
+      "filteredDescription": "Probeer een andere zoekopdracht of een ander filter.",
+      "action": "Naar Projecten"
+    },
+    "table": {
+      "invoice": "Factuur",
+      "client": "Klant",
+      "date": "Datum",
+      "status": "Status",
+      "total": "Totaal"
+    },
+    "noProject": "Geen project"
+  },
+  "integrations": {
+    "title": "Integraties",
+    "description": "Koppel Google, Microsoft, Slack, Discord, Zapier en webhooks.",
+    "help": "OAuth-vernieuwingstokens worden versleuteld opgeslagen en nooit naar de browser gestuurd. Alleen eigenaren en beheerders kunnen koppelingen maken of verbreken.",
+    "loadError": "Integraties laden is niet gelukt",
+    "permissions": "Rechten",
+    "lastSync": "Laatste synchronisatie",
+    "account": "Account",
+    "status": {
+      "connected": "Verbonden",
+      "disconnected": "Niet verbonden",
+      "error": "Fout",
+      "expired": "Verlopen"
+    },
+    "health": {
+      "label": "Status",
+      "healthy": "In orde",
+      "unhealthy": "Niet in orde",
+      "error": "Fout",
+      "degraded": "Beperkt",
+      "unknown": "Onbekend"
+    },
+    "actions": {
+      "connect": "Koppelen",
+      "health": "Status",
+      "reconnect": "Opnieuw koppelen",
+      "disconnect": "Koppeling verbreken"
+    },
+    "toasts": {
+      "connectedProvider": "{{provider}} gekoppeld",
+      "connectionFailed": "Koppelen is niet gelukt: {{error}}",
+      "adminOnly": "Alleen eigenaren en beheerders kunnen integraties beheren",
+      "connected": "Gekoppeld",
+      "webhookRequired": "Een HTTPS-webhook-URL is verplicht",
+      "disconnected": "Koppeling verbroken",
+      "tokensRefreshed": "Tokens vernieuwd"
+    },
+    "dialog": {
+      "title": "{{provider}} koppelen",
+      "description": "Plak een HTTPS-webhook-URL. Geheimen worden versleuteld en daarna niet meer getoond.",
+      "webhookUrl": "Webhook-URL",
+      "defaultChannel": "Standaardkanaal (optioneel)",
+      "channel": "Kanaal"
+    },
+    "confirm": {
+      "title": "{{action}} bevestigen",
+      "disconnect": "Hiermee verwijder je de opgeslagen tokens van de organisatie. Automatiseringen die deze provider gebruiken, mislukken totdat je deze opnieuw koppelt.",
+      "reconnect": "Koppel opnieuw om rechten en inloggegevens te vernieuwen.",
+      "action": "Bevestigen"
+    }
+  },
+  "automations": {
+    "title": "Automatiseringen",
+    "intro": "Achtergrondregels die concepten en herinneringen voorbereiden op basis van echte gebeurtenissen in je workspace. Je keurt alles goed voordat iets wordt verstuurd. Dit verschilt van Copilot (chat) en AI-agents (gespecialiseerde chats).",
+    "actions": {
+      "runNow": "Nu uitvoeren",
+      "resume": "Hervatten",
+      "pauseAll": "Alles pauzeren",
+      "new": "Nieuwe automatisering"
+    },
+    "pauseOptions": {
+      "1h": "1 uur",
+      "tomorrow": "Tot morgen",
+      "1w": "1 week",
+      "forever": "Voor onbepaalde tijd"
+    },
+    "status": {
+      "pausedUntil": "Gepauzeerd tot {{time}}",
+      "active": "Actief · Voorbereiden voor goedkeuring",
+      "off": "Alle automatiseringen uit",
+      "enabledCount": "{{active}}/{{total}} ingeschakeld",
+      "awaiting": "{{count}} wachten op goedkeuring",
+      "completedSaved": "{{count}} voltooid · {{minutes}} min. bespaard"
+    },
+    "tabs": {
+      "automations": "Automatiseringen",
+      "approvals": "Goedkeuringscentrum",
+      "history": "Geschiedenis",
+      "settings": "Instellingen"
+    },
+    "approvalStatus": {
+      "pending": "In behandeling",
+      "suggested": "Suggesties",
+      "executed": "Klaar",
+      "rejected": "Afgewezen"
+    },
+    "empty": {
+      "title": "Nog geen automatiseringen",
+      "description": "Automatiseringen letten op gebeurtenissen zoals achterstallige facturen of stilgevallen offertes en bereiden de volgende stap voor je goedkeuring voor.",
+      "action": "Maak je eerste automatisering"
+    },
+    "approvalsEmpty": {
+      "title": "Hier staat niets",
+      "description": "Assistify heeft in deze status niets voorbereid. Je workspace wordt automatisch opnieuw gescand."
+    },
+    "historyEmpty": "Nog geen automatiseringsactiviteit.",
+    "confirm": {
+      "delete": "‘{{name}}’ verwijderen?",
+      "disable": "De automatisering ‘{{name}}’ uitschakelen?"
+    },
+    "toasts": {
+      "scanComplete": "Scan voltooid — {{prepared}} voorbereid, {{executed}} uitgevoerd, {{suggested}} voorgesteld",
+      "enabled": "Automatiseringen ingeschakeld",
+      "allPaused": "Alle automatiseringen gepauzeerd",
+      "paused": "Automatiseringen gepauzeerd",
+      "resumed": "Automatiseringen hervat",
+      "modeSet": "Modus ingesteld op {{mode}}",
+      "deleted": "Automatisering verwijderd",
+      "updated": "Automatisering bijgewerkt",
+      "created": "Automatisering aangemaakt",
+      "approvedDone": "Goedgekeurd en uitgevoerd",
+      "approvedPartial": "Goedgekeurd (enkele stappen zijn mislukt)",
+      "dismissed": "Afgewezen",
+      "prepared": "Voorbereid voor goedkeuring",
+      "draftUpdated": "Concept bijgewerkt",
+      "disabled": "Automatisering uitgeschakeld"
+    }
+  },
+  "knowledge": {
+    "title": "Knowledge Brain",
+    "intro": "Bedrijfskennis en context die Copilot en Agents gebruiken — voorkeuren, diensten, toon en feiten die je Assistify leert.",
+    "confidence": "Betrouwbaarheid",
+    "used": "{{count}}× gebruikt",
+    "confirmDelete": "Deze herinnering verwijderen?",
+    "askPlaceholder": "Vraag je Brain iets — bijvoorbeeld: ‘Wat zijn mijn gebruikelijke prijzen en toon?’",
+    "search": "Herinneringen zoeken…",
+    "all": "Alles",
+    "selected": "{{count}} geselecteerd",
+    "insights": "AI-inzichten",
+    "noInsights": "Inzichten worden scherper naarmate je meer werk doet.",
+    "actions": {
+      "pin": "Vastmaken",
+      "unpin": "Losmaken",
+      "toggleLearning": "Leren aan- of uitzetten",
+      "analyze": "Nieuwe kennis analyseren",
+      "memory": "Herinnering",
+      "merge": "Samenvoegen",
+      "mergeOne": "Samenvoegen tot één"
+    },
+    "stats": {
+      "memories": "Herinneringen",
+      "avgConfidence": "Gem. betrouwbaarheid",
+      "timesReused": "Aantal keer hergebruikt",
+      "learnedToday": "Vandaag geleerd"
+    },
+    "sort": {
+      "recent": "Recent bijgewerkt",
+      "used": "Meest gebruikt",
+      "confidence": "Hoogste betrouwbaarheid",
+      "newest": "Nieuwste"
+    },
+    "empty": {
+      "title": "Nog geen herinneringen",
+      "description": "Herinneringen zijn feiten en voorkeuren die Assistify gebruikt voor betere AI-antwoorden. Voeg er handmatig een toe of rond de bedrijfsinstellingen tijdens de onboarding af.",
+      "action": "Voeg je eerste herinnering toe"
+    },
+    "profile": {
+      "title": "Bedrijfsprofiel",
+      "generate": "Genereren",
+      "empty": "Genereer een profiel dat zich blijft ontwikkelen op basis van alles wat Assistify over je bedrijf weet."
+    },
+    "modal": {
+      "new": "Nieuwe herinnering",
+      "edit": "Herinnering bewerken",
+      "title": "Titel",
+      "content": "Wat Assistify moet onthouden…",
+      "keywords": "trefwoorden, gescheiden door komma's",
+      "save": "Herinnering opslaan"
+    },
+    "toasts": {
+      "pinned": "Vastgemaakt",
+      "unpinned": "Losgemaakt",
+      "learningOn": "Leren ingeschakeld",
+      "learningPaused": "Leren gepauzeerd",
+      "deleted": "Verwijderd",
+      "saved": "Opgeslagen",
+      "learned_one": "{{count}} nieuwe herinnering geleerd",
+      "learned_other": "{{count}} nieuwe herinneringen geleerd",
+      "noPatterns": "Nog geen nieuwe patronen — ga verder met werken, dan leer ik meer",
+      "profileUpdated": "Bedrijfsprofiel bijgewerkt",
+      "selectTwo": "Selecteer er minimaal twee",
+      "merged": "Samengevoegd"
+    },
+    "categories": {
+      "Business": "Bedrijf",
+      "Writing Style": "Schrijfstijl",
+      "Pricing": "Prijzen",
+      "Customers": "Klanten",
+      "Projects": "Projecten",
+      "Processes": "Processen",
+      "Frequently Used Terms": "Veelgebruikte termen",
+      "Products": "Producten",
+      "Services": "Diensten",
+      "Brand Voice": "Merkstem",
+      "Policies": "Beleid",
+      "Preferences": "Voorkeuren",
+      "Relationships": "Relaties"
+    }
+  },
+  "aiWorkspace": {
+    "title": "AI-werkruimte",
+    "intro": "Een geschiedenis van AI-resultaten in je workspace — offertes, plannen, facturen en meer. Gebruik Copilot om nieuw werk te maken, Agents voor gespecialiseerde chats en deze pagina om eerder AI-werk terug te vinden.",
+    "lifetimeSaved": "Totale bespaarde tijd",
+    "lastDays": "Afgelopen {{count}} dagen",
+    "search": "Zoek offertes, facturen, klanten, projecten…",
+    "timeline": "Tijdlijn",
+    "minutesSaved": "+{{count}} min. bespaard",
+    "insights": "Inzichten",
+    "noInsights": "Je bent helemaal bij — er zijn nu geen acties die aandacht nodig hebben.",
+    "stats": {
+      "actions": "AI-acties",
+      "week": "Deze week",
+      "confidence": "Gem. betrouwbaarheid",
+      "speed": "Gem. snelheid"
+    },
+    "quick": {
+      "title": "Snelle acties",
+      "copilot": {
+        "label": "Vraag Copilot",
+        "hint": "Chatten en genereren"
+      },
+      "project": {
+        "label": "Nieuw project",
+        "hint": "AI-werk starten"
+      },
+      "documents": {
+        "label": "Documenten",
+        "hint": "Bibliotheek bekijken"
+      },
+      "analytics": {
+        "label": "Analytics",
+        "hint": "Cijfers bekijken"
+      }
+    },
+    "filters": {
+      "allTypes": "Alle typen"
+    },
+    "ranges": {
+      "all": "Alle perioden",
+      "today": "Vandaag",
+      "week": "Afgelopen week",
+      "month": "Afgelopen maand"
+    },
+    "sorts": {
+      "newest": "Nieuwste eerst",
+      "oldest": "Oudste eerst",
+      "most_saved": "Meeste tijd bespaard"
+    },
+    "groups": {
+      "today": "Vandaag",
+      "yesterday": "Gisteren",
+      "week": "Deze week",
+      "earlier": "Eerder"
+    },
+    "empty": {
+      "title": "Nog geen AI-activiteit",
+      "description": "Wanneer je een offerte, plan, contract of factuur genereert — of Copilot gebruikt — verschijnen de resultaten hier. Er worden geen voorbeeldgegevens vooraf ingevuld.",
+      "action": "Vraag Copilot"
+    },
+    "versions": {
+      "title": "Versies vergelijken",
+      "empty": "Documenten met meerdere versies verschijnen hier, zodat je kunt bekijken hoe ze zijn veranderd.",
+      "count_one": "{{count}} versie",
+      "count_other": "{{count}} versies",
+      "description": "Bekijk hoe dit document zich per versie heeft ontwikkeld en open daarna een vergelijking naast elkaar.",
+      "version": "Versie {{version}}",
+      "current": "Huidig",
+      "openCompare": "Vergelijking naast elkaar openen"
+    }
+  },
+  "aiReport": {
+    "justNow": "zojuist",
+    "underSecond": "minder dan 1 sec.",
+    "seconds": "{{count}} sec.",
+    "generated": "Je {{type}} is succesvol gegenereerd.",
+    "generatedIn": "Gegenereerd in {{duration}}",
+    "whatAssistifyDid": "Wat Assistify heeft gedaan",
+    "timeSaved": "Bespaarde tijd",
+    "savedApproximately": "Je hebt ongeveer bespaard:",
+    "minutes_one": "{{count}} minuut",
+    "minutes_other": "{{count}} minuten",
+    "lifetimeSaved": "Totaal bespaarde tijd",
+    "confidence": "AI-betrouwbaarheid",
+    "why": "Waarom Assistify deze keuzes heeft gemaakt",
+    "quality": "Kwaliteitsindicatoren",
+    "nextSteps": "Aanbevolen vervolgstappen",
+    "reviewDocument": "Document bekijken",
+    "downloadPdf": "PDF downloaden",
+    "exportWord": "Naar Word exporteren",
+    "sendToClient": "Naar klant sturen"
   }
 }

@@ -42,7 +42,7 @@ async function csrfHeaders(context) {
   return csrf ? { "X-CSRF-Token": csrf } : {};
 }
 
-test.describe("Assistify OS smoke", () => {
+test.describe("Assistify smoke", () => {
   test.beforeAll(async ({ request }) => {
     const ok = await apiReachable(request);
     test.skip(!ok, `Backend not reachable at ${API} — start the stack or set STAGING_BASE_URL/E2E_API_URL`);

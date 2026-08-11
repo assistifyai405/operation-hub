@@ -80,8 +80,8 @@ describe("Sprint 23 dashboard first-run", () => {
 describe("Sprint 23 empty states and CTAs", () => {
   test("major pages explain what/why/next", () => {
     expect(read("Clients.jsx")).toMatch(/clients-empty/);
-    expect(read("Projects.jsx")).toMatch(/Create your first project/);
-    expect(read("Tasks.jsx")).toMatch(/Create your first task/);
+    expect(read("Projects.jsx")).toMatch(/projects\.empty\.action/);
+    expect(read("Tasks.jsx")).toMatch(/tasks\.empty\.action/);
     expect(read("CRM.jsx")).toMatch(/crm-empty/);
     expect(read("Pipeline.jsx")).toMatch(/pipeline-empty/);
     expect(read("Opportunities.jsx")).toMatch(/opportunities-empty/);

@@ -1,24 +1,28 @@
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ListChecks, ArrowRight } from "lucide-react";
 import { AiIcon } from "@/components/ai/aiHelpers";
+import { useLocale } from "@/context/LocaleContext";
 import { Section, PRIORITY_META, money } from "./execShared";
 
 const ORDER = ["Critical", "High", "Medium", "Low"];
 
 export function TodayPriorities({ priorities, total }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const navigate = useNavigate();
   if (!total) {
     return (
-      <Section title="Today's Priorities" icon={ListChecks} testid="priorities-section">
+      <Section title={t("dashboard.priorities.title")} icon={ListChecks} testid="priorities-section">
         <div className="rounded-2xl border border-white/10 bg-zinc-950 py-10 text-center text-sm text-zinc-500" data-testid="priorities-empty">
-          Nothing needs attention right now. You're all caught up.
+          {t("dashboard.priorities.empty")}
         </div>
       </Section>
     );
   }
   return (
-    <Section title="Today's Priorities" icon={ListChecks} testid="priorities-section"
-      action={<span className="text-xs text-zinc-500">{total} item{total !== 1 ? "s" : ""}</span>}>
+    <Section title={t("dashboard.priorities.title")} icon={ListChecks} testid="priorities-section"
+      action={<span className="text-xs text-zinc-500">{t("dashboard.priorities.items", { count: total })}</span>}>
       <div className="space-y-2">
         {ORDER.map((lvl) => {
           const group = priorities[lvl.toLowerCase()];
@@ -28,7 +32,7 @@ export function TodayPriorities({ priorities, total }) {
             <div key={lvl} data-testid={`priority-group-${lvl}`}>
               <div className="mb-1.5 flex items-center gap-2">
                 <span className={`h-2 w-2 rounded-full ${pm.dot}`} />
-                <span className="text-xs font-semibold text-zinc-300">{lvl}</span>
+                <span className="text-xs font-semibold text-zinc-300">{t(`dashboard.priority.${lvl.toLowerCase()}`)}</span>
                 <span className="text-[11px] text-zinc-600">{group.count}</span>
               </div>
               <div className="space-y-1.5">
@@ -41,8 +45,8 @@ export function TodayPriorities({ priorities, total }) {
                       <p className="truncate text-xs text-zinc-500">{it.why}</p>
                     </div>
                     <div className="hidden shrink-0 text-right sm:block">
-                      {it.revenue_impact ? <p className="text-xs font-semibold text-emerald-400" data-testid="priority-revenue-impact">≈{money(it.revenue_impact)}</p> : <p className={`text-xs font-semibold ${pm.ring}`}>Score {it.score}</p>}
-                      <p className="text-[10px] text-zinc-500">{it.revenue_impact ? "revenue impact" : `~${it.time_saved}m saved`}</p>
+                      {it.revenue_impact ? <p className="text-xs font-semibold text-emerald-400" data-testid="priority-revenue-impact">≈{money(it.revenue_impact, locale)}</p> : <p className={`text-xs font-semibold ${pm.ring}`}>{t("dashboard.priorities.score", { score: it.score })}</p>}
+                      <p className="text-[10px] text-zinc-500">{it.revenue_impact ? t("dashboard.priorities.revenueImpact") : t("dashboard.priorities.minutesSaved", { count: it.time_saved })}</p>
                     </div>
                     <ArrowRight className="h-4 w-4 shrink-0 text-zinc-600" />
                   </button>

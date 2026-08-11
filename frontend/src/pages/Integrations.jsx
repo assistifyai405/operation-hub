@@ -6,7 +6,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { useLocale } from "@/context/LocaleContext";
 import { integrationsApi } from "@/lib/api";
+import { formatDateTime } from "@/i18n/format";
 import HelpTip from "@/components/HelpTip";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -15,15 +17,6 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-const fmtDate = (d) => {
-  if (!d) return "—";
-  try {
-    return new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return "—";
-  }
-};
 
 const statusBadge = (status) => {
   if (status === "connected") return "bg-emerald-500/15 text-emerald-300";
@@ -41,6 +34,7 @@ const healthIcon = (h) => {
 
 export default function Integrations() {
   const { t } = useTranslation();
+  const { locale } = useLocale();
   const { user } = useAuth();
   const canManage = user?.role === "owner" || user?.role === "admin";
   const [data, setData] = useState({ items: [], catalog: [] });
@@ -57,29 +51,29 @@ export default function Integrations() {
       const res = await integrationsApi.list();
       setData(res);
     } catch (e) {
-      setError(e.message || "Failed to load integrations");
+      setError(e.message || t("integrations.loadError"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     load();
     const params = new URLSearchParams(window.location.search);
     if (params.get("connected")) {
-      toast.success(`Connected ${params.get("connected")}`);
+      toast.success(t("integrations.toasts.connectedProvider", { provider: params.get("connected") }));
       window.history.replaceState({}, "", "/integrations");
     } else if (params.get("error")) {
-      toast.error(`Connection failed: ${params.get("error")}`);
+      toast.error(t("integrations.toasts.connectionFailed", { error: params.get("error") }));
       window.history.replaceState({}, "", "/integrations");
     }
-  }, [load]);
+  }, [load, t]);
 
   const byProvider = Object.fromEntries((data.items || []).map((i) => [i.provider, i]));
 
   const startConnect = async (providerMeta) => {
     if (!canManage) {
-      toast.error("Only owners and admins can manage integrations");
+      toast.error(t("integrations.toasts.adminOnly"));
       return;
     }
     const needsWebhook = ["discord", "zapier", "webhook"].includes(providerMeta.id)
@@ -99,7 +93,7 @@ export default function Integrations() {
         window.location.href = res.authUrl;
         return;
       }
-      toast.success("Connected");
+      toast.success(t("integrations.toasts.connected"));
       await load();
     } catch (e) {
       // Slack without OAuth — fall back to webhook dialog
@@ -117,7 +111,7 @@ export default function Integrations() {
   const submitWebhook = async () => {
     if (!connectTarget) return;
     if (!webhookForm.webhookUrl.trim()) {
-      toast.error("HTTPS webhook URL is required");
+      toast.error(t("integrations.toasts.webhookRequired"));
       return;
     }
     setBusy(connectTarget.id);
@@ -129,7 +123,7 @@ export default function Integrations() {
         displayName: webhookForm.displayName || undefined,
         useOauth: false,
       });
-      toast.success(`${connectTarget.name} connected`);
+      toast.success(t("integrations.toasts.connectedProvider", { provider: connectTarget.name }));
       setConnectTarget(null);
       await load();
     } catch (e) {
@@ -144,13 +138,13 @@ export default function Integrations() {
     try {
       if (action === "disconnect") {
         await integrationsApi.disconnect({ provider });
-        toast.success("Disconnected");
+        toast.success(t("integrations.toasts.disconnected"));
       } else if (action === "refresh") {
         await integrationsApi.refresh({ provider });
-        toast.success("Tokens refreshed");
+        toast.success(t("integrations.toasts.tokensRefreshed"));
       } else if (action === "health") {
         const res = await integrationsApi.health({ provider });
-        toast.success(res.message || (res.ok ? "Healthy" : "Unhealthy"));
+        toast.success(res.message || (res.ok ? t("integrations.health.healthy") : t("integrations.health.unhealthy")));
       } else if (action === "reconnect") {
         const meta = (data.catalog || []).find((c) => c.id === provider);
         if (meta) await startConnect(meta);
@@ -171,10 +165,10 @@ export default function Integrations() {
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-zinc-100">Integrations</h1>
+          <h1 className="text-lg font-semibold text-zinc-100">{t("integrations.title")}</h1>
           <p className="mt-1 flex items-center gap-2 text-sm text-zinc-400">
-            Connect Google, Microsoft, Slack, Discord, Zapier, and webhooks.
-            <HelpTip testid="integrations-help" text="OAuth refresh tokens are encrypted at rest and never sent to the browser. Only owners and admins can connect or disconnect." />
+            {t("integrations.description")}
+            <HelpTip testid="integrations-help" text={t("integrations.help")} />
           </p>
         </div>
       </div>
@@ -205,21 +199,21 @@ export default function Integrations() {
                     </div>
                   </div>
                   <span className={`rounded-md px-2 py-0.5 text-[11px] capitalize ${statusBadge(row.status)}`}>
-                    {row.status || "disconnected"}
+                    {t(`integrations.status.${row.status || "disconnected"}`)}
                   </span>
                 </div>
 
                 <div className="mt-4 space-y-1.5 text-xs text-zinc-400">
                   <p className="flex items-center gap-1.5">
                     <Shield className="h-3.5 w-3.5 text-zinc-500" />
-                    Permissions: {(row.permissions || []).length ? (row.permissions || []).join(", ") : (meta.permissions || []).slice(0, 3).join(", ") || "—"}
+                    {t("integrations.permissions")}: {(row.permissions || []).length ? (row.permissions || []).join(", ") : (meta.permissions || []).slice(0, 3).join(", ") || "—"}
                   </p>
-                  <p>Last sync: {fmtDate(row.lastSyncAt)}</p>
+                  <p>{t("integrations.lastSync")}: {formatDateTime(row.lastSyncAt, locale)}</p>
                   <p className="flex items-center gap-1.5">
                     {healthIcon(row.healthStatus)}
-                    Health: {row.healthMessage || row.healthStatus || "—"}
+                    {t("integrations.health.label")}: {row.healthMessage || (row.healthStatus ? t(`integrations.health.${row.healthStatus}`, { defaultValue: row.healthStatus }) : "—")}
                   </p>
-                  {row.accountEmail && <p>Account: {row.accountEmail}</p>}
+                  {row.accountEmail && <p>{t("integrations.account")}: {row.accountEmail}</p>}
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -232,7 +226,7 @@ export default function Integrations() {
                       className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500 disabled:opacity-50"
                     >
                       {busy === meta.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />}
-                      Connect
+                      {t("integrations.actions.connect")}
                     </button>
                   ) : (
                     <>
@@ -243,7 +237,7 @@ export default function Integrations() {
                         className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900"
                         data-testid={`integration-health-${meta.id}`}
                       >
-                        <HeartPulse className="h-3.5 w-3.5" /> Health
+                        <HeartPulse className="h-3.5 w-3.5" /> {t("integrations.actions.health")}
                       </button>
                       {["google", "microsoft", "slack"].includes(meta.id) && canManage && (
                         <button
@@ -253,7 +247,7 @@ export default function Integrations() {
                           className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900"
                           data-testid={`integration-refresh-${meta.id}`}
                         >
-                          <RefreshCw className="h-3.5 w-3.5" /> Refresh
+                          <RefreshCw className="h-3.5 w-3.5" /> {t("common.refresh")}
                         </button>
                       )}
                       {canManage && (
@@ -264,7 +258,7 @@ export default function Integrations() {
                           className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900"
                           data-testid={`integration-reconnect-${meta.id}`}
                         >
-                          Reconnect
+                          {t("integrations.actions.reconnect")}
                         </button>
                       )}
                       {canManage && (
@@ -275,7 +269,7 @@ export default function Integrations() {
                           className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 px-3 py-1.5 text-xs text-rose-300 hover:bg-rose-500/10"
                           data-testid={`integration-disconnect-${meta.id}`}
                         >
-                          <Unplug className="h-3.5 w-3.5" /> Disconnect
+                          <Unplug className="h-3.5 w-3.5" /> {t("integrations.actions.disconnect")}
                         </button>
                       )}
                     </>
@@ -290,13 +284,13 @@ export default function Integrations() {
       <Dialog open={!!connectTarget} onOpenChange={(o) => !o && setConnectTarget(null)}>
         <DialogContent className="max-w-md border-white/10 bg-zinc-950 text-zinc-100" data-testid="integration-webhook-dialog">
           <DialogHeader>
-            <DialogTitle>Connect {connectTarget?.name}</DialogTitle>
+            <DialogTitle>{t("integrations.dialog.title", { provider: connectTarget?.name })}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm">
-            <p className="text-xs text-zinc-400">Paste an HTTPS webhook URL. Secrets are encrypted and never shown again.</p>
-            <label className="block text-xs text-zinc-400">Webhook URL
+            <p className="text-xs text-zinc-400">{t("integrations.dialog.description")}</p>
+            <label className="block text-xs text-zinc-400">{t("integrations.dialog.webhookUrl")}
               <input
-                aria-label="Webhook URL"
+                aria-label={t("integrations.dialog.webhookUrl")}
                 data-testid="integration-webhook-url"
                 className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm"
                 value={webhookForm.webhookUrl}
@@ -305,9 +299,9 @@ export default function Integrations() {
               />
             </label>
             {connectTarget?.id === "slack" && (
-              <label className="block text-xs text-zinc-400">Default channel (optional)
+              <label className="block text-xs text-zinc-400">{t("integrations.dialog.defaultChannel")}
                 <input
-                  aria-label="Channel"
+                  aria-label={t("integrations.dialog.channel")}
                   className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm"
                   value={webhookForm.channel}
                   onChange={(e) => setWebhookForm((s) => ({ ...s, channel: e.target.value }))}
@@ -324,7 +318,7 @@ export default function Integrations() {
               data-testid="integration-webhook-save"
               className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-500"
             >
-              {busy === connectTarget?.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Connect"}
+              {busy === connectTarget?.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t("integrations.actions.connect")}
             </button>
           </DialogFooter>
         </DialogContent>
@@ -333,20 +327,20 @@ export default function Integrations() {
       <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
         <AlertDialogContent className="border-white/10 bg-zinc-950 text-zinc-100">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm {confirm?.action}</AlertDialogTitle>
+            <AlertDialogTitle>{t("integrations.confirm.title", { action: t(`integrations.actions.${confirm?.action}`, { defaultValue: confirm?.action }) })}</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
               {confirm?.action === "disconnect"
-                ? "This removes stored tokens for the organization. Automations using this provider will fail until reconnected."
-                : "Reconnect to refresh permissions and credentials."}
+                ? t("integrations.confirm.disconnect")
+                : t("integrations.confirm.reconnect")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/10 bg-transparent">Back</AlertDialogCancel>
+            <AlertDialogCancel className="border-white/10 bg-transparent">{t("common.back")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-brand-600 hover:bg-brand-500"
               onClick={() => confirm && run(confirm.action, confirm.provider)}
             >
-              Confirm
+              {t("integrations.confirm.action")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

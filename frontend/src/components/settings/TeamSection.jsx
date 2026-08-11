@@ -3,18 +3,15 @@ import {
   Loader2, UserPlus, Trash2, Crown, Shield, User, Mail, X, ArrowRightLeft,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/AuthContext";
 import { teamApi } from "@/lib/api";
+import { localizeApiError } from "@/i18n/errors";
 import { SectionCard, TextField, SelectField } from "@/components/settings/fields";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-const ROLE_OPTIONS = [
-  { value: "member", label: "Member" },
-  { value: "admin", label: "Admin" },
-];
 
 const roleIcon = (role) => {
   if (role === "owner") return <Crown className="h-3.5 w-3.5 text-amber-400" />;
@@ -22,16 +19,17 @@ const roleIcon = (role) => {
   return <User className="h-3.5 w-3.5 text-zinc-500" />;
 };
 
-const fmtDate = (d) => {
+const fmtDate = (d, locale) => {
   if (!d) return "—";
   try {
-    return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return new Date(d).toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" });
   } catch {
     return "—";
   }
 };
 
 export function TeamSection() {
+  const { t, i18n } = useTranslation();
   const { user, setUser, refreshUser } = useAuth();
   const [data, setData] = useState(null);
   const [invites, setInvites] = useState([]);
@@ -43,6 +41,13 @@ export function TeamSection() {
 
   const canManage = user?.role === "owner" || user?.role === "admin";
   const isOwner = user?.role === "owner";
+  const roleOptions = [
+    { value: "member", label: t("settings.team.roles.member") },
+    { value: "admin", label: t("settings.team.roles.admin") },
+  ];
+  const roleLabel = (role) => role ? t(`settings.team.roles.${role}`, { defaultValue: role }) : "—";
+  const statusLabel = (status) => status ? t(`settings.team.statuses.${status}`, { defaultValue: status }) : "—";
+  const locale = i18n.resolvedLanguage || i18n.language;
 
   const load = useCallback(async () => {
     setError("");
@@ -56,35 +61,35 @@ export function TeamSection() {
         setInvites([]);
       }
     } catch (e) {
-      setError(e.message || "Failed to load team");
+      setError(localizeApiError(t, e, "settings.team.loadError"));
     } finally {
       setLoading(false);
     }
-  }, [canManage]);
+  }, [canManage, t]);
 
   useEffect(() => { load(); }, [load]);
 
   const sendInvite = async () => {
-    if (!inviteForm.email.trim()) { toast.error("Email is required"); return; }
+    if (!inviteForm.email.trim()) { toast.error(t("settings.team.emailRequired")); return; }
     setInviting(true);
     try {
       const res = await teamApi.invite({ email: inviteForm.email.trim(), role: inviteForm.role });
       if (res.emailDelivery === "manual" || res.invitationLink) {
-        toast.message("Invitation created — email sending is disabled", {
+        toast.message(t("settings.team.invitationCreatedManual"), {
           description: res.invitationLink
-            ? "Share this invite link manually (shown once in development)."
-            : (res.emailDeliveryNote || "Share the invite link manually with the recipient."),
+            ? t("settings.team.shareDevInviteLink")
+            : t("settings.team.shareInviteLink"),
         });
         if (res.invitationLink) {
-          toast.message("Dev invitation link", { description: res.invitationLink });
+          toast.message(t("settings.team.devInvitationLink"), { description: res.invitationLink });
         }
       } else {
-        toast.success(`Invitation sent to ${res.email}`);
+        toast.success(t("settings.team.invitationSent", { email: res.email }));
       }
       setInviteForm({ email: "", role: "member" });
       await load();
     } catch (e) {
-      toast.error(e.message);
+      toast.error(localizeApiError(t, e));
     } finally {
       setInviting(false);
     }
@@ -93,10 +98,13 @@ export function TeamSection() {
   const changeRole = async (member, role) => {
     try {
       await teamApi.changeRole(member.id, role);
-      toast.success(`Updated ${member.firstName || member.email} to ${role}`);
+      toast.success(t("settings.team.roleUpdated", {
+        name: member.firstName || member.email,
+        role: roleLabel(role),
+      }));
       await load();
     } catch (e) {
-      toast.error(e.message);
+      toast.error(localizeApiError(t, e));
     }
   };
 
@@ -105,41 +113,41 @@ export function TeamSection() {
     try {
       if (confirm.type === "remove") {
         await teamApi.removeMember(confirm.member.id);
-        toast.success("Member removed");
+        toast.success(t("settings.team.memberRemoved"));
         if (confirm.member.id === user.id) {
           const me = await refreshUser();
           setUser(me);
         }
       } else if (confirm.type === "cancel-invite") {
         await teamApi.cancelInvitation(confirm.invitation.id);
-        toast.success("Invitation cancelled");
+        toast.success(t("settings.team.invitationCancelled"));
       } else if (confirm.type === "transfer") {
         await teamApi.transferOwnership(confirm.member.id);
-        toast.success("Ownership transferred");
+        toast.success(t("settings.team.ownershipTransferred"));
         const me = await refreshUser();
         setUser(me);
       }
       setConfirm(null);
       await load();
     } catch (e) {
-      toast.error(e.message);
+      toast.error(localizeApiError(t, e));
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-zinc-500" data-testid="team-loading">
-        <Loader2 className="h-6 w-6 animate-spin" aria-label="Loading team" />
+        <Loader2 className="h-6 w-6 animate-spin" aria-label={t("settings.team.loading")} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <SectionCard title="Team" description="People in your organization." testid="settings-team">
+      <SectionCard title={t("settings.team.title")} description={t("settings.team.description")} testid="settings-team">
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300" data-testid="team-error">
           {error}
-          <button type="button" onClick={() => { setLoading(true); load(); }} className="ml-3 text-brand-300 underline">Retry</button>
+          <button type="button" onClick={() => { setLoading(true); load(); }} className="ml-3 text-brand-300 underline">{t("common.retry")}</button>
         </div>
       </SectionCard>
     );
@@ -152,32 +160,32 @@ export function TeamSection() {
   return (
     <div className="space-y-6" data-testid="settings-team">
       <SectionCard
-        title="Team"
-        description={`${data?.organization?.name || "Organization"} · ${members.length} member${members.length === 1 ? "" : "s"}`}
+        title={t("settings.team.title")}
+        description={`${data?.organization?.name || t("settings.team.organizationFallback")} · ${t("settings.team.memberCount", { count: members.length })}`}
         testid="team-members-card"
       >
         {seats && (
           <p className="text-xs text-zinc-500" data-testid="team-seat-count">
-            Seats in use: {seats.active_members} active
-            {seats.pending_invitations ? ` · ${seats.pending_invitations} pending invite${seats.pending_invitations === 1 ? "" : "s"}` : ""}
-            {seats.seat_limit == null ? " · unlimited (billing not enforced)" : ` · limit ${seats.seat_limit}`}
+            {t("settings.team.seatsActive", { count: seats.active_members })}
+            {seats.pending_invitations ? ` · ${t("settings.team.seatsPending", { count: seats.pending_invitations })}` : ""}
+            {seats.seat_limit == null ? ` · ${t("settings.team.seatsUnlimited")}` : ` · ${t("settings.team.seatsLimit", { count: seats.seat_limit })}`}
           </p>
         )}
 
         {members.length === 0 ? (
           <div className="rounded-xl border border-dashed border-white/10 py-12 text-center text-sm text-zinc-500" data-testid="team-empty">
-            No members yet.
+            {t("settings.team.noMembers")}
           </div>
         ) : (
           <div className="overflow-x-auto" data-testid="team-members-list">
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-zinc-500">
-                  <th className="pb-2 pr-3 font-medium">Member</th>
-                  <th className="pb-2 pr-3 font-medium">Role</th>
-                  <th className="pb-2 pr-3 font-medium">Status</th>
-                  <th className="pb-2 pr-3 font-medium">Joined</th>
-                  <th className="pb-2 font-medium"><span className="sr-only">Actions</span></th>
+                  <th className="pb-2 pr-3 font-medium">{t("settings.team.member")}</th>
+                  <th className="pb-2 pr-3 font-medium">{t("settings.team.role")}</th>
+                  <th className="pb-2 pr-3 font-medium">{t("settings.team.status")}</th>
+                  <th className="pb-2 pr-3 font-medium">{t("settings.team.joined")}</th>
+                  <th className="pb-2 font-medium"><span className="sr-only">{t("common.actions")}</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -187,53 +195,53 @@ export function TeamSection() {
                       <div className="flex flex-col">
                         <span className="font-medium text-zinc-100">
                           {[m.firstName, m.lastName].filter(Boolean).join(" ") || m.email}
-                          {m.isCurrentUser && <span className="ml-2 rounded bg-brand-600/20 px-1.5 py-0.5 text-[10px] text-brand-300">You</span>}
+                          {m.isCurrentUser && <span className="ml-2 rounded bg-brand-600/20 px-1.5 py-0.5 text-[10px] text-brand-300">{t("common.you")}</span>}
                         </span>
                         <span className="text-xs text-zinc-500">{m.email}</span>
                       </div>
                     </td>
                     <td className="py-3 pr-3">
                       <span className="inline-flex items-center gap-1.5 capitalize text-zinc-300">
-                        {roleIcon(m.role)} {m.role}
+                        {roleIcon(m.role)} {roleLabel(m.role)}
                       </span>
                     </td>
                     <td className="py-3 pr-3">
-                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-400">{m.status}</span>
+                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-400">{statusLabel(m.status)}</span>
                     </td>
-                    <td className="py-3 pr-3 text-zinc-400">{fmtDate(m.joinedAt)}</td>
+                    <td className="py-3 pr-3 text-zinc-400">{fmtDate(m.joinedAt, locale)}</td>
                     <td className="py-3">
                       <div className="flex flex-wrap items-center justify-end gap-2">
                         {canManage && !m.isOwner && !m.isCurrentUser && (
                           <select
-                            aria-label={`Change role for ${m.email}`}
+                            aria-label={t("settings.team.changeRoleFor", { email: m.email })}
                             value={m.role}
                             onChange={(e) => changeRole(m, e.target.value)}
                             data-testid={`team-role-${m.id}`}
                             className="rounded-md border border-white/10 bg-zinc-900 px-2 py-1 text-xs text-zinc-200"
                           >
-                            {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                            {roleOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                           </select>
                         )}
                         {isOwner && !m.isCurrentUser && !m.isOwner && (
                           <button
                             type="button"
-                            aria-label={`Transfer ownership to ${m.email}`}
+                            aria-label={t("settings.team.transferTo", { email: m.email })}
                             data-testid={`team-transfer-${m.id}`}
                             onClick={() => setConfirm({ type: "transfer", member: m })}
                             className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 px-2 py-1 text-xs text-amber-300 hover:bg-amber-500/10"
                           >
-                            <ArrowRightLeft className="h-3 w-3" /> Transfer
+                            <ArrowRightLeft className="h-3 w-3" /> {t("settings.team.transfer")}
                           </button>
                         )}
                         {((canManage && !m.isOwner && !m.isCurrentUser) || (m.isCurrentUser && !m.isOwner)) && (
                           <button
                             type="button"
-                            aria-label={m.isCurrentUser ? "Leave organization" : `Remove ${m.email}`}
+                            aria-label={m.isCurrentUser ? t("settings.team.leaveOrganization") : t("settings.team.removePerson", { email: m.email })}
                             data-testid={`team-remove-${m.id}`}
                             onClick={() => setConfirm({ type: "remove", member: m })}
                             className="inline-flex items-center gap-1 rounded-md border border-red-500/30 px-2 py-1 text-xs text-red-300 hover:bg-red-500/10"
                           >
-                            <Trash2 className="h-3 w-3" /> {m.isCurrentUser ? "Leave" : "Remove"}
+                            <Trash2 className="h-3 w-3" /> {m.isCurrentUser ? t("settings.team.leave") : t("settings.team.remove")}
                           </button>
                         )}
                       </div>
@@ -247,23 +255,23 @@ export function TeamSection() {
       </SectionCard>
 
       {canManage && (
-        <SectionCard title="Invite member" description="Invite a teammate to this organization." testid="team-invite-card">
+        <SectionCard title={t("settings.team.inviteMember")} description={t("settings.team.inviteDescription")} testid="team-invite-card">
           <p className="mb-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90" data-testid="team-invite-email-note">
-            When email sending is disabled, invitations are created but not emailed — you must share the invite link manually (development shows the link once).
+            {t("settings.team.inviteEmailNote")}
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_160px_auto]">
             <TextField
-              label="Email"
+              label={t("settings.team.email")}
               value={inviteForm.email}
               onChange={(v) => setInviteForm((f) => ({ ...f, email: v }))}
-              placeholder="colleague@company.com"
+              placeholder={t("settings.team.emailPlaceholder")}
               testid="team-invite-email"
             />
             <SelectField
-              label="Role"
+              label={t("settings.team.role")}
               value={inviteForm.role}
               onChange={(v) => setInviteForm((f) => ({ ...f, role: v }))}
-              options={ROLE_OPTIONS}
+              options={roleOptions}
               testid="team-invite-role"
             />
             <div className="flex items-end">
@@ -274,30 +282,30 @@ export function TeamSection() {
                 data-testid="team-invite-submit"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-60"
               >
-                {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4" /> Invite</>}
+                {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4" /> {t("settings.team.invite")}</>}
               </button>
             </div>
           </div>
 
           {pending.length > 0 && (
             <div className="mt-6 space-y-2" data-testid="team-pending-invites">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Pending invitations</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{t("settings.team.pendingInvitations")}</p>
               {pending.map((inv) => (
                 <div key={inv.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 bg-zinc-900/50 px-3 py-2" data-testid={`team-invite-${inv.id}`}>
                   <div className="flex items-center gap-2 text-sm text-zinc-300">
                     <Mail className="h-4 w-4 text-zinc-500" />
                     <span>{inv.email}</span>
-                    <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] uppercase text-zinc-400">{inv.role}</span>
-                    <span className="text-xs text-zinc-600">expires {fmtDate(inv.expiresAt)}</span>
+                    <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] uppercase text-zinc-400">{roleLabel(inv.role)}</span>
+                    <span className="text-xs text-zinc-600">{t("settings.team.expires", { date: fmtDate(inv.expiresAt, locale) })}</span>
                   </div>
                   <button
                     type="button"
-                    aria-label={`Cancel invitation to ${inv.email}`}
+                    aria-label={t("settings.team.cancelInvitationTo", { email: inv.email })}
                     data-testid={`team-cancel-invite-${inv.id}`}
                     onClick={() => setConfirm({ type: "cancel-invite", invitation: inv })}
                     className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
                   >
-                    <X className="h-3.5 w-3.5" /> Cancel
+                    <X className="h-3.5 w-3.5" /> {t("common.cancel")}
                   </button>
                 </div>
               ))}
@@ -310,33 +318,33 @@ export function TeamSection() {
         <AlertDialogContent className="border-white/10 bg-zinc-950 text-zinc-100">
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirm?.type === "transfer" && "Transfer ownership?"}
-              {confirm?.type === "remove" && (confirm.member?.isCurrentUser ? "Leave organization?" : "Remove member?")}
-              {confirm?.type === "cancel-invite" && "Cancel invitation?"}
+              {confirm?.type === "transfer" && t("settings.team.confirmTransferTitle")}
+              {confirm?.type === "remove" && (confirm.member?.isCurrentUser ? t("settings.team.confirmLeaveTitle") : t("settings.team.confirmRemoveTitle"))}
+              {confirm?.type === "cancel-invite" && t("settings.team.confirmCancelInviteTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
               {confirm?.type === "transfer" && (
-                <>You will become an admin. <strong className="text-zinc-200">{confirm.member?.email}</strong> will become the owner.</>
+                <>{t("settings.team.confirmTransferPrefix")} <strong className="text-zinc-200">{confirm.member?.email}</strong> {t("settings.team.confirmTransferSuffix")}</>
               )}
               {confirm?.type === "remove" && !confirm.member?.isCurrentUser && (
-                <>Remove <strong className="text-zinc-200">{confirm.member?.email}</strong> from this organization?</>
+                <>{t("settings.team.confirmRemovePrefix")} <strong className="text-zinc-200">{confirm.member?.email}</strong> {t("settings.team.confirmRemoveSuffix")}</>
               )}
               {confirm?.type === "remove" && confirm.member?.isCurrentUser && (
-                <>You will leave this organization and get a new personal workspace.</>
+                <>{t("settings.team.confirmLeaveDescription")}</>
               )}
               {confirm?.type === "cancel-invite" && (
-                <>Cancel the pending invite to <strong className="text-zinc-200">{confirm.invitation?.email}</strong>?</>
+                <>{t("settings.team.confirmCancelInvitePrefix")} <strong className="text-zinc-200">{confirm.invitation?.email}</strong>?</>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/10 bg-zinc-900 text-zinc-200">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="border-white/10 bg-zinc-900 text-zinc-200">{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               data-testid="team-confirm-action"
               onClick={(e) => { e.preventDefault(); runConfirm(); }}
               className="bg-brand-600 text-white hover:bg-brand-500"
             >
-              Confirm
+              {t("settings.team.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

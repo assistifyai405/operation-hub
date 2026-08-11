@@ -1,24 +1,28 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { DollarSign, TrendingUp, TrendingDown, ArrowUpRight } from "lucide-react";
+import { useLocale } from "@/context/LocaleContext";
 import { Section, money } from "./execShared";
 
 export function RevenueSnapshot({ revenue }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const g = revenue.growth_pct;
   const cards = [
-    { label: "Pipeline Value", value: money(revenue.pipeline_value), tone: "text-brand-400" },
-    { label: "Expected (weighted)", value: money(revenue.expected_monthly), tone: "text-cyan-400" },
-    { label: "Outstanding Invoices", value: money(revenue.outstanding), tone: "text-amber-400" },
-    { label: "Closed Revenue", value: money(revenue.closed_revenue), tone: "text-emerald-400" },
-    { label: "Average Deal Size", value: money(revenue.avg_deal_size), tone: "text-zinc-100" },
+    { label: t("dashboard.revenue.pipelineValue"), value: money(revenue.pipeline_value, locale), tone: "text-brand-400" },
+    { label: t("dashboard.revenue.expectedWeighted"), value: money(revenue.expected_monthly, locale), tone: "text-cyan-400" },
+    { label: t("dashboard.revenue.outstandingInvoices"), value: money(revenue.outstanding, locale), tone: "text-amber-400" },
+    { label: t("dashboard.revenue.closedRevenue"), value: money(revenue.closed_revenue, locale), tone: "text-emerald-400" },
+    { label: t("dashboard.revenue.averageDealSize"), value: money(revenue.avg_deal_size, locale), tone: "text-zinc-100" },
     {
-      label: "Growth vs last 30d",
+      label: t("dashboard.revenue.growth"),
       value: g === null || g === undefined ? "—" : `${g > 0 ? "+" : ""}${g}%`,
       tone: g > 0 ? "text-emerald-400" : g < 0 ? "text-red-400" : "text-zinc-400",
       icon: g > 0 ? TrendingUp : g < 0 ? TrendingDown : null,
     },
   ];
   return (
-    <Section title="Revenue Snapshot" icon={DollarSign} testid="revenue-section">
+    <Section title={t("dashboard.revenue.title")} icon={DollarSign} testid="revenue-section">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {cards.map((c, i) => (
           <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}

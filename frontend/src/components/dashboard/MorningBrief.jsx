@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { dashboardApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { useLocale } from "@/context/LocaleContext";
 import { AiIcon, fmtDuration } from "@/components/ai/aiHelpers";
 import { money, relTime, PRIORITY_META } from "./execShared";
 
@@ -31,6 +33,8 @@ function Collapsible({ icon: Icon, title, count, tone = "text-brand-400", defaul
 }
 
 export function MorningBrief({ open, onOpenChange }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [data, setData] = useState(null);
@@ -46,29 +50,29 @@ export function MorningBrief({ open, onOpenChange }) {
   const go = (link) => { if (link) { onOpenChange(false); navigate(link); } };
 
   const NUMBERS = data ? [
-    { label: "Revenue", value: data.numbers.revenue == null ? "—" : money(data.numbers.revenue), tone: "text-emerald-400" },
-    { label: "Pipeline", value: data.numbers.pipeline == null ? "—" : money(data.numbers.pipeline), tone: "text-brand-400" },
-    { label: "Hours Saved", value: data.numbers.hours_saved == null ? "—" : `${data.numbers.hours_saved}h`, tone: "text-cyan-400" },
-    { label: "Business Health", value: data.numbers.business_health == null ? "—" : `${data.numbers.business_health}`, tone: "text-emerald-400" },
-    { label: "Active Clients", value: `${data.numbers.clients_active ?? 0}`, tone: "text-zinc-100" },
-    { label: "Deals Closing", value: `${data.numbers.deals_closing ?? 0}`, tone: "text-amber-400" },
+    { label: t("dashboard.morning.revenue"), value: data.numbers.revenue == null ? "—" : money(data.numbers.revenue, locale), tone: "text-emerald-400" },
+    { label: t("dashboard.morning.pipeline"), value: data.numbers.pipeline == null ? "—" : money(data.numbers.pipeline, locale), tone: "text-brand-400" },
+    { label: t("dashboard.morning.hoursSaved"), value: data.numbers.hours_saved == null ? "—" : `${data.numbers.hours_saved}h`, tone: "text-cyan-400", estimated: true },
+    { label: t("dashboard.morning.businessHealth"), value: data.numbers.business_health == null ? "—" : `${data.numbers.business_health}`, tone: "text-emerald-400" },
+    { label: t("dashboard.morning.activeClients"), value: `${data.numbers.clients_active ?? 0}`, tone: "text-zinc-100" },
+    { label: t("dashboard.morning.dealsClosing"), value: `${data.numbers.deals_closing ?? 0}`, tone: "text-amber-400" },
   ] : [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto border-white/10 bg-zinc-950 p-0 text-zinc-100 sm:max-w-2xl" data-testid="morning-brief">
-        <DialogTitle className="sr-only">AI Morning Brief</DialogTitle>
+        <DialogTitle className="sr-only">{t("dashboard.morning.title")}</DialogTitle>
         {/* Hero */}
         <div className="relative overflow-hidden rounded-t-lg border-b border-white/10 p-6">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand-600/20 blur-3xl" />
-          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-brand-300"><Sun className="h-4 w-4" /> AI Morning Brief</div>
+          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-brand-300"><Sun className="h-4 w-4" /> {t("dashboard.morning.title")}</div>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-zinc-50">
-            {data?.greeting || "Good morning"}{firstName ? `, ${firstName}` : ""}
+            {data?.greeting || t("dashboard.morning.goodMorning")}{firstName ? `, ${firstName}` : ""}
           </h2>
           <p className="mt-1 text-sm text-zinc-400">
             {data?.workspace_empty
-              ? "Your workspace is ready — add a client or project to see a live brief."
-              : "Here's what happened while you were away."}
+              ? t("dashboard.morning.emptyWorkspace")
+              : t("dashboard.morning.awaySummary")}
           </p>
         </div>
 
@@ -81,13 +85,13 @@ export function MorningBrief({ open, onOpenChange }) {
               {NUMBERS.map((n) => (
                 <div key={n.label} className="rounded-xl border border-white/10 bg-zinc-900/50 p-3 text-center">
                   <p className={`text-lg font-bold ${n.tone}`}>{n.value}</p>
-                  <p className="text-[10px] text-zinc-500">{n.label === "Hours Saved" ? "~Hours saved (est.)" : n.label}</p>
+                  <p className="text-[10px] text-zinc-500">{n.estimated ? t("dashboard.morning.hoursSavedEstimated") : n.label}</p>
                 </div>
               ))}
             </div>
 
             {/* Summary */}
-            <Collapsible icon={Sparkles} title="Today's Summary" testid="brief-summary">
+            <Collapsible icon={Sparkles} title={t("dashboard.morning.todaySummary")} testid="brief-summary">
               <div className="space-y-1.5">
                 {data.summary.map((s, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-zinc-300" data-testid="brief-summary-item">
@@ -99,7 +103,7 @@ export function MorningBrief({ open, onOpenChange }) {
 
             {/* Wins */}
             {data.wins.length > 0 && (
-              <Collapsible icon={Trophy} title="Business Wins" count={data.wins.length} tone="text-emerald-400" testid="brief-wins">
+              <Collapsible icon={Trophy} title={t("dashboard.morning.businessWins")} count={data.wins.length} tone="text-emerald-400" testid="brief-wins">
                 <div className="space-y-1.5">
                   {data.wins.map((w, i) => (
                     <div key={i} className="flex items-center gap-2.5 rounded-lg border border-emerald-500/15 bg-emerald-500/5 px-3 py-2" data-testid="brief-win-item">
@@ -113,7 +117,7 @@ export function MorningBrief({ open, onOpenChange }) {
 
             {/* Risks */}
             {data.risks.length > 0 && (
-              <Collapsible icon={AlertTriangle} title="Risks" count={data.risks.length} tone="text-red-400" testid="brief-risks">
+              <Collapsible icon={AlertTriangle} title={t("dashboard.morning.risks")} count={data.risks.length} tone="text-red-400" testid="brief-risks">
                 <div className="space-y-1.5">
                   {data.risks.map((r, i) => {
                     const pm = PRIORITY_META[r.severity] || PRIORITY_META.Medium;
@@ -131,7 +135,7 @@ export function MorningBrief({ open, onOpenChange }) {
 
             {/* Recommendations */}
             {data.recommendations.length > 0 && (
-              <Collapsible icon={ListChecks} title="AI Recommendations" count={data.recommendations.length} testid="brief-recommendations">
+              <Collapsible icon={ListChecks} title={t("dashboard.morning.recommendations")} count={data.recommendations.length} testid="brief-recommendations">
                 <div className="space-y-1.5">
                   {data.recommendations.map((it) => {
                     const pm = PRIORITY_META[it.priority] || PRIORITY_META.Medium;
@@ -142,7 +146,7 @@ export function MorningBrief({ open, onOpenChange }) {
                           <p className="truncate text-sm font-medium text-zinc-100">{it.title}</p>
                           <div className="flex items-center gap-2 text-[10px] text-zinc-500">
                             <span className={`rounded-full border px-1.5 ${pm.chip}`}>{it.priority}</span>
-                            {it.revenue_impact ? <span className="text-emerald-400">≈{money(it.revenue_impact)}</span> : null}
+                            {it.revenue_impact ? <span className="text-emerald-400">≈{money(it.revenue_impact, locale)}</span> : null}
                             <span>{it.confidence}%</span>
                           </div>
                         </div>
@@ -156,13 +160,13 @@ export function MorningBrief({ open, onOpenChange }) {
 
             {/* What AI did */}
             {data.what_ai_did.length > 0 && (
-              <Collapsible icon={Activity} title="What AI Did" count={data.what_ai_did.length} defaultOpen={false} testid="brief-ai-activity">
+              <Collapsible icon={Activity} title={t("dashboard.morning.whatAiDid")} count={data.what_ai_did.length} defaultOpen={false} testid="brief-ai-activity">
                 <div className="space-y-1">
                   {data.what_ai_did.map((a) => (
                     <div key={a.id} className="flex items-start gap-2.5 rounded-lg px-1 py-1.5" data-testid="brief-ai-item">
                       <AiIcon name={a.icon} className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-400" />
                       <div className="min-w-0 flex-1"><p className="truncate text-sm text-zinc-200">{a.title}</p>
-                        <p className="text-[10px] text-zinc-600">{relTime(a.created_at)}{a.time_saved ? ` · saved ~${fmtDuration(a.time_saved)}` : ""}{a.confidence ? ` · ${a.confidence}%` : ""}</p>
+                        <p className="text-[10px] text-zinc-600">{relTime(a.created_at, locale, t)}{a.time_saved ? ` · ${t("dashboard.morning.savedTime", { duration: fmtDuration(a.time_saved) })}` : ""}{a.confidence ? ` · ${a.confidence}%` : ""}</p>
                       </div>
                     </div>
                   ))}
@@ -171,7 +175,7 @@ export function MorningBrief({ open, onOpenChange }) {
             )}
 
             <div className="flex justify-end gap-2 pt-1">
-              <button onClick={() => onOpenChange(false)} data-testid="brief-dismiss" className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-900">View dashboard</button>
+              <button onClick={() => onOpenChange(false)} data-testid="brief-dismiss" className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-900">{t("dashboard.morning.viewDashboard")}</button>
             </div>
           </div>
         )}
