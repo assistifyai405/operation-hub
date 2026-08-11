@@ -179,7 +179,7 @@ export default function Automations() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="border-white/10 bg-zinc-950 text-zinc-200">
                 {PAUSE_OPTIONS.map((o) => (
-                  <DropdownMenuItem key={o.v} onClick={() => pauseAll(o.v)} data-testid={`pause-${o.v}`} className="focus:bg-zinc-900">{t(`automations.pauseOptions.${o.v}`)}</DropdownMenuItem>
+                  <DropdownMenuItem key={o.v} onClick={() => pauseAll(o.v)} data-testid={`pause-${o.v}`} className="focus:bg-zinc-900">{t(o.labelKey)}</DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>

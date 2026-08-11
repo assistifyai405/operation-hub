@@ -1,0 +1,907 @@
+{
+  "marketing": {
+    "shell": {
+      "navigation": "Marketing navigation",
+      "product": "Product",
+      "solutions": "Solutions",
+      "pricing": "Pricing",
+      "security": "Security",
+      "faq": "FAQ",
+      "signIn": "Sign in",
+      "joinBeta": "Join beta",
+      "footer": "Assistify brings client work, projects, documents, and assisted workflows together.",
+      "privacy": "Privacy",
+      "terms": "Terms"
+    },
+    "product": {
+      "common": {
+        "allProducts": "All products",
+        "what": "What",
+        "why": "Why",
+        "how": "How",
+        "capabilities": "What can I do?",
+        "connected": "Connected workflow",
+        "learnMore": "Explore module"
+      },
+      "index": {
+        "seo": {
+          "title": "Product overview",
+          "description": "Explore Assistify modules for client relationships, projects, documents, assisted actions, and configurable workflows."
+        },
+        "eyebrow": "One connected workspace",
+        "title": "Run client work without losing the thread",
+        "intro": "Assistify connects the information and practical steps behind your work, from the first client record to project delivery and business documents.",
+        "modulesTitle": "Modules that work from the same context",
+        "modulesIntro": "Start with the part of your work that needs structure. Each module uses the same workspace records, so information can move with the job.",
+        "why": {
+          "title": "Less switching, clearer ownership",
+          "body": "Client details, project work, documents, and assisted actions are easier to manage when they stay connected. Assistify is designed to reduce duplicate entry while keeping people in control of decisions."
+        },
+        "how": {
+          "title": "Build the workflow in useful steps",
+          "body": "Add clients and projects, organize tasks and source files, then use Copilot or configured automations where they help. Review generated drafts and proposed actions before relying on them."
+        },
+        "connected": {
+          "title": "From opportunity to delivered work",
+          "body": "A client can connect to opportunities and projects. Projects can hold tasks, proposals, contract drafts, invoice records, and source documents. Copilot and automations can use that workspace context for supported actions."
+        },
+        "cta": {
+          "title": "See how Assistify fits your work",
+          "body": "Join the closed beta to create a workspace and try the connected modules.",
+          "button": "Join beta"
+        }
+      },
+      "details": {
+        "copilot": {
+          "name": "Copilot",
+          "summary": "Ask questions about your workspace and prepare supported actions for your review.",
+          "seo": {
+            "title": "Copilot for client work",
+            "description": "Use Assistify Copilot to work with real workspace context, preview supported actions, and confirm before changes are made."
+          },
+          "eyebrow": "Workspace Copilot",
+          "title": "Ask, review, then act",
+          "intro": "Copilot reads the workspace context available to you and can prepare concrete actions. You see a preview and choose whether to confirm before it creates or generates anything.",
+          "frame": {
+            "title": "Assistify Copilot",
+            "subtitle": "Action preview",
+            "alt": "Illustration of a Copilot action preview"
+          },
+          "what": {
+            "title": "An assistant grounded in your workspace",
+            "body": "Copilot can answer from current client and project context, then turn supported requests into a reviewable action instead of leaving you with generic text."
+          },
+          "why": {
+            "title": "Move from question to next step",
+            "body": "You can avoid reconstructing project context in every prompt. Confirmation cards keep the proposed outcome visible before Copilot writes to your workspace."
+          },
+          "how": {
+            "title": "A clear confirmation flow",
+            "steps": [
+              {
+                "title": "Ask in plain language",
+                "body": "Request a workspace summary, a new client or project, a project plan, or a business document draft."
+              },
+              {
+                "title": "Inspect the preview",
+                "body": "Copilot shows the supported action and the details it is about to use."
+              },
+              {
+                "title": "Confirm or cancel",
+                "body": "Only confirm when the preview is right. Copilot then runs that action and links you to the result."
+              }
+            ]
+          },
+          "capabilities": {
+            "title": "Concrete actions, with review",
+            "intro": "Current Copilot actions focus on core workspace setup and project documents.",
+            "items": [
+              "Summarize clients, projects, tasks, and open workspace context",
+              "Create a client after you confirm the preview",
+              "Create a project after you confirm the details",
+              "Generate a project plan for an existing project",
+              "Generate proposal, contract, or invoice drafts for a project",
+              "Keep a session history so you can follow the conversation"
+            ]
+          },
+          "connected": {
+            "title": "Actions land where the work lives",
+            "body": "Confirmed clients and projects become workspace records. Generated plans and document drafts stay connected to their project, so the next person can continue from the same context."
+          },
+          "cta": {
+            "title": "Try a Copilot that shows its next action",
+            "body": "Create a beta workspace, add useful context, and review every proposed action before confirming it.",
+            "button": "Join beta"
+          }
+        },
+        "crm": {
+          "name": "CRM",
+          "summary": "Keep client context, activity, opportunities, and linked work in one view.",
+          "seo": {
+            "title": "CRM for connected client work",
+            "description": "Organize client records, activity, opportunities, and project context in Assistify CRM."
+          },
+          "eyebrow": "Client relationships",
+          "title": "Keep the full client picture close",
+          "intro": "CRM brings contact details, activity, open opportunities, and linked project work together so client context does not disappear between tools.",
+          "frame": {
+            "title": "Client workspace",
+            "subtitle": "Connected context",
+            "alt": "Illustration of connected client records"
+          },
+          "what": {
+            "title": "A working record for every client",
+            "body": "Use searchable client records and tags to organize the companies and people you work with, then open a record to see activity and linked work."
+          },
+          "why": {
+            "title": "Know what happened and what is next",
+            "body": "A shared client record makes it easier to prepare a follow-up, understand an opportunity, or enter a project without searching across disconnected notes."
+          },
+          "how": {
+            "title": "Build context as the relationship develops",
+            "steps": [
+              {
+                "title": "Add the client",
+                "body": "Create a client record with useful contact and company details."
+              },
+              {
+                "title": "Organize the relationship",
+                "body": "Use tags, notes, activity, and opportunity records to keep current context visible."
+              },
+              {
+                "title": "Connect delivery",
+                "body": "Link projects and business documents so relationship history and active work stay together."
+              }
+            ]
+          },
+          "capabilities": {
+            "title": "Client context you can use",
+            "intro": "CRM supports the practical information around ongoing client work.",
+            "items": [
+              "Search client and contact records",
+              "Filter records with workspace tags",
+              "Review recent client activity",
+              "See open opportunities and their status",
+              "Open linked projects and business documents",
+              "Use client context in supported Copilot workflows"
+            ]
+          },
+          "connected": {
+            "title": "Relationship context meets delivery",
+            "body": "Client records connect with opportunities, projects, proposals, contract drafts, and invoice records. That keeps commercial context available when work moves into delivery."
+          },
+          "cta": {
+            "title": "Give every client a clear home",
+            "body": "Join the beta and organize relationship context next to the work it creates.",
+            "button": "Join beta"
+          }
+        },
+        "projects": {
+          "name": "Projects",
+          "summary": "Plan delivery with linked tasks, files, client context, and document drafts.",
+          "seo": {
+            "title": "Project workspace for client delivery",
+            "description": "Manage client projects, tasks, files, plans, and business document drafts in one connected workspace."
+          },
+          "eyebrow": "Project delivery",
+          "title": "Turn agreed work into an organized project",
+          "intro": "Projects keep the brief, team, due date, tasks, plans, files, and business documents connected from kickoff through completion.",
+          "frame": {
+            "title": "Project workspace",
+            "subtitle": "Delivery overview",
+            "alt": "Illustration of a connected project workspace"
+          },
+          "what": {
+            "title": "A delivery hub for each engagement",
+            "body": "Every project has a focused workspace for status, details, tasks, notes, source files, plans, and related business documents."
+          },
+          "why": {
+            "title": "Make the next step visible",
+            "body": "When project context and outputs share one home, the team can see what is due, what is blocked, and which document or task needs attention."
+          },
+          "how": {
+            "title": "From setup to delivery",
+            "steps": [
+              {
+                "title": "Create the project",
+                "body": "Connect a client, set delivery details, and record the brief."
+              },
+              {
+                "title": "Plan the work",
+                "body": "Add tasks manually or review a plan generated with AI assistance."
+              },
+              {
+                "title": "Keep outputs together",
+                "body": "Manage files, proposals, contract drafts, invoice records, and notes in the project workspace."
+              }
+            ]
+          },
+          "capabilities": {
+            "title": "Manage the work around delivery",
+            "intro": "Project workspaces combine structure with optional AI-assisted drafting.",
+            "items": [
+              "Create and update project details and status",
+              "Track tasks, priorities, owners, and due dates",
+              "Generate and review an AI-assisted project plan",
+              "Keep project notes and source files together",
+              "Create proposals, contract drafts, and invoice records",
+              "Review project activity in one timeline"
+            ]
+          },
+          "connected": {
+            "title": "The project links every handoff",
+            "body": "Client context enters with the project. Tasks and plans guide delivery, while proposals, contract drafts, invoices, and files remain attached to the engagement."
+          },
+          "cta": {
+            "title": "Bring your next project into focus",
+            "body": "Join the beta and build a project workspace around real client work.",
+            "button": "Join beta"
+          }
+        },
+        "automations": {
+          "name": "Automations",
+          "summary": "Configure rules for supported internal actions, suggestions, and review steps.",
+          "seo": {
+            "title": "Configurable workflow automations",
+            "description": "Configure Assistify rules to detect supported conditions, prepare suggestions, and run internal actions with controls."
+          },
+          "eyebrow": "Controlled workflows",
+          "title": "Automate repeatable checks, carefully",
+          "intro": "Automations can scan for configured workspace conditions and prepare supported internal actions. You choose the rule, mode, approval behavior, and when everything should pause.",
+          "frame": {
+            "title": "Automation review",
+            "subtitle": "Configured rule",
+            "alt": "Illustration of a configurable automation rule"
+          },
+          "what": {
+            "title": "Rules for supported workspace events",
+            "body": "The automation builder combines available triggers and actions. Depending on the selected mode, a match can become a suggestion, wait for approval, or run a supported internal action."
+          },
+          "why": {
+            "title": "Reduce routine checking without hiding control",
+            "body": "Rules can surface follow-ups and internal housekeeping consistently. Approval queues, history, per-rule modes, and pause controls keep the behavior inspectable."
+          },
+          "how": {
+            "title": "Configure, review, adjust",
+            "steps": [
+              {
+                "title": "Choose a supported rule",
+                "body": "Select from the conditions and actions currently available in the builder."
+              },
+              {
+                "title": "Set the control mode",
+                "body": "Use suggestions or approvals when a person should review, or allow eligible internal actions where appropriate."
+              },
+              {
+                "title": "Inspect the history",
+                "body": "Review outcomes, pause a rule or all automations, and change settings as the workflow evolves."
+              }
+            ]
+          },
+          "capabilities": {
+            "title": "Practical controls for current rules",
+            "intro": "Availability depends on the supported triggers, action type, configuration, and connected provider settings.",
+            "items": [
+              "Build rules from available triggers and actions",
+              "Prepare suggestions for review",
+              "Queue actions that require approval",
+              "Run eligible internal actions in the configured mode",
+              "Pause, resume, edit, or disable rules",
+              "Review automation history and outcomes"
+            ]
+          },
+          "connected": {
+            "title": "Rules use existing workspace context",
+            "body": "Automations evaluate supported client, project, task, and document conditions. Some actions remain suggestions or drafts, and provider-dependent steps require the relevant configuration."
+          },
+          "cta": {
+            "title": "Start with one well-defined rule",
+            "body": "Join the beta, choose a repeatable check, and keep review enabled until its behavior fits your workflow.",
+            "button": "Join beta"
+          }
+        },
+        "documents": {
+          "name": "Documents",
+          "summary": "Keep files and create project proposals, contract drafts, and invoice records.",
+          "seo": {
+            "title": "Project documents and business drafts",
+            "description": "Organize files and create proposals, contract drafts, and invoice records alongside client projects."
+          },
+          "eyebrow": "Business documents",
+          "title": "Keep project files and drafts connected",
+          "intro": "Store source files with your work and prepare proposals, contract drafts, and invoice records from the project context you already have.",
+          "frame": {
+            "title": "Project documents",
+            "subtitle": "Draft and review",
+            "alt": "Illustration of connected project documents"
+          },
+          "what": {
+            "title": "Files and business documents in context",
+            "body": "The document library organizes uploaded files, while project workspaces provide focused editors for proposals, contracts, and invoices."
+          },
+          "why": {
+            "title": "Avoid rebuilding the same context",
+            "body": "Project details can guide a first draft, and the resulting document stays connected to the client engagement for review and revision."
+          },
+          "how": {
+            "title": "Prepare, edit, and manage",
+            "steps": [
+              {
+                "title": "Open the project",
+                "body": "Use the project and client context as the starting point for a business document."
+              },
+              {
+                "title": "Create a draft",
+                "body": "Write manually or request an AI-assisted proposal, contract, or invoice draft."
+              },
+              {
+                "title": "Review and track",
+                "body": "Edit the content, manage its workspace status, and keep relevant source files nearby."
+              }
+            ]
+          },
+          "capabilities": {
+            "title": "Work with documents around a project",
+            "intro": "Assistify supports document preparation and organization; it does not replace professional review or a payment service.",
+            "items": [
+              "Upload, search, rename, download, and delete workspace files",
+              "Create and edit project proposals",
+              "Create and edit contract drafts",
+              "Create invoice records and manage their workspace status",
+              "Use AI assistance to prepare a first draft",
+              "Keep business documents linked to clients and projects"
+            ]
+          },
+          "disclaimer": "Contract output is a draft and not legal advice. Invoice features create and track invoice records; Assistify does not collect payments.",
+          "connected": {
+            "title": "Documents stay with the engagement",
+            "body": "Proposals, contract drafts, invoice records, and uploaded source files connect to project and client context, making review and handoff easier."
+          },
+          "cta": {
+            "title": "Build documents from useful context",
+            "body": "Join the beta to organize project files and prepare business drafts for your own review.",
+            "button": "Join beta"
+          }
+        },
+        "agents": {
+          "eyebrow": "AI Agents",
+          "title": "Specialized AI help for focused work",
+          "intro": "Use Assistify agents when you want guided assistance for sales, writing, or operations — without leaving your workspace.",
+          "seo": {
+            "title": "AI Agents",
+            "description": "Specialized Assistify AI assistants for common business work."
+          },
+          "what": {
+            "title": "What it is",
+            "body": "Built-in specialists you can chat with for common business tasks. Custom agent creation is limited in the current release."
+          },
+          "why": {
+            "title": "Why it matters",
+            "body": "Different work needs different focus. Agents keep prompts and guidance closer to the job at hand."
+          },
+          "how": {
+            "title": "How it works",
+            "steps": [
+              "Open AI Agents",
+              "Pick a specialist",
+              "Ask with your workspace context in mind",
+              "Review and use the output"
+            ]
+          },
+          "capabilities": {
+            "title": "What you can do",
+            "items": [
+              "Draft outreach with a sales focus",
+              "Get writing help for client-facing text",
+              "Ask operational questions",
+              "Jump back into projects and documents"
+            ]
+          },
+          "connected": {
+            "title": "Connected workflow",
+            "body": "Agents sit alongside Copilot, clients, and projects so answers stay grounded in Assistify."
+          },
+          "cta": {
+            "button": "Get started",
+            "note": "Available during closed beta."
+          }
+        },
+        "knowledge": {
+          "eyebrow": "Knowledge Brain",
+          "title": "Give Assistify business context",
+          "intro": "Store facts, preferences, and writing guidance so Assistify can answer with your business in mind.",
+          "seo": {
+            "title": "Knowledge Brain",
+            "description": "Add business knowledge so Assistify AI can provide better answers."
+          },
+          "what": {
+            "title": "What it is",
+            "body": "A place for memories and business facts Assistify can use when generating answers and drafts."
+          },
+          "why": {
+            "title": "Why it matters",
+            "body": "AI without context invents. Knowledge Brain helps keep responses closer to how your business actually works."
+          },
+          "how": {
+            "title": "How it works",
+            "steps": [
+              "Add key business facts",
+              "Capture writing and brand preferences",
+              "Reuse context across Copilot and documents",
+              "Update knowledge as your business evolves"
+            ]
+          },
+          "capabilities": {
+            "title": "What you can do",
+            "items": [
+              "Store services and positioning",
+              "Capture pricing notes",
+              "Guide tone of voice",
+              "Improve proposal and email drafts"
+            ]
+          },
+          "connected": {
+            "title": "Connected workflow",
+            "body": "Knowledge Brain supports Copilot, agents, and document generation across your workspace."
+          },
+          "cta": {
+            "button": "Get started",
+            "note": "Available during closed beta."
+          }
+        },
+        "opportunities": {
+          "eyebrow": "Opportunities",
+          "title": "See what may need attention",
+          "intro": "Assistify surfaces suggested next actions from your workspace activity — so important follow-ups are harder to miss.",
+          "seo": {
+            "title": "Opportunities",
+            "description": "Assistify highlights actions and opportunities that may need attention."
+          },
+          "what": {
+            "title": "What it is",
+            "body": "A feed of recommended actions and signals based on real workspace data — not invented sample activity."
+          },
+          "why": {
+            "title": "Why it matters",
+            "body": "Work piles up across clients and projects. Opportunities help you notice what to do next."
+          },
+          "how": {
+            "title": "How it works",
+            "steps": [
+              "Work in your normal Assistify workspace",
+              "Review suggested opportunities",
+              "Open the related client or project",
+              "Take action or dismiss"
+            ]
+          },
+          "capabilities": {
+            "title": "What you can do",
+            "items": [
+              "Spot stalled work",
+              "Follow up on deals and tasks",
+              "Jump into the right module",
+              "Keep momentum without another tool"
+            ]
+          },
+          "connected": {
+            "title": "Connected workflow",
+            "body": "Opportunities connect dashboard insights with CRM, projects, and tasks."
+          },
+          "cta": {
+            "button": "Get started",
+            "note": "Available during closed beta."
+          }
+        }
+      }
+    },
+    "pricing": {
+      "seo": {
+        "title": "Pricing",
+        "description": "Review the planned Starter, Pro, and Business structure for Assistify during the closed beta."
+      },
+      "eyebrow": "Plans",
+      "beta": {
+        "title": "Pricing during closed beta",
+        "intro": "Assistify is in closed beta. Plan names show the intended structure, but public prices and self-service billing are not available yet.",
+        "notice": "No checkout is active during closed beta. Join the beta to request access; we will communicate pricing before any paid plan starts.",
+        "planStatus": "Closed beta access — no public price",
+        "action": "Join beta"
+      },
+      "available": {
+        "title": "Plans for different ways of working",
+        "intro": "Choose a structure that matches your client work and team needs. Contact us before starting a paid plan.",
+        "planStatus": "Pricing available on request",
+        "action": "Request access"
+      },
+      "plans": {
+        "starter": {
+          "name": "Starter",
+          "audience": "For independent work",
+          "description": "Core client, project, task, and document organization for getting a workspace in order.",
+          "features": [
+            "Client and project workspaces",
+            "Task management",
+            "File and business document drafts",
+            "Copilot with confirmation steps"
+          ]
+        },
+        "pro": {
+          "name": "Pro",
+          "audience": "For growing client work",
+          "description": "A broader workflow for businesses managing more active client delivery and repeatable processes.",
+          "features": [
+            "Everything in Starter",
+            "Opportunity and pipeline workflows",
+            "Configurable automations",
+            "AI workspace history and insights"
+          ]
+        },
+        "business": {
+          "name": "Business",
+          "audience": "For collaborative teams",
+          "description": "Workspace controls and operational support for teams coordinating client work together.",
+          "features": [
+            "Everything in Pro",
+            "Team and workspace controls",
+            "Shared operational workflows",
+            "Business onboarding conversation"
+          ]
+        }
+      },
+      "disclaimer": "Plan contents may change as the beta develops. We will show final features and pricing before enabling paid subscriptions."
+    },
+    "faq": {
+      "seo": {
+        "title": "Frequently asked questions",
+        "description": "Answers about the Assistify beta, product modules, AI-assisted work, automations, documents, pricing, and security."
+      },
+      "eyebrow": "FAQ",
+      "title": "Questions, answered plainly",
+      "intro": "What Assistify does today, where review is required, and what to expect during the closed beta.",
+      "questions": [
+        {
+          "question": "What is Assistify?",
+          "answer": "Assistify is a workspace for client relationships, opportunities, projects, tasks, files, business document drafts, and assisted workflows. Its modules share workspace context so related work can stay connected."
+        },
+        {
+          "question": "Is Assistify generally available?",
+          "answer": "No. Assistify is currently presented as a closed beta. Access and features can change while the product is being tested."
+        },
+        {
+          "question": "Can Copilot make changes on its own?",
+          "answer": "Copilot prepares supported actions such as creating a client or project and generating project document drafts. Its current action flow shows a preview and asks you to confirm or cancel before execution."
+        },
+        {
+          "question": "How do automations work?",
+          "answer": "You configure rules from currently supported triggers and actions. Rules can prepare suggestions, wait for approval, or run eligible internal actions depending on their mode. They can be paused, edited, disabled, and reviewed in history."
+        },
+        {
+          "question": "Does Assistify collect invoice payments?",
+          "answer": "No. Assistify can create invoice records and track their workspace status, but it does not collect payments."
+        },
+        {
+          "question": "Are generated contracts legal advice?",
+          "answer": "No. Contract output is a draft, not legal advice. You are responsible for reviewing it and obtaining qualified legal advice where needed."
+        },
+        {
+          "question": "How is workspace data separated?",
+          "answer": "Authenticated requests are scoped to the active workspace or organization. Assistify is designed to prevent one workspace from reading another workspace's records."
+        },
+        {
+          "question": "What security controls are implemented?",
+          "answer": "Implemented controls include httpOnly authentication cookies, CSRF protection for state-changing requests, workspace-scoped data access, encrypted stored integration tokens, environment-based secrets, AI usage controls, and health monitoring."
+        },
+        {
+          "question": "What do Starter, Pro, and Business cost?",
+          "answer": "Public prices are not shown while billing is disabled for the closed beta. The plan names describe an intended structure, not currently purchasable subscriptions."
+        },
+        {
+          "question": "Can I use Assistify in Dutch and English?",
+          "answer": "Yes. The application and these product pages support Dutch and English, although individual user-entered records remain in the language in which they were written."
+        }
+      ],
+      "more": {
+        "title": "Still evaluating the beta?",
+        "body": "Join the beta to explore the current product and share feedback about the workflow your business needs."
+      }
+    },
+    "security": {
+      "seo": {
+        "title": "Security approach",
+        "description": "Learn about Assistify's implemented cookie, CSRF, workspace isolation, token encryption, secret handling, AI control, and monitoring practices."
+      },
+      "eyebrow": "Security",
+      "title": "Designed with practical safeguards",
+      "intro": "Assistify applies security controls across authentication, state-changing requests, workspace data, connected-service credentials, AI use, and operational monitoring.",
+      "practices": {
+        "cookies": {
+          "title": "httpOnly authentication cookies",
+          "body": "Authentication tokens are held in httpOnly cookies so application JavaScript cannot read them directly."
+        },
+        "csrf": {
+          "title": "CSRF protection",
+          "body": "State-changing browser requests use a CSRF token header that is checked alongside the authenticated session."
+        },
+        "isolation": {
+          "title": "Workspace isolation",
+          "body": "Data access is scoped to the authenticated workspace or organization throughout application queries and actions."
+        },
+        "tokens": {
+          "title": "Encrypted integration tokens",
+          "body": "Stored credentials for connected services are encrypted before they are persisted and decrypted only for supported integration operations."
+        },
+        "secrets": {
+          "title": "Secrets in the environment",
+          "body": "Application secrets and encryption keys are supplied through the runtime environment instead of being embedded in frontend code."
+        },
+        "ai": {
+          "title": "AI usage controls",
+          "body": "Workspace settings can control AI use, while review and confirmation steps are used for supported generated actions and drafts."
+        },
+        "monitoring": {
+          "title": "Health monitoring",
+          "body": "Health endpoints and integration checks provide operational signals for the application and configured connections."
+        }
+      },
+      "scope": {
+        "title": "A security approach, not a certification claim",
+        "body": "This page describes implemented product behavior and design choices. It does not claim an external security, privacy, or healthcare certification."
+      }
+    },
+    "solutions": {
+      "seo": {
+        "title": "Solutions for client-focused businesses",
+        "description": "See how freelancers, agencies, and small businesses can organize client work with Assistify."
+      },
+      "eyebrow": "Solutions",
+      "title": "A connected workflow for the way you serve clients",
+      "intro": "Assistify gives independent professionals and small teams one place to organize relationships, delivery, documents, and assisted next steps.",
+      "useCases": "Use cases",
+      "audiences": {
+        "freelancers": {
+          "title": "Freelancers",
+          "body": "Keep each client engagement organized without assembling a separate stack for every stage of the work.",
+          "useCases": [
+            "Turn a new client into a structured project",
+            "Track tasks and due dates across engagements",
+            "Prepare proposal, contract, and invoice drafts",
+            "Ask Copilot about current workspace context"
+          ]
+        },
+        "agencies": {
+          "title": "Agencies",
+          "body": "Give client relationships and delivery teams shared context from opportunity through handoff.",
+          "useCases": [
+            "Connect pipeline records to active delivery",
+            "Keep briefs, tasks, files, and status together",
+            "Review repeatable workflow suggestions",
+            "See client activity and linked documents"
+          ]
+        },
+        "smallBusinesses": {
+          "title": "Small businesses",
+          "body": "Bring day-to-day client operations into a workspace that can grow with clearer processes.",
+          "useCases": [
+            "Maintain searchable client and contact records",
+            "Organize projects and internal follow-up tasks",
+            "Configure controlled automation rules",
+            "Keep document records with the work they support"
+          ]
+        }
+      },
+      "workflow": {
+        "title": "Start with the workflow you already have",
+        "body": "Assistify does not require every module on day one. Begin with clients and projects, then add document drafting, Copilot, or controlled automation where each provides a practical next step."
+      },
+      "cta": {
+        "title": "Bring one real client workflow",
+        "body": "Join the closed beta and see how your current process fits a connected workspace.",
+        "button": "Join beta"
+      }
+    },
+    "seo": {
+      "homeTitle": "AI business software for independent teams",
+      "homeDescription": "Bring clients, projects, documents and daily work together in one AI-powered workspace."
+    },
+    "nav": {
+      "product": "Product",
+      "pricing": "Pricing",
+      "security": "Security",
+      "faq": "FAQ",
+      "menuOpen": "Open navigation",
+      "menuClose": "Close navigation",
+      "copilot": "Copilot",
+      "crm": "CRM",
+      "projects": "Projects",
+      "automations": "Automations"
+    },
+    "footer": {
+      "tagline": "One calm workspace for running your business with AI.",
+      "product": "Product",
+      "company": "Company",
+      "legal": "Legal",
+      "account": "Account",
+      "overview": "Overview",
+      "pricing": "Pricing",
+      "security": "Security",
+      "faq": "FAQ",
+      "about": "About Assistify",
+      "contact": "Contact",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "betaNotice": "Beta notice",
+      "login": "Log in",
+      "register": "Create account",
+      "dashboard": "Open Assistify",
+      "language": "Language",
+      "copyright": "© {{year}} Assistify. All rights reserved.",
+      "solutions": "Solutions",
+      "documents": "Documents"
+    },
+    "cta": {
+      "login": "Log in",
+      "getStarted": "Get started",
+      "openAssistify": "Open Assistify",
+      "learnMore": "Explore the product"
+    },
+    "hero": {
+      "eyebrow": "Your business, one intelligent workspace",
+      "headline": "Run your business with AI.",
+      "body": "Assistify brings your clients, projects, proposals and finances together, then helps you move the work forward. Less switching, less admin, more time for the work that matters.",
+      "primary": "Get started",
+      "secondary": "See how it works"
+    },
+    "betaBanner": "Beta",
+    "pillars": {
+      "eyebrow": "Built for momentum",
+      "title": "Everything stays connected",
+      "body": "Assistify keeps the context around your work in one place, so you can make progress without rebuilding the picture every day.",
+      "items": {
+        "unified": {
+          "title": "One business workspace",
+          "body": "Clients, projects, documents and finances live together instead of across disconnected tools."
+        },
+        "ai": {
+          "title": "AI with your context",
+          "body": "Get useful drafts, next steps and answers grounded in the work already in your workspace."
+        },
+        "control": {
+          "title": "You stay in control",
+          "body": "Review important actions before they happen and keep a clear view of what Assistify has prepared."
+        },
+        "focus": {
+          "title": "More time for real work",
+          "body": "Reduce repetitive admin and spend your attention on clients, decisions and delivery."
+        }
+      }
+    },
+    "howItWorks": {
+      "eyebrow": "How it works",
+      "title": "From scattered work to a clear next step",
+      "body": "Start with what you already know. Assistify turns that context into practical support across your workflow.",
+      "steps": {
+        "connect": {
+          "title": "Bring your work together",
+          "body": "Organize clients, opportunities, projects and knowledge in one workspace."
+        },
+        "understand": {
+          "title": "Let Assistify understand the context",
+          "body": "Your AI copilot works with the information you choose to keep in Assistify."
+        },
+        "move": {
+          "title": "Review and move forward",
+          "body": "Turn suggestions into proposals, tasks, documents and follow-ups while keeping final control."
+        }
+      }
+    },
+    "modules": {
+      "eyebrow": "The Assistify workspace",
+      "title": "The tools your business needs, working as one",
+      "body": "Use the modules you need today and keep the same context as your business grows.",
+      "explore": "Explore {{module}}",
+      "copilot": {
+        "title": "AI Copilot",
+        "body": "Ask questions, shape ideas and turn business context into practical next steps."
+      },
+      "crm": {
+        "title": "CRM",
+        "body": "Keep every client, contact and conversation organized in one clear view."
+      },
+      "projects": {
+        "title": "Projects",
+        "body": "Plan delivery, coordinate tasks and stay on top of progress."
+      },
+      "agents": {
+        "title": "AI Agents",
+        "body": "Use focused AI assistants for repeatable parts of your workflow."
+      },
+      "proposals": {
+        "title": "Proposals",
+        "body": "Create polished proposals faster with the right client and project context."
+      },
+      "contracts": {
+        "title": "Contracts",
+        "body": "Keep agreements connected to the work and relationships they support."
+      },
+      "invoices": {
+        "title": "Invoices",
+        "body": "Prepare and track invoices alongside the projects that generated them."
+      },
+      "automations": {
+        "title": "Automations",
+        "body": "Move routine work forward with transparent, reviewable workflows."
+      },
+      "knowledge": {
+        "title": "Knowledge",
+        "body": "Build a reusable source of truth for your company and your AI."
+      },
+      "opportunities": {
+        "title": "Opportunities",
+        "body": "Follow potential work from first signal to a confident next action."
+      }
+    },
+    "beforeAfter": {
+      "eyebrow": "A calmer way to work",
+      "title": "Trade tool switching for a connected workflow",
+      "body": "Assistify does not add another isolated tab. It gives the work you already do a shared home.",
+      "beforeTitle": "Before Assistify",
+      "afterTitle": "With Assistify",
+      "before": {
+        "one": "Client context spread across inboxes and notes",
+        "two": "The same details copied between separate tools",
+        "three": "Important follow-ups depending on memory"
+      },
+      "after": {
+        "one": "A clear view of every client and active project",
+        "two": "Shared context from first conversation to invoice",
+        "three": "AI-supported next steps ready for your review"
+      }
+    },
+    "aiTrust": {
+      "eyebrow": "Responsible AI",
+      "title": "AI support without giving up control",
+      "body": "Assistify is designed to help you prepare and decide, not to hide important actions. You choose the context, review meaningful output and remain accountable for what gets sent.",
+      "pointOne": "Human review for consequential actions",
+      "pointTwo": "Clear, workspace-based context",
+      "pointThree": "No invented performance claims"
+    },
+    "useCases": {
+      "eyebrow": "Made for hands-on teams",
+      "title": "A better operating system for the way you work",
+      "body": "Whether you work independently or with a growing team, Assistify helps keep client work moving.",
+      "explore": "View solutions",
+      "freelancer": {
+        "title": "Freelancers",
+        "body": "Run client relationships, delivery and admin without assembling a stack of separate tools."
+      },
+      "agency": {
+        "title": "Agencies",
+        "body": "Give your team one place for pipeline, client context and project delivery."
+      },
+      "smallBusiness": {
+        "title": "Small businesses",
+        "body": "Build repeatable ways of working while keeping decisions and customer context close."
+      }
+    },
+    "finalCta": {
+      "eyebrow": "Ready when you are",
+      "title": "Give your business one place to move forward",
+      "body": "Start bringing your client work, operations and AI support together in Assistify.",
+      "button": "Create your account"
+    },
+    "mock": {
+      "dashboardSub": "Your business at a glance",
+      "dashboardAlt": "Preview of the Assistify business dashboard",
+      "brief": "Today in Assistify",
+      "briefBody": "Your client work, priorities and next steps are ready in one view.",
+      "clients": "Clients",
+      "clientsHint": "Relationships and context",
+      "projects": "Projects",
+      "projectsHint": "Delivery in motion",
+      "tasks": "Next steps",
+      "tasksHint": "Clear and reviewable",
+      "copilot": "AI Copilot",
+      "copilotLine": "Prepare a concise project update from the latest workspace activity."
+    }
+  }
+}

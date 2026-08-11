@@ -1,10 +1,13 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Sparkles, Loader2, Heart, TrendingUp, Zap, ShieldAlert, ArrowRight, AlertCircle, HelpCircle, MessageSquare, RefreshCw } from "lucide-react";
 import { crmApi } from "@/lib/api";
 import { toast } from "sonner";
 
 const HEALTH = { "Healthy": "text-emerald-400 bg-emerald-500/15", "At Risk": "text-amber-400 bg-amber-500/15", "Critical": "text-red-400 bg-red-500/15" };
 const LEVEL = { "Low": "text-emerald-400", "Medium": "text-amber-400", "High": "text-red-400" };
+const HEALTH_KEY = { "Healthy": "healthy", "At Risk": "atRisk", "Critical": "critical" };
+const LEVEL_KEY = { "Low": "low", "Medium": "medium", "High": "high" };
 
 function Stat({ icon: Icon, label, value, cls }) {
   return (
@@ -16,13 +19,14 @@ function Stat({ icon: Icon, label, value, cls }) {
 }
 
 export function AISalesBrief({ leadId }) {
+  const { t } = useTranslation();
   const [brief, setBrief] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const gen = async (refresh = false) => {
     setLoading(true);
     try { setBrief(await crmApi.leadBrief(leadId, refresh)); }
-    catch (e) { toast.error(e.message || "AI brief failed"); }
+    catch (e) { toast.error(e.message || t("crm.salesBrief.failed")); }
     finally { setLoading(false); }
   };
 
@@ -31,7 +35,7 @@ export function AISalesBrief({ leadId }) {
       <button onClick={() => gen(false)} disabled={loading} data-testid="lead-generate-brief"
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-500/30 bg-brand-500/[0.06] py-3 text-sm font-semibold text-brand-200 transition-all hover:bg-brand-500/15 disabled:opacity-60">
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-        {loading ? "Analyzing this deal…" : "Generate AI Sales Brief"}
+        {t(loading ? "crm.salesBrief.analyzing" : "crm.salesBrief.generate")}
       </button>
     );
   }
@@ -39,23 +43,23 @@ export function AISalesBrief({ leadId }) {
   return (
     <div className="space-y-3" data-testid="lead-ai-brief">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat icon={Heart} label="Deal health" value={brief.deal_health} cls={HEALTH[brief.deal_health]?.split(" ")[0]} />
-        <Stat icon={TrendingUp} label="Win prob." value={`${brief.win_probability}%`} cls="text-brand-300" />
-        <Stat icon={Zap} label="Urgency" value={brief.urgency} cls={LEVEL[brief.urgency]} />
-        <Stat icon={ShieldAlert} label="Risk" value={brief.risk_level} cls={LEVEL[brief.risk_level]} />
+        <Stat icon={Heart} label={t("crm.salesBrief.dealHealth")} value={HEALTH_KEY[brief.deal_health] ? t(`crm.salesBrief.health.${HEALTH_KEY[brief.deal_health]}`) : brief.deal_health} cls={HEALTH[brief.deal_health]?.split(" ")[0]} />
+        <Stat icon={TrendingUp} label={t("crm.salesBrief.winProbability")} value={`${brief.win_probability}%`} cls="text-brand-300" />
+        <Stat icon={Zap} label={t("crm.salesBrief.urgency")} value={LEVEL_KEY[brief.urgency] ? t(`crm.salesBrief.level.${LEVEL_KEY[brief.urgency]}`) : brief.urgency} cls={LEVEL[brief.urgency]} />
+        <Stat icon={ShieldAlert} label={t("crm.salesBrief.risk")} value={LEVEL_KEY[brief.risk_level] ? t(`crm.salesBrief.level.${LEVEL_KEY[brief.risk_level]}`) : brief.risk_level} cls={LEVEL[brief.risk_level]} />
       </div>
       <div className="rounded-xl border border-brand-500/25 bg-brand-500/[0.05] p-3.5" data-testid="lead-next-action">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-300"><ArrowRight className="h-3.5 w-3.5" /> Next best action</div>
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-300"><ArrowRight className="h-3.5 w-3.5" /> {t("crm.salesBrief.nextBestAction")}</div>
         <p className="mt-1 text-sm text-zinc-200">{brief.next_best_action}</p>
       </div>
-      {brief.relationship_summary && <Block icon={MessageSquare} title="Relationship summary" text={brief.relationship_summary} />}
-      {brief.conversation_summary && <Block icon={MessageSquare} title="Conversation summary" text={brief.conversation_summary} />}
-      {brief.suggested_followup && <Block icon={ArrowRight} title="Suggested follow-up" text={brief.suggested_followup} />}
-      {brief.objections?.length > 0 && <List icon={AlertCircle} title="Objections detected" items={brief.objections} color="text-amber-400" />}
-      {brief.missing_info?.length > 0 && <List icon={HelpCircle} title="Missing information" items={brief.missing_info} color="text-cyan-400" />}
+      {brief.relationship_summary && <Block icon={MessageSquare} title={t("crm.salesBrief.relationshipSummary")} text={brief.relationship_summary} />}
+      {brief.conversation_summary && <Block icon={MessageSquare} title={t("crm.salesBrief.conversationSummary")} text={brief.conversation_summary} />}
+      {brief.suggested_followup && <Block icon={ArrowRight} title={t("crm.salesBrief.suggestedFollowup")} text={brief.suggested_followup} />}
+      {brief.objections?.length > 0 && <List icon={AlertCircle} title={t("crm.salesBrief.objections")} items={brief.objections} color="text-amber-400" />}
+      {brief.missing_info?.length > 0 && <List icon={HelpCircle} title={t("crm.salesBrief.missingInformation")} items={brief.missing_info} color="text-cyan-400" />}
       <button onClick={() => gen(true)} disabled={loading} data-testid="lead-refresh-brief"
         className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-300">
-        {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} Regenerate brief
+        {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} {t("crm.salesBrief.regenerate")}
       </button>
     </div>
   );
