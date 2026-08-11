@@ -1,145 +1,198 @@
-"""Tests for POST /api/auth/demo endpoint, tenant isolation, seeded data, and regression on normal auth."""
-import os
-import re
+"""Demo login disabled + billing pending + auth regression (TestClient).
+
+ENABLE_DEMO_LOGIN=false intentionally — demo endpoint must reject.
+Isolation/billing covered via real registered users (no demo seed).
+"""
+
+from __future__ import annotations
+
+import sys
+import uuid
+from pathlib import Path
+
 import pytest
-import requests
-from conftest import auth_json
+from conftest import auth_json, clear_rate_limits, register_user
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://operations-hub-75.preview.emergentagent.com").rstrip("/")
-API = f"{BASE_URL}/api"
-
-
-@pytest.fixture(scope="module")
-def demo1():
-    r = requests.post(f"{API}/auth/demo", timeout=30)
-    if r.status_code == 429:
-        pytest.skip("Rate limited — expected in-memory 10/hr limit")
-    assert r.status_code == 200, r.text
-    return auth_json(None, r)
+BACKEND = Path(__file__).resolve().parents[1]
+if str(BACKEND) not in sys.path:
+    sys.path.insert(0, str(BACKEND))
 
 
-@pytest.fixture(scope="module")
-def demo2():
-    r = requests.post(f"{API}/auth/demo", timeout=30)
-    if r.status_code == 429:
-        pytest.skip("Rate limited")
-    assert r.status_code == 200, r.text
-    return auth_json(None, r)
+@pytest.fixture
+def client(api_client):
+    c, _ = api_client
+    return c
 
 
 def _auth(token):
     return {"Authorization": f"Bearer {token}"}
 
 
-# ---------- Demo endpoint shape ----------
+# ---------- Demo endpoint intentionally disabled ----------
 class TestDemoEndpoint:
-    def test_demo_returns_user_and_token(self, demo1):
-        assert "accessToken" in demo1 and isinstance(demo1["accessToken"], str) and len(demo1["accessToken"]) > 10
-        assert demo1.get("isDemo") is True
-        user = demo1["user"]
-        assert user["role"] == "owner"
-        assert user.get("emailVerified") is True
-        assert user.get("onboardingCompleted") is True
-        assert re.match(r"^demo\+.+@assistify\.demo$", user["email"]), f"unexpected email {user['email']}"
+    def test_demo_returns_disabled(self, client):
+        clear_rate_limits()
+        r = client.post("/api/auth/demo")
+        assert r.status_code in (401, 403, 404), r.text
+        assert "sk-" not in r.text.lower()
 
-    def test_demo_sets_cookies(self):
-        r = requests.post(f"{API}/auth/demo", timeout=30)
-        if r.status_code == 429:
-            pytest.skip("rate limited")
-        assert r.status_code == 200
-        cookies = r.cookies.get_dict()
-        # Expect at least access_token cookie
-        assert any(k in cookies for k in ("access_token", "refresh_token")), f"cookies={cookies}"
+    def test_demo_does_not_set_session_cookies(self, client):
+        clear_rate_limits()
+        client.cookies.clear()
+        r = client.post("/api/auth/demo")
+        assert r.status_code in (401, 403, 404)
+        # Must not mint a usable session when demo is disabled
+        assert not client.cookies.get("access_token")
 
 
-# ---------- Tenant isolation ----------
+# ---------- Tenant isolation via real users ----------
 class TestDemoIsolation:
-    def test_two_demos_have_different_orgs(self, demo1, demo2):
-        org1 = demo1["user"].get("organizationId")
-        org2 = demo2["user"].get("organizationId")
+    def test_two_users_have_different_orgs(self, client):
+        a = register_user(client, company="IsoA")
+        b = register_user(client, company="IsoB")
+        org1 = a["user"].get("organizationId")
+        org2 = b["user"].get("organizationId")
         assert org1 and org2 and org1 != org2
 
-    def test_demo1_sees_only_own_seeded_clients(self, demo1):
-        r = requests.get(f"{API}/clients", headers=_auth(demo1["accessToken"]), timeout=30)
+    def test_user_sees_own_clients(self, client):
+        a = register_user(client, company="ClientsA")
+        for name in ("Halcyon Group", "Vertex Studio", "Northwind Labs"):
+            r = client.post(
+                "/api/clients",
+                headers=a["headers"],
+                json={"name": name, "email": f"{name.split()[0].lower()}@test.com"},
+            )
+            assert r.status_code in (200, 201), r.text
+        r = client.get("/api/clients", headers=a["headers"])
         assert r.status_code == 200
         clients = r.json()
-        # response may be list or wrapped
         if isinstance(clients, dict) and "clients" in clients:
             clients = clients["clients"]
-        assert isinstance(clients, list)
-        assert len(clients) == 3, f"expected 3 seeded clients, got {len(clients)}: {[c.get('name') for c in clients]}"
+        assert len(clients) == 3
         names = {c.get("name") for c in clients}
-        assert {"Halcyon Group", "Vertex Studio", "Northwind Labs"}.issubset(names), names
+        assert {"Halcyon Group", "Vertex Studio", "Northwind Labs"}.issubset(names)
 
-    def test_demo2_cannot_see_demo1_created_client(self, demo1, demo2):
-        # demo1 creates a new client
+    def test_user_b_cannot_see_user_a_client(self, client):
+        a = register_user(client, company="IsoCreateA")
+        b = register_user(client, company="IsoCreateB")
+        # Seed B with 3 clients so count stays stable
+        for i in range(3):
+            client.post(
+                "/api/clients",
+                headers=b["headers"],
+                json={"name": f"B Client {i}", "email": f"b{i}@test.com"},
+            )
         payload = {"name": "TEST_Isolation_Client", "email": "iso@test.com"}
-        c = requests.post(f"{API}/clients", json=payload, headers=_auth(demo1["accessToken"]), timeout=30)
+        c = client.post("/api/clients", json=payload, headers=a["headers"])
         assert c.status_code in (200, 201), c.text
-        # demo2 lists clients — must not include TEST_Isolation_Client and count must remain 3
-        r = requests.get(f"{API}/clients", headers=_auth(demo2["accessToken"]), timeout=30)
+        r = client.get("/api/clients", headers=b["headers"])
         assert r.status_code == 200
         clients = r.json()
         if isinstance(clients, dict) and "clients" in clients:
             clients = clients["clients"]
         names = [c.get("name") for c in clients]
         assert "TEST_Isolation_Client" not in names
-        assert len(clients) == 3, f"demo2 org contaminated: {names}"
+        assert len(clients) == 3, f"org B contaminated: {names}"
 
 
-# ---------- Seeded workspace ----------
+# ---------- Seeded workspace via real CRUD ----------
 class TestDemoSeededWorkspace:
-    def test_projects_seeded(self, demo1):
-        r = requests.get(f"{API}/projects", headers=_auth(demo1["accessToken"]), timeout=30)
+    def test_projects_created(self, client):
+        a = register_user(client, company="ProjSeed")
+        cr = client.post("/api/clients", headers=a["headers"], json={"name": "Seed Co", "email": "s@s.com"})
+        assert cr.status_code == 200
+        cid = cr.json()["id"]
+        for name in ("Brand Redesign", "Q3 Marketing Site"):
+            r = client.post(
+                "/api/projects",
+                headers=a["headers"],
+                json={"name": name, "client_id": cid, "status": "In Progress"},
+            )
+            assert r.status_code == 200, r.text
+        r = client.get("/api/projects", headers=a["headers"])
         assert r.status_code == 200
         data = r.json()
         if isinstance(data, dict) and "projects" in data:
             data = data["projects"]
-        assert len(data) == 2, f"expected 2 projects got {len(data)}"
+        assert len(data) == 2
         names = {p.get("name") for p in data}
-        assert "Brand Redesign" in names and "Q3 Marketing Site" in names, names
+        assert "Brand Redesign" in names and "Q3 Marketing Site" in names
 
-    def test_tasks_seeded(self, demo1):
-        r = requests.get(f"{API}/tasks", headers=_auth(demo1["accessToken"]), timeout=30)
+    def test_tasks_created(self, client):
+        a = register_user(client, company="TaskSeed")
+        pr = client.post("/api/projects", headers=a["headers"], json={"name": "T Proj", "status": "Active"})
+        assert pr.status_code == 200
+        pid = pr.json()["id"]
+        for i in range(3):
+            r = client.post(
+                "/api/tasks",
+                headers=a["headers"],
+                json={"title": f"Task {i}", "project_id": pid, "priority": "Medium"},
+            )
+            assert r.status_code == 200, r.text
+        r = client.get("/api/tasks", headers=a["headers"])
         assert r.status_code == 200
-        data = auth_json(None, r)
+        data = r.json()
         if isinstance(data, dict) and "tasks" in data:
             data = data["tasks"]
-        assert len(data) == 3, f"expected 3 tasks got {len(data)}"
+        assert len(data) == 3
 
-    def test_dashboard_summary(self, demo1):
-        r = requests.get(f"{API}/dashboard/summary", headers=_auth(demo1["accessToken"]), timeout=30)
+    def test_dashboard_summary(self, client):
+        a = register_user(client, company="DashSeed")
+        client.post("/api/clients", headers=a["headers"], json={"name": "D Client", "email": "d@d.com"})
+        r = client.get("/api/dashboard/summary", headers=a["headers"])
         assert r.status_code == 200
         body = r.json()
         assert "kpis" in body
         assert body["kpis"], "kpis empty"
 
 
+# ---------- Billing pending ----------
+class TestBillingPending:
+    def test_billing_not_fake_pro(self, client):
+        a = register_user(client, company="BillCo")
+        r = client.get("/api/settings/billing", headers=a["headers"])
+        assert r.status_code == 200
+        b = r.json()
+        assert b.get("plan") is None or b.get("status") == "pending" or b.get("billingConfigured") is False
+        assert b.get("plan") != "Pro"
+
+
 # ---------- Regression: normal auth still works ----------
 class TestAuthRegression:
-    def test_login_seed_account(self):
-        r = requests.post(f"{API}/auth/login", json={
-            "email": os.environ.get("DEMO_EMAIL", "jordan@assistify.io"),
-            "password": os.environ.get("DEMO_PASSWORD", "Assistify2026!"),
-            "remember": True,
-        }, timeout=30)
+    def test_login_after_register(self, client):
+        clear_rate_limits()
+        email = f"login_{uuid.uuid4().hex[:10]}@example.com"
+        pw = "Assistify2026!"
+        r = client.post(
+            "/api/auth/register",
+            json={
+                "firstName": "Jordan", "lastName": "User",
+                "email": email, "password": pw, "company": "LoginCo",
+            },
+        )
         assert r.status_code == 200, r.text
-        data = auth_json(None, r)
+        client.post("/api/auth/logout", headers=_auth(auth_json(client, r)["accessToken"]))
+        client.cookies.clear()
+        clear_rate_limits()
+        r = client.post("/api/auth/login", json={"email": email, "password": pw, "remember": True})
+        assert r.status_code == 200, r.text
+        data = auth_json(client, r)
         assert "accessToken" in data
-        token = data["accessToken"]
-
-        me = requests.get(f"{API}/auth/me", headers=_auth(token), timeout=30)
+        me = client.get("/api/auth/me", headers=_auth(data["accessToken"]))
         assert me.status_code == 200
-        assert me.json().get("email") == "jordan@assistify.io"
+        assert me.json().get("email") == email
 
-    def test_register_fresh(self):
-        import uuid
+    def test_register_fresh(self, client):
+        clear_rate_limits()
         email = f"TEST_{uuid.uuid4().hex[:10]}@assistify.test"
-        r = requests.post(f"{API}/auth/register", json={
-            "firstName": "Test", "lastName": "User",
-            "email": email, "password": "TestPassword123!",
-        }, timeout=30)
-        if r.status_code == 429:
-            pytest.skip("rate limited")
+        r = client.post(
+            "/api/auth/register",
+            json={
+                "firstName": "Test", "lastName": "User",
+                "email": email, "password": "TestPassword123!",
+            },
+        )
         assert r.status_code == 200, r.text
-        assert "accessToken" in r.json()
+        data = auth_json(client, r)
+        assert "accessToken" in data

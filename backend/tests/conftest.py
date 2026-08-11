@@ -49,8 +49,25 @@ def ensure_test_settings():
 
     for k, v in _TEST_ENV.items():
         os.environ[k] = v
+    # Drop async flags that sprint tests may enable
+    for k in ("WORKER_ENABLED", "SCHEDULER_ENABLED", "REQUIRE_REDIS"):
+        os.environ.pop(k, None)
     reset_settings_for_tests()
     return load_settings(strict=True)
+
+
+def clear_rate_limits():
+    """Clear in-memory and Redis-backed rate-limit keys used by tests."""
+    from dependencies import _rl_store
+    _rl_store.clear()
+    try:
+        from redis_client import get_redis
+        r = get_redis()
+        if r:
+            for k in list(r.scan_iter("assistify:rl:*")):
+                r.delete(k)
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope="session")
@@ -64,8 +81,10 @@ def api_client():
     import dependencies as deps
 
     with TestClient(app) as client:
+        clear_rate_limits()
         yield client, upload_dir
     deps._rl_store.clear()
+    clear_rate_limits()
 
 
 def auth_json(client, response):
@@ -96,4 +115,36 @@ def auth_json(client, response):
 def bearer_from_client(client) -> dict:
     tok = client.cookies.get("access_token") if client is not None else None
     return {"Authorization": f"Bearer {tok}"} if tok else {}
+
+
+def register_user(client, company="Test Co", password="Password123!", first="Test", last="User"):
+    """Register a unique user and return headers, token, email, and auth payload.
+
+    Clears rate limits first so parallel/module fixtures don't trip RL.
+    """
+    import uuid
+
+    clear_rate_limits()
+    email = f"u_{uuid.uuid4().hex[:10]}@example.com"
+    r = client.post(
+        "/api/auth/register",
+        json={
+            "firstName": first,
+            "lastName": last,
+            "email": email,
+            "password": password,
+            "company": company,
+        },
+    )
+    assert r.status_code == 200, r.text
+    data = auth_json(client, r)
+    tok = data["accessToken"]
+    return {
+        "headers": {"Authorization": f"Bearer {tok}"},
+        "token": tok,
+        "email": email,
+        "password": password,
+        "user": data.get("user") or {},
+        "data": data,
+    }
 

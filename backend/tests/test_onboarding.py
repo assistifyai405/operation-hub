@@ -1,32 +1,22 @@
-"""Backend tests for onboarding sprint (GET/POST /api/onboarding, checklist auto-derivation, phone on client, non-regression)."""
-import os
-import uuid
-import requests
+"""Backend tests for legacy onboarding checklist — TestClient."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
 import pytest
-from conftest import auth_json
+from conftest import auth_json, clear_rate_limits, register_user
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL').rstrip('/')
-DEMO_EMAIL = "jordan@assistify.io"
-DEMO_PASSWORD = "Assistify2026!"
-
-
-def _register_new():
-    email = f"onb+{uuid.uuid4().hex[:10]}@example.com"
-    r = requests.post(f"{BASE_URL}/api/auth/register", json={
-        "firstName": "Onb", "lastName": "Tester",
-        "email": email, "password": "NewPass123!", "company": "OnbCo"
-    }, timeout=30)
-    assert r.status_code == 200, r.text
-    data = auth_json(None, r)
-    return email, data["accessToken"], data.get("user", {})
+BACKEND = Path(__file__).resolve().parents[1]
+if str(BACKEND) not in sys.path:
+    sys.path.insert(0, str(BACKEND))
 
 
-def _login(email, password):
-    r = requests.post(f"{BASE_URL}/api/auth/login", json={
-        "email": email, "password": password, "remember": True
-    }, timeout=30)
-    assert r.status_code == 200, r.text
-    return auth_json(None, r).get("accessToken"), r.json().get("user", {})
+@pytest.fixture
+def client(api_client):
+    c, _ = api_client
+    return c
 
 
 def _auth(token):
@@ -35,10 +25,10 @@ def _auth(token):
 
 # ---------- new user onboarding ----------
 
-def test_new_user_onboarding_completed_false_and_zero_percent():
-    email, token, user = _register_new()
-    assert user.get("onboardingCompleted") is False
-    r = requests.get(f"{BASE_URL}/api/onboarding", headers=_auth(token))
+def test_new_user_onboarding_completed_false_and_zero_percent(client):
+    a = register_user(client, company="OnbCo")
+    assert a["user"].get("onboardingCompleted") is False
+    r = client.get("/api/onboarding", headers=a["headers"])
     assert r.status_code == 200
     j = r.json()
     assert j["completed"] is False
@@ -49,76 +39,80 @@ def test_new_user_onboarding_completed_false_and_zero_percent():
         assert j["checklist"][key] is False
 
 
-def test_onboarding_checklist_updates_after_client_created():
-    email, token, _ = _register_new()
-    # Create a client with phone (new field)
-    payload = {"name": "TEST_Acme Co", "contact": "TEST User",
-               "email": "t@t.com", "phone": "+1-555-1111"}
-    r = requests.post(f"{BASE_URL}/api/clients", json=payload, headers=_auth(token))
+def test_onboarding_checklist_updates_after_client_created(client):
+    a = register_user(client, company="OnbClient")
+    payload = {"name": "TEST_Acme Co", "contact": "TEST User", "email": "t@t.com", "phone": "+1-555-1111"}
+    r = client.post("/api/clients", json=payload, headers=a["headers"])
     assert r.status_code == 200, r.text
     c = r.json()
     assert c.get("phone") == "+1-555-1111"
 
-    r = requests.get(f"{BASE_URL}/api/onboarding", headers=_auth(token))
+    r = client.get("/api/onboarding", headers=a["headers"])
     j = r.json()
     assert j["checklist"]["client"] is True
-    assert j["percent"] >= 16  # 1/6 ~ 17
+    assert j["percent"] >= 16
 
 
-def test_onboarding_complete_persists_across_relogin():
-    email, token, _ = _register_new()
-    r = requests.post(f"{BASE_URL}/api/onboarding/complete", headers=_auth(token))
+def test_onboarding_complete_persists_across_relogin(client):
+    a = register_user(client, company="OnbComplete", password="NewPass123!")
+    r = client.post("/api/onboarding/complete", headers=a["headers"])
     assert r.status_code == 200
-    # GET onboarding shows completed=true
-    r = requests.get(f"{BASE_URL}/api/onboarding", headers=_auth(token))
+    r = client.get("/api/onboarding", headers=a["headers"])
     assert r.json()["completed"] is True
-    # Re-login and confirm user.onboardingCompleted persists
-    token2, user2 = _login(email, "NewPass123!")
-    assert user2.get("onboardingCompleted") is True
+    client.post("/api/auth/logout", headers=a["headers"])
+    client.cookies.clear()
+    clear_rate_limits()
+    login = client.post("/api/auth/login", json={
+        "email": a["email"], "password": "NewPass123!", "remember": True,
+    })
+    assert login.status_code == 200
+    data = auth_json(client, login)
+    assert data["user"].get("onboardingCompleted") is True
 
 
-def test_onboarding_requires_auth():
-    r = requests.get(f"{BASE_URL}/api/onboarding")
+def test_onboarding_requires_auth(client):
+    client.cookies.clear()
+    r = client.get("/api/onboarding")
     assert r.status_code == 401
-    r = requests.post(f"{BASE_URL}/api/onboarding/complete")
+    r = client.post("/api/onboarding/complete")
     assert r.status_code == 401
 
 
-# ---------- demo (existing) user unaffected ----------
+# ---------- completed user with real data (replaces demo login) ----------
 
-def test_demo_user_onboarding_completed_true_and_partial_checklist():
-    token, user = _login(DEMO_EMAIL, DEMO_PASSWORD)
-    assert user.get("onboardingCompleted") is True
-    r = requests.get(f"{BASE_URL}/api/onboarding", headers=_auth(token))
+def test_completed_user_partial_checklist(client):
+    a = register_user(client, company="OnbDone")
+    client.post("/api/onboarding/complete", headers=a["headers"])
+    client.post("/api/clients", headers=a["headers"], json={
+        "name": "Done Client", "contact": "N", "email": "n@n.com",
+    })
+    client.post("/api/projects", headers=a["headers"], json={
+        "name": "Done Project", "status": "In Progress",
+    })
+    r = client.get("/api/onboarding", headers=a["headers"])
     j = r.json()
     assert j["completed"] is True
-    # demo has clients + projects at minimum (~50-67%)
     assert j["checklist"]["client"] is True
     assert j["checklist"]["project"] is True
     assert 30 <= j["percent"] <= 100
 
 
-# ---------- regression: create project links to client for new user ----------
+# ---------- regression ----------
 
-def test_new_user_can_create_client_and_project_scoped():
-    email, token, _ = _register_new()
-    # Create client
-    rc = requests.post(f"{BASE_URL}/api/clients", json={
-        "name": "TEST_Onb Client", "contact": "N",
-        "email": "n@n.com", "phone": "555"
-    }, headers=_auth(token))
+def test_new_user_can_create_client_and_project_scoped(client):
+    a = register_user(client, company="OnbScope")
+    rc = client.post("/api/clients", json={
+        "name": "TEST_Onb Client", "contact": "N", "email": "n@n.com", "phone": "555",
+    }, headers=a["headers"])
     assert rc.status_code == 200
     client_id = rc.json()["id"]
-    # Create project
-    rp = requests.post(f"{BASE_URL}/api/projects", json={
-        "client_id": client_id, "name": "TEST_Onb Project",
-        "status": "In Progress"
-    }, headers=_auth(token))
+    rp = client.post("/api/projects", json={
+        "client_id": client_id, "name": "TEST_Onb Project", "status": "In Progress",
+    }, headers=a["headers"])
     assert rp.status_code == 200, rp.text
     proj = rp.json()
     assert proj["client_id"] == client_id
-    # Onboarding should now show client + project true
-    j = requests.get(f"{BASE_URL}/api/onboarding", headers=_auth(token)).json()
+    j = client.get("/api/onboarding", headers=a["headers"]).json()
     assert j["checklist"]["client"] is True
     assert j["checklist"]["project"] is True
     assert j["percent"] >= 33

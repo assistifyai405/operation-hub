@@ -1,71 +1,48 @@
-"""Sprint 14: Library/Documents/Analytics/Notifications/GlobalSearch integration tests.
+"""Sprint 14: Library/Documents/Analytics/Notifications — TestClient."""
 
-Covers:
-- Auth (demo + fresh register)
-- GET /api/library/{documents,proposals,contracts,invoices} pagination + filters + isolation
-- POST /api/documents/upload -> real file lands in library and downloads via /file?auth=
-- PUT /api/documents/{id} rename
-- DELETE /api/documents/{id}
-- GET /api/analytics (real KPIs, isolation)
-- GET /api/notifications (real activities, isolation)
-- GET /api/dashboard/search returns documents group
-- Deep-link data readiness (project/invoice/contract/proposal have ids)
-"""
+from __future__ import annotations
+
 import io
-import os
+import sys
 import uuid
+from pathlib import Path
+
 import pytest
-import requests
-from conftest import auth_json
+from conftest import register_user
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
-if not BASE_URL:
-    # fallback to frontend env
-    try:
-        with open("/app/frontend/.env") as f:
-            for line in f:
-                if line.startswith("REACT_APP_BACKEND_URL="):
-                    BASE_URL = line.split("=", 1)[1].strip().rstrip("/")
-    except Exception:
-        pass
-assert BASE_URL, "REACT_APP_BACKEND_URL must be set"
-
-DEMO_EMAIL = "jordan@assistify.io"
-DEMO_PASSWORD = "Assistify2026!"
+BACKEND = Path(__file__).resolve().parents[1]
+if str(BACKEND) not in sys.path:
+    sys.path.insert(0, str(BACKEND))
 
 
-def _login(email, password):
-    r = requests.post(f"{BASE_URL}/api/auth/login", json={"email": email, "password": password, "remember": True}, timeout=30)
-    assert r.status_code == 200, f"login failed: {r.status_code} {r.text}"
-    return auth_json(None, r).get("accessToken")
+@pytest.fixture
+def client(api_client):
+    c, upload_dir = api_client
+    return c
 
 
-@pytest.fixture(scope="module")
-def demo_token():
-    return _login(DEMO_EMAIL, DEMO_PASSWORD)
+@pytest.fixture
+def auth(client):
+    a = register_user(client, company="LibDemo")
+    h = a["headers"]
+    # Seed a client/project so analytics + search have data
+    cr = client.post("/api/clients", headers=h, json={"name": "Lib Client", "email": "l@l.com"})
+    cid = cr.json()["id"]
+    pr = client.post("/api/projects", headers=h, json={"name": "Lib Project", "client_id": cid, "status": "Active"})
+    a["project_id"] = pr.json()["id"]
+    a["client_id"] = cid
+    return a
 
 
-@pytest.fixture(scope="module")
-def demo_headers(demo_token):
-    return {"Authorization": f"Bearer {demo_token}"}
+@pytest.fixture
+def fresh_user(client):
+    return register_user(client, company="LibFresh")
 
 
-@pytest.fixture(scope="module")
-def fresh_user():
-    email = f"lib+{uuid.uuid4().hex[:10]}@example.com"
-    pw = "TestPass123!"
-    r = requests.post(f"{BASE_URL}/api/auth/register", json={
-        "firstName": "Lib", "lastName": "Tester", "email": email, "password": pw, "company": "TestCo"
-    }, timeout=30)
-    assert r.status_code in (200, 201), f"register: {r.status_code} {r.text}"
-    token = auth_json(None, r).get("accessToken")
-    return {"email": email, "token": token, "headers": {"Authorization": f"Bearer {token}"}}
-
-
-# ---------- Library endpoints (demo has data) ----------
+# ---------- Library endpoints ----------
 class TestLibraryDemo:
-    def test_library_documents_shape(self, demo_headers):
-        r = requests.get(f"{BASE_URL}/api/library/documents?page=1&page_size=12", headers=demo_headers, timeout=30)
+    def test_library_documents_shape(self, client, auth):
+        r = client.get("/api/library/documents?page=1&page_size=12", headers=auth["headers"])
         assert r.status_code == 200
         d = r.json()
         for k in ("items", "total", "page", "page_size", "pages"):
@@ -73,37 +50,35 @@ class TestLibraryDemo:
         assert d["page"] == 1 and d["page_size"] == 12
         assert isinstance(d["items"], list)
 
-    def test_library_page_size_capped(self, demo_headers):
-        r = requests.get(f"{BASE_URL}/api/library/documents?page=1&page_size=999", headers=demo_headers, timeout=30)
+    def test_library_page_size_capped(self, client, auth):
+        r = client.get("/api/library/documents?page=1&page_size=999", headers=auth["headers"])
         assert r.status_code == 200
         assert r.json()["page_size"] == 50
 
-    def test_library_proposals(self, demo_headers):
-        r = requests.get(f"{BASE_URL}/api/library/proposals?sort=recent", headers=demo_headers, timeout=30)
+    def test_library_proposals(self, client, auth):
+        r = client.get("/api/library/proposals?sort=recent", headers=auth["headers"])
         assert r.status_code == 200
         d = r.json()
         assert set(("items", "total", "page", "page_size", "pages")).issubset(d.keys())
 
-    def test_library_contracts(self, demo_headers):
-        r = requests.get(f"{BASE_URL}/api/library/contracts", headers=demo_headers, timeout=30)
+    def test_library_contracts(self, client, auth):
+        r = client.get("/api/library/contracts", headers=auth["headers"])
         assert r.status_code == 200
-        d = r.json()
-        assert "items" in d
+        assert "items" in r.json()
 
-    def test_library_invoices_totals(self, demo_headers):
-        r = requests.get(f"{BASE_URL}/api/library/invoices", headers=demo_headers, timeout=30)
+    def test_library_invoices_totals(self, client, auth):
+        r = client.get("/api/library/invoices", headers=auth["headers"])
         assert r.status_code == 200
         d = r.json()
         assert "totals" in d
         t = d["totals"]
         for k in ("by_status", "revenue", "outstanding", "count"):
             assert k in t
-        # demo org has 1 invoice ~8640, status Generated
-        assert t["count"] >= 1
         assert isinstance(t["by_status"], dict)
+        assert t["count"] >= 0
 
-    def test_library_invoices_status_filter(self, demo_headers):
-        r = requests.get(f"{BASE_URL}/api/library/invoices?status=Generated", headers=demo_headers, timeout=30)
+    def test_library_invoices_status_filter(self, client, auth):
+        r = client.get("/api/library/invoices?status=Generated", headers=auth["headers"])
         assert r.status_code == 200
         for it in r.json()["items"]:
             assert it["status"] == "Generated"
@@ -111,29 +86,29 @@ class TestLibraryDemo:
 
 # ---------- Isolation on fresh org ----------
 class TestFreshOrgIsolation:
-    def test_fresh_docs_empty(self, fresh_user):
-        r = requests.get(f"{BASE_URL}/api/library/documents", headers=fresh_user["headers"], timeout=30)
+    def test_fresh_docs_empty(self, client, fresh_user):
+        r = client.get("/api/library/documents", headers=fresh_user["headers"])
         assert r.status_code == 200
         assert r.json()["total"] == 0
 
-    def test_fresh_proposals_empty(self, fresh_user):
-        r = requests.get(f"{BASE_URL}/api/library/proposals", headers=fresh_user["headers"], timeout=30)
+    def test_fresh_proposals_empty(self, client, fresh_user):
+        r = client.get("/api/library/proposals", headers=fresh_user["headers"])
         assert r.json()["total"] == 0
 
-    def test_fresh_contracts_empty(self, fresh_user):
-        r = requests.get(f"{BASE_URL}/api/library/contracts", headers=fresh_user["headers"], timeout=30)
+    def test_fresh_contracts_empty(self, client, fresh_user):
+        r = client.get("/api/library/contracts", headers=fresh_user["headers"])
         assert r.json()["total"] == 0
 
-    def test_fresh_invoices_empty(self, fresh_user):
-        r = requests.get(f"{BASE_URL}/api/library/invoices", headers=fresh_user["headers"], timeout=30)
+    def test_fresh_invoices_empty(self, client, fresh_user):
+        r = client.get("/api/library/invoices", headers=fresh_user["headers"])
         d = r.json()
         assert d["total"] == 0
         assert d["totals"]["count"] == 0
         assert d["totals"]["revenue"] == 0
         assert d["totals"]["outstanding"] == 0
 
-    def test_fresh_analytics_zero(self, fresh_user):
-        r = requests.get(f"{BASE_URL}/api/analytics", headers=fresh_user["headers"], timeout=30)
+    def test_fresh_analytics_zero(self, client, fresh_user):
+        r = client.get("/api/analytics", headers=fresh_user["headers"])
         assert r.status_code == 200
         k = r.json()["kpis"]
         assert k["total_clients"] == 0
@@ -145,104 +120,92 @@ class TestFreshOrgIsolation:
 
 # ---------- Document upload / rename / download / delete flow ----------
 class TestDocumentUploadFlow:
-    def test_upload_rename_download_delete(self, fresh_user):
+    def test_upload_rename_download_delete(self, client, fresh_user):
         headers = fresh_user["headers"]
-        # Upload a small txt
         payload = b"Hello Assistify sprint 14 test file " + uuid.uuid4().hex.encode()
         files = {"file": ("TEST_upload.txt", io.BytesIO(payload), "text/plain")}
-        r = requests.post(f"{BASE_URL}/api/documents/upload", headers=headers, files=files, timeout=60)
+        r = client.post("/api/documents/upload", headers=headers, files=files)
         assert r.status_code == 200, f"upload: {r.status_code} {r.text}"
         doc = r.json()
         assert "id" in doc and doc["name"] == "TEST_upload.txt"
         assert doc["url"].endswith(f"/api/documents/{doc['id']}/file")
         doc_id = doc["id"]
 
-        # Verify appears in library
-        r = requests.get(f"{BASE_URL}/api/library/documents", headers=headers, timeout=30)
+        r = client.get("/api/library/documents", headers=headers)
         ids = [i["id"] for i in r.json()["items"]]
         assert doc_id in ids
 
-        # Rename
-        r = requests.put(f"{BASE_URL}/api/documents/{doc_id}", headers=headers, json={"name": "TEST_renamed.txt"}, timeout=30)
+        r = client.put(f"/api/documents/{doc_id}", headers=headers, json={"name": "TEST_renamed.txt"})
         assert r.status_code == 200 and r.json()["name"] == "TEST_renamed.txt"
 
-        # Download via ?auth=
-        r = requests.get(f"{BASE_URL}/api/documents/{doc_id}/file?auth={fresh_user['token']}", timeout=30)
+        r = client.get(f"/api/documents/{doc_id}/file?auth={fresh_user['token']}")
         assert r.status_code == 200
         assert r.content == payload
 
-        # Download via Bearer header
-        r = requests.get(f"{BASE_URL}/api/documents/{doc_id}/file", headers=headers, timeout=30)
+        r = client.get(f"/api/documents/{doc_id}/file", headers=headers)
         assert r.status_code == 200 and r.content == payload
 
-        # Download unauth -> 401
-        r = requests.get(f"{BASE_URL}/api/documents/{doc_id}/file", timeout=30)
+        client.cookies.clear()
+        r = client.get(f"/api/documents/{doc_id}/file")
         assert r.status_code == 401
 
-        # Delete
-        r = requests.delete(f"{BASE_URL}/api/documents/{doc_id}", headers=headers, timeout=30)
+        r = client.delete(f"/api/documents/{doc_id}", headers=headers)
         assert r.status_code == 200
 
-        # Verify 404 on download after delete
-        r = requests.get(f"{BASE_URL}/api/documents/{doc_id}/file", headers=headers, timeout=30)
+        r = client.get(f"/api/documents/{doc_id}/file", headers=headers)
         assert r.status_code == 404
 
-    def test_upload_search_and_type_filter(self, fresh_user):
+    def test_upload_search_and_type_filter(self, client, fresh_user):
         headers = fresh_user["headers"]
-        # Upload 2 files
         for name, ctype in [("TEST_alpha.pdf", "application/pdf"), ("TEST_beta.png", "image/png")]:
-            files = {"file": (name, io.BytesIO(b"x"*20), ctype)}
-            r = requests.post(f"{BASE_URL}/api/documents/upload", headers=headers, files=files, timeout=30)
+            files = {"file": (name, io.BytesIO(b"x" * 20), ctype)}
+            r = client.post("/api/documents/upload", headers=headers, files=files)
             assert r.status_code == 200
-        # search
-        r = requests.get(f"{BASE_URL}/api/library/documents?q=alpha", headers=headers, timeout=30)
+        r = client.get("/api/library/documents?q=alpha", headers=headers)
         items = r.json()["items"]
         assert any("alpha" in i["name"].lower() for i in items)
         assert all("beta" not in i["name"].lower() for i in items)
 
 
-# ---------- Global search now includes documents ----------
+# ---------- Global search ----------
 class TestGlobalSearch:
-    def test_search_documents_group(self, demo_headers):
-        r = requests.get(f"{BASE_URL}/api/dashboard/search?q=a", headers=demo_headers, timeout=30)
+    def test_search_documents_group(self, client, auth):
+        r = client.get("/api/dashboard/search?q=a", headers=auth["headers"])
         assert r.status_code == 200
         d = r.json()
         for g in ("clients", "projects", "invoices", "contracts", "proposals", "documents"):
             assert g in d, f"missing group {g}"
 
-    def test_search_isolation(self, fresh_user):
-        # Fresh user with no clients/projects/invoices/etc; may have uploaded documents
-        # from prior tests in this module. Verify no leakage from demo org.
-        r = requests.get(f"{BASE_URL}/api/dashboard/search?q=Halcyon", headers=fresh_user["headers"], timeout=30)
+    def test_search_isolation(self, client, fresh_user):
+        r = client.get("/api/dashboard/search?q=Halcyon", headers=fresh_user["headers"])
         d = r.json()
         for g in ("clients", "projects", "invoices", "contracts", "proposals", "documents"):
-            assert d[g] == [], f"{g} leaked from demo org: {d[g]}"
+            assert d[g] == [], f"{g} leaked: {d[g]}"
 
 
 # ---------- Notifications ----------
 class TestNotifications:
-    def test_demo_notifications(self, demo_headers):
-        r = requests.get(f"{BASE_URL}/api/notifications", headers=demo_headers, timeout=30)
+    def test_notifications_list(self, client, auth):
+        r = client.get("/api/notifications", headers=auth["headers"])
         assert r.status_code == 200
         assert isinstance(r.json(), list)
 
-    def test_fresh_notifications_empty_or_list(self, fresh_user):
-        r = requests.get(f"{BASE_URL}/api/notifications", headers=fresh_user["headers"], timeout=30)
+    def test_fresh_notifications_empty_or_list(self, client, fresh_user):
+        r = client.get("/api/notifications", headers=fresh_user["headers"])
         assert r.status_code == 200
-        # fresh user has no activities
         assert isinstance(r.json(), list)
 
 
-# ---------- Analytics on demo has real numbers ----------
+# ---------- Analytics ----------
 class TestAnalyticsDemo:
-    def test_demo_analytics_shape(self, demo_headers):
-        r = requests.get(f"{BASE_URL}/api/analytics", headers=demo_headers, timeout=30)
+    def test_analytics_shape(self, client, auth):
+        r = client.get("/api/analytics", headers=auth["headers"])
         assert r.status_code == 200
         d = r.json()
         for k in ("kpis", "revenue_series", "project_status", "invoice_status"):
             assert k in d
         assert d["kpis"]["total_projects"] >= 1
-        assert d["kpis"]["invoices"] >= 1
+        assert d["kpis"]["total_clients"] >= 1
 
 
 # ---------- Auth required ----------
@@ -252,6 +215,7 @@ class TestUnauth:
         "/api/library/contracts", "/api/library/invoices",
         "/api/analytics", "/api/notifications", "/api/dashboard/search?q=a",
     ])
-    def test_unauth_401(self, path):
-        r = requests.get(f"{BASE_URL}{path}", timeout=30)
+    def test_unauth_401(self, client, path):
+        client.cookies.clear()
+        r = client.get(path)
         assert r.status_code in (401, 403)

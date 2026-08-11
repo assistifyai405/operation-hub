@@ -1,37 +1,26 @@
-"""Sprint 9 WOW Onboarding backend tests.
+"""Sprint 9 WOW Onboarding — TestClient.
 
-Covers: state persistence, restart, flag, website analysis (real + graceful failure),
-profile generation (LLM+fallback), memory seed, PUT profile, seed-demo idempotent,
-demo-status, DELETE demo-data (preserves onboarding memories), checklist, org isolation,
-and non-regression on core endpoints.
+Demo seed/login intentionally disabled: seed-demo/demo endpoints assert 401/403/404.
+Checklist coverage overlaps sprint23 but keeps wizard state/profile/isolation coverage.
 """
-import os
-import uuid
-import requests
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
 import pytest
-from conftest import auth_json
+from conftest import register_user
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL').rstrip('/')
-DEMO_EMAIL = "jordan@assistify.io"
-DEMO_PASSWORD = "Assistify2026!"
-
-
-def _register():
-    email = f"onb9+{uuid.uuid4().hex[:10]}@example.com"
-    r = requests.post(f"{BASE_URL}/api/auth/register", json={
-        "firstName": "Onb", "lastName": "Nine",
-        "email": email, "password": "NewPass123!", "company": "OnbCo9"
-    }, timeout=30)
-    assert r.status_code == 200, r.text
-    d = auth_json(None, r)
-    return email, d["accessToken"], d.get("user", {})
+BACKEND = Path(__file__).resolve().parents[1]
+if str(BACKEND) not in sys.path:
+    sys.path.insert(0, str(BACKEND))
 
 
-def _demo_session():
-    r = requests.post(f"{BASE_URL}/api/auth/demo", timeout=30)
-    assert r.status_code == 200, r.text
-    d = auth_json(None, r)
-    return d["accessToken"], d["user"]
+@pytest.fixture
+def client(api_client):
+    c, _ = api_client
+    return c
 
 
 def _h(tok):
@@ -40,94 +29,98 @@ def _h(tok):
 
 # ---------- state / restart / flag ----------
 
-def test_state_defaults_and_persistence():
-    _, tok, user = _register()
-    assert user.get("onboardingCompleted") is False
-    r = requests.get(f"{BASE_URL}/api/onboarding/state", headers=_h(tok))
+def test_state_defaults_and_persistence(client):
+    a = register_user(client, company="OnbCo9")
+    assert a["user"].get("onboardingCompleted") is False
+    r = client.get("/api/onboarding/state", headers=a["headers"])
     assert r.status_code == 200
     j = r.json()
     assert j["step"] == 0 and j["completed"] is False
     assert j["demo_seeded"] is False
     assert isinstance(j["flags"], dict)
 
-    # persist step + data
-    r = requests.post(f"{BASE_URL}/api/onboarding/state", headers=_h(tok),
-                      json={"step": 3, "data": {"company_name": "TEST_Co"}})
+    r = client.post("/api/onboarding/state", headers=a["headers"],
+                    json={"step": 3, "data": {"company_name": "TEST_Co"}})
     assert r.status_code == 200 and r.json()["ok"] is True
-    j2 = requests.get(f"{BASE_URL}/api/onboarding/state", headers=_h(tok)).json()
+    j2 = client.get("/api/onboarding/state", headers=a["headers"]).json()
     assert j2["step"] == 3 and j2["data"]["company_name"] == "TEST_Co"
 
 
-def test_flag_sets_and_reflects_in_state():
-    _, tok, _ = _register()
-    r = requests.post(f"{BASE_URL}/api/onboarding/flag", headers=_h(tok), json={"key": "workspace"})
+def test_flag_sets_and_reflects_in_state(client):
+    a = register_user(client, company="FlagCo")
+    r = client.post("/api/onboarding/flag", headers=a["headers"], json={"key": "workspace"})
     assert r.status_code == 200
-    j = requests.get(f"{BASE_URL}/api/onboarding/state", headers=_h(tok)).json()
+    j = client.get("/api/onboarding/state", headers=a["headers"]).json()
     assert j["flags"].get("workspace") is True
 
 
-def test_restart_resets_state_and_completed():
-    _, tok, _ = _register()
-    requests.post(f"{BASE_URL}/api/onboarding/state", headers=_h(tok),
-                  json={"step": 5, "data": {"x": 1}, "completed": True})
-    j = requests.get(f"{BASE_URL}/api/onboarding/state", headers=_h(tok)).json()
+def test_restart_resets_state_and_completed(client):
+    a = register_user(client, company="RestartCo")
+    client.post("/api/onboarding/state", headers=a["headers"],
+                json={"step": 5, "data": {"x": 1}, "completed": True})
+    j = client.get("/api/onboarding/state", headers=a["headers"]).json()
     assert j["completed"] is True
-    r = requests.post(f"{BASE_URL}/api/onboarding/restart", headers=_h(tok))
+    r = client.post("/api/onboarding/restart", headers=a["headers"])
     assert r.status_code == 200
-    j = requests.get(f"{BASE_URL}/api/onboarding/state", headers=_h(tok)).json()
+    j = client.get("/api/onboarding/state", headers=a["headers"]).json()
     assert j["completed"] is False and j["step"] == 0 and j["data"] == {}
 
 
-def test_state_requires_auth():
-    assert requests.get(f"{BASE_URL}/api/onboarding/state").status_code == 401
-    assert requests.post(f"{BASE_URL}/api/onboarding/restart").status_code == 401
+def test_state_requires_auth(client):
+    client.cookies.clear()
+    assert client.get("/api/onboarding/state").status_code == 401
+    assert client.post("/api/onboarding/restart").status_code == 401
 
 
 # ---------- website analysis ----------
 
-def test_analyze_website_bad_url_graceful():
-    _, tok, _ = _register()
-    r = requests.post(f"{BASE_URL}/api/onboarding/analyze-website",
-                      headers=_h(tok), json={"url": "not-a-real-domain-xyzzy-999.tld"}, timeout=30)
+def test_analyze_website_bad_url_graceful(client):
+    a = register_user(client, company="WebBad")
+    r = client.post("/api/onboarding/analyze-website",
+                    headers=a["headers"], json={"url": "not-a-real-domain-xyzzy-999.tld"})
     assert r.status_code == 200, r.text
     j = r.json()
     assert j["ok"] is False and "reason" in j and j["fields"] == {}
 
 
-def test_analyze_website_real_url():
-    _, tok, _ = _register()
-    r = requests.post(f"{BASE_URL}/api/onboarding/analyze-website",
-                      headers=_h(tok), json={"url": "example.com"}, timeout=45)
-    assert r.status_code == 200, r.text
-    j = r.json()
-    # Either LLM parsed it (ok=True) or it fell through gracefully (ok=False, no 500).
-    assert "ok" in j and "fields" in j
+def test_analyze_website_real_url(client):
+    a = register_user(client, company="WebReal")
+    r = client.post("/api/onboarding/analyze-website",
+                    headers=a["headers"], json={"url": "example.com"})
+    assert r.status_code in (200, 502, 503), r.text
+    assert "sk-" not in r.text.lower()
+    if r.status_code == 200:
+        j = r.json()
+        assert "ok" in j and "fields" in j
 
 
-def test_analyze_website_empty_url_400():
-    _, tok, _ = _register()
-    r = requests.post(f"{BASE_URL}/api/onboarding/analyze-website",
-                      headers=_h(tok), json={"url": ""})
+def test_analyze_website_empty_url_400(client):
+    a = register_user(client, company="WebEmpty")
+    r = client.post("/api/onboarding/analyze-website", headers=a["headers"], json={"url": ""})
     assert r.status_code == 400
 
 
 # ---------- profile ----------
 
-@pytest.fixture(scope="module")
-def profile_ctx():
-    email, tok, _ = _register()
-    payload = {"company_name": "TEST_Aster Studio", "industry": "Design agency",
-               "website": "https://aster.example", "employees": "1-5",
-               "main_services": "Branding, Web design, Motion",
-               "target_customers": "Early stage startups",
-               "language": "en", "country": "US"}
-    r = requests.post(f"{BASE_URL}/api/onboarding/profile", headers=_h(tok),
-                      json=payload, timeout=90)
-    assert r.status_code == 200, r.text
-    return {"email": email, "tok": tok, "resp": r.json()}
+@pytest.fixture
+def profile_ctx(client):
+    a = register_user(client, company="Aster Studio")
+    payload = {
+        "company_name": "TEST_Aster Studio", "industry": "Design agency",
+        "website": "https://aster.example", "employees": "1-5",
+        "main_services": "Branding, Web design, Motion",
+        "target_customers": "Early stage startups",
+        "language": "en", "country": "US",
+    }
+    r = client.post("/api/onboarding/profile", headers=a["headers"], json=payload)
+    assert r.status_code in (200, 502, 503), r.text
+    assert "sk-" not in r.text.lower()
+    return {"auth": a, "resp": r.json() if r.status_code == 200 else None, "status": r.status_code}
 
 
 def test_profile_returns_sections_memories_and_automations(profile_ctx):
+    if profile_ctx["status"] != 200:
+        pytest.skip("profile generation LLM unavailable (sanitized error)")
     j = profile_ctx["resp"]
     assert j["ok"] is True
     s = j["sections"]
@@ -140,9 +133,11 @@ def test_profile_returns_sections_memories_and_automations(profile_ctx):
         assert "key" in a and "name" in a
 
 
-def test_profile_memories_appear_in_memory_list(profile_ctx):
-    tok = profile_ctx["tok"]
-    r = requests.get(f"{BASE_URL}/api/memory/memories", headers=_h(tok), timeout=30)
+def test_profile_memories_appear_in_memory_list(client, profile_ctx):
+    if profile_ctx["status"] != 200:
+        pytest.skip("profile generation LLM unavailable")
+    tok = profile_ctx["auth"]["token"]
+    r = client.get("/api/memory/memories", headers=_h(tok))
     assert r.status_code == 200
     mems = r.json()
     if isinstance(mems, dict):
@@ -151,61 +146,58 @@ def test_profile_memories_appear_in_memory_list(profile_ctx):
     assert any(s == "Onboarding" for s in sources), f"no Onboarding-sourced memory, sources={sources}"
 
 
-def test_profile_put_updates_sections(profile_ctx):
-    tok = profile_ctx["tok"]
-    new = {"sections": {"company_summary": "TEST_updated summary", "industry": "Design",
-                        "services": ["Branding"], "communication_style": "Warm",
-                        "proposal_style": "Concise", "brand_voice": "Confident",
-                        "writing_style": "Scannable"}}
-    r = requests.put(f"{BASE_URL}/api/onboarding/profile", headers=_h(tok), json=new)
+def test_profile_put_updates_sections(client, profile_ctx):
+    tok = profile_ctx["auth"]["token"]
+    new = {
+        "sections": {
+            "company_summary": "TEST_updated summary", "industry": "Design",
+            "services": ["Branding"], "communication_style": "Warm",
+            "proposal_style": "Concise", "brand_voice": "Confident",
+            "writing_style": "Scannable",
+        }
+    }
+    r = client.put("/api/onboarding/profile", headers=_h(tok), json=new)
     assert r.status_code == 200 and r.json()["ok"] is True
 
 
-# ---------- demo workspace ----------
+# ---------- demo workspace intentionally disabled ----------
 
-def test_seed_demo_idempotent_and_status_and_clear():
-    _, tok, _ = _register()
-    r1 = requests.post(f"{BASE_URL}/api/onboarding/seed-demo", headers=_h(tok), timeout=60)
-    assert r1.status_code == 200, r1.text
-    c1 = r1.json()["counts"]
-    assert c1["clients"] > 0
+def test_seed_demo_disabled(client):
+    a = register_user(client, company="SeedOff")
+    r1 = client.post("/api/onboarding/seed-demo", headers=a["headers"])
+    assert r1.status_code in (401, 403, 404), r1.text
 
-    r2 = requests.post(f"{BASE_URL}/api/onboarding/seed-demo", headers=_h(tok), timeout=60)
-    assert r2.status_code == 200
-    c2 = r2.json()["counts"]
-    assert c2["clients"] == c1["clients"], f"seed-demo not idempotent: {c1} vs {c2}"
+    st = client.get("/api/onboarding/demo-status", headers=a["headers"])
+    assert st.status_code == 200
+    body = st.json()
+    assert body.get("has_demo") is False or body.get("counts", {}).get("clients", 0) == 0
 
-    st = requests.get(f"{BASE_URL}/api/onboarding/demo-status", headers=_h(tok)).json()
-    assert st["has_demo"] is True and st["counts"]["clients"] == c1["clients"]
-
-    r = requests.delete(f"{BASE_URL}/api/onboarding/demo-data", headers=_h(tok))
-    assert r.status_code == 200
-    st2 = requests.get(f"{BASE_URL}/api/onboarding/demo-status", headers=_h(tok)).json()
-    assert st2["has_demo"] is False and st2["counts"]["clients"] == 0
+    r = client.delete("/api/onboarding/demo-data", headers=a["headers"])
+    assert r.status_code in (200, 401, 403, 404)
 
 
-def test_clear_demo_preserves_onboarding_memories():
-    _, tok, _ = _register()
-    # generate real onboarding memories
-    r = requests.post(f"{BASE_URL}/api/onboarding/profile", headers=_h(tok), json={
-        "company_name": "TEST_Preserve", "industry": "Test", "main_services": "A, B, C"
-    }, timeout=90)
-    assert r.status_code == 200
-    # seed demo, then clear
-    requests.post(f"{BASE_URL}/api/onboarding/seed-demo", headers=_h(tok), timeout=60)
-    requests.delete(f"{BASE_URL}/api/onboarding/demo-data", headers=_h(tok))
-    # Onboarding memories must remain
-    mems = requests.get(f"{BASE_URL}/api/memory/memories", headers=_h(tok)).json()
-    if isinstance(mems, dict):
-        mems = mems.get("memories") or mems.get("items") or []
-    assert any(m.get("source") == "Onboarding" for m in mems), "Onboarding memories were wiped by clear-demo!"
+def test_clear_demo_preserves_onboarding_memories(client):
+    a = register_user(client, company="PreserveMem")
+    r = client.post("/api/onboarding/profile", headers=a["headers"], json={
+        "company_name": "TEST_Preserve", "industry": "Test", "main_services": "A, B, C",
+    })
+    assert r.status_code in (200, 502, 503), r.text
+    assert "sk-" not in r.text.lower()
+    # seed-demo disabled — still exercise delete path
+    client.post("/api/onboarding/seed-demo", headers=a["headers"])
+    client.delete("/api/onboarding/demo-data", headers=a["headers"])
+    if r.status_code == 200:
+        mems = client.get("/api/memory/memories", headers=a["headers"]).json()
+        if isinstance(mems, dict):
+            mems = mems.get("memories") or mems.get("items") or []
+        assert any(m.get("source") == "Onboarding" for m in mems), "Onboarding memories wiped!"
 
 
 # ---------- checklist ----------
 
-def test_checklist_shape_for_new_user():
-    _, tok, _ = _register()
-    r = requests.get(f"{BASE_URL}/api/onboarding/checklist", headers=_h(tok))
+def test_checklist_shape_for_new_user(client):
+    a = register_user(client, company="CheckShape")
+    r = client.get("/api/onboarding/checklist", headers=a["headers"])
     assert r.status_code == 200
     j = r.json()
     assert j["total"] == 6 and j["done"] == 0 and j["percent"] == 0
@@ -217,79 +209,76 @@ def test_checklist_shape_for_new_user():
     assert "Assistify" in (j.get("title") or "")
 
 
-def test_checklist_reflects_flags_and_profile():
-    _, tok, _ = _register()
-    requests.post(f"{BASE_URL}/api/onboarding/flag", headers=_h(tok), json={"key": "copilot"})
-    requests.post(f"{BASE_URL}/api/onboarding/flag", headers=_h(tok), json={"key": "agents"})
-    j = requests.get(f"{BASE_URL}/api/onboarding/checklist", headers=_h(tok)).json()
+def test_checklist_reflects_flags_and_profile(client):
+    a = register_user(client, company="CheckFlags")
+    client.post("/api/onboarding/flag", headers=a["headers"], json={"key": "copilot"})
+    client.post("/api/onboarding/flag", headers=a["headers"], json={"key": "agents"})
+    j = client.get("/api/onboarding/checklist", headers=a["headers"]).json()
     st = {i["key"]: i["done"] for i in j["items"]}
     assert st["copilot"] is True and st["agents"] is True
     assert j["done"] >= 2
 
 
-def test_checklist_client_counts_only_non_demo():
-    _, tok, _ = _register()
-    # seed demo — client count should NOT flip
-    requests.post(f"{BASE_URL}/api/onboarding/seed-demo", headers=_h(tok), timeout=60)
-    j = requests.get(f"{BASE_URL}/api/onboarding/checklist", headers=_h(tok)).json()
+def test_checklist_client_counts_only_non_demo(client):
+    a = register_user(client, company="CheckClient")
+    # seed-demo disabled — checklist still false until real client
+    client.post("/api/onboarding/seed-demo", headers=a["headers"])
+    j = client.get("/api/onboarding/checklist", headers=a["headers"]).json()
     st = {i["key"]: i["done"] for i in j["items"]}
-    assert st["client"] is False, "demo clients incorrectly counted in checklist"
-    # create a REAL client
-    requests.post(f"{BASE_URL}/api/clients", headers=_h(tok),
-                  json={"name": "TEST_Real Client", "contact": "R", "email": "r@r.com", "phone": "1"})
-    j = requests.get(f"{BASE_URL}/api/onboarding/checklist", headers=_h(tok)).json()
+    assert st["client"] is False
+    client.post("/api/clients", headers=a["headers"],
+                json={"name": "TEST_Real Client", "contact": "R", "email": "r@r.com", "phone": "1"})
+    j = client.get("/api/onboarding/checklist", headers=a["headers"]).json()
     st = {i["key"]: i["done"] for i in j["items"]}
     assert st["client"] is True
 
 
-def test_checklist_dismiss_persists():
-    _, tok, _ = _register()
-    r = requests.post(f"{BASE_URL}/api/onboarding/checklist/dismiss", headers=_h(tok))
+def test_checklist_dismiss_persists(client):
+    a = register_user(client, company="DismissCo")
+    r = client.post("/api/onboarding/checklist/dismiss", headers=a["headers"])
     assert r.status_code == 200
-    j = requests.get(f"{BASE_URL}/api/onboarding/checklist", headers=_h(tok)).json()
+    j = client.get("/api/onboarding/checklist", headers=a["headers"]).json()
     assert j.get("dismissed") is True
 
 
-def test_onboarding_primary_goal_persists_on_state():
-    _, tok, _ = _register()
-    requests.post(
-        f"{BASE_URL}/api/onboarding/state",
-        headers=_h(tok),
+def test_onboarding_primary_goal_persists_on_state(client):
+    a = register_user(client, company="GoalCo")
+    client.post(
+        "/api/onboarding/state",
+        headers=a["headers"],
         json={"step": 2, "data": {"primaryGoal": "save_time_ai", "company": {"company_name": "GoalCo"}}},
     )
-    # complete so returning users are not forced through wizard
-    requests.post(f"{BASE_URL}/api/onboarding/complete", headers=_h(tok))
-    st = requests.get(f"{BASE_URL}/api/onboarding/state", headers=_h(tok)).json()
+    client.post("/api/onboarding/complete", headers=a["headers"])
+    st = client.get("/api/onboarding/state", headers=a["headers"]).json()
     assert st.get("completed") is True
     assert (st.get("data") or {}).get("primaryGoal") == "save_time_ai"
 
 
 # ---------- org isolation ----------
 
-def test_org_isolation_between_two_new_users():
-    _, tokA, _ = _register()
-    _, tokB, _ = _register()
-    requests.post(f"{BASE_URL}/api/onboarding/state", headers=_h(tokA),
-                  json={"step": 4, "data": {"marker": "A"}})
-    requests.post(f"{BASE_URL}/api/onboarding/seed-demo", headers=_h(tokA), timeout=60)
-    stA = requests.get(f"{BASE_URL}/api/onboarding/state", headers=_h(tokA)).json()
-    stB = requests.get(f"{BASE_URL}/api/onboarding/state", headers=_h(tokB)).json()
+def test_org_isolation_between_two_new_users(client):
+    a = register_user(client, company="IsoA9")
+    b = register_user(client, company="IsoB9")
+    client.post("/api/onboarding/state", headers=a["headers"],
+                json={"step": 4, "data": {"marker": "A"}})
+    # seed-demo disabled for A — isolation still holds on state
+    client.post("/api/onboarding/seed-demo", headers=a["headers"])
+    stA = client.get("/api/onboarding/state", headers=a["headers"]).json()
+    stB = client.get("/api/onboarding/state", headers=b["headers"]).json()
     assert stA["step"] == 4 and stB["step"] == 0
-    dsB = requests.get(f"{BASE_URL}/api/onboarding/demo-status", headers=_h(tokB)).json()
+    dsB = client.get("/api/onboarding/demo-status", headers=b["headers"]).json()
     assert dsB["has_demo"] is False
 
 
-# ---------- regression / demo user ----------
+# ---------- demo login disabled ----------
 
-def test_demo_user_completed_true_and_has_demo():
-    tok, user = _demo_session()
-    assert user.get("onboardingCompleted") is True
-    ds = requests.get(f"{BASE_URL}/api/onboarding/demo-status", headers=_h(tok)).json()
-    assert ds["has_demo"] is True
+def test_demo_login_disabled(client):
+    r = client.post("/api/auth/demo")
+    assert r.status_code in (401, 403, 404)
 
 
-def test_regression_core_endpoints_still_200():
-    _, tok, _ = _register()
+def test_regression_core_endpoints_still_200(client):
+    a = register_user(client, company="Regress9")
     for path in ("/api/memory/stats", "/api/opportunities", "/api/automation/summary", "/api/crm/sales-metrics"):
-        r = requests.get(f"{BASE_URL}{path}", headers=_h(tok), timeout=30)
+        r = client.get(path, headers=a["headers"])
         assert r.status_code == 200, f"{path} -> {r.status_code} {r.text[:200]}"
