@@ -26,15 +26,19 @@ test.describe("Sprint 30 marketing journey", () => {
     const page = await context.newPage();
 
     await page.goto("/", { waitUntil: "domcontentloaded", timeout: 30_000 });
-    await expect(page.getByTestId("marketing-home").or(page.getByTestId("marketing-hero"))).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("marketing-home")).toBeVisible({ timeout: 20_000 });
     await expect(page.locator("body")).toContainText(/Beheer je bedrijf slimmer met AI|Aan de slag/i);
 
-    // Product card → Copilot
-    const copilotCard = page.locator('a[href="/product/copilot"]').first();
-    await expect(copilotCard).toBeVisible({ timeout: 15_000 });
-    await copilotCard.click();
+    // Product pages (direct navigation keeps journey stable with sticky nav)
+    await page.goto("/product/copilot", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/product\/copilot/, { timeout: 20_000 });
-    await expect(page.getByTestId("marketing-product-copilot").or(page.locator("body"))).toContainText(/Copilot|assistent|AI/i);
+    await expect(page.getByTestId("marketing-product-copilot")).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator("body")).toContainText(/Copilot|assistent|AI/i);
+
+    // Module cards exist on homepage
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("marketing-modules")).toBeVisible();
+    await expect(page.locator('a[href="/product/copilot"]').first()).toHaveCount(1);
 
     await page.goto("/pricing", { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("marketing-pricing")).toBeVisible({ timeout: 15_000 });
@@ -42,7 +46,8 @@ test.describe("Sprint 30 marketing journey", () => {
     await expect(page.locator("body")).toContainText(/beta|Beta|aan de slag|Join|Starter|Pro|Business/i);
 
     await page.goto("/faq", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("marketing-faq").or(page.locator("body"))).toContainText(/Assistify|FAQ|Veelgestelde/i);
+    await expect(page.getByTestId("marketing-faq")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("marketing-faq")).toContainText(/Assistify|FAQ|Veelgestelde/i);
 
     await page.goto("/security", { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("marketing-security")).toBeVisible({ timeout: 15_000 });

@@ -9,9 +9,9 @@ const readJson = (rel) => JSON.parse(read(rel));
 
 describe("Sprint 30 marketing site", () => {
   const app = read("../../App.js");
-  const home = read("../HomePage.jsx");
-  const pricing = read("../PricingPage.jsx");
-  const security = read("../SecurityPage.jsx");
+  const home = read("./HomePage.jsx");
+  const pricing = read("./PricingPage.jsx");
+  const security = read("./SecurityPage.jsx");
   const en = readJson("../../i18n/locales/marketing-en.json");
   const nl = readJson("../../i18n/locales/marketing-nl.json");
 
