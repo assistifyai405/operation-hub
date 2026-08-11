@@ -21,11 +21,11 @@ export function OpportunityCard({ item, onRun, onDismiss, compact = false }) {
   const c = COLORS[item.color] || COLORS.green;
   return (
     <div data-testid="opportunity-card" data-priority={item.priority}
-      className="group relative flex gap-4 rounded-2xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-violet-500/30 animate-fade-up">
+      className="group relative flex gap-4 rounded-2xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-brand-500/30 animate-fade-up">
       <ScoreRing score={item.score} color={item.color} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-violet-600/15 text-violet-300"><AiIcon name={item.icon} className="h-3.5 w-3.5" /></span>
+          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600/15 text-brand-300"><AiIcon name={item.icon} className="h-3.5 w-3.5" /></span>
           <p className="text-sm font-semibold text-zinc-100">{item.title}</p>
           <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${c.chip}`} data-testid="opportunity-priority">{item.priority}</span>
         </div>
@@ -40,7 +40,7 @@ export function OpportunityCard({ item, onRun, onDismiss, compact = false }) {
         </div>
         <div className="mt-3 flex items-center gap-2">
           <button onClick={() => onRun(item)} data-testid="opportunity-action-btn"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-violet-500">
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-500">
             {item.action.label} <ArrowRight className="h-3.5 w-3.5" />
           </button>
           {onDismiss && (

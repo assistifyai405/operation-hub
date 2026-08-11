@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Sparkles, Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { onboardingApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { useLocale } from "@/context/LocaleContext";
 import { events } from "@/lib/analytics";
 import { markProductTourEligible } from "@/lib/productTour";
 import { ProgressRail } from "@/components/onboarding/onboardingShared";
@@ -17,16 +19,25 @@ const LAST_STEP = 3;
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const { user, setUser, refreshUser } = useAuth();
   const [step, setStep] = useState(0);
   const [data, setData] = useState({
     company: {
-      language: "en",
+      language: locale || "en",
       company_name: user?.company || "",
       contact_name: [user?.firstName, user?.lastName].filter(Boolean).join(" "),
     },
   });
   const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setData((d) => ({
+      ...d,
+      company: { ...d.company, language: locale || d.company?.language || "en" },
+    }));
+  }, [locale]);
 
   useEffect(() => {
     // Returning users who already finished should not be trapped here
@@ -141,17 +152,15 @@ export default function Onboarding() {
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           backgroundImage:
-            "radial-gradient(600px circle at 20% 0%, rgba(139,92,246,0.12), transparent 60%), radial-gradient(500px circle at 90% 20%, rgba(34,211,238,0.08), transparent 55%)",
+            "radial-gradient(600px circle at 20% 0%, rgba(34,197,94,0.12), transparent 60%), radial-gradient(500px circle at 90% 20%, rgba(34,211,238,0.08), transparent 55%)",
         }}
       />
       <header className="relative z-10 flex items-center justify-between gap-3 px-5 py-5 sm:px-10">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600 glow-violet">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-600 glow-brand">
             <Sparkles className="h-4 w-4 text-white" />
           </span>
-          <span className="text-sm font-bold tracking-tight">
-            Assistify <span className="text-violet-400">OS</span>
-          </span>
+          <span className="text-sm font-bold tracking-tight text-zinc-50">{t("app.name")}</span>
         </div>
         <ProgressRail step={step} />
         {step < LAST_STEP ? (
@@ -160,7 +169,7 @@ export default function Onboarding() {
             data-testid="onboarding-save-exit"
             className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300"
           >
-            <LogOut className="h-3.5 w-3.5" /> Skip for now
+            <LogOut className="h-3.5 w-3.5" /> {t("onboarding.skip")}
           </button>
         ) : (
           <span className="w-16" />

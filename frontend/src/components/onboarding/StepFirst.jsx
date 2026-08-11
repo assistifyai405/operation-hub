@@ -29,7 +29,7 @@ export function StepFirst({ data, setData, next, back }) {
   return (
     <StepShell>
       <div className="text-center" data-testid="onb-step-first">
-        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-600 glow-violet"><Rocket className="h-8 w-8 text-white" /></span>
+        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 glow-brand"><Rocket className="h-8 w-8 text-white" /></span>
         <h2 className="mt-5 text-2xl font-bold text-zinc-50">Let's create real value in 60 seconds</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">Assistify will spin up your first real project and open the AI Proposal Generator — pre-loaded with everything it just learned about your business.</p>
 

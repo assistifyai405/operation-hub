@@ -82,6 +82,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     company: str = ""
     invitationToken: Optional[str] = None
+    language: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
@@ -188,8 +189,8 @@ async def _email_brand(org_id: str) -> dict:
     s = _merged_settings(org_doc)
     b, o = s["branding"], s["organization"]
     return {
-        "company_name": o.get("name") or "Assistify OS",
-        "primary": b.get("primaryColor") or "#7C3AED",
+        "company_name": o.get("name") or "Assistify",
+        "primary": b.get("primaryColor") or "#16A34A",
         "logo_url": b.get("logo") or o.get("logo") or "",
     }
 
@@ -202,6 +203,22 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
         raise HTTPException(status_code=422, detail="Please enter a valid email address")
     if await db.users.find_one({"email": email}):
         raise HTTPException(status_code=409, detail="An account with this email already exists")
+
+    from locale_util import is_allowed_locale, normalize_locale
+    # Prefer explicit client locale; else Accept-Language; else English.
+    lang = None
+    if payload.language:
+        if not is_allowed_locale(payload.language):
+            raise HTTPException(status_code=400, detail="language must be 'nl' or 'en'")
+        lang = normalize_locale(payload.language)
+    else:
+        accept = request.headers.get("accept-language") or ""
+        for part in accept.split(","):
+            tag = part.split(";")[0].strip()
+            if tag and is_allowed_locale(tag):
+                lang = normalize_locale(tag)
+                break
+    lang = lang or "en"
 
     now = now_iso()
     user_id = A.gen_id()
@@ -223,7 +240,7 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     user = {
         "id": user_id, "firstName": payload.firstName.strip(), "lastName": payload.lastName.strip(),
         "email": email, "passwordHash": A.hash_password(payload.password), "emailVerified": False,
-        "avatar": "", "role": role, "organizationId": org_id, "timezone": "UTC", "language": "en",
+        "avatar": "", "role": role, "organizationId": org_id, "timezone": "UTC", "language": lang,
         "createdAt": now, "updatedAt": now, "lastLogin": now, "joinedAt": now,
         "onboardingCompleted": onboarding_done,
     }
@@ -636,10 +653,15 @@ async def resend_verification(user: dict = Depends(current_user)):
 
 @api_router.patch("/auth/profile")
 async def update_profile(payload: ProfileUpdate, user: dict = Depends(current_user)):
+    from locale_util import is_allowed_locale, normalize_locale
     updates = {}
     for f in ["firstName", "lastName", "avatar", "timezone", "language"]:
         v = getattr(payload, f)
         if v is not None:
+            if f == "language":
+                if not is_allowed_locale(v):
+                    raise HTTPException(status_code=400, detail="language must be 'nl' or 'en'")
+                v = normalize_locale(v)
             updates[f] = v
     if updates:
         updates["updatedAt"] = now_iso()
@@ -725,21 +747,21 @@ AGENTS = {
         "description": "Crafts outreach, pricing strategy and closes deals.",
         "avatar": "https://images.unsplash.com/photo-1689443111130-6e9c7dfd8f9e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHRlY2glMjBzdGFydHVwJTIwbG9nb3xlbnwwfHx8fDE3ODMyMzk4NzF8MA&ixlib=rb-4.1.0&q=85",
         "accent": "emerald",
-        "system_message": "You are the Sales Strategist for Assistify OS. You specialize in outbound outreach, cold email copy, pricing strategy, objection handling and deal closing. Be persuasive, concise and results-driven.",
+        "system_message": "You are the Sales Strategist for Assistify. You specialize in outbound outreach, cold email copy, pricing strategy, objection handling and deal closing. Be persuasive, concise and results-driven.",
     },
     "writer": {
         "id": "writer", "name": "Proposal Writer", "role": "Docs & Proposals",
         "description": "Writes crisp proposals, SOWs and client documents.",
         "avatar": "https://images.unsplash.com/photo-1689443111384-1cf214df988a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHRlY2glMjBzdGFydHVwJTIwbG9nb3xlbnwwfHx8fDE3ODMyMzk4NzF8MA&ixlib=rb-4.1.0&q=85",
         "accent": "blue",
-        "system_message": "You are the Proposal Writer for Assistify OS. You write polished, well-structured business proposals, scopes of work and client-facing documents. Use clear headings and professional tone.",
+        "system_message": "You are the Proposal Writer for Assistify. You write polished, well-structured business proposals, scopes of work and client-facing documents. Use clear headings and professional tone.",
     },
     "analyst": {
         "id": "analyst", "name": "Data Analyst", "role": "Insights & Metrics",
         "description": "Turns numbers into clear business insights.",
         "avatar": "https://images.unsplash.com/photo-1689443111070-2c1a1110fe82?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHRlY2glMjBzdGFydHVwJTIwbG9nb3xlbnwwfHx8fDE3ODMyMzk4NzF8MA&ixlib=rb-4.1.0&q=85",
         "accent": "amber",
-        "system_message": "You are the Data Analyst for Assistify OS. You interpret business metrics, revenue trends and KPIs, and give clear, quantified insights and recommendations.",
+        "system_message": "You are the Data Analyst for Assistify. You interpret business metrics, revenue trends and KPIs, and give clear, quantified insights and recommendations.",
     },
 }
 
@@ -842,7 +864,7 @@ class Proposal(ProposalCreate):
 # ------------------- Base Routes -------------------
 @api_router.get("/")
 async def root():
-    return {"message": "Assistify OS API"}
+    return {"message": "Assistify API"}
 
 
 @api_router.get("/agents")
@@ -1322,7 +1344,7 @@ DEFAULT_ORG_SETTINGS = {
         "vatNumber": "", "kvkNumber": "", "defaultCurrency": "USD", "defaultVat": 0, "logo": "",
     },
     "branding": {
-        "primaryColor": "#8b5cf6", "secondaryColor": "#22d3ee", "logo": "", "pdfLogo": "",
+        "primaryColor": "#16a34a", "secondaryColor": "#22d3ee", "logo": "", "pdfLogo": "",
         "proposalFooter": "", "contractFooter": "", "invoiceFooter": "",
     },
     "ai": {
@@ -1331,7 +1353,7 @@ DEFAULT_ORG_SETTINGS = {
     },
     "documents": {
         "proposalPrefix": "PROP", "contractPrefix": "CTR", "invoicePrefix": "INV",
-        "numberingStart": 1, "pdfPageSize": "A4", "pdfAccentColor": "#8b5cf6",
+        "numberingStart": 1, "pdfPageSize": "A4", "pdfAccentColor": "#16a34a",
     },
     "email": {
         "senderName": "", "senderEmail": "", "replyToEmail": "", "companySignature": "",
@@ -1609,7 +1631,7 @@ PLAN_SECTIONS = [
 ]
 
 PLANNER_SYSTEM = (
-    "You are an elite AI project planner for Assistify OS. Given full project context, you produce "
+    "You are an elite AI project planner for Assistify. Given full project context, you produce "
     "a rigorous, actionable project plan. You ALWAYS respond with a single valid JSON object and nothing else "
     "(no markdown fences, no prose outside JSON)."
 )
@@ -2318,7 +2340,7 @@ SCOPED_COLLECTIONS = [
 async def startup():
     cfg = get_app_settings()
     logger.info(
-        "Starting Assistify OS (%s) storage=%s ai=%s cookie_secure=%s samesite=%s",
+        "Starting Assistify (%s) storage=%s ai=%s cookie_secure=%s samesite=%s",
         cfg.environment, cfg.storage_provider, cfg.ai_provider, cfg.cookie_secure, cfg.cookie_samesite,
     )
     try:

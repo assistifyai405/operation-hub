@@ -1,4 +1,6 @@
+import PageIntro from "@/components/PageIntro";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Bot, MessageSquare, Sparkles } from "lucide-react";
 import { onboardingApi } from "@/lib/api";
@@ -9,13 +11,13 @@ import { LoadError } from "@/components/LoadError";
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const accentBg = {
-  violet: "from-violet-600/30",
+  violet: "from-brand-600/30",
   emerald: "from-emerald-600/30",
   blue: "from-blue-600/30",
   amber: "from-amber-600/30",
 };
 const accentText = {
-  violet: "text-violet-400",
+  violet: "text-brand-400",
   emerald: "text-emerald-400",
   blue: "text-blue-400",
   amber: "text-amber-400",
@@ -46,6 +48,7 @@ function normalizeAgents(payload) {
 }
 
 export default function AIAgents() {
+  const { t } = useTranslation();
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -98,12 +101,14 @@ export default function AIAgents() {
 
   return (
     <div className="space-y-5" data-testid="ai-agents-page">
+      <PageIntro title={t("pages.aiAgents.title")} description={t("pages.aiAgents.description")} help={t("help.aiAgents")} />
+
       <div className="max-w-2xl">
         <p className="text-sm text-zinc-400">
           <span className="font-medium text-zinc-200">AI Agents</span> are specialists for a role —
           sales, operations, writing, and more. Chat with a built-in specialist below.
           For quick questions across your whole business, use{" "}
-          <button type="button" onClick={() => navigate("/ai-chat")} className="text-violet-400 hover:text-violet-300 underline-offset-2 hover:underline">
+          <button type="button" onClick={() => navigate("/ai-chat")} className="text-brand-400 hover:text-brand-300 underline-offset-2 hover:underline">
             Copilot
           </button>
           .
@@ -123,7 +128,7 @@ export default function AIAgents() {
             <div
               key={a.id}
               style={{ animationDelay: `${i * 70}ms` }}
-              className="group relative animate-fade-up overflow-hidden rounded-xl border border-white/10 bg-zinc-950 p-5 transition-all hover:border-violet-500/40"
+              className="group relative animate-fade-up overflow-hidden rounded-xl border border-white/10 bg-zinc-950 p-5 transition-all hover:border-brand-500/40"
               data-testid={`agent-card-${a.id}`}
             >
               <div className={`pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br ${accentBg[a.accent] || accentBg.violet} to-transparent blur-2xl opacity-60`} />
@@ -151,7 +156,7 @@ export default function AIAgents() {
                   type="button"
                   onClick={() => openAgent(a.id, a.name)}
                   data-testid={`chat-agent-${a.id}`}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-900 py-2 text-sm font-medium text-zinc-200 transition-all hover:bg-violet-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-900 py-2 text-sm font-medium text-zinc-200 transition-all hover:bg-brand-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
                 >
                   <MessageSquare className="h-4 w-4" aria-hidden="true" /> Chat with {a.name}
                 </button>

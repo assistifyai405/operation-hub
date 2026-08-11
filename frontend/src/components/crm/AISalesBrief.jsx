@@ -29,7 +29,7 @@ export function AISalesBrief({ leadId }) {
   if (!brief) {
     return (
       <button onClick={() => gen(false)} disabled={loading} data-testid="lead-generate-brief"
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/30 bg-violet-500/[0.06] py-3 text-sm font-semibold text-violet-200 transition-all hover:bg-violet-500/15 disabled:opacity-60">
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-500/30 bg-brand-500/[0.06] py-3 text-sm font-semibold text-brand-200 transition-all hover:bg-brand-500/15 disabled:opacity-60">
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
         {loading ? "Analyzing this deal…" : "Generate AI Sales Brief"}
       </button>
@@ -40,12 +40,12 @@ export function AISalesBrief({ leadId }) {
     <div className="space-y-3" data-testid="lead-ai-brief">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat icon={Heart} label="Deal health" value={brief.deal_health} cls={HEALTH[brief.deal_health]?.split(" ")[0]} />
-        <Stat icon={TrendingUp} label="Win prob." value={`${brief.win_probability}%`} cls="text-violet-300" />
+        <Stat icon={TrendingUp} label="Win prob." value={`${brief.win_probability}%`} cls="text-brand-300" />
         <Stat icon={Zap} label="Urgency" value={brief.urgency} cls={LEVEL[brief.urgency]} />
         <Stat icon={ShieldAlert} label="Risk" value={brief.risk_level} cls={LEVEL[brief.risk_level]} />
       </div>
-      <div className="rounded-xl border border-violet-500/25 bg-violet-500/[0.05] p-3.5" data-testid="lead-next-action">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-300"><ArrowRight className="h-3.5 w-3.5" /> Next best action</div>
+      <div className="rounded-xl border border-brand-500/25 bg-brand-500/[0.05] p-3.5" data-testid="lead-next-action">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-300"><ArrowRight className="h-3.5 w-3.5" /> Next best action</div>
         <p className="mt-1 text-sm text-zinc-200">{brief.next_best_action}</p>
       </div>
       {brief.relationship_summary && <Block icon={MessageSquare} title="Relationship summary" text={brief.relationship_summary} />}

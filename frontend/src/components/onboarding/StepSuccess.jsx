@@ -26,12 +26,12 @@ export function StepSuccess({ data, finish, onComplete }) {
               initial={{ opacity: 0, y: 0, x: 0 }}
               animate={{ opacity: [0, 1, 0], y: [-4, -60 - i * 6], x: (i - 4) * 26 }}
               transition={{ duration: 1.6, delay: 0.1 + i * 0.05 }}
-              className={`absolute h-2 w-2 rounded-full ${["bg-violet-500", "bg-cyan-400", "bg-emerald-400", "bg-amber-400", "bg-pink-400"][i % 5]}`} />
+              className={`absolute h-2 w-2 rounded-full ${["bg-brand-500", "bg-cyan-400", "bg-emerald-400", "bg-amber-400", "bg-pink-400"][i % 5]}`} />
           ))}
         </div>
 
         <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 200, damping: 14 }}
-          className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-violet-600 glow-violet">
+          className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-brand-600 glow-brand">
           <PartyPopper className="h-10 w-10 text-white" />
         </motion.div>
 

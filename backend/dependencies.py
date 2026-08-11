@@ -39,6 +39,11 @@ async def current_user(request: Request) -> dict:
     user = await db.users.find_one({"id": payload["sub"]}, {"_id": 0})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    try:
+        from locale_util import bind_ai_locale, normalize_locale
+        bind_ai_locale(normalize_locale(user.get("language") or user.get("locale")))
+    except Exception:
+        pass
     return user
 
 

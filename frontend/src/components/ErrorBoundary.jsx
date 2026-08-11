@@ -37,7 +37,7 @@ export default class ErrorBoundary extends Component {
           data-testid="error-boundary"
           role="alert"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600/15 text-violet-400" aria-hidden="true">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600/15 text-brand-400" aria-hidden="true">
             <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.75">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
             </svg>
@@ -55,7 +55,7 @@ export default class ErrorBoundary extends Component {
             <button
               type="button"
               data-testid="error-boundary-reload"
-              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
               onClick={() => window.location.reload()}
             >
               Reload page
@@ -63,7 +63,7 @@ export default class ErrorBoundary extends Component {
             <button
               type="button"
               data-testid="error-boundary-retry"
-              className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+              className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
               onClick={this.handleRetry}
             >
               Try again
@@ -71,7 +71,7 @@ export default class ErrorBoundary extends Component {
             <a
               href="/dashboard"
               data-testid="error-boundary-home"
-              className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+              className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
             >
               Go to dashboard
             </a>

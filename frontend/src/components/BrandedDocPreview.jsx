@@ -21,7 +21,7 @@ export default function BrandedDocPreview({ docType = "proposal" }) {
   return (
     <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-950" data-testid={`branded-preview-${docType}`}>
       <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center gap-2 border-b border-white/5 px-4 py-2.5 text-left" data-testid="branded-preview-toggle">
-        <Eye className="h-4 w-4 text-violet-400" />
+        <Eye className="h-4 w-4 text-brand-400" />
         <span className="text-sm font-medium text-zinc-200">Branded preview</span>
         <span className="text-xs text-zinc-500">— how your exported {docType} will look</span>
         {open ? <ChevronUp className="ml-auto h-4 w-4 text-zinc-500" /> : <ChevronDown className="ml-auto h-4 w-4 text-zinc-500" />}
@@ -55,7 +55,7 @@ export default function BrandedDocPreview({ docType = "proposal" }) {
               <p className="text-[10px] text-zinc-400">Page 1</p>
             </div>
           </div>
-          <p className="mt-2 text-center text-xs text-zinc-600">Edit logo, colors and footers in <span className="text-violet-400">Settings → Branding</span>.</p>
+          <p className="mt-2 text-center text-xs text-zinc-600">Edit logo, colors and footers in <span className="text-brand-400">Settings → Branding</span>.</p>
         </div>
       )}
     </div>

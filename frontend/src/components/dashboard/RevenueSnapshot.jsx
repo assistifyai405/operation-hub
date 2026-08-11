@@ -5,7 +5,7 @@ import { Section, money } from "./execShared";
 export function RevenueSnapshot({ revenue }) {
   const g = revenue.growth_pct;
   const cards = [
-    { label: "Pipeline Value", value: money(revenue.pipeline_value), tone: "text-violet-400" },
+    { label: "Pipeline Value", value: money(revenue.pipeline_value), tone: "text-brand-400" },
     { label: "Expected (weighted)", value: money(revenue.expected_monthly), tone: "text-cyan-400" },
     { label: "Outstanding Invoices", value: money(revenue.outstanding), tone: "text-amber-400" },
     { label: "Closed Revenue", value: money(revenue.closed_revenue), tone: "text-emerald-400" },

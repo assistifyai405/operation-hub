@@ -1,4 +1,6 @@
+import PageIntro from "@/components/PageIntro";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Loader2, Plug, Link2, Unplug, RefreshCw, HeartPulse, Shield, CheckCircle2, XCircle, AlertTriangle,
 } from "lucide-react";
@@ -38,6 +40,7 @@ const healthIcon = (h) => {
 };
 
 export default function Integrations() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const canManage = user?.role === "owner" || user?.role === "admin";
   const [data, setData] = useState({ items: [], catalog: [] });
@@ -164,6 +167,8 @@ export default function Integrations() {
 
   return (
     <div className="space-y-5" data-testid="integrations-page">
+      <PageIntro title={t("pages.integrations.title")} description={t("pages.integrations.description")} />
+
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-lg font-semibold text-zinc-100">Integrations</h1>
@@ -191,7 +196,7 @@ export default function Integrations() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-600/15 text-violet-400">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/15 text-brand-400">
                       <Plug className="h-5 w-5" />
                     </div>
                     <div>
@@ -224,7 +229,7 @@ export default function Integrations() {
                       disabled={!canManage || busy === meta.id}
                       onClick={() => startConnect(meta)}
                       data-testid={`integration-connect-${meta.id}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500 disabled:opacity-50"
                     >
                       {busy === meta.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />}
                       Connect
@@ -317,7 +322,7 @@ export default function Integrations() {
               disabled={busy === connectTarget?.id}
               onClick={submitWebhook}
               data-testid="integration-webhook-save"
-              className="rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500"
+              className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-500"
             >
               {busy === connectTarget?.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Connect"}
             </button>
@@ -338,7 +343,7 @@ export default function Integrations() {
           <AlertDialogFooter>
             <AlertDialogCancel className="border-white/10 bg-transparent">Back</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-violet-600 hover:bg-violet-500"
+              className="bg-brand-600 hover:bg-brand-500"
               onClick={() => confirm && run(confirm.action, confirm.provider)}
             >
               Confirm

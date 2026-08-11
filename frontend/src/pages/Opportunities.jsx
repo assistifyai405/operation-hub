@@ -1,4 +1,6 @@
+import PageIntro from "@/components/PageIntro";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Sparkles, Target, CheckCircle2 } from "lucide-react";
 import { opportunitiesApi } from "@/lib/api";
@@ -12,6 +14,7 @@ const FILTERS = [
 ];
 
 export default function Opportunities() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [health, setHealth] = useState(null);
@@ -32,10 +35,12 @@ export default function Opportunities() {
 
   return (
     <div className="space-y-6" data-testid="opportunities-page">
+      <PageIntro title={t("pages.opportunities.title")} description={t("pages.opportunities.description")} help={t("help.opportunities")} />
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="flex items-center gap-2.5 text-3xl font-bold tracking-tight text-zinc-50">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet"><Target className="h-5 w-5 text-white" /></span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 glow-brand"><Target className="h-5 w-5 text-white" /></span>
             Opportunities
           </h1>
           <p className="mt-1.5 text-sm text-zinc-400">
@@ -43,9 +48,9 @@ export default function Opportunities() {
           </p>
         </div>
         {data && (
-          <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.06] px-4 py-2.5 text-right">
+          <div className="rounded-xl border border-brand-500/20 bg-brand-500/[0.06] px-4 py-2.5 text-right">
             <p className="text-xs text-zinc-500">Time you could save</p>
-            <p className="bg-gradient-to-r from-violet-300 to-cyan-300 bg-clip-text text-xl font-extrabold text-transparent" data-testid="opp-total-saved">
+            <p className="bg-gradient-to-r from-brand-300 to-cyan-300 bg-clip-text text-xl font-extrabold text-transparent" data-testid="opp-total-saved">
               {Math.round(data.total_time_saved / 60) ? `${Math.floor(data.total_time_saved / 60)}h ${data.total_time_saved % 60}m` : `${data.total_time_saved}m`}
             </p>
           </div>
@@ -59,7 +64,7 @@ export default function Opportunities() {
           const count = f.v === "all" ? (data?.total || 0) : (data?.counts?.[f.v.toLowerCase()] || 0);
           return (
             <button key={f.v} onClick={() => setFilter(f.v)} data-testid={`opp-filter-${f.v.toLowerCase()}`}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${filter === f.v ? "border-violet-500 bg-violet-600/15 text-violet-200" : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"}`}>
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${filter === f.v ? "border-brand-500 bg-brand-600/15 text-brand-200" : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"}`}>
               {f.label} <span className="rounded-full bg-white/10 px-1.5 text-[10px]">{count}</span>
             </button>
           );
@@ -86,7 +91,7 @@ export default function Opportunities() {
                 : "Assistify didn't find anything that needs your attention here. Nice work."}
           </p>
           {filter === "all" && health?.has_workspace_data === false && (
-            <button type="button" onClick={() => navigate("/clients")} data-testid="opportunities-empty-action" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+            <button type="button" onClick={() => navigate("/clients")} data-testid="opportunities-empty-action" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500">
               Create your first client
             </button>
           )}

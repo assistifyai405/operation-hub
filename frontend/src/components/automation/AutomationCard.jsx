@@ -11,10 +11,10 @@ export function AutomationCard({ a, onToggle, onMode, onEdit, onDelete }) {
   return (
     <div
       data-testid={`automation-card-${a.id}`}
-      className={`rounded-2xl border bg-zinc-950 p-5 transition-all ${a.enabled ? "border-white/10 hover:border-violet-500/30" : "border-white/5 opacity-70"}`}
+      className={`rounded-2xl border bg-zinc-950 p-5 transition-all ${a.enabled ? "border-white/10 hover:border-brand-500/30" : "border-white/5 opacity-70"}`}
     >
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-600/15 text-violet-300">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600/15 text-brand-300">
           <AiIcon name={a.trigger_icon} className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0 flex-1">

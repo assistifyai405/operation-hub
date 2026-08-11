@@ -1,4 +1,6 @@
+import PageIntro from "@/components/PageIntro";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Search, ArrowRight, X, Bot, Sun } from "lucide-react";
 import { toast } from "sonner";
@@ -46,7 +48,7 @@ function GlobalSearch({ navigate }) {
         onFocus={() => results && setOpen(true)}
         data-testid="dashboard-search-input"
         placeholder="Search everything…"
-        className="w-full rounded-xl border border-white/10 bg-zinc-950/80 py-2 pl-10 pr-9 text-sm text-zinc-200 outline-none backdrop-blur focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40"
+        className="w-full rounded-xl border border-white/10 bg-zinc-950/80 py-2 pl-10 pr-9 text-sm text-zinc-200 outline-none backdrop-blur focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40"
       />
       {q && (
         <button type="button" onClick={() => { setQ(""); setOpen(false); }} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200">
@@ -85,6 +87,7 @@ function DashboardSkeleton() {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [data, setData] = useState(null);
@@ -121,6 +124,8 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6" data-testid="dashboard-page">
+      <PageIntro title={t("pages.dashboard.title")} description={t("pages.dashboard.description")} help={t("help.morningBrief")} />
+
       <OnboardingChecklist />
       <DemoDataBanner />
 
@@ -133,7 +138,7 @@ export default function Dashboard() {
             <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1" data-testid="hero-brief">
               {(hero.brief_lines || []).slice(0, 3).map((l, i) => (
                 <span key={i} className="inline-flex items-center gap-1.5 text-xs text-zinc-400" data-testid="hero-brief-line">
-                  <AiIcon name={l.icon} className="h-3.5 w-3.5 text-violet-400" /> {l.text}
+                  <AiIcon name={l.icon} className="h-3.5 w-3.5 text-brand-400" /> {l.text}
                 </span>
               ))}
             </div>
@@ -148,7 +153,7 @@ export default function Dashboard() {
             type="button"
             onClick={() => setBriefOpen(true)}
             data-testid="open-morning-brief"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-white/10 bg-zinc-950/80 px-3.5 py-2 text-sm font-medium text-zinc-300 backdrop-blur transition-all hover:border-violet-500/40 hover:text-zinc-100"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-white/10 bg-zinc-950/80 px-3.5 py-2 text-sm font-medium text-zinc-300 backdrop-blur transition-all hover:border-brand-500/40 hover:text-zinc-100"
           >
             <Sun className="h-4 w-4 text-amber-400" aria-hidden="true" /> Morning Brief
           </button>
@@ -156,7 +161,7 @@ export default function Dashboard() {
             type="button"
             onClick={() => navigate("/ai-chat")}
             data-testid="hero-ask-ai"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-violet-600 px-3.5 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 glow-brand"
           >
             <Bot className="h-4 w-4" aria-hidden="true" /> Ask AI
           </button>

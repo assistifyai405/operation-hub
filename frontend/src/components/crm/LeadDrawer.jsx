@@ -101,7 +101,7 @@ export function LeadDrawer({ leadId, onClose, onChanged, navigate }) {
           </div>
           <Field label="Notes"><textarea value={form.notes || ""} onChange={(e) => setF("notes", e.target.value)} rows={2} className={inputCls} /></Field>
           <div className="flex gap-2">
-            <button onClick={save} disabled={saving} data-testid="lead-save" className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-60"><Save className="h-4 w-4" /> Save</button>
+            <button onClick={save} disabled={saving} data-testid="lead-save" className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-60"><Save className="h-4 w-4" /> Save</button>
             {!form.project_id && <button onClick={convert} data-testid="lead-convert" className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3.5 py-2 text-sm font-medium text-zinc-200 hover:text-white"><FolderPlus className="h-4 w-4" /> Convert to project</button>}
             {form.project_id && <button onClick={() => navigate(`/projects/${form.project_id}`)} className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3.5 py-2 text-sm font-medium text-zinc-200 hover:text-white"><ArrowRight className="h-4 w-4" /> Open project</button>}
           </div>
@@ -111,14 +111,14 @@ export function LeadDrawer({ leadId, onClose, onChanged, navigate }) {
             <div className="grid grid-cols-2 gap-2" data-testid="lead-one-click">
               {ONE_CLICK.map((a) => (
                 <button key={a.key} onClick={() => oneClick(a)} data-testid={`lead-action-${a.key}`}
-                  className="group flex items-center gap-2 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-left text-xs font-medium text-zinc-200 transition-all hover:border-violet-500/40 hover:bg-violet-500/[0.05]">
-                  <a.icon className="h-3.5 w-3.5 text-violet-300" /> {a.label}
+                  className="group flex items-center gap-2 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-left text-xs font-medium text-zinc-200 transition-all hover:border-brand-500/40 hover:bg-brand-500/[0.05]">
+                  <a.icon className="h-3.5 w-3.5 text-brand-300" /> {a.label}
                 </button>
               ))}
               {lead?.client_id && (
                 <button onClick={() => navigate(`/crm/${lead.client_id}`)} data-testid="lead-action-summary"
-                  className="group flex items-center gap-2 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-left text-xs font-medium text-zinc-200 transition-all hover:border-violet-500/40 hover:bg-violet-500/[0.05]">
-                  <Users className="h-3.5 w-3.5 text-violet-300" /> Summarize Customer
+                  className="group flex items-center gap-2 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-left text-xs font-medium text-zinc-200 transition-all hover:border-brand-500/40 hover:bg-brand-500/[0.05]">
+                  <Users className="h-3.5 w-3.5 text-brand-300" /> Summarize Customer
                 </button>
               )}
             </div>
@@ -133,7 +133,7 @@ export function LeadDrawer({ leadId, onClose, onChanged, navigate }) {
               <div className="space-y-2" data-testid="lead-followups">
                 {lead.followups.map((f, i) => (
                   <div key={i} className="flex items-start gap-2.5 rounded-lg border border-white/10 bg-zinc-900/40 p-3">
-                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-600/15 text-violet-300"><Mail className="h-3.5 w-3.5" /></span>
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-600/15 text-brand-300"><Mail className="h-3.5 w-3.5" /></span>
                     <div><p className="text-sm font-medium text-zinc-200">{f.label}</p><p className="text-xs text-zinc-500">{f.why}</p></div>
                   </div>
                 ))}
@@ -148,7 +148,7 @@ export function LeadDrawer({ leadId, onClose, onChanged, navigate }) {
                 {lead.timeline.map((e, i) => (
                   <div key={i} className="flex gap-3">
                     <div className="flex flex-col items-center">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-600/15 text-violet-300"><AiIcon name={e.icon} className="h-3 w-3" /></span>
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600/15 text-brand-300"><AiIcon name={e.icon} className="h-3 w-3" /></span>
                       {i < lead.timeline.length - 1 && <span className="mt-1 h-full w-px flex-1 bg-white/10" />}
                     </div>
                     <div className="pb-1"><p className="text-sm text-zinc-200">{e.title}</p><p className="text-xs text-zinc-600">{relTime(e.when)}</p></div>
@@ -163,6 +163,6 @@ export function LeadDrawer({ leadId, onClose, onChanged, navigate }) {
   );
 }
 
-const inputCls = "w-full rounded-lg border border-white/10 bg-zinc-900 px-2.5 py-1.5 text-sm text-zinc-100 focus:border-violet-500/50 focus:outline-none";
+const inputCls = "w-full rounded-lg border border-white/10 bg-zinc-900 px-2.5 py-1.5 text-sm text-zinc-100 focus:border-brand-500/50 focus:outline-none";
 const Field = ({ label, children }) => (<label className="block"><span className="mb-1 block text-[11px] text-zinc-500">{label}</span>{children}</label>);
 const Section = ({ title, children }) => (<div><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">{title}</p>{children}</div>);

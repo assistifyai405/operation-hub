@@ -1,4 +1,6 @@
+import PageIntro from "@/components/PageIntro";
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Upload, Search, FileText, FileImage, FileSpreadsheet, FileArchive, File,
   FolderOpen, Loader2, Trash2, Pencil, Download, ChevronLeft, ChevronRight,
@@ -13,6 +15,7 @@ import { toast } from "sonner";
 import { documentsApi, libraryApi } from "@/lib/api";
 import EmptyState from "@/components/EmptyState";
 import HelpTip from "@/components/HelpTip";
+import { formatDate } from "@/i18n/format";
 
 const typeIcon = {
   PDF: { icon: FileText, color: "text-red-400 bg-red-500/10" },
@@ -23,9 +26,9 @@ const typeIcon = {
   Other: { icon: File, color: "text-zinc-400 bg-zinc-500/10" },
 };
 const TYPES = ["All", "PDF", "Image", "Doc", "Sheet", "Archive", "Other"];
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
 
 export default function Documents() {
+  const { t, i18n } = useTranslation();
   const fileRef = useRef(null);
   const [data, setData] = useState({ items: [], total: 0, pages: 1 });
   const [loading, setLoading] = useState(true);
@@ -70,6 +73,8 @@ export default function Documents() {
 
   return (
     <div className="space-y-5" data-testid="documents-page">
+      <PageIntro title={t("pages.documents.title")} description={t("pages.documents.description")} />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="flex items-center gap-2 text-sm text-zinc-400">
           {data.total} file{data.total !== 1 && "s"} in your library.
@@ -79,7 +84,7 @@ export default function Documents() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search documents" data-testid="documents-search"
-              className="rounded-lg border border-white/10 bg-zinc-950 py-2 pl-9 pr-3 text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
+              className="rounded-lg border border-white/10 bg-zinc-950 py-2 pl-9 pr-3 text-sm text-zinc-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
           </div>
           <Select value={type} onValueChange={setType}>
             <SelectTrigger data-testid="documents-type-filter" className="w-32 border-white/10 bg-zinc-950"><SelectValue /></SelectTrigger>
@@ -89,7 +94,7 @@ export default function Documents() {
           </Select>
           <input ref={fileRef} type="file" onChange={onUpload} className="hidden" data-testid="documents-file-input" />
           <button onClick={() => fileRef.current?.click()} disabled={uploading} data-testid="upload-btn"
-            className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 glow-violet">
+            className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-60 glow-brand">
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Upload
           </button>
         </div>
@@ -114,16 +119,16 @@ export default function Documents() {
               const t = typeIcon[d.type] || typeIcon.Other;
               const Icon = t.icon;
               return (
-                <div key={d.id} className="group relative rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-violet-500/40" data-testid={`doc-${d.id}`}>
+                <div key={d.id} className="group relative rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-brand-500/40" data-testid={`doc-${d.id}`}>
                   <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${t.color}`}><Icon className="h-6 w-6" /></div>
                   <p className="mt-3 truncate text-sm font-medium text-zinc-100" title={d.name}>{d.name}</p>
                   <p className="mt-0.5 truncate text-xs text-zinc-500">{d.project_name || "No project"}</p>
                   <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
-                    <span>{d.size}</span><span>{fmtDate(d.created_at)}</span>
+                    <span>{d.size}</span><span>{formatDate(d.created_at, i18n.resolvedLanguage, { month: "short" })}</span>
                   </div>
                   <div className="mt-3 flex items-center gap-1 border-t border-white/5 pt-3 opacity-0 transition-opacity group-hover:opacity-100">
-                    {d.storage_path && <a href={documentsApi.fileUrl(d.id)} target="_blank" rel="noreferrer" data-testid={`doc-view-${d.id}`} className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-violet-400"><Download className="h-4 w-4" /></a>}
-                    <button onClick={() => { setRenameTarget(d); setRenameVal(d.name); }} data-testid={`doc-rename-${d.id}`} className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-violet-400"><Pencil className="h-4 w-4" /></button>
+                    {d.storage_path && <a href={documentsApi.fileUrl(d.id)} target="_blank" rel="noreferrer" data-testid={`doc-view-${d.id}`} className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-brand-400"><Download className="h-4 w-4" /></a>}
+                    <button onClick={() => { setRenameTarget(d); setRenameVal(d.name); }} data-testid={`doc-rename-${d.id}`} className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-brand-400"><Pencil className="h-4 w-4" /></button>
                     <button onClick={() => setDeleteTarget(d)} data-testid={`doc-delete-${d.id}`} className="ml-auto rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
@@ -144,10 +149,10 @@ export default function Documents() {
         <DialogContent className="border-white/10 bg-zinc-950 text-zinc-100 sm:max-w-sm">
           <DialogHeader><DialogTitle>Rename document</DialogTitle></DialogHeader>
           <input value={renameVal} onChange={(e) => setRenameVal(e.target.value)} data-testid="doc-rename-input"
-            className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
+            className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
           <DialogFooter>
             <button onClick={() => setRenameTarget(null)} className="rounded-lg border border-white/10 bg-zinc-900 px-4 py-2 text-sm text-zinc-300">Cancel</button>
-            <button onClick={doRename} data-testid="doc-rename-save" className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500">Save</button>
+            <button onClick={doRename} data-testid="doc-rename-save" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500">Save</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

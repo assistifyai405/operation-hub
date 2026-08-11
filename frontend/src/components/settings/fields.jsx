@@ -6,7 +6,7 @@ import { settingsApi } from "@/lib/api";
 import { toast } from "sonner";
 
 export const inputCls =
-  "w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none transition-all placeholder:text-zinc-600 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40 disabled:opacity-60";
+  "w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none transition-all placeholder:text-zinc-600 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40 disabled:opacity-60";
 
 export function SectionCard({ title, description, children, footer, testid }) {
   return (
@@ -83,7 +83,7 @@ export function ToggleRow({ label, description, checked, onChange, testid }) {
         <p className="text-sm font-medium text-zinc-100">{label}</p>
         {description && <p className="text-xs text-zinc-500">{description}</p>}
       </div>
-      <Switch checked={checked} onCheckedChange={onChange} data-testid={testid} className="data-[state=checked]:bg-violet-600" />
+      <Switch checked={checked} onCheckedChange={onChange} data-testid={testid} className="data-[state=checked]:bg-brand-600" />
     </div>
   );
 }
@@ -110,7 +110,7 @@ export function ImageUpload({ label, value, onChange, testid, hint }) {
         </div>
         <input ref={ref} type="file" accept="image/*" onChange={upload} className="hidden" data-testid={`${testid}-input`} />
         <button type="button" onClick={() => ref.current?.click()} disabled={busy} data-testid={testid}
-          className="flex items-center gap-2 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 transition-all hover:border-violet-500/40 disabled:opacity-60">
+          className="flex items-center gap-2 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 transition-all hover:border-brand-500/40 disabled:opacity-60">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Upload
         </button>
         {value && <button type="button" onClick={() => onChange("")} className="text-xs text-zinc-500 hover:text-red-400">Remove</button>}
@@ -122,7 +122,7 @@ export function ImageUpload({ label, value, onChange, testid, hint }) {
 export function SaveButton({ onClick, saving, testid, label = "Save changes" }) {
   return (
     <button onClick={onClick} disabled={saving} data-testid={testid}
-      className="mt-2 flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 glow-violet">
+      className="mt-2 flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-60 glow-brand">
       {saving && <Loader2 className="h-4 w-4 animate-spin" />} {label}
     </button>
   );

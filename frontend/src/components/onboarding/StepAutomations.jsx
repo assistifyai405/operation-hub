@@ -25,7 +25,7 @@ export function StepAutomations({ data, next, back }) {
     <StepShell>
       <div data-testid="onb-step-automations">
         <div className="mb-5 flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600/15 text-violet-400"><Zap className="h-5 w-5" /></span>
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15 text-brand-400"><Zap className="h-5 w-5" /></span>
           <div>
             <h2 className="text-2xl font-bold text-zinc-50">Smart automations, ready to go</h2>
             <p className="text-sm text-zinc-500">Enabled by default — Assistify prepares these for your approval. Turn off any you don't want.</p>
@@ -38,7 +38,7 @@ export function StepAutomations({ data, next, back }) {
             const enabled = a ? a.enabled : true;
             return (
               <div key={r.key} data-testid={`onb-automation-${r.key}`} className="flex items-center gap-3 rounded-xl border border-white/10 bg-zinc-950 p-4">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-600/15 text-violet-300"><Zap className="h-4 w-4" /></span>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-600/15 text-brand-300"><Zap className="h-4 w-4" /></span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-zinc-100">{r.name}</p>
                   <p className="text-xs text-zinc-500">{r.description}</p>

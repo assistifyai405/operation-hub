@@ -160,6 +160,12 @@ PROFILE_SYSTEM = (
 @router.post("/profile")
 async def generate_profile(body: CompanyBody, user: dict = Depends(current_user)):
     org = user["organizationId"]
+    from locale_util import is_allowed_locale, normalize_locale
+    lang = normalize_locale(body.language) if body.language else "en"
+    if body.language and not is_allowed_locale(body.language):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="language must be 'nl' or 'en'")
+    body.language = lang
     # 1) persist company info on the organization
     org_fields = {"name": body.company_name.strip() or None, "industry": body.industry, "website": body.website,
                   "employees": body.employees, "services": body.main_services, "target_customers": body.target_customers,

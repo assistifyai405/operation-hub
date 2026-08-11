@@ -22,9 +22,9 @@ export function ExecInsights({ insights }) {
           const pm = PRIORITY_META[it.priority] || PRIORITY_META.Medium;
           return (
             <motion.div key={it.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-              className="flex flex-col rounded-2xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-violet-500/30" data-testid={`insight-card-${it.type}`}>
+              className="flex flex-col rounded-2xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-brand-500/30" data-testid={`insight-card-${it.type}`}>
               <div className="flex items-start gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-600/15 text-violet-300"><AiIcon name={it.icon} className="h-4 w-4" /></span>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600/15 text-brand-300"><AiIcon name={it.icon} className="h-4 w-4" /></span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className={`h-1.5 w-1.5 rounded-full ${pm.dot}`} />
@@ -39,7 +39,7 @@ export function ExecInsights({ insights }) {
                 <span>{it.confidence}% confidence</span>
                 <span className="text-emerald-500/80">~{it.time_saved}m saved</span>
                 {it.action?.link && (
-                  <button onClick={() => navigate(it.action.link)} data-testid={`insight-action-${it.type}`} className="ml-auto inline-flex items-center gap-1 rounded-lg bg-violet-600 px-2.5 py-1 text-[11px] font-semibold text-white transition-all hover:bg-violet-500">
+                  <button onClick={() => navigate(it.action.link)} data-testid={`insight-action-${it.type}`} className="ml-auto inline-flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1 text-[11px] font-semibold text-white transition-all hover:bg-brand-500">
                     {it.action.label} <ArrowRight className="h-3 w-3" />
                   </button>
                 )}

@@ -53,9 +53,9 @@ async def _brand_context(org_id: str, footer_key: str) -> dict:
             except Exception:
                 logo_bytes = None
     return {
-        "company_name": o.get("name", "") or "Assistify OS",
+        "company_name": o.get("name", "") or "Assistify",
         "logo_bytes": logo_bytes,
-        "primary": b.get("primaryColor") or "#7C3AED",
+        "primary": b.get("primaryColor") or "#16A34A",
         "secondary": b.get("secondaryColor") or "#22D3EE",
         "address": o.get("address", ""), "website": o.get("website", ""),
         "email": o.get("businessEmail", ""), "phone": o.get("phone", ""),

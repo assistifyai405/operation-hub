@@ -55,8 +55,8 @@ async def _send(to_email: str, subject: str, html_content: str) -> dict:
 
 
 def _shell(brand: dict, heading: str, body_html: str, cta_label: str, cta_url: str, footer_note: str) -> str:
-    company = html.escape((brand or {}).get("company_name") or "Assistify OS")
-    primary = (brand or {}).get("primary") or "#7C3AED"
+    company = html.escape((brand or {}).get("company_name") or "Assistify")
+    primary = (brand or {}).get("primary") or "#16A34A"
     logo_url = (brand or {}).get("logo_url") or ""
     show_logo = logo_url.startswith("http") and "/api/settings/image/" not in logo_url
     header_inner = (
@@ -99,7 +99,7 @@ def _shell(brand: dict, heading: str, body_html: str, cta_label: str, cta_url: s
 
 
 async def send_verification_email(to_email: str, verify_link: str, brand: dict = None) -> dict:
-    company = (brand or {}).get("company_name") or "Assistify OS"
+    company = (brand or {}).get("company_name") or "Assistify"
     body = (
         f"Welcome to {html.escape(company)}! Please confirm your email address to "
         "secure your account and unlock all features."
@@ -113,7 +113,7 @@ async def send_verification_email(to_email: str, verify_link: str, brand: dict =
 
 
 async def send_password_reset_email(to_email: str, reset_link: str, brand: dict = None) -> dict:
-    company = (brand or {}).get("company_name") or "Assistify OS"
+    company = (brand or {}).get("company_name") or "Assistify"
     body = (
         "We received a request to reset your password. Click the button below to "
         "choose a new one."
@@ -135,13 +135,13 @@ async def send_invitation_email(
     role: str = "member",
     org_name: str = "your team",
 ) -> dict:
-    company = (brand or {}).get("company_name") or org_name or "Assistify OS"
+    company = (brand or {}).get("company_name") or org_name or "Assistify"
     who = html.escape(inviter_name or "A teammate")
     org = html.escape(org_name or company)
     role_label = html.escape((role or "member").capitalize())
     body = (
         f"{who} invited you to join <strong style=\"color:#f4f4f6;\">{org}</strong> "
-        f"on Assistify OS as a <strong style=\"color:#f4f4f6;\">{role_label}</strong>."
+        f"on Assistify as a <strong style=\"color:#f4f4f6;\">{role_label}</strong>."
     )
     html_content = _shell(
         brand, f"Join {org}", body,

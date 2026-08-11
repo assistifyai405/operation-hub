@@ -10,7 +10,7 @@ const METRICS = [
   { k: "hours_saved", label: "Hours Saved", color: "#22d3ee", fmt: (v) => `${v}h` },
   { k: "deals", label: "Deals", color: "#f59e0b", fmt: (v) => `${v}` },
   { k: "clients", label: "Clients", color: "#f472b6", fmt: (v) => `${v}` },
-  { k: "automations", label: "Automations", color: "#a78bfa", fmt: (v) => `${v}` },
+  { k: "automations", label: "Automations", color: "#86EFAC", fmt: (v) => `${v}` },
   { k: "ai_activity", label: "AI Activity", color: "#60a5fa", fmt: (v) => `${v}` },
 ];
 
@@ -24,7 +24,7 @@ export function BusinessPerformanceChart({ trends, workspaceEmpty }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-zinc-950/80 p-5 backdrop-blur-xl" data-testid="performance-chart">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><BarChart3 className="h-4 w-4 text-violet-400" /> Business Performance</h2>
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><BarChart3 className="h-4 w-4 text-brand-400" /> Business Performance</h2>
         <span className="text-xs text-zinc-500">Last 8 weeks</span>
       </div>
 

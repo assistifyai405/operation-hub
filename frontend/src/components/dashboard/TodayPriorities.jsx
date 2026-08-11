@@ -34,8 +34,8 @@ export function TodayPriorities({ priorities, total }) {
               <div className="space-y-1.5">
                 {group.items.map((it) => (
                   <button key={it.id} onClick={() => it.action?.link && navigate(it.action.link)} data-testid={`priority-item-${it.type}`}
-                    className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-zinc-950 px-3.5 py-2.5 text-left transition-all hover:border-violet-500/30">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-600/15 text-violet-300"><AiIcon name={it.icon} className="h-4 w-4" /></span>
+                    className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-zinc-950 px-3.5 py-2.5 text-left transition-all hover:border-brand-500/30">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600/15 text-brand-300"><AiIcon name={it.icon} className="h-4 w-4" /></span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-zinc-100">{it.title}</p>
                       <p className="truncate text-xs text-zinc-500">{it.why}</p>

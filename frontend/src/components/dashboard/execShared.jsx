@@ -28,7 +28,7 @@ export const healthTone = (score) => {
 };
 
 export const DOC_BADGE = {
-  proposal: { label: "Proposal", chip: "bg-violet-500/15 text-violet-300", icon: "file-text" },
+  proposal: { label: "Proposal", chip: "bg-brand-500/15 text-brand-300", icon: "file-text" },
   contract: { label: "Contract", chip: "bg-cyan-500/15 text-cyan-300", icon: "scroll-text" },
   invoice: { label: "Invoice", chip: "bg-emerald-500/15 text-emerald-300", icon: "receipt" },
   plan: { label: "Project Plan", chip: "bg-amber-500/15 text-amber-300", icon: "list-checks" },
@@ -43,7 +43,7 @@ export function Section({ title, icon: Icon, action, children, testid }) {
     <section data-testid={testid}>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-100">
-          {Icon && <Icon className="h-4 w-4 text-violet-400" />} {title}
+          {Icon && <Icon className="h-4 w-4 text-brand-400" />} {title}
         </h2>
         {action}
       </div>

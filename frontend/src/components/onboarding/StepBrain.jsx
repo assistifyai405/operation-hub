@@ -36,7 +36,7 @@ export function StepBrain({ data, setData, next, back }) {
       <div data-testid="onb-step-brain">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600/15 text-violet-400"><Brain className="h-5 w-5" /></span>
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15 text-brand-400"><Brain className="h-5 w-5" /></span>
             <div>
               <h2 className="text-2xl font-bold text-zinc-50">Your Knowledge Brain is ready</h2>
               <p className="text-sm text-zinc-500">Here's what Assistify learned. Edit anything — it's yours.</p>
@@ -48,7 +48,7 @@ export function StepBrain({ data, setData, next, back }) {
         <div className="space-y-3" data-testid="onb-brain-profile">
           {FIELDS.map(([key, label, big]) => (
             <div key={key} className="rounded-xl border border-white/10 bg-zinc-950 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-300">{label}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">{label}</p>
               {editing ? (
                 big
                   ? <textarea value={local[key] || ""} onChange={(e) => setLocal({ ...local, [key]: e.target.value })} rows={2} className={`${inputCls} mt-1.5 resize-none`} data-testid={`onb-brain-${key}`} />
@@ -59,7 +59,7 @@ export function StepBrain({ data, setData, next, back }) {
             </div>
           ))}
           <div className="rounded-xl border border-white/10 bg-zinc-950 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-300">Services</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">Services</p>
             {editing ? (
               <input value={local.services || ""} onChange={(e) => setLocal({ ...local, services: e.target.value })} className={`${inputCls} mt-1.5`} data-testid="onb-brain-services" placeholder="comma separated" />
             ) : (

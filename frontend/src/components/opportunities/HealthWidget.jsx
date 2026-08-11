@@ -1,7 +1,7 @@
 import { Activity } from "lucide-react";
 
-const GRADE_COLOR = (s) => (s >= 90 ? "text-emerald-400" : s >= 75 ? "text-violet-300" : s >= 55 ? "text-yellow-400" : "text-orange-400");
-const barColor = (s) => (s >= 90 ? "bg-emerald-500" : s >= 75 ? "bg-violet-500" : s >= 55 ? "bg-yellow-500" : "bg-orange-500");
+const GRADE_COLOR = (s) => (s >= 90 ? "text-emerald-400" : s >= 75 ? "text-brand-300" : s >= 55 ? "text-yellow-400" : "text-orange-400");
+const barColor = (s) => (s >= 90 ? "bg-emerald-500" : s >= 75 ? "bg-brand-500" : s >= 55 ? "bg-yellow-500" : "bg-orange-500");
 
 export function HealthWidget({ data, loading }) {
   if (loading || !data) {
@@ -24,7 +24,7 @@ export function HealthWidget({ data, loading }) {
   const r = 52, circ = 2 * Math.PI * r;
   return (
     <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5" data-testid="workspace-health">
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Activity className="h-3.5 w-3.5 text-violet-400" /> Workspace Health</div>
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Activity className="h-3.5 w-3.5 text-brand-400" /> Workspace Health</div>
       <div className="mt-4 flex flex-col items-center gap-5 sm:flex-row sm:items-center">
         <div className="relative flex h-32 w-32 shrink-0 items-center justify-center">
           <svg className="h-32 w-32 -rotate-90" viewBox="0 0 120 120">

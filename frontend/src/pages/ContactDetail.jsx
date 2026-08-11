@@ -52,7 +52,7 @@ export default function ContactDetail() {
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600/15 text-violet-300 text-lg font-bold">{c.name.slice(0, 2).toUpperCase()}</span>
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600/15 text-brand-300 text-lg font-bold">{c.name.slice(0, 2).toUpperCase()}</span>
           <div>
             <h1 className="text-2xl font-bold text-zinc-50" data-testid="contact-name">{c.name}</h1>
             <p className="text-sm text-zinc-500">{c.contact || "—"} · {fmtMoneyFull(c.pipeline_value)} open pipeline</p>
@@ -64,14 +64,14 @@ export default function ContactDetail() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
           {/* AI relationship summary */}
-          <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.05] p-4" data-testid="contact-ai-summary">
+          <div className="rounded-2xl border border-brand-500/20 bg-brand-500/[0.05] p-4" data-testid="contact-ai-summary">
             <div className="mb-2 flex items-center justify-between">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-violet-300"><Sparkles className="h-3.5 w-3.5" /> AI Relationship Summary</p>
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-brand-300"><Sparkles className="h-3.5 w-3.5" /> AI Relationship Summary</p>
               {summary && <button onClick={() => genSummary(true)} disabled={genning} data-testid="contact-refresh-summary" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300">{genning ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />} Refresh</button>}
             </div>
             {!summary ? (
               <button onClick={() => genSummary(false)} disabled={genning} data-testid="contact-generate-summary"
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-violet-500/30 py-2.5 text-sm font-semibold text-violet-200 hover:bg-violet-500/10 disabled:opacity-60">
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-brand-500/30 py-2.5 text-sm font-semibold text-brand-200 hover:bg-brand-500/10 disabled:opacity-60">
                 {genning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} {genning ? "Analyzing relationship…" : "Generate AI summary"}
               </button>
             ) : (
@@ -79,7 +79,7 @@ export default function ContactDetail() {
                 <p className="text-sm text-zinc-200">{summary.summary}</p>
                 {summary.strengths?.length > 0 && <div><p className="flex items-center gap-1 text-xs font-semibold text-emerald-400"><ShieldCheck className="h-3.5 w-3.5" /> Strengths</p><ul className="mt-1 space-y-0.5">{summary.strengths.map((s, i) => <li key={i} className="text-xs text-zinc-300">• {s}</li>)}</ul></div>}
                 {summary.risks?.length > 0 && <div><p className="flex items-center gap-1 text-xs font-semibold text-amber-400"><AlertTriangle className="h-3.5 w-3.5" /> Risks</p><ul className="mt-1 space-y-0.5">{summary.risks.map((s, i) => <li key={i} className="text-xs text-zinc-300">• {s}</li>)}</ul></div>}
-                {summary.next_best_action && <div className="rounded-lg bg-zinc-900/60 p-2.5"><p className="flex items-center gap-1 text-xs font-semibold text-violet-300"><ArrowRight className="h-3.5 w-3.5" /> Next best action</p><p className="mt-0.5 text-sm text-zinc-200">{summary.next_best_action}</p></div>}
+                {summary.next_best_action && <div className="rounded-lg bg-zinc-900/60 p-2.5"><p className="flex items-center gap-1 text-xs font-semibold text-brand-300"><ArrowRight className="h-3.5 w-3.5" /> Next best action</p><p className="mt-0.5 text-sm text-zinc-200">{summary.next_best_action}</p></div>}
               </div>
             )}
           </div>
@@ -110,7 +110,7 @@ export default function ContactDetail() {
                 {c.timeline.map((e, i) => (
                   <div key={i} className="flex gap-3">
                     <div className="flex flex-col items-center">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-600/15 text-violet-300"><AiIcon name={e.icon} className="h-3 w-3" /></span>
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600/15 text-brand-300"><AiIcon name={e.icon} className="h-3 w-3" /></span>
                       {i < c.timeline.length - 1 && <span className="mt-1 h-full w-px flex-1 bg-white/10" />}
                     </div>
                     <div className="pb-1"><p className="text-sm text-zinc-200">{e.title}</p><p className="text-xs text-zinc-600">{relTime(e.when)}</p></div>
@@ -127,11 +127,11 @@ export default function ContactDetail() {
 
 const LinkRow = ({ icon: Icon, title, items, empty, testid }) => (
   <div className="rounded-2xl border border-white/10 bg-zinc-950 p-4" data-testid={testid}>
-    <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Icon className="h-3.5 w-3.5 text-violet-400" /> {title} <span className="rounded-full bg-white/5 px-1.5 text-[10px]">{items.length}</span></p>
+    <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500"><Icon className="h-3.5 w-3.5 text-brand-400" /> {title} <span className="rounded-full bg-white/5 px-1.5 text-[10px]">{items.length}</span></p>
     {items.length === 0 ? <p className="text-xs text-zinc-600">{empty}</p> : (
       <div className="space-y-1.5">
         {items.map((it, i) => (
-          <button key={i} onClick={it.onClick} className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-zinc-900/40 px-3 py-2 text-left transition-all hover:border-violet-500/30">
+          <button key={i} onClick={it.onClick} className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-zinc-900/40 px-3 py-2 text-left transition-all hover:border-brand-500/30">
             <span className="truncate text-sm text-zinc-200">{it.label}</span>
             <span className="shrink-0 text-xs text-zinc-500">{it.meta}</span>
           </button>

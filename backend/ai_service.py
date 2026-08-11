@@ -95,6 +95,11 @@ class AIService:
             logger.debug("AI usage enforce skipped: %s", e)
     async def complete(self, system_message: str, prompt: str, session_id: str = None) -> str:
         await self._before_provider_call()
+        try:
+            from locale_util import with_language_instruction
+            system_message = with_language_instruction(system_message)
+        except Exception:
+            pass
         if self.provider == "openai":
             return await self._complete_openai(system_message, prompt)
         if self.provider == "emergent":
@@ -108,6 +113,11 @@ class AIService:
     async def stream(self, system_message: str, prompt: str, session_id: str = None) -> AsyncIterator[str]:
         """Yield text deltas for SSE endpoints."""
         await self._before_provider_call()
+        try:
+            from locale_util import with_language_instruction
+            system_message = with_language_instruction(system_message)
+        except Exception:
+            pass
         if self.provider == "openai":
             async for chunk in self._stream_openai(system_message, prompt):
                 yield chunk

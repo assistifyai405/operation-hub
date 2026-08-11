@@ -1,4 +1,6 @@
+import PageIntro from "@/components/PageIntro";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Users, FolderKanban, DollarSign, FileText, Loader2, TrendingUp, CheckSquare } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -15,6 +17,7 @@ const Card = ({ children, className = "" }) => (
 );
 
 export default function Analytics() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
 
   useEffect(() => { analyticsApi.get().then(setData).catch((e) => toast.error(e.message)); }, []);
@@ -24,7 +27,7 @@ export default function Analytics() {
   const k = data.kpis;
   const kpis = [
     { label: "Total revenue (paid)", value: money(k.total_paid), icon: DollarSign, color: "text-emerald-400" },
-    { label: "Total invoiced", value: money(k.total_invoiced), icon: TrendingUp, color: "text-violet-400" },
+    { label: "Total invoiced", value: money(k.total_invoiced), icon: TrendingUp, color: "text-brand-400" },
     { label: "Clients", value: k.total_clients, icon: Users, color: "text-blue-400" },
     { label: "Projects", value: k.total_projects, icon: FolderKanban, color: "text-cyan-400" },
   ];
@@ -37,6 +40,8 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6" data-testid="analytics-page">
+      <PageIntro title={t("pages.analytics.title")} description={t("pages.analytics.description")} />
+
       {emptyWorkspace && (
         <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950 px-4 py-8 text-center" data-testid="analytics-empty">
           <p className="text-sm font-semibold text-zinc-200">No analytics yet</p>
@@ -117,15 +122,15 @@ export default function Analytics() {
         </Card>
 
         <Card>
-          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-100"><CheckSquare className="h-4 w-4 text-violet-400" /> Task completion</h3>
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-100"><CheckSquare className="h-4 w-4 text-brand-400" /> Task completion</h3>
           <div className="flex h-[240px] flex-col justify-center gap-6">
             <div>
               <div className="mb-2 flex items-center justify-between text-sm"><span className="text-zinc-400">Completed</span><span className="font-semibold text-emerald-400">{k.completed_tasks}</span></div>
               <div className="h-3 overflow-hidden rounded-full bg-zinc-800"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${(k.completed_tasks + k.open_tasks) ? (k.completed_tasks / (k.completed_tasks + k.open_tasks)) * 100 : 0}%` }} /></div>
             </div>
             <div>
-              <div className="mb-2 flex items-center justify-between text-sm"><span className="text-zinc-400">Open</span><span className="font-semibold text-violet-400">{k.open_tasks}</span></div>
-              <div className="h-3 overflow-hidden rounded-full bg-zinc-800"><div className="h-full rounded-full bg-violet-500" style={{ width: `${(k.completed_tasks + k.open_tasks) ? (k.open_tasks / (k.completed_tasks + k.open_tasks)) * 100 : 0}%` }} /></div>
+              <div className="mb-2 flex items-center justify-between text-sm"><span className="text-zinc-400">Open</span><span className="font-semibold text-brand-400">{k.open_tasks}</span></div>
+              <div className="h-3 overflow-hidden rounded-full bg-zinc-800"><div className="h-full rounded-full bg-brand-500" style={{ width: `${(k.completed_tasks + k.open_tasks) ? (k.open_tasks / (k.completed_tasks + k.open_tasks)) * 100 : 0}%` }} /></div>
             </div>
           </div>
         </Card>
