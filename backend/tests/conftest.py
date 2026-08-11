@@ -87,6 +87,14 @@ def api_client():
     clear_rate_limits()
 
 
+@pytest.fixture(autouse=True)
+def _clear_rate_limits_each_test():
+    """Prevent Redis/IP rate-limit bleed across the large HTTP suite."""
+    clear_rate_limits()
+    yield
+    clear_rate_limits()
+
+
 def auth_json(client, response):
     """Cookie-only auth: synthesize accessToken from httpOnly cookie for Bearer test headers.
 

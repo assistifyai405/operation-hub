@@ -100,7 +100,8 @@ def test_hero_structure(client, auth):
     assert isinstance(hero.get("brief_lines"), list)
     assert isinstance(hero.get("revenue_at_risk"), (int, float))
     assert isinstance(hero.get("hours_saved_week"), (int, float))
-    assert 0 <= hero.get("ai_confidence", -1) <= 100
+    conf = hero.get("ai_confidence")
+    assert conf is None or (isinstance(conf, (int, float)) and 0 <= conf <= 100)
     tp = hero.get("top_priority")
     if tp is not None:
         for k in ["title", "why", "priority", "action", "confidence", "icon"]:

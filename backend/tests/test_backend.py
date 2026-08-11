@@ -47,31 +47,33 @@ def test_agents_list(client, auth):
 def test_chat_stream_fires_and_persists_user_msg(client, auth):
     payload = {"session_id": "TEST_session_pytest", "agent_id": "copilot", "message": "Hello test"}
     with client.stream("POST", "/api/chat/stream", headers=auth["headers"], json=payload) as r:
-        assert r.status_code in (200, 502, 503), r.text
-        assert "sk-" not in (r.text or "").lower()
+        assert r.status_code in (200, 502, 503)
         if r.status_code != 200:
+            body = r.read().decode("utf-8", errors="replace")
+            assert "sk-" not in body.lower()
             return
         assert "text/event-stream" in r.headers.get("content-type", "")
         got_event = False
+        collected = ""
         for line in r.iter_lines():
+            collected += line + "\n"
             if line and line.startswith("data:"):
                 got_event = True
                 break
+        assert "sk-" not in collected.lower()
         assert got_event
 
 
 def test_chat_stream_real_ai_response(client, auth):
     """Accepts 200 with text OR sanitized 502/503 when LLM key is fake."""
-    if not __import__("os").environ.get("RUN_LIVE_AI_TESTS"):
-        # Still exercise the endpoint; soft-assert when LLM fails
-        pass
     payload = {"session_id": "TEST_real_ai_session", "agent_id": "copilot", "message": "Say hello in 5 words"}
     collected = ""
     done_seen = False
     with client.stream("POST", "/api/chat/stream", headers=auth["headers"], json=payload) as r:
-        assert r.status_code in (200, 502, 503), r.text
-        assert "sk-" not in (r.text or "").lower()
+        assert r.status_code in (200, 502, 503)
         if r.status_code != 200:
+            body = r.read().decode("utf-8", errors="replace")
+            assert "sk-" not in body.lower()
             return
         for line in r.iter_lines():
             if not line or not line.startswith("data:"):
@@ -81,6 +83,7 @@ def test_chat_stream_real_ai_response(client, auth):
                 collected += data["delta"]
             if data.get("done"):
                 done_seen = True
+        assert "sk-" not in collected.lower()
     if done_seen:
         assert len(collected) >= 0  # may be empty on failure path inside stream
 
