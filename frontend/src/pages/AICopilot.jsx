@@ -14,31 +14,27 @@ import { toast } from "sonner";
 const SESSION_KEY = "copilot_session";
 const icons = { receipt: Receipt, alert: TriangleAlert, clock: Clock, folder: FolderKanban, sparkles: Sparkles, users: Users };
 
-const TOOL_LABEL = {
-  create_client: "Create Client", create_project: "Create Project", generate_plan: "Generate AI Plan",
-  generate_proposal: "Generate Proposal", generate_contract: "Generate Contract", generate_invoice: "Generate Invoice",
-};
-
 function ActionCard({ action, onConfirm, onCancel, busy, done }) {
+  const { t } = useTranslation();
   return (
     <div className="mt-2 rounded-xl border border-brand-500/30 bg-brand-600/10 p-4" data-testid="copilot-action-card">
       <div className="flex items-center gap-2">
         <Wand2 className="h-4 w-4 text-brand-400" />
-        <p className="text-sm font-semibold text-zinc-100">{TOOL_LABEL[action.tool] || "Action"}</p>
+        <p className="text-sm font-semibold text-zinc-100">{t(`copilot.tools.${action.tool}`, { defaultValue: t("copilot.action") })}</p>
       </div>
-      <p className="mt-2 text-xs text-zinc-400">I'm about to create:</p>
+      <p className="mt-2 text-xs text-zinc-400">{t("copilot.aboutToCreate")}</p>
       <ul className="mt-1 space-y-1">
         {(asArray(action.preview)).map((p, i) => <li key={i} className="text-sm text-zinc-200">• {p}</li>)}
       </ul>
       {done ? (
-        <p className="mt-3 flex items-center gap-1.5 text-sm text-emerald-400"><Check className="h-4 w-4" /> Done</p>
+        <p className="mt-3 flex items-center gap-1.5 text-sm text-emerald-400"><Check className="h-4 w-4" /> {t("copilot.done")}</p>
       ) : (
         <div className="mt-3 flex items-center gap-2">
           <button onClick={onConfirm} disabled={busy} data-testid="copilot-confirm" className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-brand-500 disabled:opacity-60">
-            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Confirm
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} {t("copilot.confirm")}
           </button>
           <button onClick={onCancel} disabled={busy} data-testid="copilot-cancel" className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-300 transition-all hover:text-white">
-            <X className="h-3.5 w-3.5" /> Cancel
+            <X className="h-3.5 w-3.5" /> {t("common.cancel")}
           </button>
         </div>
       )}
@@ -124,7 +120,7 @@ export default function AICopilot() {
     finally { setExecBusy(null); }
   };
 
-  const cancelAction = (idx) => setMessages((m) => m.map((msg, i) => i === idx ? { ...msg, action: null, content: msg.content + "\n\n(Action cancelled.)" } : msg));
+  const cancelAction = (idx) => setMessages((m) => m.map((msg, i) => i === idx ? { ...msg, action: null, content: `${msg.content}\n\n${t("copilot.actionCancelled")}` } : msg));
 
   const empty = messages.length === 0;
 
@@ -135,22 +131,17 @@ export default function AICopilot() {
       {empty ? (
         <div className="flex flex-1 flex-col items-center justify-center px-2 text-center" data-testid="copilot-empty">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 glow-brand" aria-hidden="true"><Sparkles className="h-8 w-8 text-white" /></div>
-          <h1 className="mt-5 text-2xl font-bold tracking-tight text-zinc-50">Assistify Copilot</h1>
-          <p className="mt-2 max-w-md text-sm text-zinc-400">
-            Your day-to-day AI assistant across the whole workspace. Ask it to summarize a client, draft an email,
-            create a project plan, prepare a proposal, or analyze recent activity.
-          </p>
-          <p className="mt-2 max-w-md text-xs text-zinc-600">
-            Copilot is for quick questions and actions. For specialized roles, open AI Agents. For everything AI has already created, use AI Workspace.
-          </p>
+          <h1 className="mt-5 text-2xl font-bold tracking-tight text-zinc-50">{t("copilot.title")}</h1>
+          <p className="mt-2 max-w-md text-sm text-zinc-400">{t("copilot.description")}</p>
+          <p className="mt-2 max-w-md text-xs text-zinc-600">{t("copilot.hint")}</p>
           <div className="mt-6 grid w-full max-w-xl grid-cols-1 gap-2 sm:grid-cols-2">
             {(asArray(suggestions).length
               ? asArray(suggestions)
               : [
-                  { text: "Summarize my top clients", prompt: "Summarize my top clients and what needs attention.", icon: "users" },
-                  { text: "Draft a follow-up email", prompt: "Draft a polite follow-up email for a recent proposal.", icon: "sparkles" },
-                  { text: "Create a project plan", prompt: "Help me create a project plan for a new engagement.", icon: "folder" },
-                  { text: "Prepare a proposal outline", prompt: "Outline a proposal for a mid-size consulting project.", icon: "sparkles" },
+                  { text: t("copilot.suggestions.clients.text"), prompt: t("copilot.suggestions.clients.prompt"), icon: "users" },
+                  { text: t("copilot.suggestions.followup.text"), prompt: t("copilot.suggestions.followup.prompt"), icon: "sparkles" },
+                  { text: t("copilot.suggestions.plan.text"), prompt: t("copilot.suggestions.plan.prompt"), icon: "folder" },
+                  { text: t("copilot.suggestions.proposal.text"), prompt: t("copilot.suggestions.proposal.prompt"), icon: "sparkles" },
                 ]
             ).map((s, i) => {
               const Icon = icons[s.icon] || Sparkles;
@@ -176,7 +167,7 @@ export default function AICopilot() {
                   <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
                 </div>
                 {m.action && <ActionCard action={m.action} busy={execBusy === i} done={m.done} onConfirm={() => confirmAction(i, m.action)} onCancel={() => cancelAction(i)} />}
-                {m.navigate && <button onClick={() => navigate(m.navigate)} data-testid="copilot-open-result" className="mt-2 flex items-center gap-1.5 text-xs font-medium text-brand-400 hover:text-brand-300">Open <ArrowRight className="h-3.5 w-3.5" /></button>}
+                {m.navigate && <button onClick={() => navigate(m.navigate)} data-testid="copilot-open-result" className="mt-2 flex items-center gap-1.5 text-xs font-medium text-brand-400 hover:text-brand-300">{t("common.open")} <ArrowRight className="h-3.5 w-3.5" /></button>}
               </div>
               {m.role === "user" && <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-400"><User className="h-4 w-4" /></div>}
             </div>
@@ -187,10 +178,10 @@ export default function AICopilot() {
       )}
 
       <form onSubmit={(e) => { e.preventDefault(); send(); }} className="mt-2 flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-950 p-2">
-        <label htmlFor="copilot-input" className="sr-only">Message Copilot</label>
-        <input id="copilot-input" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask anything or say 'Create a project for…'" data-testid="copilot-input"
+        <label htmlFor="copilot-input" className="sr-only">{t("copilot.messageLabel")}</label>
+        <input id="copilot-input" value={input} onChange={(e) => setInput(e.target.value)} placeholder={t("copilot.placeholder")} data-testid="copilot-input"
           className="flex-1 bg-transparent px-3 py-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-600" />
-        <button type="submit" disabled={loading || !input.trim()} data-testid="copilot-send" aria-label="Send message" className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white transition-all hover:bg-brand-500 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50">
+        <button type="submit" disabled={loading || !input.trim()} data-testid="copilot-send" aria-label={t("copilot.send")} className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white transition-all hover:bg-brand-500 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50">
           <Send className="h-4 w-4" aria-hidden="true" />
         </button>
       </form>

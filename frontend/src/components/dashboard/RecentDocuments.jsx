@@ -1,10 +1,14 @@
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FileStack, ArrowRight } from "lucide-react";
 import { AiIcon } from "@/components/ai/aiHelpers";
+import { useLocale } from "@/context/LocaleContext";
 import { Section, relTime, DOC_BADGE } from "./execShared";
 
 export function RecentDocuments({ documents }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const navigate = useNavigate();
   const all = [
     ...(documents.proposals || []), ...(documents.contracts || []),
@@ -12,10 +16,10 @@ export function RecentDocuments({ documents }) {
   ].filter((d) => d.updated_at).sort((a, b) => (b.updated_at > a.updated_at ? 1 : -1)).slice(0, 8);
 
   return (
-    <Section title="Recent Documents" icon={FileStack} testid="documents-section">
+    <Section title={t("dashboard.documents.title")} icon={FileStack} testid="documents-section">
       {all.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-zinc-950 py-10 text-center text-sm text-zinc-500" data-testid="documents-empty">
-          No documents yet — generate a proposal, contract or invoice from a project.
+          {t("dashboard.documents.empty")}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -26,7 +30,7 @@ export function RecentDocuments({ documents }) {
                 className="flex flex-col rounded-2xl border border-white/10 bg-zinc-950 p-4 text-left transition-all hover:border-brand-500/40" data-testid={`document-card-${d.type}`}>
                 <div className="flex items-center justify-between">
                   <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.chip}`}>
-                    <AiIcon name={badge.icon} className="h-3 w-3" /> {badge.label}
+                    <AiIcon name={badge.icon} className="h-3 w-3" /> {t(badge.labelKey)}
                   </span>
                   <ArrowRight className="h-3.5 w-3.5 text-zinc-600" />
                 </div>
@@ -35,7 +39,7 @@ export function RecentDocuments({ documents }) {
                 <div className="mt-auto flex items-center gap-2 pt-2 text-[10px] text-zinc-600">
                   <span className="rounded bg-zinc-900 px-1.5 py-0.5 text-zinc-400">{d.status}</span>
                   {d.confidence ? <span className="text-brand-400">{d.confidence}%</span> : null}
-                  <span className="ml-auto">{relTime(d.updated_at)}</span>
+                  <span className="ml-auto">{relTime(d.updated_at, locale, t)}</span>
                 </div>
               </motion.button>
             );

@@ -1,20 +1,24 @@
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import { AiIcon } from "@/components/ai/aiHelpers";
+import { useLocale } from "@/context/LocaleContext";
 import { money } from "./execShared";
 
 const DOT = { Critical: "bg-red-500", High: "bg-orange-500", Medium: "bg-amber-500", Low: "bg-emerald-500", positive: "bg-emerald-500", risk: "bg-red-500" };
 
 export function AIExecutiveBrief({ insights, hero, health, workspaceEmpty }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const navigate = useNavigate();
 
   const lines = [];
   if (!workspaceEmpty && health?.score != null && health.score >= 75) {
-    lines.push({ id: "pos", tone: "positive", title: `Business health is strong at ${health.score}/100`, why: health.grade, action: null });
+    lines.push({ id: "pos", tone: "positive", title: t("dashboard.executive.healthStrong", { score: health.score }), why: health.grade, action: null });
   }
   if (!workspaceEmpty && hero?.revenue_at_risk > 0) {
-    lines.push({ id: "risk", tone: "risk", title: `${money(hero.revenue_at_risk)} at risk`, why: "Across unpaid invoices and stalled open deals.", confidence: null, action: { label: "Review", link: "/pipeline" } });
+    lines.push({ id: "risk", tone: "risk", title: t("dashboard.executive.atRisk", { amount: money(hero.revenue_at_risk, locale) }), why: t("dashboard.executive.atRiskWhy"), confidence: null, action: { label: t("dashboard.executive.review"), link: "/pipeline" } });
   }
   (insights || []).slice(0, 4).forEach((it) => {
     lines.push({ id: it.id, tone: it.priority, icon: it.icon, title: it.title, why: it.why, confidence: it.confidence, impact: it.revenue_impact, action: it.action });
@@ -22,16 +26,16 @@ export function AIExecutiveBrief({ insights, hero, health, workspaceEmpty }) {
 
   return (
     <div className="flex h-full flex-col rounded-2xl border border-white/10 bg-zinc-950/80 p-5 backdrop-blur-xl" data-testid="ai-executive-brief">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><Sparkles className="h-4 w-4 text-brand-400" /> AI Executive Brief</h2>
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><Sparkles className="h-4 w-4 text-brand-400" /> {t("dashboard.executive.title")}</h2>
       <div className="mt-3 flex-1 space-y-2.5">
         {lines.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center" data-testid="brief-empty">
             <CheckCircle2 className="h-8 w-8 text-emerald-500" />
             <p className="mt-2 text-sm text-zinc-300">
-              {workspaceEmpty ? "No workspace insights yet." : "All clear — nothing needs your attention."}
+              {workspaceEmpty ? t("dashboard.executive.noInsights") : t("dashboard.executive.allClear")}
             </p>
             {workspaceEmpty && (
-              <p className="mt-1 max-w-xs text-xs text-zinc-500">Add clients, projects or deals and Assistify will surface real recommendations here.</p>
+              <p className="mt-1 max-w-xs text-xs text-zinc-500">{t("dashboard.executive.emptyHint")}</p>
             )}
           </div>
         ) : lines.map((l, i) => (
@@ -43,8 +47,8 @@ export function AIExecutiveBrief({ insights, hero, health, workspaceEmpty }) {
               <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">{l.why}</p>
               {(l.confidence || l.action || l.impact) && (
                 <div className="mt-1.5 flex items-center gap-2">
-                  {l.impact ? <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300" data-testid={`brief-impact-${l.id}`}>≈{money(l.impact)}</span> : null}
-                  {l.confidence ? <span className="text-[10px] text-zinc-600">{l.confidence}% confidence</span> : null}
+                  {l.impact ? <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300" data-testid={`brief-impact-${l.id}`}>≈{money(l.impact, locale)}</span> : null}
+                  {l.confidence ? <span className="text-[10px] text-zinc-600">{t("dashboard.confidence", { value: l.confidence })}</span> : null}
                   {l.action?.link && (
                     <button onClick={() => navigate(l.action.link)} data-testid={`brief-action-${l.id}`}
                       className="ml-auto inline-flex items-center gap-1 rounded-lg bg-brand-600/90 px-2.5 py-1 text-[11px] font-semibold text-white transition-all hover:bg-brand-500">

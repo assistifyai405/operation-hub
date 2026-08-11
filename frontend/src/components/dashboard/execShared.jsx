@@ -1,14 +1,10 @@
-export const money = (v) => `$${Number(v || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+import { formatCurrencyCompact, formatDateShort, formatRelativeTime } from "@/i18n/format";
 
-export const relTime = (d) => {
-  if (!d) return "";
-  const s = (Date.now() - new Date(d).getTime()) / 1000;
-  if (s < 60) return "just now";
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  if (s < 604800) return `${Math.floor(s / 86400)}d ago`;
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-};
+/** @deprecated Prefer formatCurrencyCompact with an explicit locale. */
+export const money = (v, locale = "en", currency = "EUR") =>
+  formatCurrencyCompact(v, locale, currency);
+
+export const relTime = (d, locale = "en", t) => formatRelativeTime(d, locale, t);
 
 export const PRIORITY_META = {
   Critical: { chip: "bg-red-500/15 text-red-300 border-red-500/30", dot: "bg-red-500", ring: "text-red-400" },
@@ -28,10 +24,10 @@ export const healthTone = (score) => {
 };
 
 export const DOC_BADGE = {
-  proposal: { label: "Proposal", chip: "bg-brand-500/15 text-brand-300", icon: "file-text" },
-  contract: { label: "Contract", chip: "bg-cyan-500/15 text-cyan-300", icon: "scroll-text" },
-  invoice: { label: "Invoice", chip: "bg-emerald-500/15 text-emerald-300", icon: "receipt" },
-  plan: { label: "Project Plan", chip: "bg-amber-500/15 text-amber-300", icon: "list-checks" },
+  proposal: { labelKey: "nav.proposals", chip: "bg-brand-500/15 text-brand-300", icon: "file-text" },
+  contract: { labelKey: "nav.contracts", chip: "bg-cyan-500/15 text-cyan-300", icon: "scroll-text" },
+  invoice: { labelKey: "nav.invoices", chip: "bg-emerald-500/15 text-emerald-300", icon: "receipt" },
+  plan: { labelKey: "planner.plan", chip: "bg-amber-500/15 text-amber-300", icon: "list-checks" },
 };
 
 export function Skeleton({ className = "" }) {
@@ -51,3 +47,5 @@ export function Section({ title, icon: Icon, action, children, testid }) {
     </section>
   );
 }
+
+export { formatDateShort };

@@ -5,12 +5,9 @@ import {
 } from "lucide-react";
 import { aiApi } from "@/lib/api";
 import { fmtDuration } from "@/components/ai/aiHelpers";
-
-const fmtSecs = (ms) => {
-  if (!ms || ms < 0) return "just now";
-  const s = ms / 1000;
-  return s < 1 ? "under 1s" : `${s.toFixed(1)}s`;
-};
+import { useTranslation } from "react-i18next";
+import { useLocale } from "@/context/LocaleContext";
+import { localeTag } from "@/i18n/format";
 
 function Skeleton() {
   return (
@@ -25,6 +22,8 @@ function Skeleton() {
 }
 
 export function AIActionReport({ report, durationMs, actions = {} }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const [lifetime, setLifetime] = useState(null);
   const [ready, setReady] = useState(false);
   const [ts] = useState(() => new Date());
@@ -40,6 +39,11 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
 
   const conf = report.confidence || 95;
   const confColor = conf >= 95 ? "#34d399" : conf >= 90 ? "#86EFAC" : "#fbbf24";
+  const fmtSecs = (ms) => {
+    if (!ms || ms < 0) return t("aiReport.justNow");
+    const s = ms / 1000;
+    return s < 1 ? t("aiReport.underSecond") : t("aiReport.seconds", { count: s.toFixed(1) });
+  };
 
   const btn = (key, Icon, label, primary) =>
     actions[key] ? (
@@ -58,11 +62,11 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
             <CheckCircle2 className="h-6 w-6 text-emerald-400 ai-pop" />
           </span>
           <div className="min-w-0">
-            <h2 className="text-lg font-bold text-zinc-50" data-testid="report-success-title">Your {report.type_label} has been generated successfully.</h2>
+            <h2 className="text-lg font-bold text-zinc-50" data-testid="report-success-title">{t("aiReport.generated", { type: report.type_label })}</h2>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-400">
               <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-brand-400" /> {report.type_label}</span>
-              <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> Generated in {fmtSecs(durationMs)}</span>
-              <span>{ts.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+              <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {t("aiReport.generatedIn", { duration: fmtSecs(durationMs) })}</span>
+              <span>{new Intl.DateTimeFormat(localeTag(locale), { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(ts)}</span>
             </div>
           </div>
         </div>
@@ -71,7 +75,7 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
       <div className="grid gap-4 md:grid-cols-2">
         {/* 2. What the AI did */}
         <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5" data-testid="report-checklist">
-          <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><Sparkles className="h-4 w-4 text-brand-400" /> What Assistify did</p>
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><Sparkles className="h-4 w-4 text-brand-400" /> {t("aiReport.whatAssistifyDid")}</p>
           <div className="space-y-2">
             {report.steps.map((s, i) => (
               <div key={i} className="flex items-center gap-2.5 text-sm animate-fade-up" style={{ animationDelay: `${i * 70}ms` }}>
@@ -85,10 +89,10 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
         {/* 3 + 4. Time saved & Confidence */}
         <div className="space-y-4">
           <div className="rounded-2xl border border-brand-500/20 bg-gradient-to-br from-brand-600/10 to-zinc-950 p-5" data-testid="report-time-saved">
-            <p className="flex items-center gap-1.5 text-xs text-zinc-500"><Clock className="h-3.5 w-3.5" /> Time saved</p>
-            <p className="mt-1 text-sm text-zinc-300">You saved approximately</p>
-            <p className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-brand-300 to-cyan-300">{report.time_saved} minutes</p>
-            {lifetime != null && <p className="mt-2 text-xs text-zinc-500">Lifetime time saved · <b className="text-zinc-300" data-testid="report-lifetime">{fmtDuration(lifetime)}</b></p>}
+            <p className="flex items-center gap-1.5 text-xs text-zinc-500"><Clock className="h-3.5 w-3.5" /> {t("aiReport.timeSaved")}</p>
+            <p className="mt-1 text-sm text-zinc-300">{t("aiReport.savedApproximately")}</p>
+            <p className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-brand-300 to-cyan-300">{t("aiReport.minutes", { count: report.time_saved })}</p>
+            {lifetime != null && <p className="mt-2 text-xs text-zinc-500">{t("aiReport.lifetimeSaved")} · <b className="text-zinc-300" data-testid="report-lifetime">{fmtDuration(lifetime)}</b></p>}
           </div>
 
           <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-zinc-950 p-5" data-testid="report-confidence">
@@ -99,7 +103,7 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-zinc-100">AI Confidence</p>
+              <p className="text-sm font-semibold text-zinc-100">{t("aiReport.confidence")}</p>
               <p className="mt-0.5 text-xs leading-snug text-zinc-400">{report.confidence_note}</p>
             </div>
           </div>
@@ -108,7 +112,7 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
 
       {/* 5. Why */}
       <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5" data-testid="report-why">
-        <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><Lightbulb className="h-4 w-4 text-amber-400" /> Why Assistify made these decisions</p>
+        <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><Lightbulb className="h-4 w-4 text-amber-400" /> {t("aiReport.why")}</p>
         <ul className="space-y-2">
           {report.why.map((w, i) => (
             <li key={i} className="flex gap-2.5 text-sm leading-snug text-zinc-300"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />{w}</li>
@@ -118,7 +122,7 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
 
       {/* 7. Quality indicators */}
       <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5" data-testid="report-quality">
-        <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><ShieldCheck className="h-4 w-4 text-emerald-400" /> Quality indicators</p>
+        <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-100"><ShieldCheck className="h-4 w-4 text-emerald-400" /> {t("aiReport.quality")}</p>
         <div className="flex flex-wrap gap-2">
           {report.quality.map((q, i) => (
             <span key={i} className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
@@ -130,12 +134,12 @@ export function AIActionReport({ report, durationMs, actions = {} }) {
 
       {/* 6. Suggested next steps */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-zinc-950 p-4" data-testid="report-actions">
-        <span className="mr-auto text-xs font-semibold uppercase tracking-wide text-zinc-500">Suggested next steps</span>
-        {btn("onReview", Eye, "Review Document", true)}
-        {btn("onEdit", Pencil, "Edit")}
-        {btn("onDownloadPdf", Download, "Download PDF")}
-        {btn("onExportWord", FileText, "Export Word")}
-        {btn("onSend", Send, "Send to Client")}
+        <span className="mr-auto text-xs font-semibold uppercase tracking-wide text-zinc-500">{t("aiReport.nextSteps")}</span>
+        {btn("onReview", Eye, t("aiReport.reviewDocument"), true)}
+        {btn("onEdit", Pencil, t("common.edit"))}
+        {btn("onDownloadPdf", Download, t("aiReport.downloadPdf"))}
+        {btn("onExportWord", FileText, t("aiReport.exportWord"))}
+        {btn("onSend", Send, t("aiReport.sendToClient"))}
       </div>
     </div>
   );

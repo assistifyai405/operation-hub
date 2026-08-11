@@ -36,6 +36,10 @@ export function formatApiErrorDetail(detail) {
     // Sprint 18 envelope: { error: { code, message, requestId } }
     if (detail.error && typeof detail.error === "object") {
       const e = detail.error;
+      // Prefer stable codes for UI mapping via localizeApiError
+      if (typeof e.code === "string" && typeof e.message === "string") {
+        return e.actionable ? `${e.message} — ${e.actionable}` : e.message;
+      }
       if (e.actionable && e.message) return `${e.message} — ${e.actionable}`;
       if (typeof e.message === "string") return e.message;
     }

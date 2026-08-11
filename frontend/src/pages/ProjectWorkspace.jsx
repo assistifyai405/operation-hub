@@ -18,6 +18,9 @@ import ProposalWriter from "@/components/workspace/ProposalWriter";
 import ContractWriter from "@/components/workspace/ContractWriter";
 import InvoiceWriter from "@/components/workspace/InvoiceWriter";
 import { useAssistant } from "@/context/AssistantContext";
+import { useTranslation } from "react-i18next";
+import { useLocale } from "@/context/LocaleContext";
+import { formatCurrency, formatDate, localeTag } from "@/i18n/format";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -28,15 +31,16 @@ const statusStyle = {
   Blocked: "bg-red-500/10 text-red-400 border-red-500/20",
 };
 const priorityDot = { High: "bg-red-400", Medium: "bg-amber-400", Low: "bg-zinc-500" };
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No date";
-
 /* ---------------- Overview ---------------- */
 function Overview({ project, tasks, documents, goTab }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
+  const fmtDate = (d) => d ? formatDate(d, locale, { month: "short", day: "numeric", year: "numeric" }) : t("workspace.noDate");
   const meta = [
-    { label: "Client", value: project.client_name || "No client", icon: Users },
-    { label: "Status", value: project.status, icon: CircleDot },
-    { label: "Deadline", value: fmtDate(project.due), icon: Calendar },
-    { label: "Progress", value: `${project.progress}%`, icon: TrendingUp },
+    { label: t("workspace.overview.client"), value: project.client_name || t("workspace.noClient"), icon: Users },
+    { label: t("common.status"), value: t(`statuses.${project.status}`, { defaultValue: project.status }), icon: CircleDot },
+    { label: t("workspace.overview.deadline"), value: fmtDate(project.due), icon: Calendar },
+    { label: t("workspace.overview.progress"), value: `${project.progress}%`, icon: TrendingUp },
   ];
   return (
     <div className="space-y-6" data-testid="tab-overview">
@@ -50,21 +54,21 @@ function Overview({ project, tasks, documents, goTab }) {
       </div>
       <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
         <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="font-medium text-zinc-300">Overall progress</span><span className="text-zinc-400">{project.progress}%</span>
+          <span className="font-medium text-zinc-300">{t("workspace.overview.overallProgress")}</span><span className="text-zinc-400">{project.progress}%</span>
         </div>
         <Progress value={project.progress} className="h-2 bg-zinc-800 [&>div]:bg-brand-500" />
       </div>
       <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
-        <h3 className="mb-2 text-sm font-semibold text-zinc-100">Description</h3>
-        <p className="text-sm leading-relaxed text-zinc-400" data-testid="overview-description">{project.description || "No description yet. Edit the project to add details."}</p>
+        <h3 className="mb-2 text-sm font-semibold text-zinc-100">{t("workspace.overview.description")}</h3>
+        <p className="text-sm leading-relaxed text-zinc-400" data-testid="overview-description">{project.description || t("workspace.overview.noDescription")}</p>
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><CheckSquare className="h-4 w-4 text-brand-400" /> Linked Tasks</h3>
-            <button onClick={() => goTab("tasks")} className="text-xs font-medium text-brand-400 hover:text-brand-300">Manage</button>
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><CheckSquare className="h-4 w-4 text-brand-400" /> {t("workspace.overview.linkedTasks")}</h3>
+            <button onClick={() => goTab("tasks")} className="text-xs font-medium text-brand-400 hover:text-brand-300">{t("workspace.manage")}</button>
           </div>
-          {tasks.length === 0 ? <p className="py-4 text-center text-sm text-zinc-600">No tasks linked yet</p> : (
+          {tasks.length === 0 ? <p className="py-4 text-center text-sm text-zinc-600">{t("workspace.overview.noTasks")}</p> : (
             <div className="space-y-2">
               {tasks.slice(0, 5).map((t) => (
                 <div key={t.id} className="flex items-center gap-2 text-sm">
@@ -77,10 +81,10 @@ function Overview({ project, tasks, documents, goTab }) {
         </div>
         <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><FolderOpen className="h-4 w-4 text-brand-400" /> Linked Documents</h3>
-            <button onClick={() => goTab("documents")} className="text-xs font-medium text-brand-400 hover:text-brand-300">Manage</button>
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100"><FolderOpen className="h-4 w-4 text-brand-400" /> {t("workspace.overview.linkedDocuments")}</h3>
+            <button onClick={() => goTab("documents")} className="text-xs font-medium text-brand-400 hover:text-brand-300">{t("workspace.manage")}</button>
           </div>
-          {documents.length === 0 ? <p className="py-4 text-center text-sm text-zinc-600">No documents linked yet</p> : (
+          {documents.length === 0 ? <p className="py-4 text-center text-sm text-zinc-600">{t("workspace.overview.noDocuments")}</p> : (
             <div className="space-y-2">
               {documents.slice(0, 5).map((d) => (
                 <div key={d.id} className="flex items-center gap-2 text-sm text-zinc-200"><FileText className="h-4 w-4 shrink-0 text-zinc-500" /><span className="truncate">{d.name}</span></div>
@@ -95,6 +99,7 @@ function Overview({ project, tasks, documents, goTab }) {
 
 /* ---------------- Project Chat ---------------- */
 function ProjectChat({ projectId, projectName }) {
+  const { t } = useTranslation();
   const sessionId = `project-${projectId}`;
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -143,20 +148,20 @@ function ProjectChat({ projectId, projectName }) {
         }
       }
     } catch {
-      setMessages((m) => { const c = [...m]; c[c.length - 1] = { role: "assistant", content: "Sorry, something went wrong." }; return c; });
+      setMessages((m) => { const c = [...m]; c[c.length - 1] = { role: "assistant", content: t("workspace.chat.error") }; return c; });
     } finally { setStreaming(false); }
   };
 
   return (
     <div className="flex h-[calc(100vh-16rem)] flex-col" data-testid="tab-chat">
       <div className="mb-3 flex items-center gap-2 rounded-lg border border-brand-500/20 bg-brand-600/10 px-3 py-2 text-xs text-brand-300">
-        <Sparkles className="h-4 w-4" /> This AI chat is dedicated to <b className="font-semibold">{projectName}</b> and remembers your conversation history.
+        <Sparkles className="h-4 w-4" /> {t("workspace.chat.context", { project: projectName })}
       </div>
       <div className="flex-1 overflow-y-auto rounded-xl border border-white/10 bg-zinc-950/50 p-4">
         {loaded && messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 glow-brand"><Bot className="h-6 w-6 text-white" /></div>
-            <p className="mt-3 text-sm text-zinc-400">Ask anything about this project — planning, drafts, next steps.</p>
+            <p className="mt-3 text-sm text-zinc-400">{t("workspace.chat.empty")}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -173,7 +178,7 @@ function ProjectChat({ projectId, projectName }) {
         )}
       </div>
       <form onSubmit={(e) => { e.preventDefault(); send(); }} className="mt-3 mb-6 flex items-center gap-3">
-        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Message project copilot…" data-testid="chat-input"
+        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={t("workspace.chat.placeholder")} data-testid="chat-input"
           className="flex-1 rounded-xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
         <button type="submit" disabled={streaming || !input.trim()} data-testid="chat-send" className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white transition-all hover:bg-brand-500 disabled:opacity-40 glow-brand"><Send className="h-4 w-4" /></button>
       </form>
@@ -183,6 +188,9 @@ function ProjectChat({ projectId, projectName }) {
 
 /* ---------------- Tasks ---------------- */
 function TasksTab({ projectId, tasks, reload }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
+  const fmtDate = (d) => d ? formatDate(d, locale, { month: "short", day: "numeric", year: "numeric" }) : t("workspace.noDate");
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("Medium");
@@ -191,20 +199,20 @@ function TasksTab({ projectId, tasks, reload }) {
 
   const add = async () => {
     if (saving) return;
-    if (!title.trim()) { toast.error("Task title is required"); return; }
+    if (!title.trim()) { toast.error(t("tasks.validation.titleRequired")); return; }
     setSaving(true);
-    try { await tasksApi.create({ title: title.trim(), project_id: projectId, priority, due, done: false }); toast.success("Task created"); setOpen(false); setTitle(""); setPriority("Medium"); setDue(""); reload(); }
+    try { await tasksApi.create({ title: title.trim(), project_id: projectId, priority, due, done: false }); toast.success(t("tasks.toasts.created")); setOpen(false); setTitle(""); setPriority("Medium"); setDue(""); reload(); }
     catch (e) { toast.error(e.message); } finally { setSaving(false); }
   };
   const toggle = async (t) => { try { await tasksApi.update(t.id, { title: t.title, project_id: t.project_id, priority: t.priority, due: t.due, done: !t.done }); reload(); } catch (e) { toast.error(e.message); } };
-  const del = async (t) => { try { await tasksApi.remove(t.id); toast.success("Task deleted"); reload(); } catch (e) { toast.error(e.message); } };
+  const del = async (task) => { try { await tasksApi.remove(task.id); toast.success(t("tasks.toasts.deleted")); reload(); } catch (e) { toast.error(e.message); } };
 
   return (
     <div className="space-y-4" data-testid="tab-tasks">
       <div className="flex justify-end">
-        <button onClick={() => setOpen(true)} data-testid="ws-add-task-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 glow-brand"><Plus className="h-4 w-4" /> Add Task</button>
+        <button onClick={() => setOpen(true)} data-testid="ws-add-task-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 glow-brand"><Plus className="h-4 w-4" /> {t("tasks.add")}</button>
       </div>
-      {tasks.length === 0 ? <EmptyState icon={CheckSquare} title="No tasks yet" description="Add tasks to break this project into actionable steps." actionLabel="Add Task" onAction={() => setOpen(true)} testid="ws-tasks-empty" /> : (
+      {tasks.length === 0 ? <EmptyState icon={CheckSquare} title={t("tasks.empty.title")} description={t("workspace.tasks.emptyDescription")} actionLabel={t("tasks.add")} onAction={() => setOpen(true)} testid="ws-tasks-empty" /> : (
         <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-950">
           {tasks.map((t) => (
             <div key={t.id} className="group flex items-center gap-4 border-b border-white/5 px-5 py-3.5 transition-colors last:border-0 hover:bg-zinc-900/40" data-testid={`ws-task-${t.id}`}>
@@ -218,20 +226,20 @@ function TasksTab({ projectId, tasks, reload }) {
       )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="border-white/10 bg-zinc-950 text-zinc-100 sm:max-w-md" data-testid="ws-task-dialog">
-          <DialogHeader><DialogTitle>New Task</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("tasks.form.newTitle")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <input value={title} onChange={(e) => setTitle(e.target.value)} data-testid="ws-task-title-input" placeholder="Task title" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
+            <input value={title} onChange={(e) => setTitle(e.target.value)} data-testid="ws-task-title-input" placeholder={t("tasks.form.title")} className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
             <div className="grid grid-cols-2 gap-3">
               <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger data-testid="ws-task-priority-trigger" className="border-white/10 bg-zinc-900"><SelectValue /></SelectTrigger>
-                <SelectContent className="border-white/10 bg-zinc-900 text-zinc-100">{["High", "Medium", "Low"].map((s) => <SelectItem key={s} value={s} data-testid={`ws-task-priority-${s}`}>{s}</SelectItem>)}</SelectContent>
+                <SelectContent className="border-white/10 bg-zinc-900 text-zinc-100">{["High", "Medium", "Low"].map((s) => <SelectItem key={s} value={s} data-testid={`ws-task-priority-${s}`}>{t(`priorities.${s}`)}</SelectItem>)}</SelectContent>
               </Select>
               <input type="date" value={due} onChange={(e) => setDue(e.target.value)} data-testid="ws-task-due-input" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
             </div>
           </div>
           <DialogFooter>
-            <button onClick={() => setOpen(false)} className="rounded-lg border border-white/10 bg-zinc-900 px-4 py-2 text-sm text-zinc-300 hover:text-white">Cancel</button>
-            <button onClick={add} disabled={saving} data-testid="ws-task-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Create</button>
+            <button onClick={() => setOpen(false)} className="rounded-lg border border-white/10 bg-zinc-900 px-4 py-2 text-sm text-zinc-300 hover:text-white">{t("common.cancel")}</button>
+            <button onClick={add} disabled={saving} data-testid="ws-task-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}{t("common.create")}</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -241,6 +249,7 @@ function TasksTab({ projectId, tasks, reload }) {
 
 /* ---------------- Documents ---------------- */
 function DocumentsTab({ projectId, documents, reload }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState("Doc");
@@ -248,19 +257,19 @@ function DocumentsTab({ projectId, documents, reload }) {
 
   const add = async () => {
     if (saving) return;
-    if (!name.trim()) { toast.error("Document name is required"); return; }
+    if (!name.trim()) { toast.error(t("workspace.documents.nameRequired")); return; }
     setSaving(true);
-    try { await documentsApi.create({ name: name.trim(), type, project_id: projectId, size: "—" }); toast.success("Document uploaded"); setOpen(false); setName(""); setType("Doc"); reload(); }
+    try { await documentsApi.create({ name: name.trim(), type, project_id: projectId, size: "—" }); toast.success(t("workspace.documents.uploaded")); setOpen(false); setName(""); setType("Doc"); reload(); }
     catch (e) { toast.error(e.message); } finally { setSaving(false); }
   };
-  const del = async (d) => { try { await documentsApi.remove(d.id); toast.success("Document deleted"); reload(); } catch (e) { toast.error(e.message); } };
+  const del = async (d) => { try { await documentsApi.remove(d.id); toast.success(t("workspace.documents.deleted")); reload(); } catch (e) { toast.error(e.message); } };
 
   return (
     <div className="space-y-4" data-testid="tab-documents">
       <div className="flex justify-end">
-        <button onClick={() => setOpen(true)} data-testid="ws-add-doc-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 glow-brand"><FileUp className="h-4 w-4" /> Add Document</button>
+        <button onClick={() => setOpen(true)} data-testid="ws-add-doc-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 glow-brand"><FileUp className="h-4 w-4" /> {t("workspace.documents.add")}</button>
       </div>
-      {documents.length === 0 ? <EmptyState icon={FolderOpen} title="No documents yet" description="Attach documents and files relevant to this project." actionLabel="Add Document" onAction={() => setOpen(true)} testid="ws-docs-empty" /> : (
+      {documents.length === 0 ? <EmptyState icon={FolderOpen} title={t("workspace.documents.emptyTitle")} description={t("workspace.documents.emptyDescription")} actionLabel={t("workspace.documents.add")} onAction={() => setOpen(true)} testid="ws-docs-empty" /> : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {documents.map((d) => (
             <div key={d.id} className="group relative rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-brand-500/40" data-testid={`ws-doc-${d.id}`}>
@@ -274,17 +283,17 @@ function DocumentsTab({ projectId, documents, reload }) {
       )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="border-white/10 bg-zinc-950 text-zinc-100 sm:max-w-md" data-testid="ws-doc-dialog">
-          <DialogHeader><DialogTitle>Add Document</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("workspace.documents.add")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <input value={name} onChange={(e) => setName(e.target.value)} data-testid="ws-doc-name-input" placeholder="e.g. Statement of Work.pdf" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
+            <input value={name} onChange={(e) => setName(e.target.value)} data-testid="ws-doc-name-input" placeholder={t("workspace.documents.placeholder")} className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
             <Select value={type} onValueChange={setType}>
               <SelectTrigger data-testid="ws-doc-type-trigger" className="border-white/10 bg-zinc-900"><SelectValue /></SelectTrigger>
-              <SelectContent className="border-white/10 bg-zinc-900 text-zinc-100">{["Doc", "PDF", "Sheet", "Image", "Archive"].map((s) => <SelectItem key={s} value={s} data-testid={`ws-doc-type-${s}`}>{s}</SelectItem>)}</SelectContent>
+              <SelectContent className="border-white/10 bg-zinc-900 text-zinc-100">{["Doc", "PDF", "Sheet", "Image", "Archive"].map((s) => <SelectItem key={s} value={s} data-testid={`ws-doc-type-${s}`}>{t(`workspace.documents.types.${s}`)}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <DialogFooter>
-            <button onClick={() => setOpen(false)} className="rounded-lg border border-white/10 bg-zinc-900 px-4 py-2 text-sm text-zinc-300 hover:text-white">Cancel</button>
-            <button onClick={add} disabled={saving} data-testid="ws-doc-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Upload</button>
+            <button onClick={() => setOpen(false)} className="rounded-lg border border-white/10 bg-zinc-900 px-4 py-2 text-sm text-zinc-300 hover:text-white">{t("common.cancel")}</button>
+            <button onClick={add} disabled={saving} data-testid="ws-doc-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}{t("workspace.documents.upload")}</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -294,34 +303,36 @@ function DocumentsTab({ projectId, documents, reload }) {
 
 /* ---------------- Proposals ---------------- */
 function ProposalsTab({ projectId, proposals, reload }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", amount: "", status: "Draft", content: "" });
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const add = async () => {
-    if (!form.title.trim()) { toast.error("Proposal title is required"); return; }
+    if (!form.title.trim()) { toast.error(t("workspace.proposals.titleRequired")); return; }
     setSaving(true);
-    try { await proposalsApi.create({ ...form, title: form.title.trim(), project_id: projectId }); toast.success("Proposal generated"); setOpen(false); setForm({ title: "", amount: "", status: "Draft", content: "" }); reload(); }
+    try { await proposalsApi.create({ ...form, title: form.title.trim(), project_id: projectId }); toast.success(t("workspace.proposals.generated")); setOpen(false); setForm({ title: "", amount: "", status: "Draft", content: "" }); reload(); }
     catch (e) { toast.error(e.message); } finally { setSaving(false); }
   };
-  const del = async (p) => { try { await proposalsApi.remove(p.id); toast.success("Proposal deleted"); reload(); } catch (e) { toast.error(e.message); } };
+  const del = async (p) => { try { await proposalsApi.remove(p.id); toast.success(t("workspace.proposals.deleted")); reload(); } catch (e) { toast.error(e.message); } };
 
   const st = { Draft: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20", Sent: "bg-brand-500/10 text-brand-400 border-brand-500/20", Accepted: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", Rejected: "bg-red-500/10 text-red-400 border-red-500/20" };
 
   return (
     <div className="space-y-4" data-testid="tab-proposals">
       <div className="flex justify-end">
-        <button onClick={() => setOpen(true)} data-testid="ws-add-proposal-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 glow-brand"><FilePlus2 className="h-4 w-4" /> New Proposal</button>
+        <button onClick={() => setOpen(true)} data-testid="ws-add-proposal-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-500 glow-brand"><FilePlus2 className="h-4 w-4" /> {t("workspace.proposals.new")}</button>
       </div>
-      {proposals.length === 0 ? <EmptyState icon={FileText} title="No proposals yet" description="Generate a proposal to send to your client for this project." actionLabel="New Proposal" onAction={() => setOpen(true)} testid="ws-proposals-empty" /> : (
+      {proposals.length === 0 ? <EmptyState icon={FileText} title={t("workspace.proposals.emptyTitle")} description={t("workspace.proposals.emptyDescription")} actionLabel={t("workspace.proposals.new")} onAction={() => setOpen(true)} testid="ws-proposals-empty" /> : (
         <div className="space-y-3">
           {proposals.map((p) => (
             <div key={p.id} className="group flex items-center gap-4 rounded-xl border border-white/10 bg-zinc-950 p-4 transition-all hover:border-brand-500/40" data-testid={`ws-proposal-${p.id}`}>
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-600/15 text-brand-400"><FileText className="h-5 w-5" /></div>
               <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-zinc-100">{p.title}</p>{p.content && <p className="truncate text-xs text-zinc-500">{p.content}</p>}</div>
-              {p.amount && <span className="hidden text-sm font-semibold text-zinc-200 sm:block">{p.amount}</span>}
-              <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${st[p.status]}`}>{p.status}</span>
+              {p.amount && <span className="hidden text-sm font-semibold text-zinc-200 sm:block">{formatCurrency(p.amount, locale, "EUR")}</span>}
+              <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${st[p.status]}`}>{t(`statuses.${p.status}`, { defaultValue: p.status })}</span>
               <button onClick={() => del(p)} data-testid={`ws-delete-proposal-${p.id}`} className="rounded-md p-1.5 text-zinc-500 opacity-0 transition-all hover:bg-zinc-800 hover:text-red-400 group-hover:opacity-100"><Trash2 className="h-4 w-4" /></button>
             </div>
           ))}
@@ -329,21 +340,21 @@ function ProposalsTab({ projectId, proposals, reload }) {
       )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="border-white/10 bg-zinc-950 text-zinc-100 sm:max-w-md" data-testid="ws-proposal-dialog">
-          <DialogHeader><DialogTitle>New Proposal</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("workspace.proposals.new")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <input value={form.title} onChange={(e) => set("title", e.target.value)} data-testid="ws-proposal-title-input" placeholder="Proposal title" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
+            <input value={form.title} onChange={(e) => set("title", e.target.value)} data-testid="ws-proposal-title-input" placeholder={t("workspace.proposals.titlePlaceholder")} className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
             <div className="grid grid-cols-2 gap-3">
-              <input value={form.amount} onChange={(e) => set("amount", e.target.value)} data-testid="ws-proposal-amount-input" placeholder="$24,000" className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
+              <input type="number" min="0" value={form.amount} onChange={(e) => set("amount", e.target.value)} data-testid="ws-proposal-amount-input" placeholder={t("workspace.proposals.amountPlaceholder")} className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
               <Select value={form.status} onValueChange={(v) => set("status", v)}>
                 <SelectTrigger data-testid="ws-proposal-status-trigger" className="border-white/10 bg-zinc-900"><SelectValue /></SelectTrigger>
-                <SelectContent className="border-white/10 bg-zinc-900 text-zinc-100">{["Draft", "Sent", "Accepted", "Rejected"].map((s) => <SelectItem key={s} value={s} data-testid={`ws-proposal-status-${s}`}>{s}</SelectItem>)}</SelectContent>
+                <SelectContent className="border-white/10 bg-zinc-900 text-zinc-100">{["Draft", "Sent", "Accepted", "Rejected"].map((s) => <SelectItem key={s} value={s} data-testid={`ws-proposal-status-${s}`}>{t(`statuses.${s}`)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <textarea value={form.content} onChange={(e) => set("content", e.target.value)} data-testid="ws-proposal-content-input" placeholder="Summary / scope (optional)" rows={3} className="w-full resize-none rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
+            <textarea value={form.content} onChange={(e) => set("content", e.target.value)} data-testid="ws-proposal-content-input" placeholder={t("workspace.proposals.contentPlaceholder")} rows={3} className="w-full resize-none rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
           </div>
           <DialogFooter>
-            <button onClick={() => setOpen(false)} className="rounded-lg border border-white/10 bg-zinc-900 px-4 py-2 text-sm text-zinc-300 hover:text-white">Cancel</button>
-            <button onClick={add} disabled={saving} data-testid="ws-proposal-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Generate</button>
+            <button onClick={() => setOpen(false)} className="rounded-lg border border-white/10 bg-zinc-900 px-4 py-2 text-sm text-zinc-300 hover:text-white">{t("common.cancel")}</button>
+            <button onClick={add} disabled={saving} data-testid="ws-proposal-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}{t("workspace.proposals.generate")}</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -353,6 +364,7 @@ function ProposalsTab({ projectId, proposals, reload }) {
 
 /* ---------------- Notes ---------------- */
 function NotesTab({ project, reload }) {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState(project.notes || "");
   const [saving, setSaving] = useState(false);
   const save = async () => {
@@ -363,14 +375,14 @@ function NotesTab({ project, reload }) {
         progress: project.progress, due: project.due, members: project.members,
         description: project.description || "", notes,
       });
-      toast.success("Notes saved"); reload();
+      toast.success(t("workspace.notes.saved")); reload();
     } catch (e) { toast.error(e.message); } finally { setSaving(false); }
   };
   return (
     <div className="space-y-4" data-testid="tab-notes">
-      <textarea value={notes} onChange={(e) => setNotes(e.target.value)} data-testid="ws-notes-input" rows={14} placeholder="Jot down meeting notes, ideas, decisions…" className="w-full resize-none rounded-xl border border-white/10 bg-zinc-950 p-5 text-sm leading-relaxed text-zinc-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
+      <textarea value={notes} onChange={(e) => setNotes(e.target.value)} data-testid="ws-notes-input" rows={14} placeholder={t("workspace.notes.placeholder")} className="w-full resize-none rounded-xl border border-white/10 bg-zinc-950 p-5 text-sm leading-relaxed text-zinc-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40" />
       <div className="flex justify-end">
-        <button onClick={save} disabled={saving} data-testid="ws-notes-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Save Notes</button>
+        <button onClick={save} disabled={saving} data-testid="ws-notes-save-btn" className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}{t("workspace.notes.save")}</button>
       </div>
     </div>
   );
@@ -396,10 +408,12 @@ const activityMeta = {
   invoice_restored: { icon: RotateCcw, color: "bg-emerald-600/20 text-emerald-400" },
 };
 function ActivityTab({ activities }) {
-  const fmt = (d) => new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const { t } = useTranslation();
+  const { locale } = useLocale();
+  const fmt = (d) => new Intl.DateTimeFormat(localeTag(locale), { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(d));
   return (
     <div data-testid="tab-activity">
-      {activities.length === 0 ? <EmptyState icon={Clock} title="No activity yet" description="Actions on this project will be logged here automatically." testid="ws-activity-empty" /> : (
+      {activities.length === 0 ? <EmptyState icon={Clock} title={t("workspace.activity.emptyTitle")} description={t("workspace.activity.emptyDescription")} testid="ws-activity-empty" /> : (
         <div className="relative space-y-1 pl-2">
           {activities.map((a, i) => {
             const m = activityMeta[a.type] || { icon: CircleDot, color: "bg-zinc-700 text-zinc-300" };
@@ -420,6 +434,8 @@ function ActivityTab({ activities }) {
 
 /* ---------------- Workspace shell ---------------- */
 export default function ProjectWorkspace() {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -469,29 +485,29 @@ export default function ProjectWorkspace() {
   }
 
   const tabs = [
-    { id: "overview", label: "Overview" },
-    { id: "planner", label: "AI Planner" },
-    { id: "proposal", label: "Proposal" },
-    { id: "contract", label: "Contract" },
-    { id: "invoice", label: "Invoice" },
-    { id: "chat", label: "AI Chat" },
-    { id: "tasks", label: "Tasks" },
-    { id: "documents", label: "Documents" },
-    { id: "proposals", label: "Proposals" },
-    { id: "notes", label: "Notes" },
-    { id: "activity", label: "Activity" },
+    { id: "overview", label: t("workspace.tabs.overview") },
+    { id: "planner", label: t("workspace.tabs.planner") },
+    { id: "proposal", label: t("workspace.tabs.proposal") },
+    { id: "contract", label: t("workspace.tabs.contract") },
+    { id: "invoice", label: t("workspace.tabs.invoice") },
+    { id: "chat", label: t("workspace.tabs.chat") },
+    { id: "tasks", label: t("workspace.tabs.tasks") },
+    { id: "documents", label: t("workspace.tabs.documents") },
+    { id: "proposals", label: t("workspace.tabs.proposals") },
+    { id: "notes", label: t("workspace.tabs.notes") },
+    { id: "activity", label: t("workspace.tabs.activity") },
   ];
 
   return (
     <div className="space-y-6" data-testid="project-workspace">
       <div>
-        <button onClick={() => navigate("/projects")} data-testid="back-to-projects" className="mb-4 flex items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-zinc-100"><ArrowLeft className="h-4 w-4" /> Projects</button>
+        <button onClick={() => navigate("/projects")} data-testid="back-to-projects" className="mb-4 flex items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-zinc-100"><ArrowLeft className="h-4 w-4" /> {t("pages.projects.title")}</button>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-zinc-50" data-testid="workspace-title">{project.name}</h1>
-            <p className="mt-1 text-sm text-zinc-500">{project.client_name || "No client"} · Due {fmtDate(project.due)}</p>
+            <p className="mt-1 text-sm text-zinc-500">{project.client_name || t("workspace.noClient")} · {t("workspace.due", { date: project.due ? formatDate(project.due, locale, { month: "short", day: "numeric", year: "numeric" }) : t("workspace.noDate") })}</p>
           </div>
-          <span className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-medium ${statusStyle[project.status]}`}>{project.status}</span>
+          <span className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-medium ${statusStyle[project.status]}`}>{t(`statuses.${project.status}`, { defaultValue: project.status })}</span>
         </div>
       </div>
 

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Check, Loader2, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Premium live AI workflow. Reveals contextual stages sequentially with checkmarks;
  * the final stage keeps working until `running` flips to false, then all complete.
  * Cosmetic staging over a single backend request — never a bare "Loading...".
  */
-export function AIWorkflow({ steps, running, title = "Assistify is working" }) {
+export function AIWorkflow({ steps, running, title }) {
+  const { t } = useTranslation();
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export function AIWorkflow({ steps, running, title = "Assistify is working" }) {
           <Sparkles className="h-3.5 w-3.5 text-brand-300" />
           {!done && <span className="absolute inset-0 animate-ping rounded-lg bg-brand-500/20" />}
         </span>
-        <p className="text-sm font-semibold text-zinc-100">{done ? "Done" : title}</p>
+        <p className="text-sm font-semibold text-zinc-100">{done ? t("aiWorkflow.done") : (title || t("aiWorkflow.working"))}</p>
       </div>
       <div className="space-y-2.5">
         {steps.map((s, i) => {

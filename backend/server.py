@@ -739,7 +739,7 @@ AGENTS = {
         "id": "copilot", "name": "Assistify Copilot", "role": "General Business Assistant",
         "description": "Your all-round operator for planning, drafting and quick answers.",
         "avatar": "https://images.unsplash.com/photo-1674027444485-cec3da58eef4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxmdXR1cmlzdGljJTIwYXJ0aWZpY2lhbCUyMGludGVsbGlnZW5jZSUyMGdsb3dpbmclMjBjb3JlfGVufDB8fHx8MTc4MzIzOTg1OHww&ixlib=rb-4.1.0&q=85",
-        "accent": "violet",
+        "accent": "brand",
         "system_message": "You are Assistify Copilot, a sharp, concise business operating assistant for entrepreneurs. Help with planning, tasks, clients and general operations. Keep answers practical and action-oriented.",
     },
     "sales": {
