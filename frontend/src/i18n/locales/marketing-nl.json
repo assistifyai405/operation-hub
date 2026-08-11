@@ -1215,6 +1215,49 @@
         "locale": "Nederlands en Engels in marketing én product.",
         "billing": "Geen betaling vereist tijdens de beta zolang online betalen uitstaat."
       }
+    },
+    "dayWith": {
+      "eyebrow": "Verbonden workflow",
+      "title": "Zo werkt een werkdag met Assistify",
+      "body": "Alles blijft verbonden terwijl werk verdergaat — van eerste contact tot opvolging.",
+      "message": "Alles is verbonden.",
+      "steps": {
+        "client": {
+          "title": "Nieuwe klant",
+          "body": "Bewaar de relatie en belangrijke contactinformatie.",
+          "path": "/product/crm"
+        },
+        "crm": {
+          "title": "CRM",
+          "body": "Houd kansen en notities bij de klant.",
+          "path": "/product/crm"
+        },
+        "project": {
+          "title": "Project",
+          "body": "Maak het klantwerk overzichtelijk.",
+          "path": "/product/projects"
+        },
+        "tasks": {
+          "title": "Taken",
+          "body": "Leg vast wat er moet gebeuren.",
+          "path": "/product/projects"
+        },
+        "copilot": {
+          "title": "Copilot",
+          "body": "Gebruik relevante workspace-context om werk voor te bereiden.",
+          "path": "/product/copilot"
+        },
+        "proposal": {
+          "title": "Offerte",
+          "body": "Maak een voorstel vanuit dezelfde werkplek.",
+          "path": "/product/documents"
+        },
+        "followup": {
+          "title": "Opvolging",
+          "body": "Houd bij wat de volgende stap is.",
+          "path": "/product/opportunities"
+        }
+      }
     }
   }
 }

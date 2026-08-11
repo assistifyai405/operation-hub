@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
-  User, Building2, Palette, Sparkles, FileText, Bell, Shield, KeyRound, CreditCard, Plug, Loader2, Users, Mail, Activity, MessageSquare, Languages,
+  User, Building2, Palette, Sparkles, FileText, Bell, Shield, KeyRound, CreditCard, Plug, Loader2, Users, Mail, Activity, MessageSquare, Languages, Sun,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { settingsApi } from "@/lib/api";
@@ -16,11 +16,13 @@ import { EmailSettingsSection } from "@/components/settings/EmailSettingsSection
 import { OperationsSection } from "@/components/settings/OperationsSection";
 import { BetaFeedbackSection } from "@/components/settings/BetaFeedbackSection";
 import { LanguageSection } from "@/components/settings/LanguageSection";
+import { AppearanceSection } from "@/components/settings/AppearanceSection";
 import PageIntro from "@/components/PageIntro";
 
 const TAB_DEFS = [
   { id: "general", key: "general", icon: User },
   { id: "language", key: "language", icon: Languages },
+  { id: "appearance", key: "appearance", icon: Sun },
   { id: "organization", key: "organization", icon: Building2 },
   { id: "team", key: "team", icon: Users },
   { id: "email", key: "email", icon: Mail },
@@ -83,6 +85,7 @@ export default function Settings() {
             <>
               {tab === "general" && <GeneralSection />}
               {tab === "language" && <LanguageSection />}
+              {tab === "appearance" && <AppearanceSection />}
               {tab === "organization" && <OrganizationSection data={data} reload={load} />}
               {tab === "team" && <TeamSection />}
               {tab === "email" && <EmailSettingsSection data={data} reload={load} />}

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 
-export const STEP_LABELS = ["Welcome", "Company", "Goal", "Ready"];
+export const STEP_LABELS = ["Welcome", "Company", "Goal", "Setup", "Ready"];
 
 export function ProgressRail({ step }) {
   return (

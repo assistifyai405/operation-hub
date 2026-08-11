@@ -249,7 +249,8 @@
       "integrations": "Integrations",
       "operations": "Operations",
       "feedback": "Beta feedback",
-      "language": "Language"
+      "language": "Language",
+      "appearance": "Appearance"
     },
     "language": {
       "title": "Language",
@@ -563,7 +564,17 @@
     "operationsTitle": "Operations",
     "operationsDescription": "Backend readiness, AI usage, workers, and recovery actions for owners and admins.",
     "feedbackTitle": "Beta feedback",
-    "feedbackDescription": "Feedback submitted by users in this workspace."
+    "feedbackDescription": "Feedback submitted by users in this workspace.",
+    "appearance": {
+      "title": "Appearance",
+      "description": "Choose how Assistify looks on this device. Marketing pages stay light.",
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System",
+      "hint": "Currently showing {{resolved}}. Changes apply immediately.",
+      "saved": "Appearance updated"
+    }
   },
   "beta": {
     "sendFeedback": "Send feedback",
@@ -601,8 +612,8 @@
   },
   "onboarding": {
     "welcomeTitle": "Welcome to Assistify",
-    "welcomeHeadline": "Your AI-powered business operating system.",
-    "welcomeBody": "Assistify helps small businesses, freelancers, and teams manage work and use AI from one workspace — without juggling separate tools for clients, projects, and documents.",
+    "welcomeHeadline": "Welcome to Assistify",
+    "welcomeBody": "Assistify brings your clients, projects, tasks, documents and AI together in one workspace. We will help you with the most important first steps.",
     "skip": "Skip",
     "skipExplore": "Skip setup — explore the workspace",
     "getStarted": "Get started",
@@ -686,18 +697,43 @@
       "projectForDocs": "Create a project for documents"
     },
     "checklist": {
-      "title": "Get Assistify working for you",
-      "subtitle": "Complete these steps using your real workspace — progress is never faked.",
+      "title": "Getting started",
+      "subtitle": "A short path using your real workspace — nothing is created until you do it.",
       "dismiss": "Dismiss setup checklist",
       "progress": "{{done}} of {{total}} complete",
       "progressLabel": "Workspace setup progress",
       "items": {
+        "account": "Create account",
+        "client": "Add first client",
+        "project": "Create first project",
+        "task": "Add first task",
+        "copilot": "Try Copilot",
         "profile": "Complete company profile",
-        "client": "Create your first client",
-        "project": "Create your first project",
-        "task": "Create your first task",
-        "copilot": "Ask Copilot",
         "agents": "Explore AI Agents"
+      }
+    },
+    "firstActions": {
+      "eyebrow": "First actions",
+      "title": "Set up your workspace with real work",
+      "body": "These steps use your real Assistify workspace. Nothing is created automatically — you decide when to add a client, project, task or Copilot prompt.",
+      "note": "You can open any step now, or continue and use the dashboard checklist later.",
+      "items": {
+        "client": {
+          "title": "Create your first client",
+          "body": "Store the relationship you work with."
+        },
+        "project": {
+          "title": "Create your first project",
+          "body": "Organize delivery around a client."
+        },
+        "task": {
+          "title": "Add your first task",
+          "body": "Capture what needs to happen next."
+        },
+        "copilot": {
+          "title": "Try Copilot",
+          "body": "Ask for a summary, draft or plan — then review it."
+        }
       }
     }
   },
@@ -2210,5 +2246,11 @@
       "sent": "Sent",
       "failed": "Failed"
     }
+  },
+  "verifyEmail": {
+    "banner": "Verify your email to unlock sending proposals, contracts and invoices to clients.",
+    "resend": "Resend email",
+    "dismiss": "Dismiss email verification reminder",
+    "sent": "Verification email sent — please check your inbox."
   }
 }

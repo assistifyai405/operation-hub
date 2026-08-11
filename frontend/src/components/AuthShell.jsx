@@ -1,11 +1,13 @@
 import { Sparkles } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { applyTheme, getStoredTheme } from "@/lib/theme";
 
 export function AuthShell({ title, subtitle, children, footer }) {
   const { t } = useTranslation();
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", "dark");
+    // Auth follows the same preference as the app (default light for new users)
+    applyTheme(getStoredTheme());
   }, []);
   return (
     <div className="grid min-h-screen grid-cols-1 bg-black lg:grid-cols-2">

@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { LocaleProvider } from "@/context/LocaleContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { HelpProvider } from "@/help/HelpContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Layout from "@/components/Layout";
@@ -72,6 +73,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <LocaleProvider>
+            <ThemeProvider>
             <HelpProvider>
               <Suspense fallback={<RouteFallback />}>
                 <Routes>
@@ -132,10 +134,11 @@ function App() {
                 </Routes>
               </Suspense>
             </HelpProvider>
+            </ThemeProvider>
           </LocaleProvider>
         </AuthProvider>
       </BrowserRouter>
-      <Toaster position="bottom-right" theme="dark" />
+      <Toaster position="bottom-right" theme="system" />
     </div>
   );
 }
