@@ -78,6 +78,15 @@ class Settings:
     email_provider: str  # resend | console
     email_sending_enabled: bool
     email_daily_limit: int
+    beta_mode: bool
+    ai_daily_request_limit: int
+    legal_company_name: Optional[str]
+    legal_trade_name: Optional[str]
+    legal_contact_email: Optional[str]
+    legal_privacy_email: Optional[str]
+    legal_address: Optional[str]
+    legal_kvk_number: Optional[str]
+    legal_vat_number: Optional[str]
     resend_webhook_secret: Optional[str]
     integration_encryption_key: Optional[str]
     google_client_id: Optional[str]
@@ -318,6 +327,15 @@ def load_settings(*, strict: bool = True) -> Settings:
     if email_daily_limit < 1 or email_daily_limit > 10000:
         raise ConfigError("EMAIL_DAILY_LIMIT must be between 1 and 10000")
 
+    beta_mode = _truthy("BETA_MODE", False)
+    try:
+        ai_daily_request_limit = int(_env("AI_DAILY_REQUEST_LIMIT", "200") or "200")
+    except ValueError as e:
+        raise ConfigError("AI_DAILY_REQUEST_LIMIT must be an integer") from e
+    # 0 = unlimited; positive caps per-workspace daily AI requests
+    if ai_daily_request_limit < 0 or ai_daily_request_limit > 100000:
+        raise ConfigError("AI_DAILY_REQUEST_LIMIT must be between 0 and 100000")
+
     # Reject credentialed CORS that includes wildcard mixed with origins in production
     if environment == "production" and any(o == "*" for o in cors_origins):
         raise ConfigError("CORS_ORIGINS must not include '*' in production")
@@ -371,6 +389,15 @@ def load_settings(*, strict: bool = True) -> Settings:
         email_provider=email_provider,
         email_sending_enabled=email_sending_enabled,
         email_daily_limit=email_daily_limit,
+        beta_mode=beta_mode,
+        ai_daily_request_limit=ai_daily_request_limit,
+        legal_company_name=_env("LEGAL_COMPANY_NAME"),
+        legal_trade_name=_env("LEGAL_TRADE_NAME"),
+        legal_contact_email=_env("LEGAL_CONTACT_EMAIL"),
+        legal_privacy_email=_env("LEGAL_PRIVACY_EMAIL"),
+        legal_address=_env("LEGAL_ADDRESS"),
+        legal_kvk_number=_env("LEGAL_KVK_NUMBER"),
+        legal_vat_number=_env("LEGAL_VAT_NUMBER"),
         resend_webhook_secret=_env("RESEND_WEBHOOK_SECRET"),
         integration_encryption_key=integration_encryption_key,
         google_client_id=_env("GOOGLE_CLIENT_ID"),

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Loader2, Activity, RefreshCw, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { opsApi } from "@/lib/api";
-import { SectionCard, SaveButton } from "@/components/settings/fields";
+import { SectionCard } from "@/components/settings/fields";
 
 export function OperationsSection() {
   const [data, setData] = useState(null);
@@ -40,18 +40,28 @@ export function OperationsSection() {
   }
 
   const mailboxes = data?.mailboxes || [];
+  const ai = data?.aiUsage || {};
+  const workerStatus = data?.worker?.status || (data?.workerEnabled ? "enabled" : "inline");
+  const schedulerStatus = data?.scheduler?.status || (data?.schedulerEnabled ? "enabled" : "off");
 
   return (
-    <SectionCard title="Operations" description="Backend readiness, workers, and recovery actions for owners and admins." testid="settings-operations">
+    <SectionCard title="Operations" description="Backend readiness, AI usage, workers, and recovery actions for owners and admins." testid="settings-operations">
       <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4" data-testid="ops-status-grid">
         <Stat label="Release" value={data?.release || "—"} />
+        <Stat label="App health" value={data?.status || (data?.mongodb?.ok ? "ok" : "down")} bad={data?.status === "degraded" || !data?.mongodb?.ok} />
         <Stat label="MongoDB" value={data?.mongodb?.ok ? "ok" : "down"} bad={!data?.mongodb?.ok} />
         <Stat label="Redis" value={data?.redis?.ok ? "ok" : (data?.redis?.configured ? "down" : "unset")} />
+        <Stat label="Workspaces" value={String(data?.organizationCount ?? "—")} />
+        <Stat label="Workspace users" value={String(data?.workspaceUserCount ?? "—")} />
+        <Stat label="AI requests today" value={String(ai.used ?? 0)} testid="ops-ai-used" />
+        <Stat label="AI daily limit" value={ai.unlimited ? "unlimited" : String(ai.limit ?? data?.aiDailyLimit ?? "—")} testid="ops-ai-limit" />
+        <Stat label="Beta feedback" value={String(data?.betaFeedbackCount ?? 0)} testid="ops-feedback-count" />
         <Stat label="Failed jobs" value={String(data?.failedJobs ?? 0)} bad={(data?.failedJobs || 0) > 0} />
+        <Stat label="Worker" value={String(workerStatus)} />
+        <Stat label="Scheduler" value={String(schedulerStatus)} />
         <Stat label="Stuck emails" value={String(data?.stuckEmails ?? 0)} bad={(data?.stuckEmails || 0) > 0} />
         <Stat label="Unhealthy integrations" value={String(data?.unhealthyIntegrations ?? 0)} bad={(data?.unhealthyIntegrations || 0) > 0} />
-        <Stat label="Worker" value={data?.workerEnabled || data?.worker?.enabled ? "enabled" : "inline"} />
-        <Stat label="Scheduler" value={data?.schedulerEnabled || data?.scheduler?.enabled ? "enabled" : "off"} />
+        <Stat label="Beta mode" value={data?.betaMode ? "on" : "off"} />
       </div>
 
       <div className="space-y-2">
@@ -104,9 +114,9 @@ export function OperationsSection() {
   );
 }
 
-function Stat({ label, value, bad }) {
+function Stat({ label, value, bad, testid }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-zinc-900/40 p-3">
+    <div className="rounded-lg border border-white/10 bg-zinc-900/40 p-3" data-testid={testid}>
       <p className="text-[10px] uppercase tracking-wide text-zinc-500">{label}</p>
       <p className={`mt-1 font-medium ${bad ? "text-rose-300" : "text-zinc-100"}`}>{value}</p>
     </div>

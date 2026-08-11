@@ -69,9 +69,17 @@ export function TeamSection() {
     setInviting(true);
     try {
       const res = await teamApi.invite({ email: inviteForm.email.trim(), role: inviteForm.role });
-      toast.success(`Invitation sent to ${res.email}`);
-      if (res.invitationLink) {
-        toast.message("Dev invitation link", { description: res.invitationLink });
+      if (res.emailDelivery === "manual" || res.invitationLink) {
+        toast.message("Invitation created — email sending is disabled", {
+          description: res.invitationLink
+            ? "Share this invite link manually (shown once in development)."
+            : (res.emailDeliveryNote || "Share the invite link manually with the recipient."),
+        });
+        if (res.invitationLink) {
+          toast.message("Dev invitation link", { description: res.invitationLink });
+        }
+      } else {
+        toast.success(`Invitation sent to ${res.email}`);
       }
       setInviteForm({ email: "", role: "member" });
       await load();
@@ -239,7 +247,10 @@ export function TeamSection() {
       </SectionCard>
 
       {canManage && (
-        <SectionCard title="Invite member" description="Send an email invitation to join this organization." testid="team-invite-card">
+        <SectionCard title="Invite member" description="Invite a teammate to this organization." testid="team-invite-card">
+          <p className="mb-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90" data-testid="team-invite-email-note">
+            When email sending is disabled, invitations are created but not emailed — you must share the invite link manually (development shows the link once).
+          </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_160px_auto]">
             <TextField
               label="Email"

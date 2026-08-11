@@ -43,7 +43,14 @@ async def current_user(request: Request) -> dict:
 
 
 async def current_org(user: dict = Depends(current_user)) -> str:
-    return user["organizationId"]
+    org = user["organizationId"]
+    # Bind workspace for server-side AI usage accounting (see ai_usage.py).
+    try:
+        from ai_usage import bind_ai_org
+        bind_ai_org(org)
+    except Exception:
+        pass
+    return org
 
 
 async def require_project(project_id: str, org: str) -> dict:

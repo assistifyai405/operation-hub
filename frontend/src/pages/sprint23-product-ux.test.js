@@ -97,7 +97,7 @@ describe("Sprint 23 empty states and CTAs", () => {
 
   test("billing remains setup-pending without fake upgrade when disabled", () => {
     const layout = read("../components/Layout.jsx");
-    expect(layout).toMatch(/Billing setup pending/);
+    expect(layout).toMatch(/Billing is not available during beta/);
     expect(layout).toMatch(/sidebar-billing-pending/);
   });
 });

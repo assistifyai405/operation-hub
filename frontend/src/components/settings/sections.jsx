@@ -312,8 +312,13 @@ export function BillingSection() {
       ) : (
         <div className="rounded-xl border border-dashed border-white/10 bg-zinc-900/60 p-6 text-center" data-testid="billing-coming-soon">
           <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400"><Sparkles className="h-5 w-5" /></div>
-          <p className="mt-3 text-sm font-semibold text-zinc-100">Billing setup pending</p>
-          <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">Stripe is not configured. No active subscription or payment method is implied — usage below is informational only.</p>
+          <p className="mt-3 text-sm font-semibold text-zinc-100">Billing is not available during beta.</p>
+          <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">{b.message || "Stripe is not configured. No active subscription, trial countdown, or payment method is implied — usage below is informational only."}</p>
+          {b.aiUsage && (
+            <p className="mt-3 text-xs text-zinc-400" data-testid="billing-ai-usage">
+              AI requests today: {b.aiUsage.used}{b.aiUsage.limit != null ? ` / ${b.aiUsage.limit}` : ""} (workspace daily limit)
+            </p>
+          )}
         </div>
       )}
       <div>

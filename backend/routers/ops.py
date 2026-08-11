@@ -24,6 +24,7 @@ async def ops_status(org: str = Depends(current_org), user: dict = Depends(requi
     from config import get_settings
     from redis_client import ping_redis
     from routers.health import health
+    from ai_usage import get_ai_usage
 
     s = get_settings()
     base = await health()
@@ -31,6 +32,14 @@ async def ops_status(org: str = Depends(current_org), user: dict = Depends(requi
         {"organizationId": org},
         {"_id": 0, "id": 1, "emailAddress": 1, "syncStatus": 1, "lastSuccessfulSyncAt": 1, "lastError": 1, "provider": 1},
     ).to_list(20)
+
+    user_count = await db.users.count_documents({"organizationId": org})
+    # Platform-wide counts for owner visibility during closed beta (same deployment).
+    # Still no cross-tenant content — only aggregate counts.
+    workspace_count = await db.organizations.count_documents({})
+    feedback_count = await db.beta_feedback.count_documents({"organizationId": org})
+    ai_usage = await get_ai_usage(org)
+
     return {
         **base,
         "redis": ping_redis(),
@@ -43,7 +52,19 @@ async def ops_status(org: str = Depends(current_org), user: dict = Depends(requi
         "workerEnabled": s.worker_enabled,
         "schedulerEnabled": s.scheduler_enabled,
         "release": s.release_version,
+        "betaMode": bool(s.beta_mode),
+        "workspaceUserCount": user_count,
+        "organizationCount": workspace_count,
+        "betaFeedbackCount": feedback_count,
+        "aiUsage": ai_usage,
+        "aiDailyLimit": s.ai_daily_request_limit,
     }
+
+
+@router.get("/ai-usage")
+async def ops_ai_usage(org: str = Depends(current_org), user: dict = Depends(require_admin)):
+    from ai_usage import get_ai_usage
+    return await get_ai_usage(org)
 
 
 @router.post("/jobs/{job_id}/retry")

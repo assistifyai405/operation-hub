@@ -63,21 +63,25 @@ export function MorningBrief({ open, onOpenChange }) {
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-violet-600/20 blur-3xl" />
           <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-violet-300"><Sun className="h-4 w-4" /> AI Morning Brief</div>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-zinc-50">
-            {data?.greeting || "Good morning"}{firstName ? `, ${firstName}` : ""} 👋
+            {data?.greeting || "Good morning"}{firstName ? `, ${firstName}` : ""}
           </h2>
-          <p className="mt-1 text-sm text-zinc-400">Here's what happened while you were away.</p>
+          <p className="mt-1 text-sm text-zinc-400">
+            {data?.workspace_empty
+              ? "Your workspace is ready — add a client or project to see a live brief."
+              : "Here's what happened while you were away."}
+          </p>
         </div>
 
         {loading || !data ? (
           <div className="flex items-center justify-center py-16 text-zinc-600"><Loader2 className="h-6 w-6 animate-spin" /></div>
         ) : (
           <div className="space-y-3 p-4">
-            {/* Numbers */}
+            {/* Numbers — estimated hours saved labeled clearly */}
             <div className="grid grid-cols-3 gap-2" data-testid="brief-numbers">
               {NUMBERS.map((n) => (
                 <div key={n.label} className="rounded-xl border border-white/10 bg-zinc-900/50 p-3 text-center">
                   <p className={`text-lg font-bold ${n.tone}`}>{n.value}</p>
-                  <p className="text-[10px] text-zinc-500">{n.label}</p>
+                  <p className="text-[10px] text-zinc-500">{n.label === "Hours Saved" ? "~Hours saved (est.)" : n.label}</p>
                 </div>
               ))}
             </div>

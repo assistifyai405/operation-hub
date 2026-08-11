@@ -246,9 +246,16 @@ async def create_invitation(payload: InviteRequest, request: Request, actor: dic
     )
 
     include_dev = not email_service.is_enabled() and not settings.is_production
+    email_delivery = "sent" if email_service.is_enabled() else "manual"
     if include_dev:
         logger.info(f"[INVITE:DEV] {email} org={org} -> {invite_link}")
     out = _public_invitation(inv, include_dev_link=include_dev, raw_token=raw if include_dev else None)
+    out["emailDelivery"] = email_delivery
+    if email_delivery == "manual":
+        out["emailDeliveryNote"] = (
+            "Email sending is disabled. Share the invitation link manually "
+            "(shown in development when available)."
+        )
     return out
 
 

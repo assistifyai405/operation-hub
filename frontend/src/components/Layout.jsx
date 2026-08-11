@@ -11,14 +11,15 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
-import { authApi, notificationsApi, aiApi, onboardingApi } from "@/lib/api";
+import { authApi, notificationsApi, aiApi, onboardingApi, publicConfigApi } from "@/lib/api";
 import { toast } from "sonner";
 import CommandPalette from "@/components/CommandPalette";
 import ProductTour from "@/components/ProductTour";
 import { AiIcon } from "@/components/ai/aiHelpers";
-import { BILLING_ENABLED } from "@/lib/config";
+import { BILLING_ENABLED, BETA_MODE_BUILD } from "@/lib/config";
 import { AssistantProvider } from "@/context/AssistantContext";
 import FloatingAssistant from "@/components/assistant/FloatingAssistant";
+import BetaFeedbackButton from "@/components/BetaFeedbackButton";
 
 const relativeTime = (iso) => {
   if (!iso) return "";
@@ -53,7 +54,7 @@ const nav = [
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
-const Sidebar = ({ onNavigate }) => (
+const Sidebar = ({ onNavigate, betaMode }) => (
   <div className="flex h-full min-h-0 flex-col">
     <div className="flex shrink-0 items-center gap-2.5 px-6 py-6">
       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 glow-violet">
@@ -61,7 +62,11 @@ const Sidebar = ({ onNavigate }) => (
       </div>
       <div className="leading-tight">
         <p className="text-[15px] font-bold tracking-tight text-zinc-50">Assistify</p>
-        <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-violet-400">OS</p>
+        {betaMode ? (
+          <p className="text-[10px] font-medium tracking-wide text-zinc-500" data-testid="assistify-beta-badge">Assistify Beta</p>
+        ) : (
+          <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-violet-400">OS</p>
+        )}
       </div>
     </div>
     <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-2" data-testid="sidebar-nav">
@@ -98,8 +103,8 @@ const Sidebar = ({ onNavigate }) => (
       </div>
     ) : (
       <div className="m-3 shrink-0 rounded-xl border border-dashed border-white/10 bg-zinc-950/60 p-4" data-testid="sidebar-billing-pending">
-        <p className="text-sm font-semibold text-zinc-300">Billing setup pending</p>
-        <p className="mt-1 text-xs text-zinc-500">Payments are not configured. No active plan or charges apply.</p>
+        <p className="text-sm font-semibold text-zinc-300">Billing is not available during beta.</p>
+        <p className="mt-1 text-xs text-zinc-500">No active plan, trial countdown, or payment CTA. Stripe comes later.</p>
       </div>
     )}
   </div>
@@ -110,10 +115,17 @@ export default function Layout() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [bannerDismissed, setBannerDismissed] = useState(() => sessionStorage.getItem("verify_banner_dismissed") === "1");
+  const [betaMode, setBetaMode] = useState(BETA_MODE_BUILD);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
   const pageTitle = [...nav].reverse().find((n) => location.pathname === n.to || location.pathname.startsWith(n.to + "/"))?.label || "Dashboard";
+
+  useEffect(() => {
+    publicConfigApi.get().then((c) => {
+      if (typeof c?.betaMode === "boolean") setBetaMode(c.betaMode);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (user && user.onboardingCompleted === false && location.pathname !== "/onboarding") navigate("/onboarding");
@@ -150,7 +162,7 @@ export default function Layout() {
     <div className="min-h-screen bg-black text-zinc-50">
       {/* Desktop sidebar */}
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r border-white/10 bg-black lg:block">
-        <Sidebar />
+        <Sidebar betaMode={betaMode} />
       </aside>
 
       {/* Mobile sidebar */}
@@ -161,7 +173,7 @@ export default function Layout() {
             <button className="absolute right-3 top-5 text-zinc-400 focus-visible:ring-2 focus-visible:ring-violet-500 rounded-md" onClick={() => setMobileOpen(false)} data-testid="mobile-close" aria-label="Close navigation menu">
               <X className="h-5 w-5" />
             </button>
-            <Sidebar onNavigate={() => setMobileOpen(false)} />
+            <Sidebar onNavigate={() => setMobileOpen(false)} betaMode={betaMode} />
           </aside>
         </div>
       )}
@@ -173,6 +185,11 @@ export default function Layout() {
             <Menu className="h-5 w-5" />
           </button>
           <h1 className="min-w-0 truncate text-lg font-semibold tracking-tight" data-testid="page-title">{pageTitle}</h1>
+          {betaMode && (
+            <span className="hidden rounded border border-white/10 px-2 py-0.5 text-[10px] font-medium tracking-wide text-zinc-400 sm:inline" data-testid="header-beta-badge">
+              Assistify Beta
+            </span>
+          )}
           <div className="relative ml-auto hidden max-w-xs flex-1 sm:block">
             <button
               onClick={() => setPaletteOpen(true)}
@@ -192,6 +209,7 @@ export default function Layout() {
           >
             <Search className="h-[18px] w-[18px]" />
           </button>
+          {betaMode && <BetaFeedbackButton />}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="relative rounded-lg border border-white/10 bg-zinc-950 p-2 text-zinc-400 transition-all hover:text-zinc-100" data-testid="notifications-btn" aria-label={notifications.length ? `Notifications, ${notifications.length} recent` : "Notifications"}>

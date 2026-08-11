@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  User, Building2, Palette, Sparkles, FileText, Bell, Shield, KeyRound, CreditCard, Plug, Loader2, Users, Mail, Activity,
+  User, Building2, Palette, Sparkles, FileText, Bell, Shield, KeyRound, CreditCard, Plug, Loader2, Users, Mail, Activity, MessageSquare,
 } from "lucide-react";
 import { settingsApi } from "@/lib/api";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import {
 import { TeamSection } from "@/components/settings/TeamSection";
 import { EmailSettingsSection } from "@/components/settings/EmailSettingsSection";
 import { OperationsSection } from "@/components/settings/OperationsSection";
+import { BetaFeedbackSection } from "@/components/settings/BetaFeedbackSection";
 
 const TABS = [
   { id: "general", label: "General", icon: User },
@@ -27,6 +28,7 @@ const TABS = [
   { id: "billing", label: "Billing", icon: CreditCard },
   { id: "integrations", label: "Integrations", icon: Plug },
   { id: "operations", label: "Operations", icon: Activity, adminOnly: true },
+  { id: "feedback", label: "Beta feedback", icon: MessageSquare, adminOnly: true },
 ];
 
 export default function Settings() {
@@ -70,6 +72,7 @@ export default function Settings() {
             {tab === "billing" && <BillingSection />}
             {tab === "integrations" && <IntegrationsSection />}
             {tab === "operations" && isAdmin && <OperationsSection />}
+            {tab === "feedback" && isAdmin && <BetaFeedbackSection />}
           </>
         )}
       </div>

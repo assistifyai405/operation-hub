@@ -63,6 +63,8 @@ services:
       STORAGE_PROVIDER: local
       ENABLE_DEMO_SEED: "false"
       ENABLE_DEMO_LOGIN: "false"
+      BETA_MODE: "true"
+      AI_DAILY_REQUEST_LIMIT: "200"
       LOG_LEVEL: INFO
     ports:
       - "8000:8000"
@@ -161,6 +163,7 @@ services:
         REACT_APP_BACKEND_URL: http://localhost:8000
         REACT_APP_BILLING_ENABLED: "false"
         REACT_APP_ENABLE_DEMO_LOGIN: "false"
+        REACT_APP_BETA_MODE: "true"
     ports:
       - "3000:80"
     restart: unless-stopped

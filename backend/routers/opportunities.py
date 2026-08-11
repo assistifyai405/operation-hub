@@ -346,30 +346,48 @@ async def workspace_health(org: str = Depends(current_org)):
         }
 
     cats = {}
+    # Only score categories that have workspace records — empty categories must not inflate health to 100.
     over = by_type.get("invoice_overdue", 0)
-    cats["Invoices"] = cat(100 - (over / max(1, n_inv)) * 100 if n_inv else 100,
-                           [f"{over} overdue invoice(s)"] if over else ["All invoices on track"])
+    if n_inv:
+        cats["Invoices"] = cat(100 - (over / max(1, n_inv)) * 100,
+                               [f"{over} overdue invoice(s)"] if over else ["All invoices on track"])
     unsigned = by_type.get("contract_unsigned", 0)
-    cats["Contracts"] = cat(100 - (unsigned / max(1, n_con)) * 100 if n_con else 100,
-                            [f"{unsigned} contract(s) unsigned"] if unsigned else ["No contracts awaiting signature"])
-    proj_issues = by_type.get("project_inactive", 0) + by_type.get("project_no_task", 0) + by_type.get("project_no_deadline", 0)
-    cats["Projects"] = cat(100 - (proj_issues * 12), _reasons([
-        (by_type.get("project_inactive", 0), "inactive"), (by_type.get("project_no_task", 0), "without a next task"),
-        (by_type.get("project_no_deadline", 0), "without a deadline")], "project") or ["Projects are healthy"])
-    cli_issues = by_type.get("client_missing_info", 0) + by_type.get("client_not_contacted", 0)
-    cats["Clients"] = cat(100 - (cli_issues * 10), _reasons([
-        (by_type.get("client_not_contacted", 0), "flagged for a check-in"), (by_type.get("client_missing_info", 0), "with missing details")], "client") or ["Client records look good"])
-    task_over = by_type.get("task_overdue", 0)
-    cats["Tasks"] = cat(100 - (task_over * 14) if n_tasks else 100,
-                        [f"{task_over} overdue task(s)"] if task_over else ["No overdue tasks"])
-    stale = by_type.get("deal_stale", 0)
-    cats["Pipeline"] = cat(100 - (stale * 12) if n_leads else 100,
-                           [f"{stale} stale deal(s)"] if stale else ["Pipeline looks active"])
-    cats["Activity"] = cat(min(100, 40 + recent_activity * 12),
-                           [f"{recent_activity} action(s) in the last 7 days"] if recent_activity else ["No activity in the last 7 days"])
+    if n_con:
+        cats["Contracts"] = cat(100 - (unsigned / max(1, n_con)) * 100,
+                                [f"{unsigned} contract(s) unsigned"] if unsigned else ["No contracts awaiting signature"])
+    if n_proj:
+        proj_issues = by_type.get("project_inactive", 0) + by_type.get("project_no_task", 0) + by_type.get("project_no_deadline", 0)
+        cats["Projects"] = cat(100 - (proj_issues * 12), _reasons([
+            (by_type.get("project_inactive", 0), "inactive"), (by_type.get("project_no_task", 0), "without a next task"),
+            (by_type.get("project_no_deadline", 0), "without a deadline")], "project") or ["Projects are healthy"])
+    if n_cli:
+        cli_issues = by_type.get("client_missing_info", 0) + by_type.get("client_not_contacted", 0)
+        cats["Clients"] = cat(100 - (cli_issues * 10), _reasons([
+            (by_type.get("client_not_contacted", 0), "flagged for a check-in"), (by_type.get("client_missing_info", 0), "with missing details")], "client") or ["Client records look good"])
+    if n_tasks:
+        task_over = by_type.get("task_overdue", 0)
+        cats["Tasks"] = cat(100 - (task_over * 14),
+                            [f"{task_over} overdue task(s)"] if task_over else ["No overdue tasks"])
+    if n_leads:
+        stale = by_type.get("deal_stale", 0)
+        cats["Pipeline"] = cat(100 - (stale * 12),
+                               [f"{stale} stale deal(s)"] if stale else ["Pipeline looks active"])
+    if recent_activity:
+        cats["Activity"] = cat(min(100, 40 + recent_activity * 12),
+                               [f"{recent_activity} action(s) in the last 7 days"])
     outstanding = len(items)
-    cats["Outstanding work"] = cat(100 - outstanding * 6,
-                                   [f"{outstanding} open recommendation(s)"] if outstanding else ["Nothing outstanding"])
+    if outstanding or cats:
+        cats["Outstanding work"] = cat(100 - outstanding * 6,
+                                       [f"{outstanding} open recommendation(s)"] if outstanding else ["Nothing outstanding"])
+
+    if not cats:
+        return {
+            "score": None,
+            "grade": "No data yet",
+            "has_workspace_data": False,
+            "categories": [],
+            "top_reasons": ["Add clients, projects or deals to start measuring workspace health."],
+        }
 
     overall = round(sum(c["score"] for c in cats.values()) / len(cats))
     grade = "Excellent" if overall >= 90 else ("Good" if overall >= 75 else ("Fair" if overall >= 55 else "Needs attention"))
