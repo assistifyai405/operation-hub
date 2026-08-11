@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { clientsApi } from "@/lib/api";
 import { asArray } from "@/lib/safe";
+import { emptyNl } from "@/lib/nlCopy";
 import EmptyState from "@/components/EmptyState";
 import { LoadError } from "@/components/LoadError";
 
@@ -160,7 +161,7 @@ export default function Clients() {
   return (
     <div className="space-y-5" data-testid="clients-page">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-zinc-400">{list.length} client{list.length !== 1 && "s"} in your workspace.</p>
+        <p className="text-sm text-zinc-400">{list.length} {list.length === 1 ? "klant" : "klanten"} in je werkruimte.</p>
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
@@ -168,7 +169,7 @@ export default function Clients() {
               className="rounded-lg border border-white/10 bg-zinc-950 py-2 pl-9 pr-3 text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/40" />
           </div>
           <button onClick={openNew} data-testid="add-client-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet">
-            <Plus className="h-4 w-4" /> Add Client
+            <Plus className="h-4 w-4" /> Klant toevoegen
           </button>
         </div>
       </div>
@@ -180,10 +181,10 @@ export default function Clients() {
       ) : list.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No clients yet"
-          description="Clients are the companies and people you work with — linked to projects, tasks, and opportunities."
-          why="Add one real client to unlock CRM views, pipeline deals, and AI summaries grounded in your data."
-          actionLabel="Create your first client"
+          title={emptyNl.clients.title}
+          description={emptyNl.clients.description}
+          why={emptyNl.clients.why}
+          actionLabel={emptyNl.clients.action}
           onAction={openNew}
           testid="clients-empty"
         />

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { projectsApi, clientsApi } from "@/lib/api";
 import { asArray } from "@/lib/safe";
+import { emptyNl } from "@/lib/nlCopy";
 import EmptyState from "@/components/EmptyState";
 import { LoadError } from "@/components/LoadError";
 
@@ -156,9 +157,9 @@ export default function Projects() {
   return (
     <div className="space-y-5" data-testid="projects-page">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-zinc-400">{projectList.length} project{projectList.length !== 1 && "s"} across their lifecycle.</p>
+        <p className="text-sm text-zinc-400">{projectList.length} {projectList.length === 1 ? "project" : "projecten"} in de levenscyclus.</p>
         <button onClick={openNew} data-testid="new-project-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet">
-          <Plus className="h-4 w-4" /> New Project
+          <Plus className="h-4 w-4" /> Project toevoegen
         </button>
       </div>
 
@@ -169,10 +170,10 @@ export default function Projects() {
       ) : projectList.length === 0 ? (
         <EmptyState
           icon={FolderKanban}
-          title="No projects yet"
-          description="Projects organize delivery for a client — plans, tasks, proposals, and documents live here."
-          why="Create one project to start tracking work and unlock AI plans and proposals."
-          actionLabel="Create your first project"
+          title={emptyNl.projects.title}
+          description={emptyNl.projects.description}
+          why={emptyNl.projects.why}
+          actionLabel={emptyNl.projects.action}
           onAction={openNew}
           testid="projects-empty"
         />
@@ -210,7 +211,7 @@ export default function Projects() {
                       </div>
                     </div>
                   ))}
-                  {items.length === 0 && <p className="rounded-xl border border-dashed border-white/10 p-4 text-center text-xs text-zinc-600">No projects</p>}
+                  {items.length === 0 && <p className="rounded-xl border border-dashed border-white/10 p-4 text-center text-xs text-zinc-600">Geen projecten</p>}
                 </div>
               </div>
             );

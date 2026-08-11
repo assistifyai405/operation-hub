@@ -216,6 +216,13 @@ export const analyticsNl = {
   contracts: "Contracten",
   invoices: "Facturen",
   documents: "Documenten",
+  projectStatus: {
+    "In Progress": "In uitvoering",
+    Review: "Review",
+    Completed: "Voltooid",
+    Blocked: "Geblokkeerd",
+    Unknown: "Onbekend",
+  },
 };
 
 export const integrationsNl = {
@@ -230,7 +237,7 @@ export const integrationsNl = {
   disconnect: "Ontkoppelen",
   reconnect: "Opnieuw verbinden",
   refresh: "Vernieuwen",
-  healthBtn: "Health",
+  healthBtn: "Controleer status",
   adminOnly: "Alleen owners en admins kunnen integraties beheren",
   status: {
     connected: "Verbonden",

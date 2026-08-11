@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { tasksApi, projectsApi } from "@/lib/api";
 import { asArray } from "@/lib/safe";
+import { emptyNl } from "@/lib/nlCopy";
 import EmptyState from "@/components/EmptyState";
 import { LoadError } from "@/components/LoadError";
 
@@ -142,6 +143,11 @@ export default function Tasks() {
   const projectList = asArray(projects);
   const filtered = taskList.filter((t) => filter === "all" || (filter === "active" ? !t.done : t.done));
   const fmtDue = (d) => d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
+  const filterEmptyText = {
+    all: "Geen taken.",
+    active: "Geen actieve taken.",
+    done: "Geen afgeronde taken.",
+  };
 
   return (
     <div className="space-y-5" data-testid="tasks-page">
@@ -153,7 +159,7 @@ export default function Tasks() {
           ))}
         </div>
         <button onClick={openNew} data-testid="add-task-btn" className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-violet-500 glow-violet">
-          <Plus className="h-4 w-4" /> Add Task
+          <Plus className="h-4 w-4" /> Taak toevoegen
         </button>
       </div>
 
@@ -164,15 +170,15 @@ export default function Tasks() {
       ) : taskList.length === 0 ? (
         <EmptyState
           icon={CheckSquare}
-          title="No tasks yet"
-          description="Tasks are the concrete next steps on your projects — due dates, priorities, and progress."
-          why="Add a task so Assistify can surface overdue work and keep priorities clear."
-          actionLabel="Create your first task"
+          title={emptyNl.tasks.title}
+          description={emptyNl.tasks.description}
+          why={emptyNl.tasks.why}
+          actionLabel={emptyNl.tasks.action}
           onAction={openNew}
           testid="tasks-empty"
         />
       ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 py-16 text-center text-sm text-zinc-500" data-testid="tasks-filter-empty">No {filter} tasks.</div>
+        <div className="rounded-xl border border-dashed border-white/10 py-16 text-center text-sm text-zinc-500" data-testid="tasks-filter-empty">{filterEmptyText[filter]}</div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-950">
           {filtered.map((t) => (
